@@ -1,0 +1,2 @@
+import a
+print('b')
