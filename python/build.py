@@ -16,22 +16,26 @@ def build_bin():
     
 def build0():
     build_bin()
-    if mtime("libs/tmcode.py") > mtime("instruction.h"):
+    if not exists("../include/instruction.h") or \
+        mtime("libs/tmcode.py") > mtime("../include/instruction.h"):
         system("python libs/tmcode.py")
         copy("instruction.h", "../include/instruction.h")
     
     
 def clean_temp():
-    copy("tm.exe", "../test/tm.exe")
+    # copy("tm.exe", "../test/tm.exe")
+    pass
 
 def build_gcc():
     build0()
     system("gcc ../vm.c -o tm.exe")
     clean_temp()
+
 def build_tcc():
     build0()
     system("tcc ../vm.c -o tm.exe")
     clean_temp()
+
 def build_gcc_debug():
     build0()
     system("gcc -g ../vm.c -o tm.exe")

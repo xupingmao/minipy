@@ -1,6 +1,6 @@
 #include "include/tm.h"
 
-#define DEBUG_MALLOC 1
+#define DEBUG_MALLOC 0
 
 
 #if DEBUG_MALLOC

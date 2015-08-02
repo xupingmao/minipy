@@ -69,6 +69,8 @@ def join_path(path_list):
 
 
 def resolvepath(path):
+    if not ('/' in path or '\\' in path):
+        return path
     fs1 = split_path(getcwd())
     fs2 = split_path(path)
     fname = fs2.pop()

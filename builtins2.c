@@ -241,7 +241,7 @@ Object bfChdir() {
     char *path = getSzArg(szFunc);
     int r = chdir(path);
     if (r != 0) {
-        tmRaise("%s: -- fatal error, can not chdir", szFunc);
+        tmRaise("%s: -- fatal error, can not chdir(\"%s\")", szFunc, path);
     } 
     return NONE_OBJECT;
 }
