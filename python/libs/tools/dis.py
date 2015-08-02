@@ -1,0 +1,104 @@
+from encode import *
+from boot import *
+
+global_mod_list = [LOAD_GLOBAL, STORE_GLOBAL, LOAD_CONSTANT, TM_DEF]
+def dis(fname ,constants = ['None']):
+    constants = getConstList()
+    s = load(fname)
+    i = 0; l = len(s)
+    #constants = ['None']
+    while i < l:
+        op = ord(s[i])
+        val = uncode16(s[i+1], s[i+2])
+        i+=3
+        if op in (NEW_STRING, NEW_NUMBER):
+            vv = s.substring(i, i + val)
+            i += val
+            constants.append(vv)
+        elif ins in global_mod_list:
+            print(tmcodes[ins], constants[val])
+        else:
+            print(tmcodes[ins], val)
+
+def dis_func(func):
+    code = get_func_code(func)
+    if code == None:
+        print("native function")
+        return
+    dis_code(code)
+
+
+
+def dissimple0(code, limit = None):
+    s = code
+    i = 0; l = len(s)
+    count = 0
+    while i < l:
+        ins = s[i]
+        i+=1
+        ins = ord(ins)
+        val = uncode16(s[i], s[i+1])
+        i+=2
+        print(tmcodes[ins], val)
+        count += 1
+        if limit and count >= limit:
+            break
+
+def dis_code(s, start = 0, end = 0):
+    constlist = getConstList()
+    i, l =0,len(s)
+    lineno = 0
+    while i < l:
+        op = ord(s[i])
+        val = uncode16(s[i+1], s[i+2])
+        i+=3
+        lineno += 1
+        if end and lineno > end:break
+        if lineno > start:
+            if op in global_mod_list:
+                val = constlist[val]
+            printf("%4s: %s, %s\n", lineno, tmcodes[op], val)
+
+def dis_txt(s):
+    dis_code(compile(s))
+
+def dissimple(argv):
+    argc = len(argv)
+    s = argv[0]
+    if len(s) < 20 and s.endswith(".py"):
+        s = compilefile(s)
+        showconst = True
+    else:
+        s = load(s)
+    start, count, end = 0, None, None
+    if argc == 2: 
+        start = 0
+        count = int(argv[1])
+        end = start + count
+    if argc == 3:
+        start = int(argv[1])
+        count = int(argv[2])
+        end = start + count
+    dis_code(s, start, end)
+        
+
+def main():
+    argc = len(ARGV)
+    if argc == 2:
+        fname = ARGV[1]
+        dis(fname)
+    elif argc == 3:
+        opt = ARGV[1]
+        fname = ARGV[2]
+        if opt == '-src':
+            tmp = compilefile(fname, "temp")
+            dis("temp", getConstList())
+            rm("temp")
+        elif opt == '-const':
+            dis(fname, 'const')
+        elif opt == '-simple':
+            dissimple0(load(fname))
+test = None
+if __name__ == "__main__":
+    del ARGV[0]
+    dissimple(ARGV)
