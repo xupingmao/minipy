@@ -248,7 +248,8 @@ Object bmStringFormat() {
 	while (i < GET_STR_LEN(str)) {
 		char c = fmt[i];
 		if (c == '%' && fmt[i + 1] == 's') {
-			StringBuilderAppendObj(sb, getStrArg(szFunc));
+            Object obj = getObjArg(szFunc);
+			StringBuilderAppendObj(sb, obj);
 			i++;j++;
 		} else {
 			StringBuilderAppend(sb, fmt[i]);
