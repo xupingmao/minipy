@@ -158,14 +158,6 @@ int bObjEq(Object a, Object b){
 	return 0;
 }
 
-Object objEquals(Object a, Object b) {
-	RET_NUM(bObjEq(a, b));
-}
-
-Object objNotEquals(Object a, Object b) {
-	RET_NUM(!bObjEq(a, b));
-}
-
 #define DEF_CMP_FUNC(fnc_name, op) Object fnc_name(Object a, Object b) {      \
 	if(TM_TYPE(a) != TM_TYPE(b))                             \
 		tmRaise(#fnc_name"(): can not compare [%o] and [%o]", (a), (b));                 \
@@ -211,19 +203,23 @@ Object tmMul(Object a, Object b) {
 		b = temp;
 	}
 	if (a.type == TYPE_STR && b.type == TYPE_NUM) {
-		if (GET_STR_LEN(a) == 0)
+        int len = GET_STR_LEN(a);
+        Object des;
+		if (len == 0)
 			return a;
 		int times = (int) GET_NUM(b);
 		if (times <= 0)
-			return newString0("", 0);
+			return staticString("");
 		if (times == 1)
 			return a;
-		StringBuilder*sb = StringBuilderNew();
+        des = newString0(NULL, len * times);
+        char* s = GET_STR(des);
 		int i;
 		for (i = 0; i < times; i++) {
-			StringBuilderAppendObj(sb, a);
+			strncpy(s, GET_STR(a), len);
+            s += len;
 		}
-		return StringBuilderToStr(sb);
+		return des;
 	}
 	tmRaise("tmMul: can not mul %o and %o", a, b);
 	return NONE_OBJECT;

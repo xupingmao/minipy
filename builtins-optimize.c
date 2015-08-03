@@ -1,3 +1,5 @@
+/* iterator range implementation */
+
 
 typedef struct RangeIter {
 	DATA_HEAD
@@ -58,15 +60,8 @@ Object blt_Range() {
 	}
 	if (inc == 0)
 		tmRaise("range(): increment can not be 0!");
-	/* eg. (1, 10, -1),  (10, 1, 1) : range can not be the same signal */
 	if (inc * (end - start) < 0)
 		tmRaise("range(%d, %d, %d): not valid range!", start, end, inc);
-	/*Object list = newList((end - start) / inc);
-	long i = 0;
-	for (i = start; i < end; i += inc) {
-		APPEND(list, newNumber(i));
-	}
-	return list;*/
     Object data = dataNew(sizeof(RangeIter));
     RangeIter *iterator = (RangeIter*) GET_DATA(data);
 	iterator->cur = start;

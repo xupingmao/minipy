@@ -41,9 +41,9 @@ void builtinsInit() {
 	dictSetByStr(tm->builtins, "False", newNumber(0));
 	dictSetByStr(tm->builtins, "__builtins__", tm->builtins);
 	dictSetByStr(tm->builtins, "__modules__", tm->modules);
-	STRING_MAIN = newString0("__main__", -1); 
+	STRING_MAIN = staticString("__main__"); 
 	regConst(STRING_MAIN);
-	STRING_NAME = newString0("__name__", -1);
+	STRING_NAME = staticString("__name__");
 	regConst(STRING_NAME);
 
 	regListMethods();

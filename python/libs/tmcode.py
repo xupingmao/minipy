@@ -46,7 +46,7 @@ def export_clang_define(des):
     # if src is modified before des and cdes, do not convert.
     if not exists(des):
         pass
-    elif mtime(des) > mtime(ARGV[0]):
+    elif mtime(ARGV[0]) > mtime(des):
         return
     defines = []
     i = 0

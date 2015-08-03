@@ -202,7 +202,7 @@ Object* DictGetByStr(TmDict* dict, char* key) {
 }
 
 void _dictSetByStr(TmDict* dict, char* key, Object value) {
-	DictSet(dict, newString0(key, -1), value);
+	DictSet(dict, staticString(key), value);
 }
 
 void _dictDel(TmDict* dict, Object key) {

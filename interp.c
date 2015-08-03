@@ -294,8 +294,17 @@ Object tmEval(TmFrame* f) {
 		TM_OP(DIV, tmDiv)
 		TM_OP(MOD, tmMod)
 		TM_OP(GET, tmGet)
-		TM_OP(EQEQ, objEquals)
-		TM_OP(NOTEQ, objNotEquals)
+		case EQEQ: {
+            *(top-1) = newNumber(bObjEq(*(top-1), *top));
+            top--;
+            break;
+        }
+        case NOTEQ: {
+            *(top-1) = newNumber(!bObjEq(*(top-1), *top));
+            top--;
+            break;
+        }
+        
 		TM_OP(LT, tmLessThan)
 		TM_OP(LTEQ, tmLessEqual)
 		TM_OP(GT, tmGreaterThan)
