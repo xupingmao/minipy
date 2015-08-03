@@ -73,9 +73,6 @@ op_ext_map = {
 begin_tag_list = [-1]
 end_tag_list = [-1]
 
-in_class = False
-
-
 def build_set(self, key, val):
     node = AstNode('=')
     node.first = val
@@ -132,7 +129,6 @@ def getconst(const):
     return g
     
     
-    
 def encode_if(tk):
     # refuse assignment in if condition
     if tk.first.type == '=':
@@ -166,7 +162,6 @@ def encode_dict(tk):
             encode_item(item[0])
             encode_item(item[1])
             emit(DICT_SET)
-    #emit(DICT, n)
     
 def encode_neg(tk):
     if tk.first.type == 'number':
@@ -188,7 +183,7 @@ def encode_call(tk):
     emit(CALL, n)
 
     
-def encode_def(tk, isMethod = 0):
+def encode_def(tk, in_class = 0):
     emit_def(tk.first)
     # emit(TM_DEF, 0)
     # regs = []
@@ -214,7 +209,7 @@ def encode_def(tk, isMethod = 0):
     emit(TM_EOF)
     #loc_num_ins[1] = get_loc_num()
     pop_scope()
-    if not isMethod:
+    if not in_class:
         emit_store(tk.first)
  
 
@@ -447,7 +442,6 @@ for k in op_ext_map:
 
 
 def encode_item(tk):
-    global in_class
     if tk == None: return 0
     # encode for statement list.
     if istype(tk, 'list'):

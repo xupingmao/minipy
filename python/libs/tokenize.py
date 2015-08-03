@@ -216,7 +216,7 @@ def tokenizeFromText(v):
         print("%s: %s => %s".format(str(tk.pos).ljust(10), tk.type.ljust(10), str(tk.val).ljust(10)))
 def tokenize0(f):
     v = load(f)
-    print('tokenize %s, length = %s'.format(f, len(v)))
+    print('tokenize %s, length = %s\n'.format(f, len(v)))
     tokenizeFromText(v)
     
 def printSource(f):

@@ -84,6 +84,7 @@ def load_core():
     for name in lst:
         dest += compilefile(name+".py")
     save('core', dest)
+    
 def build_const_code():
     list = getConstList()
     b = ''
@@ -92,6 +93,7 @@ def build_const_code():
         if istype(v,'number'):t = chr(NEW_NUMBER); v = str(v)
         b+=t+code16(len(v))+v
     return b+code8(TM_EOP)+code16(0)
+    
 def main():
     argc = len(ARGV)
     if argc > 1:
