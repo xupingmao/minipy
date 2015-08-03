@@ -171,8 +171,6 @@ TmFrame* pushFrame(Object fnc) {
 }
 
 
-#define TM_IN(a,b) tmHas(b,a)
-
 /** 
 ** evaluate byte code.
 ** @param f: Frame
@@ -304,14 +302,45 @@ Object tmEval(TmFrame* f) {
             top--;
             break;
         }
-        
-		TM_OP(LT, tmLessThan)
-		TM_OP(LTEQ, tmLessEqual)
-		TM_OP(GT, tmGreaterThan)
-		TM_OP(GTEQ, tmGreaterEqual)
-		TM_OP(OP_IN, TM_IN)
-		TM_OP(AND, tmAnd)
-		TM_OP(OR, tmOr)
+        case LT: {
+            *(top-1) = newNumber(tmCmp(*(top-1), *top)<0);
+            top--;
+            break;
+        }
+        case LTEQ: {
+            *(top-1) = newNumber(tmCmp(*(top-1), *top)<=0);
+            top--;
+            break;
+        }
+        case GT: {
+            *(top-1) = newNumber(tmCmp(*(top-1), *top)>0);
+            top--;
+            break;
+        }
+        case GTEQ: {
+            *(top-1) = newNumber(tmCmp(*(top-1), *top)>=0);
+            top--;
+            break;
+        }
+        case OP_IN: {
+            *(top-1) = newNumber(bTmHas(*top, *(top-1)));
+            top--;
+            break;
+        }
+        case AND: {
+            *(top-1) = newNumber(tmBool(*(top-1)) && tmBool(*top));
+            top--;
+            break;
+        }
+        case OR: {
+            *(top-1) = newNumber(tmBool(*(top-1)) || tmBool(*top));
+            top--;
+            break;
+        }
+        case NOT:{
+            *top = newNumber(!tmBool(*top));
+            break;
+        }
 
 		/*   TM_OP2( LT_JUMP_ON_FALSE, tm_bool_lt );
 		 TM_OP2( GT_JUMP_ON_FALSE, tm_bool_gt );
@@ -334,11 +363,6 @@ Object tmEval(TmFrame* f) {
 			top--;
 			break;
 		}
-
-		case NOT:
-			TM_TOP() = tmNot(TM_TOP());
-			break;
-
 		case NEG:
 			TM_TOP() = tmNeg(TM_TOP());
 			break;

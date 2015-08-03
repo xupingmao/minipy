@@ -17,20 +17,21 @@ Object    tmSub(Object a, Object b);
 Object    tmMul(Object a, Object b);
 Object    tmDiv(Object a, Object b);
 Object    tmMod(Object a, Object b);
-Object    tmAnd(Object a, Object b);
-Object    tmOr (Object a, Object b);
-Object tmNeg(Object o) ;
-Object tmNot(Object o);
+Object    tmNeg(Object o) ;
 int bObjEq(Object a, Object b);
 
-
+/*
+Object    tmAnd(Object a, Object b);
+Object    tmOr (Object a, Object b);
 Object objEquals(Object, Object);
 Object tmLessThan(Object, Object);
 Object tmGreaterThan(Object, Object);
 Object tmLessEqual(Object, Object);
 Object tmGreaterEqual(Object, Object);
 Object objNotEquals(Object, Object);
+*/
 
+int tmCmp(Object a, Object b);
 Object* tmNext(Object iterator);
 Object iterNew(Object collections);
 Object tmGet(Object self, Object k);

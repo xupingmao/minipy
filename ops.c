@@ -158,6 +158,7 @@ int bObjEq(Object a, Object b){
 	return 0;
 }
 
+/*
 #define DEF_CMP_FUNC(fnc_name, op) Object fnc_name(Object a, Object b) {      \
 	if(TM_TYPE(a) != TM_TYPE(b))                             \
 		tmRaise(#fnc_name"(): can not compare [%o] and [%o]", (a), (b));                 \
@@ -184,7 +185,18 @@ DEF_CMP_FUNC(tmLessThan, <);
 DEF_CMP_FUNC(tmGreaterThan, >);
 DEF_CMP_FUNC(tmLessEqual, <=);
 DEF_CMP_FUNC(tmGreaterEqual, >=);
+*/
 
+int tmCmp(Object a, Object b) {
+    if (TM_TYPE(a) == TM_TYPE(b)) {
+        switch (TM_TYPE(a)) {
+            case TYPE_NUM: return GET_NUM(a) - GET_NUM(b);
+            case TYPE_STR: return strcmp(GET_STR(a), GET_STR(b));
+        }
+    }
+    tmRaise("tmCmp: can not compare %a and %b", a, b);
+    return 0;
+}
 /*
 DEF_CMP_FUNC_2(tm_bool_lt, <);
 DEF_CMP_FUNC_2(tm_bool_gt, >);
@@ -252,6 +264,7 @@ Object tmMod(Object a, Object b) {
 	return NONE_OBJECT;
 }
 
+/* a has b */
 int bTmHas(Object a, Object b) {
 	switch (TM_TYPE(a)) {
 	case TYPE_LIST: {
@@ -272,11 +285,6 @@ int bTmHas(Object a, Object b) {
 	}
 	return 0;
 }
-
-Object tmHas(Object a, Object b) {
-	return newNumber(bTmHas(a, b));
-}
-
 int tmBool(Object v) {
 	switch (TM_TYPE(v)) {
 	case TYPE_NUM:
@@ -294,23 +302,6 @@ int tmBool(Object v) {
         return 1;
 	}
 	return 0;
-}
-
-/**
- * used by tmEval.
- */
-Object tmAnd(Object a, Object b) {
-	return newNumber(tmBool(a) && tmBool(b));
-}
-
-Object tmOr(Object a, Object b) {
-	return newNumber(tmBool(a) || tmBool(b));
-}
-
-Object tmNot(Object o) {
-	if (tmBool(o))
-		return NUMBER_FALSE;
-	return NUMBER_TRUE;
 }
 
 Object tmNeg(Object o) {

@@ -36,9 +36,11 @@ _opcode_names = [
 
 # update global values.
 i = 0
+tmcodes = {}
 while i < len(_opcode_names):
     name = _opcode_names[i]
     globals()[name] = i + 1
+    tmcodes[i+1] = name
     i += 1
 
 def export_clang_define(des):
