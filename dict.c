@@ -168,7 +168,7 @@ DictNode* DictGetNode(TmDict* dict, Object key){
 			node = node->next;
 			continue;
 		}
-		if (bObjEq(node->key, key)) {
+		if (tmEquals(node->key, key)) {
 			return node;
 		}
 		node = node->next;

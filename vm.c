@@ -53,18 +53,7 @@ void builtinsInit() {
     regBuiltinsFunc2();
 }
 
-
-void loadModule(char* fname, unsigned char* s) {
-	Object modName = newString(fname);
-	Object code = staticString((char*) s);
-	Object mod = moduleNew(modName, modName, code);
-	Object fnc = newFunction(mod, NONE_OBJECT, NULL);
-	GET_FUNCTION(fnc)->code = (unsigned char*) GET_STR(code);
-	GET_FUNCTION(fnc)->name = STRING_MAIN;
-	callFunction(fnc);
-}
-
-void loadModule2(Object name, Object code) {
+void loadModule(Object name, Object code) {
 	Object mod = moduleNew(name, name, code);
 	Object fnc = newFunction(mod, NONE_OBJECT, NULL);
 	GET_FUNCTION(fnc)->code = (unsigned char*) GET_STR(code);
@@ -90,7 +79,7 @@ int loadBinary() {
         int codeLen = uncode32(&text);
         Object code = newString0((char*)text, codeLen);
         text += codeLen;
-        loadModule2(name, code);
+        loadModule(name, code);
     }
 	return 1;
 }

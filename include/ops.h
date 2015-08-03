@@ -18,7 +18,7 @@ Object    tmMul(Object a, Object b);
 Object    tmDiv(Object a, Object b);
 Object    tmMod(Object a, Object b);
 Object    tmNeg(Object o) ;
-int bObjEq(Object a, Object b);
+int tmEquals(Object a, Object b);
 
 /*
 Object    tmAnd(Object a, Object b);

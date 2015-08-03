@@ -56,7 +56,7 @@ Object tmStr(Object a) {
 		for (i = 0; i < l; i++) {
 			Object obj = GET_LIST(a)->nodes[i];
 			/* reference to self in list */
-			if (bObjEq(a, obj)) {
+			if (tmEquals(a, obj)) {
 				StringBuilderAppendChars(sb, "[...]");
 			} else if (obj.type == TYPE_STR) {
 				StringBuilderAppend(sb, '"');

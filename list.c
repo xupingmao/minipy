@@ -116,7 +116,7 @@ int _listIndex(TmList* list, Object v) {
 	int len = list->len;
 	Object* nodes = list->nodes;
 	for (i = 0; i < len; i++) {
-		if (bObjEq(nodes[i], v)) {
+		if (tmEquals(nodes[i], v)) {
 			return i;
 		}
 	}

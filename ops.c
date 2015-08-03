@@ -130,7 +130,7 @@ Object tmAdd(Object a, Object b) {
 	return NONE_OBJECT;
 }
 
-int bObjEq(Object a, Object b){
+int tmEquals(Object a, Object b){
 	if(TM_TYPE(a) != TM_TYPE(b)) return 0;
 	switch(TM_TYPE(a)){
 		case TYPE_NUM:return GET_NUM(a) == GET_NUM(b);
@@ -144,7 +144,7 @@ int bObjEq(Object a, Object b){
 			Object* nodes1 = GET_LIST(a)->nodes;
 			Object* nodes2 = GET_LIST(b)->nodes;
 			for(i = 0; i < len; i++){
-				if(!bObjEq(nodes1[i], nodes2[i]) ){
+				if(!tmEquals(nodes1[i], nodes2[i]) ){
 					return 0;
 				}
 			}
