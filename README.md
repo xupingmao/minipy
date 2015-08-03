@@ -7,7 +7,7 @@
 2. `parse.py` handwrite LL parser
 3. `encode.py`, `asm.py` code generator
 
-## virtual machine features
+## vm features
 1. stack based
 2. bytecode defined in `python/libs/tmcode.py`
 3. exception handling implemented with setjmp
