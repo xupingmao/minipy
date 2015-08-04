@@ -190,11 +190,19 @@ DEF_CMP_FUNC(tmGreaterEqual, >=);
 int tmCmp(Object a, Object b) {
     if (TM_TYPE(a) == TM_TYPE(b)) {
         switch (TM_TYPE(a)) {
-            case TYPE_NUM: return GET_NUM(a) - GET_NUM(b);
+            case TYPE_NUM: {
+                double diff = GET_NUM(a) - GET_NUM(b);
+                if (diff > 0.0) {
+                    return 1;
+                } else if (diff < 0.0) {
+                    return -1;
+                }
+                return 0;
+            }
             case TYPE_STR: return strcmp(GET_STR(a), GET_STR(b));
         }
     }
-    tmRaise("tmCmp: can not compare %a and %b", a, b);
+    tmRaise("tmCmp: can not compare %o and %o", a, b);
     return 0;
 }
 /*

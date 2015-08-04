@@ -5,22 +5,12 @@ from tmcode import *
 
 def load_const(const):
     emit(LOAD_CONSTANT, getConstIdx(const.val))
-    
-# constants as list
-class Constants:
-    def __init__(self):
-        # self.values = [None]
-        pass
-    def load(self, v):
-        emit(LOAD_CONSTANT, self.index(v))
-        
-    def index(self, v):
-        return getConstIdx(v.val)
 
 class Scope:
     def __init__(self):
         self.locals = []
         self.globals = []
+        self.jmps = 0 # try block count.
         
     def def_global(self, v):
         if v not in self.globals:

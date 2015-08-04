@@ -12,14 +12,34 @@ def _op_mod(a,b):
     return a%b
 def _op_get(a,b):
     return a[b]
-
+def _op_lt(a,b):
+    return a < b
+def _op_gt(a,b):
+    return a > b
+def _op_lteq(a,b):
+    return a<=b
+def _op_gteq(a,b):
+    return a>=b
+def _op_eq(a,b):
+    return a==b
+def _op_ne(a,b):
+    return a!=b
+def _op_in(a,b):
+    return a in b
 op_dict = {
     ADD: _op_add,
     SUB: _op_sub,
     DIV: _op_div,
     MUL: _op_mul,
     MOD: _op_mod,
-    GET: _op_get
+    GET: _op_get,
+    LT: _op_lt,
+    GT: _op_gt,
+    LTEQ: _op_lteq,
+    GTEQ: _op_gteq,
+    EQEQ: _op_eq,
+    NOTEQ: _op_ne,
+    OP_IN: _op_in
 }
 
 def pyeval(src, glo_vars = None, debug = False):
@@ -130,13 +150,8 @@ def pyeval(src, glo_vars = None, debug = False):
             collection.reverse()
             for x in collection:
                 stack.append(x)
-        elif op == OP_IN:
-            r = stack.pop()
-            l = stack.pop()
-            r = l in r
-            stack.append(r)
-        #elif op == SETJUMP:
-            #pass
+        elif op == SETJUMP:
+            print("SETJUMP not implemented")
         elif op == POP_JUMP_ON_FALSE:
             r = stack.pop()
             if not r:
