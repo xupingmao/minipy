@@ -115,7 +115,7 @@ void gcMarkList(TmList* list) {
 		gcMark(list->nodes[i]);
 	}
 }
-
+/*
 void gcMarkDict(TmDict* dict) {
 	if (dict->marked)
 		return;
@@ -127,8 +127,20 @@ void gcMarkDict(TmDict* dict) {
 		node = node->next;
 	}
 }
-/*
  */
+ 
+ void gcMarkDict(TmDict* dict) {
+	if (dict->marked)
+		return;
+	dict->marked = GC_REACHED_SIGN;
+	int i;
+    for(i = 0; i < dict->cap; i++) {
+        if (dict->nodes[i].used) {
+            gcMark(dict->nodes[i].key);
+            gcMark(dict->nodes[i].val);
+        }
+    }
+}
 
 void gcMark(Object o) {
 	if (o.type == TYPE_NUM || o.type == TYPE_NONE)

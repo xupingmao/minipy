@@ -37,17 +37,16 @@ int DictHash(Object key) {
 
 
 TmDict* DictInit(){
-	int size = 3;
+    int i;
 	TmDict * dict = tmMalloc(sizeof(TmDict));
-	dict->nodes = dict->_nodes;
-	DictNode** nodes = dict->nodes;
+    dict->cap = 3;
+    dict->extend = 2;
+	dict->nodes = tmMalloc(sizeof(DictNode) * (dict->cap));
 	// to mark that the node is not allocated.
-	int i;for(i = 0; i < size; i++){
-		nodes[i] = NULL;
+	for(i = 0; i < dict->cap; i++){
+		dict->nodes[i].used = 0;
 	}
 	dict->len = 0;
-	dict->cap = size;
-	dict->head = NULL;
 	return dict;
 }
 
@@ -58,91 +57,46 @@ Object newDict(){
 	return gcTrack(o);
 }
 
-// reset hashdict, do not need to allocate new block.
-void DictSetNode(TmDict* dict, DictNode* des){
-	int hash = DictHash(des->key);
-	int idx = hash % dict->cap;
-//	printf("set:entry pos:%d\n", hash % dict->cap);
-	DictNode* node = dict->nodes[idx];
-	des->hash = hash;
-	des->idx = idx;
-	if (dict->head != NULL) {
-		if (node == NULL) {
-			dict->nodes[idx] = des;
-			des->next = dict->head;
-			dict->head = des;
-		} else {
-			// insert after first element in the slot.
-			des->next = node->next;
-			node->next = des;
-		}
-	} else {
-		dict->head = des;
-		des->next = NULL;
-		dict->nodes[idx] = des;
-	}
-}
 
 void DictCheck(TmDict* dict){
 	if(dict->len < dict->cap)
 		return;
 	int osize = dict->cap;
 	int i;
+    int j;
 	int nsize = osize + osize / 2 + 1;
 	dict->cap = nsize;
-	// store old nodes to rehash the table
-	DictNode** nodes = dict->nodes;
-	dict->nodes = tmMalloc(nsize * sizeof(DictNode*));
-	// reset new nodes
-	for(i = 0; i < nsize; i++){
-		dict->nodes[i] = NULL;
-	}
-    /* rehash nodes */
-	DictNode* node = dict->head;
-	dict->head = NULL;
-	while(node != NULL){
-		int hash = node->hash;
-		int idx = hash % dict->cap;
-		DictNode* next = node->next;
-		node->idx = idx;
-		DictNode* newNode = dict->nodes[idx];
-		if (newNode == NULL) {
-			dict->nodes[idx] = node;
-			node->next = dict->head;
-			dict->head = node;
-		} else {
-			node->next = newNode->next;
-			newNode->next = node;
-		}
-		node = next;
-	}
-	// free old nodes.
-    if(nodes != dict->_nodes){
-        tmFree(nodes, osize * sizeof(DictNode*));
+	DictNode* nodes = tmMalloc(nsize * sizeof(DictNode));
+    for(i = 0; i < dict->cap; i++) {
+        nodes[i].used = 0;
     }
-}
-
-
-
-void DictFreeNode(DictNode* node){
-	if(node == NULL){
-		return;
-	}
-	DictFreeNode(node->next);
-	tmFree(node, sizeof(DictNode));
+    j = 0;
+    for(i = 0; i < osize; i++) {
+        if (dict->nodes[i].used) {
+            nodes[j] = dict->nodes[i];
+            j++;
+        }
+    }
+    DictNode* temp = dict->nodes;
+    dict->nodes = nodes;
+    tmFree(temp, osize * sizeof(DictNode));
 }
 
 void freeDict(TmDict* dict){
 	PRINT_OBJ_GC_INFO_START();
-	int i;
-	DictFreeNode(dict->head);
-    if (dict->nodes != dict->_nodes){
-        tmFree(dict->nodes, sizeof(DictNode*) * dict->cap);
-    }
+	tmFree(dict->nodes, (dict->cap) * sizeof(DictNode));
 	tmFree(dict, sizeof(TmDict));
 	PRINT_OBJ_GC_INFO_END("dict", dict);
 }
 
+int findfreepos(TmDict* dict) {
+    int i;
+    for(i = 0; i < dict->cap; i++) {
+        if (dict->nodes[i].used == 0) {
+            return i;
+        }
+    }
+}
 
 void DictSet(TmDict* dict, Object key, Object val){
 	DictNode* node = DictGetNode(dict, key);
@@ -150,50 +104,38 @@ void DictSet(TmDict* dict, Object key, Object val){
 		node->val = val;
 		return;
 	}
-	DictCheck(dict);
-	/* add a new node , insert into the nodes */
-	dict->len++;
-	DictNode* new_node = tmMalloc(sizeof(DictNode));
-	new_node->key = key;
-	new_node->val = val;
-    DictSetNode(dict, new_node);
+    DictCheck(dict);
+	int i = findfreepos(dict);
+    dict->len++;
+    dict->nodes[i].used = 1;
+    dict->nodes[i].key = key;
+    dict->nodes[i].val = val;
 }
 
 DictNode* DictGetNode(TmDict* dict, Object key){
-    int hash = DictHash(key);
-    int idx = hash % dict->cap;
-	DictNode* node = dict->nodes[idx];
-	while(node != NULL && node->idx == idx){
-		if (node->hash == hash && tmEquals(node->key, key)) {
-			return node;
-		}
-		node = node->next;
-	}
+    //int hash = DictHash(key);
+    //int idx = hash % dict->cap;
+    int i;
+	DictNode* nodes = dict->nodes;
+	for (i = 0; i < dict->cap; i++) {
+        if (nodes[i].used && tmEquals(nodes[i].key, key)) {
+            return nodes + i;
+        }
+    }
 	return NULL;
 }
 
 Object* DictGetByStr(TmDict* dict, char* key) {
-    int hash = hashSz((unsigned char*) key, strlen(key));
-    int idx = hash % dict->cap;
-	DictNode* node = dict->nodes[idx];
-    while (node != NULL
-    		&& node->idx == idx) {
-    	if (hash != node->hash) {
-    		node = node->next;
-    		continue;
-    	}
-        Object k = node->key;
-        if (TM_TYPE(k) != TYPE_STR) {
-        	node = node->next;
-        	continue;
+    //int hash = hashSz((unsigned char*) key, strlen(key));
+    //int idx = hash % dict->cap;
+    int i;
+	DictNode* nodes = dict->nodes;
+    for (i = 0; i < dict->cap; i++) {
+        if (nodes[i].used && TM_TYPE(nodes[i].key) == TYPE_STR && 
+            strcmp(GET_STR(nodes[i].key), key) == 0) {
+            return &nodes[i].val;
         }
-        char* ks = GET_STR(k);
-        if (strcmp(ks,key) == 0) {
-            return &(node->val);
-        } else {
-        	node = node->next;
-        }
-    }
+    } 
     return NULL;
 }
 
@@ -202,46 +144,23 @@ void _dictSetByStr(TmDict* dict, char* key, Object value) {
 }
 
 void _dictDel(TmDict* dict, Object key) {
-	DictNode *node = DictGetNode(dict, key);
-	if (node == NULL) {
-		tmRaise("dictDel: keyError %o", key);
-	} else {
-        int i;
-		node->idx = -1;
-		dict->len--;
-		DictNode* n = dict->head;
-		// is first node
-		if (node == n) {
-			dict->head = node->next;
-		}else {
-			while (n != NULL) {
-				if (n->next != NULL && n->next->idx == -1) {
-					n->next = n->next->next;
-					break;
-				}
-				n = n->next;
-			}
-		}
-        for (i = 0; i < dict->cap; i++) {
-            if (dict->nodes[i] != NULL && dict->nodes[i]->idx == -1) {
-                if (dict->nodes[i]->next != NULL && dict->nodes[i]->next->idx == i) {
-                    dict->nodes[i] = dict->nodes[i]->next;
-                } else {
-                    dict->nodes[i] = NULL;
-                }
-            }
-        }
-		tmFree(node, sizeof(DictNode));
-	}
+	DictNode* node = DictGetNode(dict, key);
+    if (node == NULL) {
+        tmRaise("tmDel: keyError %o", key);
+    }
+    node->used = 0;
+    dict->len--;
+    return;
 }
 
 Object DictKeys(TmDict* dict){
-	Object list = newList(dict->len);
-	DictNode* node = dict->head;
-	while(node != NULL){
-		APPEND(list, node->key);
-		node = node->next;
-	}
+    Object list = newList(dict->len);
+    int i;
+    for(i = 0; i < dict->cap; i++) {
+        if (dict->nodes[i].used) {
+            APPEND(list, dict->nodes[i].key);
+        }
+    }
 	return list;
 }
 
@@ -254,11 +173,12 @@ Object bmDictValues() {
     Object _d = getDictArg("dict.values");
     TmDict* dict = GET_DICT(_d);
     Object list = newList(dict->len);
-	DictNode* node = dict->head;
-	while(node != NULL){
-		APPEND(list, node->val);
-		node = node->next;
-	}
+    int i;
+    for(i = 0; i < dict->cap; i++) {
+        if (dict->nodes[i].used) {
+            APPEND(list, dict->nodes[i].val);
+        }
+    }
 	return list;
 }
 
@@ -300,16 +220,21 @@ Object dictIterNew(TmDict* dict) {
 	Object data = dataNew(sizeof(TmDictIterator));
 	TmDictIterator* iterator = (TmDictIterator*)GET_DATA(data);
 	iterator->dict = dict;
-	iterator->cur_node = dict->head;
+	iterator->idx = 0;
 	iterator->proto = getDictIterProto();
 	return data;
 }
 
 Object* dictNext(TmDictIterator* iterator) {
-	if (iterator->cur_node != NULL) {
-		Object* key = &(iterator->cur_node->key);
-		iterator->cur_node = iterator->cur_node->next;
-		return key;
+	if (iterator->idx < iterator->dict->cap) {
+		int i;
+        for(i = iterator->idx; i < iterator->dict->cap; i++) {
+            if (iterator->dict->nodes[i].used) {
+                iterator->idx = i + 1;
+                return &iterator->dict->nodes[i].key;
+            }
+        }
+		return NULL;
 	}
 	return NULL;
 }

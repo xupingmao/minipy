@@ -79,15 +79,15 @@ Object classNew(Object clazz){
   TmDict* cl = GET_DICT(clazz);
   Object k,v;
   Object instance = newDict();
-  DictNode* node = cl->head;
-  while(node != NULL){
-	  k = node->key;
-	  v = node->val;
-    if(IS_FUNC(v)){
-      Object method = methodNew(v, instance);
-      tmSet(instance, k, method);
-    }
-    node = node->next;
+  DictNode* nodes = cl->nodes;
+  int i;
+  for(i = 0; i < cl->cap; i++) {
+      k = nodes[i].key;
+      v = nodes[i].val;
+      if(nodes[i].used && IS_FUNC(v)){
+        Object method = methodNew(v, instance);
+        tmSet(instance, k, method);
+      }
   }
   return instance;
 }

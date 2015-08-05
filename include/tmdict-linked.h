@@ -6,22 +6,24 @@ typedef struct DictNode{
   Object key;
   Object val;
   int hash;
-  int used;
-  int attr;
+  int idx;
+  struct DictNode* next;
 }DictNode;
 
 typedef struct Dictonary {
   int marked;
   int len;
   int cap;
-  int extend;
-  struct DictNode* nodes;
+  struct DictNode* last_node;
+  struct DictNode* head;
+  struct DictNode* _nodes[7];
+  struct DictNode** nodes;
 }TmDict;
 
 typedef struct _TmDictIterator {
 	DATA_HEAD
 	TmDict* dict;
-	int idx;
+	DictNode* cur_node;
 } TmDictIterator;
 
 
