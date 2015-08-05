@@ -164,11 +164,7 @@ DictNode* DictGetNode(TmDict* dict, Object key){
     int idx = hash % dict->cap;
 	DictNode* node = dict->nodes[idx];
 	while(node != NULL && node->idx == idx){
-		if (node->hash != hash) {
-			node = node->next;
-			continue;
-		}
-		if (tmEquals(node->key, key)) {
+		if (node->hash == hash && tmEquals(node->key, key)) {
 			return node;
 		}
 		node = node->next;
@@ -210,6 +206,7 @@ void _dictDel(TmDict* dict, Object key) {
 	if (node == NULL) {
 		tmRaise("dictDel: keyError %o", key);
 	} else {
+        int i;
 		node->idx = -1;
 		dict->len--;
 		DictNode* n = dict->head;
@@ -225,6 +222,15 @@ void _dictDel(TmDict* dict, Object key) {
 				n = n->next;
 			}
 		}
+        for (i = 0; i < dict->cap; i++) {
+            if (dict->nodes[i] != NULL && dict->nodes[i]->idx == -1) {
+                if (dict->nodes[i]->next != NULL && dict->nodes[i]->next->idx == i) {
+                    dict->nodes[i] = dict->nodes[i]->next;
+                } else {
+                    dict->nodes[i] = NULL;
+                }
+            }
+        }
 		tmFree(node, sizeof(DictNode));
 	}
 }
@@ -277,29 +283,6 @@ DataProto* getDictIterProto() {
         dictIterProto.mark = dictIterMark;
 	}
 	return &dictIterProto;
-}
-
-Object* baseNext(TmBaseIterator* iterator) {
-    iterator->ret = callFunction2(iterator->func);
-    if (iterator->ret.type != -1) {
-        return &iterator->ret;
-    } else {
-        return NULL;
-    }
-}
-
-void baseMark(DataObject* data) {
-    gcMark(((TmBaseIterator*)data)->func);
-}
-
-DataProto* getBaseIterProto() {
-	if(!baseIterProto.init) {
-		initDataProto(&baseIterProto);
-		baseIterProto.dataSize = sizeof(TmBaseIterator);
-		baseIterProto.next = baseNext;
-        baseIterProto.mark = baseMark;
-	}
-	return &baseIterProto;
 }
 
 

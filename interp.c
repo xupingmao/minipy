@@ -160,7 +160,6 @@ TmFrame* pushFrame(Object fnc) {
 	f->stack = f->locals + f->maxlocals;
     f->top = f->stack;
 	f->fnc = fnc;
-    f->callType = 0;
  
 	int i;for(i = 0; i < f->maxlocals; i++) {
 		f->locals[i] = NONE_OBJECT;

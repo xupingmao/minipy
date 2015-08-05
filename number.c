@@ -1,7 +1,4 @@
 #include "include/tm.h"
-#ifndef fabs
-    #define fabs(v) (v) > 0 ? v : -v
-#endif
 
 Object newNumber(double v){
   Object o;

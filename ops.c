@@ -135,7 +135,10 @@ int tmEquals(Object a, Object b){
 	switch(TM_TYPE(a)){
 		case TYPE_NUM:return GET_NUM(a) == GET_NUM(b);
 		case TYPE_STR: {
-			return StringEquals(GET_STR_OBJ(a),GET_STR_OBJ(b));
+            String* s1 = GET_STR_OBJ(a);
+            String* s2 = GET_STR_OBJ(b);
+			return s1->value == s2->value || 
+                (s1->len == s2->len && strncmp(s1->value, s2->value, s1->len) == 0);
 		}
 		case TYPE_LIST:	{
 			if(GET_LIST(a) == GET_LIST(b)) return 1;

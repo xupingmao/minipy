@@ -35,6 +35,16 @@ def replPrint(p, n = 0, depth = 2):
         printf(' '*n)
         print(p)
 
+def remove_consts(g):
+    idx = []
+    for k in g:
+        if gettype(g[k]) in ('string', 'number'):
+            idx.append(k)
+    #print(idx)
+    for k in idx:
+        #print('del ' + str(k))
+        del g[k]
+        
 def repl():
     from parse import parse
     printast = loadlib("libs/tools/printast.py").printast
@@ -53,11 +63,14 @@ def repl():
     g.update(dis)
     g.pyeval = pyeval
     g.printast = printast
+    remove_consts(g)
 
     while 1:
         x = input(">>> ")
         if x != '':
             try:
+                if 'debug' not in g:
+                    g['debug'] = 0
                 v = pyeval(x, g, g['debug'])
                 if v != None:
                     replPrint(v)

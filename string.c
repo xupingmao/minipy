@@ -65,11 +65,12 @@ void StringFree(String *str) {
 #endif
 }
 
+/*
 int StringEquals(String* s1, String* s2) {
 	return s1->value == s2->value
 			|| (s1->len == s2->len
 					&& strncmp(s1->value, s2->value, s1->len) == 0);
-}
+}*/
 
 int StringIndex(String* s1, String* s2, int start) {
 	char* ss1 = s1->value;

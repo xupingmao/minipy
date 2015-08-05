@@ -54,6 +54,29 @@ void objectFree(Object o) {
 	}
 }
 
+Object* baseNext(TmBaseIterator* iterator) {
+    iterator->ret = callFunction2(iterator->func);
+    if (iterator->ret.type != -1) {
+        return &iterator->ret;
+    } else {
+        return NULL;
+    }
+}
+
+void baseMark(DataObject* data) {
+    gcMark(((TmBaseIterator*)data)->func);
+}
+
+DataProto* getBaseIterProto() {
+	if(!baseIterProto.init) {
+		initDataProto(&baseIterProto);
+		baseIterProto.dataSize = sizeof(TmBaseIterator);
+		baseIterProto.next = baseNext;
+        baseIterProto.mark = baseMark;
+	}
+	return &baseIterProto;
+}
+
 Object* dataNext(DataObject* data) {
     tmRaise("next is not defined!");
     return NULL;

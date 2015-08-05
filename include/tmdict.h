@@ -26,11 +26,6 @@ typedef struct _TmDictIterator {
 	DictNode* cur_node;
 } TmDictIterator;
 
-typedef struct _TmBaseIterator {
-	DATA_HEAD
-	Object func;
-  Object ret;
-}TmBaseIterator;
 
 Object           newDict();
 TmDict*          DictInit();
@@ -50,7 +45,7 @@ void _dictSetByStr(TmDict* dict, char* key, Object val);
 #define dictGetByStr(dict, key) DictGetByStr(GET_DICT(dict), key)
 
 static DataProto dictIterProto;
-static DataProto baseIterProto;
+
 DataProto* getDictIterProto();
 Object dictIterNew(TmDict* dict);
 Object* dictNext(TmDictIterator* iterator);

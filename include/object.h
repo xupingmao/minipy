@@ -85,7 +85,6 @@ typedef struct TmFrame {
   Object *last_pc;
   char* last_code;
   
-  int callType;
   unsigned char* pc;
 
   int stacksize;

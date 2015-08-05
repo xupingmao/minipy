@@ -29,6 +29,13 @@ typedef struct DataObject {
   DATA_OBJECT_HEAD
 }DataObject;
 
+typedef struct _TmBaseIterator {
+	DATA_HEAD
+	Object func;
+  Object ret;
+}TmBaseIterator;
+static DataProto baseIterProto;
+
 Object dataNew(size_t size);
 void dataMark();
 void dataFree();

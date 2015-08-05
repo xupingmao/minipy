@@ -26,6 +26,8 @@ def _op_ne(a,b):
     return a!=b
 def _op_in(a,b):
     return a in b
+def _op_del(a,b):
+    del a[b]
 op_dict = {
     ADD: _op_add,
     SUB: _op_sub,
@@ -39,7 +41,8 @@ op_dict = {
     GTEQ: _op_gteq,
     EQEQ: _op_eq,
     NOTEQ: _op_ne,
-    OP_IN: _op_in
+    OP_IN: _op_in,
+    TM_DEL: _op_del
 }
 
 def pyeval(src, glo_vars = None, debug = False):

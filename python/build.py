@@ -16,9 +16,9 @@ def build_bin():
     
 def build0():
     build_bin()
+    system("python libs/tmcode.py")
     if not exists("../include/instruction.h") or \
-        mtime("libs/tmcode.py") > mtime("../include/instruction.h"):
-        system("python libs/tmcode.py")
+        mtime("instruction.h") > mtime("../include/instruction.h"):
         copy("instruction.h", "../include/instruction.h")
     
     
@@ -40,9 +40,9 @@ def build_gcc_debug():
     build0()
     system("gcc -g ../vm.c -o tm.exe")
     clean_temp()
+    
 def code_str(s):
     return code32(len(s))+s
-magic = "1992"
 
 class Lib:
     def __init__(self, name, path):
@@ -69,6 +69,7 @@ def build_dest():
         code = compilefile(obj.path)
         destCode += code_str(obj.name)+code_str(code)
     return modLen + code_str("constants") + code_str(build_const_code()) + destCode
+    
 def str_to_chars(code):
     chararray = []
     for c in code:

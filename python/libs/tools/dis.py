@@ -1,5 +1,6 @@
-from encode import *
+from encode import compile, compilefile
 from boot import *
+from tmcode import *
 
 global_mod_list = [LOAD_GLOBAL, STORE_GLOBAL, LOAD_CONSTANT, TM_DEF]
 def dis(fname ,constants = ['None']):
