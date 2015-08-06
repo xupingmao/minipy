@@ -10,10 +10,6 @@
 
 #define INTERP_DB 0
 
-void defVmConstant(Object v) {
-	APPEND(tm->constants, v);
-}
-
 Object callFunction2(Object func) {
     if (NOT_FUNC(func) || IS_NATIVE(func)) {
         return UNDEF;
@@ -201,19 +197,20 @@ Object tmEval(TmFrame* f) {
 			double d = atof((char*)pc + 3);
 			pc += i;
 			v = newNumber(d);
-			defVmConstant(v);
+			APPEND(tm->constants,v);
 			break;
 		}
 
 		case NEW_STRING: {
 			v = newString0((char*)pc + 3, i);
 			pc += i;
-			defVmConstant(v);
+			APPEND(tm->constants,v);
 			break;
 		}
 
 		case LOAD_CONSTANT: {
 			TM_PUSH(GET_CONST(i));
+            /* predict , eg. SET, GET etc. */
 			break;
 		}
         
@@ -347,7 +344,7 @@ Object tmEval(TmFrame* f) {
 		 TM_OP2( GTEQ_JUMP_ON_FALSE, tm_bool_gteq);
 		 TM_OP2( EQEQ_JUMP_ON_FALSE, tm_bool_eqeq);
 		 TM_OP2( NOTEQ_JUMP_ON_FALSE, tm_bool_noteq); */
-
+         
 		case SET:
 			k = TM_POP();
 			x = TM_POP();

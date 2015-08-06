@@ -81,11 +81,15 @@ def resolvepath(path):
     
     
 
-def _execute_file(fname):
+def _execute_file(path):
     from encode import compilefile
-    fname = resolvepath(fname)
-    _code = compilefile(fname)
-    load_module(fname, _code, '__main__')
+    fname = resolvepath(path)
+    try:
+        _code = compilefile(fname)
+        load_module(fname, _code, '__main__')
+    except Exception as e:
+        # printf("fail to execute file \"%s\"\n", path)
+        print(e)
     
 def print_usage():
     printf("options:\n")

@@ -24,8 +24,8 @@ def find_error_line(s, pos):
 
 def compile_error(ctx, s, pos, eMsg = ""):
     r = find_error_line(s, pos)
-    print('Error at '+ctx+':\n'+r + eMsg)
-    raise
+    raise('Error at '+ctx+':\n'+r + eMsg)
+    #raise
 
 ISYMBOLS = '-=[];,./!%*()+{}:<>@^$'
 KEYWORDS = [

@@ -354,7 +354,8 @@ def encode_global(tk):
 def encode_try(tk):
     exception = newtag()
     end = newtag()
-    emit(SETJUMP, exception)
+    if not asm_try(exception):
+        encode_error(tk, "do not support cursive try")
     encode_item(tk.first)
     jump(end)
     emit_tag(exception)
@@ -365,6 +366,7 @@ def encode_try(tk):
         emit(POP)
     encode_item(tk.third)
     emit_tag(end)
+    asm_try_exit()
     
 def do_nothing(tk):
     pass

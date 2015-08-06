@@ -76,6 +76,16 @@ def asm_init():
     out = []
     out_ext = []
 
+def asm_try(tag):
+    if names.scope.jmps > 0:
+        return 0
+    names.scope.jmps += 1
+    emit(SETJUMP, tag)
+    return 1
+
+def asm_try_exit():
+    names.scope.jmps -= 1
+    
 def asm_switch_out():
     global out
     global out_ext

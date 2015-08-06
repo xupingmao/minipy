@@ -358,9 +358,11 @@ def parse_pass(p):
     p.add(node)
 
 def parse_try(p):
+    pos = p.token.pos # save position
     p.next()
     expect(p, ':')
     node = AstNode("try")
+    node.pos = pos # for encode to locate error pos.
     node.first = p.visit_block()
     expect(p, 'except')
     if p.token.type == 'name':

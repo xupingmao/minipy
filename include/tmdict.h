@@ -6,8 +6,7 @@ typedef struct DictNode{
   Object key;
   Object val;
   int hash;
-  int used;
-  int attr;
+  int used; /* also used for attr index */
 }DictNode;
 
 typedef struct Dictonary {
@@ -32,11 +31,9 @@ void             DictSet(TmDict* dict, Object key, Object val);
 DictNode*        DictGetNode(TmDict* dict, Object key);
 Object*          DictGetByStr(TmDict* dict, char* key);
 Object           DictKeys(TmDict* );
-#define dictKeys(obj) DictKeys(GET_DICT(obj))
 void             _dictDel(TmDict* dict, Object k);
 #define dictDel(dict, k) _dictDel(GET_DICT(dict), k)
 void             regDictMethods();
-void             DictPrint(TmDict*);
 
 void _dictSetByStr(TmDict* dict, char* key, Object val);
 #define dictSetByStr(dict, key, val) _dictSetByStr(GET_DICT(dict), key, val)
