@@ -1,3 +1,5 @@
+from boot import *
+
 def _clock():
     return time.time() * 1000
 

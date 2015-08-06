@@ -57,7 +57,7 @@ void loadModule(Object name, Object code) {
 	Object mod = moduleNew(name, name, code);
 	Object fnc = newFunction(mod, NONE_OBJECT, NULL);
 	GET_FUNCTION(fnc)->code = (unsigned char*) GET_STR(code);
-	GET_FUNCTION(fnc)->name = STRING_MAIN;
+	GET_FUNCTION(fnc)->name = staticString("#main");
 	callFunction(fnc);
 }
 

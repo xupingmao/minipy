@@ -45,4 +45,7 @@ DataProto* getDictIterProto();
 Object dictIterNew(TmDict* dict);
 Object* dictNext(TmDictIterator* iterator);
 
+void setAttr(TmDict* dict, int constId, Object val);
+Object* getAttr(TmDict* dict, int constId);
+
 #endif

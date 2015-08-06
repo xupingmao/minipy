@@ -24,6 +24,12 @@ void gcInit() {
 
     initMemory();
     
+    /* initialize constants */
+    NUMBER_TRUE = newNumber(1);
+	NUMBER_FALSE = newNumber(0);
+	NONE_OBJECT.type = TYPE_NONE;
+    UNDEF.type = -1;
+    
     tm->init = 0;
     tm->debug = 0;
 	tm->allocated = 0;
@@ -49,12 +55,6 @@ void gcInit() {
 		APPEND(ARRAY_CHARS, newChar(i));
 	}
 	APPEND(tm->root, ARRAY_CHARS);
-    
-    /* initialize constants */
-    NUMBER_TRUE = newNumber(1);
-	NUMBER_FALSE = newNumber(0);
-	NONE_OBJECT.type = TYPE_NONE;
-    UNDEF.type = -1;
     
     tm->ex = NONE_OBJECT;
     

@@ -70,7 +70,7 @@ Object callFunction(Object func) {
         }
         return ret;
     }
-    tmRaise("callFunction:invalid object type %d", TM_TYPE(func));
+    tmRaise("callFunction:invalid object %o", (func));
     return NONE_OBJECT;
 }
 
@@ -211,6 +211,14 @@ Object tmEval(TmFrame* f) {
 		case LOAD_CONSTANT: {
 			TM_PUSH(GET_CONST(i));
             /* predict , eg. SET, GET etc. */
+            /*
+            pc += 3;
+            if (pc[0] == SET) {
+                
+            } else if(pc[0] == GET) {
+                
+            }
+            */
 			break;
 		}
         
@@ -234,6 +242,18 @@ Object tmEval(TmFrame* f) {
 			break;
 
 		case LOAD_GLOBAL: {
+            /* tmPrintf("load global %o\n", GET_CONST(i)); */
+			Object *val = getAttr(GET_DICT(globals), i);
+			if (val == NULL) {
+				val = getAttr(GET_DICT(tm->builtins), i);
+				if (val == NULL) {
+					tmRaise("NameError: name %o is not defined", GET_CONST(i));
+				}
+				TM_PUSH(*val);
+			} else {
+				TM_PUSH(*val);
+			}
+            /*
 			k = GET_CONST(i);
 			DictNode* node = DictGetNode(GET_DICT(globals), k);
 			if (node == NULL) {
@@ -246,12 +266,15 @@ Object tmEval(TmFrame* f) {
 				v = node->val;
 			}
 			TM_PUSH(v);
+            */
 			break;
 		}
 
 		case STORE_GLOBAL: {
 			x = TM_POP();
-			tmSet(globals, GET_CONST(i), x);
+            /* tmPrintf("store global %o\n", GET_CONST(i)); */
+            setAttr(GET_DICT(globals), i, x);
+			/* tmSet(globals, GET_CONST(i), x); */
 			break;
 		}
 
