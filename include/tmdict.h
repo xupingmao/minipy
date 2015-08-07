@@ -27,7 +27,8 @@ typedef struct _TmDictIterator {
 Object           newDict();
 TmDict*          DictInit();
 void             freeDict(TmDict* dict);
-void             DictSet(TmDict* dict, Object key, Object val);
+int             DictSet(TmDict* dict, Object key, Object val);
+#define dictSet(d, k, v) DictSet(GET_DICT(d), k, v)
 DictNode*        DictGetNode(TmDict* dict, Object key);
 Object*          DictGetByStr(TmDict* dict, char* key);
 Object           DictKeys(TmDict* );
@@ -45,7 +46,7 @@ DataProto* getDictIterProto();
 Object dictIterNew(TmDict* dict);
 Object* dictNext(TmDictIterator* iterator);
 
-void setAttr(TmDict* dict, int constId, Object val);
+int setAttr(TmDict* dict, int constId, Object val);
 Object* getAttr(TmDict* dict, int constId);
 
 #endif

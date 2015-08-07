@@ -55,8 +55,7 @@ Object ListGet(TmList* list, int n) {
 		n += list->len;
 	}
 	if (n >= list->len || n < 0) {
-		tmRaise("ListGet: index overflow, %o , %d, %o",
-				newObj(TYPE_LIST, list), n, newObj(TYPE_LIST, list));
+		tmRaise("list out of range");
 	}
 	return list->nodes[n];
 }
@@ -66,7 +65,7 @@ void ListSet(TmList* list, int n, Object val) {
 		n += list->len;
 	}
 	if (n >= list->len || n < 0) {
-		tmRaise("ListSet: index overflow");
+		tmRaise("list out of range");
 	}
 	list->nodes[n] = val;
 }
@@ -75,9 +74,11 @@ void ListSet(TmList* list, int n, Object val) {
 void listCheck(TmList* list) {
 	if (list->len >= list->cap) {
 		int ocap = list->cap;
-        list->cap += ocap / 2 + 1;
+        /* in case malloc crash */
+        int newsize = list->cap * 3 / 2 + 1;
 		list->nodes = tmRealloc(list->nodes, OBJ_SIZE * ocap,
-				OBJ_SIZE * list->cap);
+				OBJ_SIZE * newsize);
+        list->cap = newsize;
 #if GC_DEBUG_LIST
 		printf("resize list: from %d to %d\n", OBJ_SIZE * ocap, OBJ_SIZE * list->cap);
 #endif

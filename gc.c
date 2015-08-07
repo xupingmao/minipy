@@ -46,7 +46,7 @@ void gcInit() {
 	tm->exList = newList(10);
 	APPEND(tm->root, tm->exList);
 	
-	tm->constants = newList(100);
+	tm->constants = newDict();
 	APPEND(tm->root, tm->constants);
 
     /* initialize chars */

@@ -338,8 +338,8 @@ Object bfGetType() {
 		case TYPE_FUNCTION: return staticString("function");
 		case TYPE_DATA: return staticString("data");
 		case TYPE_NONE: return staticString("None");
-		default: tmRaise("unknown type");
-	}
+		default: tmRaise("gettype(%o)", obj);
+    }
 	return NONE_OBJECT;
 }
 
@@ -464,7 +464,11 @@ Object bfWrite() {
     return NONE_OBJECT;
 }
 
-
+Object bfPow() {
+    double base = getNumArg("pow");
+    double y = getNumArg("pow");
+    return newNumber(pow(base, y));
+}
 
 void regBuiltinsFunc() {
 	regBuiltinFunc("load", bfLoad);
@@ -489,5 +493,6 @@ void regBuiltinsFunc() {
 	regBuiltinFunc("raise", bfRaise);
 	regBuiltinFunc("system", bfSystem);
 	regBuiltinFunc("apply", bfApply);
+    regBuiltinFunc("pow", bfPow);
 }
 

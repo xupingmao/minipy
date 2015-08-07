@@ -24,8 +24,13 @@ Object bfGetCurrentFrame() {
 	return frameInfo;
 }
 
-Object bfForceGC() {
-	gcFull();
+Object bfVmOpt() {
+    char* opt = getSzArg("vminfo");
+    if (strcmp(opt, "gc") == 0) {
+        gcFull();
+    } else if (strcmp(opt, "help") == 0) {
+        return staticString("gc, help");
+    }
 	return NONE_OBJECT;
 }
 
@@ -52,6 +57,7 @@ Object bfGetVmInfo() {
     dictSetByStr(tmInfo, "allocated", newNumber(tm->allocated));
     dictSetByStr(tmInfo, "gcThreshold", newNumber(tm->gcThreshold));
     dictSetByStr(tmInfo, "frameIndex", newNumber(tm->frame - tm->frames));
+    dictSetByStr(tmInfo, "constsLen", newNumber(DICT_LEN(tm->constants)));
     return tmInfo;
 }
 
@@ -156,19 +162,22 @@ Object bfSetVMState() {
 }
 
 Object bfGetConstIdx() {
-    Object value = getObjArg("getConstIdx");
+    Object key = getObjArg("getConstIdx");
+    int i = dictSet(tm->constants, key, NONE_OBJECT);
+    /*
     int i = listIndex(tm->constants, value);
     if (i < 0) {
         APPEND(tm->constants, value);
         i = listIndex(tm->constants, value);
-    }
+    }*/
     /*DEBUG tmPrintf("LoadConst %d:%o\n", i, LIST_GET(tm->constants,i)); */
     /* here can check again in case of memory leak */
     return newNumber(i);
 }
 
-Object bfGetConstList() {
-    return tm->constants;
+Object bfGetConst() {
+    int num = getIntArg("getConst");
+    return GET_CONST(num);
 }
 
 Object bfGetExList() {
@@ -248,14 +257,14 @@ Object bfChdir() {
 void regBuiltinsFunc2() {
     /* functions which has impact on vm follow camel case */
     regBuiltinFunc("getConstIdx", bfGetConstIdx);
-    regBuiltinFunc("getConstList", bfGetConstList);
+    regBuiltinFunc("getConst", bfGetConst);
     regBuiltinFunc("getExList", bfGetExList);
     regBuiltinFunc("enableDebug", bfEnableDebug);
 	regBuiltinFunc("disableDebug", bfDisableDebug);
     regBuiltinFunc("setVMState", bfSetVMState);
     regBuiltinFunc("inspectPtr", bfInspectPtr);
 	regBuiltinFunc("getCurrentFrame", bfGetCurrentFrame);
-	regBuiltinFunc("forceGC", bfForceGC);
+	regBuiltinFunc("vmopt", bfVmOpt);
     regBuiltinFunc("getVmInfo", bfGetVmInfo);
     regBuiltinFunc("getMallocInfo", bfGetMallocInfo);
 

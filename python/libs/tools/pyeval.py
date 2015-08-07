@@ -56,7 +56,6 @@ def pyeval(src, glo_vars = None, debug = False):
     stack = []
     r = None
     idx = 0
-    consts = getConstList()
     cyc = 0
     while idx < len(ins_list):
         op,v = ins_list[idx]
@@ -64,7 +63,7 @@ def pyeval(src, glo_vars = None, debug = False):
             print(' ' * 10, cyc, tmcodes[op], v)
         cyc += 1
         if op == LOAD_CONSTANT:
-            r = consts[v]
+            r = getConst(v)
             stack.append(r)
             if debug:
                 print(' ' * 30, '<==' + str(r))
@@ -75,7 +74,7 @@ def pyeval(src, glo_vars = None, debug = False):
             r = stack.pop()
             loc_vars[v] = r
         elif op == LOAD_GLOBAL:
-            name = consts[v]
+            name = getConst(v)
             if debug:
                 print(' ' * 30, '<==' + name)
             if name in glo_vars:
@@ -84,7 +83,7 @@ def pyeval(src, glo_vars = None, debug = False):
                 r = __builtins__[name]
             stack.append(r)
         elif op == STORE_GLOBAL:
-            name = consts[v]
+            name = getConst(v)
             if debug:
                 print(' '* 30, '==>' + name)
             r = stack.pop()

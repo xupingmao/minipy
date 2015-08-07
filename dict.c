@@ -65,9 +65,8 @@ void DictCheck(TmDict* dict){
 	int i;
     int j;
 	int nsize = osize + osize / 2 + 1;
-	dict->cap = nsize;
 	DictNode* nodes = tmMalloc(nsize * sizeof(DictNode));
-    for(i = 0; i < dict->cap; i++) {
+    for(i = 0; i < nsize; i++) {
         nodes[i].used = 0;
     }
     j = 0;
@@ -79,6 +78,7 @@ void DictCheck(TmDict* dict){
     }
     DictNode* temp = dict->nodes;
     dict->nodes = nodes;
+    dict->cap = nsize;
     tmFree(temp, osize * sizeof(DictNode));
 }
 
@@ -98,11 +98,11 @@ int findfreepos(TmDict* dict) {
     }
 }
 
-void DictSet(TmDict* dict, Object key, Object val){
+int DictSet(TmDict* dict, Object key, Object val){
 	DictNode* node = DictGetNode(dict, key);
 	if (node != NULL) {
 		node->val = val;
-		return;
+		return (node - dict->nodes);
 	}
     DictCheck(dict);
 	int i = findfreepos(dict);
@@ -110,9 +110,10 @@ void DictSet(TmDict* dict, Object key, Object val){
     dict->nodes[i].used = 1;
     dict->nodes[i].key = key;
     dict->nodes[i].val = val;
+    return i;
 }
 
-void setAttr(TmDict* dict, int constId, Object val) {
+int setAttr(TmDict* dict, int constId, Object val) {
     int i;
 	DictNode* nodes = dict->nodes;
     constId += 2; /* prevent first const to be 0, and normal dict node to be 1. */
@@ -123,18 +124,9 @@ void setAttr(TmDict* dict, int constId, Object val) {
         }
     }
     Object key = GET_CONST(constId-2);
-    DictNode* node = DictGetNode(dict, key);
-	if (node != NULL) {
-		node->val = val;
-        node->used = constId;
-		return;
-	}
-    DictCheck(dict);
-	i = findfreepos(dict);
-    dict->len++;
+    i = DictSet(dict, key, val);
     dict->nodes[i].used = constId;
-    dict->nodes[i].key = key;
-    dict->nodes[i].val = val;
+    return i;
 }
 
 Object* getAttr(TmDict* dict, int constId) {

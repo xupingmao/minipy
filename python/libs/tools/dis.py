@@ -4,7 +4,6 @@ from tmcode import *
 
 global_mod_list = [LOAD_GLOBAL, STORE_GLOBAL, LOAD_CONSTANT, TM_DEF]
 def dis(fname ,constants = ['None']):
-    constants = getConstList()
     s = load(fname)
     i = 0; l = len(s)
     #constants = ['None']
@@ -15,9 +14,8 @@ def dis(fname ,constants = ['None']):
         if op in (NEW_STRING, NEW_NUMBER):
             vv = s.substring(i, i + val)
             i += val
-            constants.append(vv)
         elif ins in global_mod_list:
-            print(tmcodes[ins], constants[val])
+            print(tmcodes[ins], getConst(val))
         else:
             print(tmcodes[ins], val)
 
@@ -46,7 +44,6 @@ def dissimple0(code, limit = None):
             break
 
 def dis_code(s, start = 0, end = 0):
-    constlist = getConstList()
     i, l =0,len(s)
     lineno = 0
     while i < l:
@@ -57,7 +54,7 @@ def dis_code(s, start = 0, end = 0):
         if end and lineno > end:break
         if lineno > start:
             if op in global_mod_list:
-                val = constlist[val]
+                val = getConst(val)
             printf("%4s: %s, %s\n", lineno, tmcodes[op], val)
 
 def dis_txt(s):

@@ -36,7 +36,7 @@ typedef struct _GlobalCache {
 #define TM_PUSH(x) *(++top) = (x); /*if( top - f->stack >= 50) tmRaise("stack overflow");*/
 #define TM_POP() *(top--)
 #define TM_TOP() (*top)
-#define GET_CONST(i) LIST_GET(tm->constants, i)
+#define GET_CONST(i) GET_DICT(tm->constants)->nodes[i].key
 /*Object* defineModuleConstant(Object fnc, Object v) ;*/
 Object  callUnsafe(Object fnc);
 void popFrame();

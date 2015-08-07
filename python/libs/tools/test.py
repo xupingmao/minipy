@@ -28,7 +28,7 @@ def protected_run(func, args):
         printf("FAIL -- %s\n", e)
 
         
-def test(func, args, tar=None, show_time = 0):
+def testfunc(func, args, tar=None, show_time = 0):
     try:
         t1 = clock()
         r = apply(func, args)

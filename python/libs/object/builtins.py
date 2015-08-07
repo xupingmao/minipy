@@ -87,8 +87,6 @@ class range:
                 return cur
         raise
 
-__builtins__.range = range
-
 def dir(obj):
     if istype(obj, "string"):return __strclass__.keys()
     elif istype(obj, "function"):return __funcclass__.keys()
@@ -99,5 +97,14 @@ def mtime(fname):
     return obj.st_mtime
 add_builtin("mtime", mtime)
 
+def range(size):
+    i = 0
+    list = []
+    while i < size:
+        list.append(i)
+        i+=1
+    return list
+add_builtin("range", range)
+    
 loadlib("libs/object/string.py")
 loadlib("libs/object/dict.py")

@@ -197,14 +197,16 @@ Object tmEval(TmFrame* f) {
 			double d = atof((char*)pc + 3);
 			pc += i;
 			v = newNumber(d);
-			APPEND(tm->constants,v);
+			/* APPEND(tm->constants,v);*/
+            dictSet(tm->constants, v, NONE_OBJECT);
 			break;
 		}
 
 		case NEW_STRING: {
 			v = newString0((char*)pc + 3, i);
 			pc += i;
-			APPEND(tm->constants,v);
+			/* APPEND(tm->constants,v); */
+            dictSet(tm->constants, v, NONE_OBJECT);
 			break;
 		}
 
