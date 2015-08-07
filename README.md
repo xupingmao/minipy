@@ -16,3 +16,11 @@
 ## vm hierarchy
 `vm.c` entry
 `interp.c` interpreter
+
+## base objects
+1. string, strings are immutable
+2. number, double number
+3. list
+4. dict, this is not hashtable, for the optimization of global access, because the offset of a variable in `globals` dict never change.Besides, object are implemented in dict.
+5. function: C functions, normal functions and methods.
+6. None
