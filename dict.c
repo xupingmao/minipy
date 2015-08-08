@@ -96,6 +96,7 @@ int findfreepos(TmDict* dict) {
             return i;
         }
     }
+    return -1;
 }
 
 int DictSet(TmDict* dict, Object key, Object val){

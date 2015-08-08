@@ -92,13 +92,7 @@ def factor(p):
             p.next()
             node.first = None
         else:
-            end = 0
-            or_exp(p)
-            while p.token.type == ',':
-                p.next()
-                if p.token.type == ']':break
-                or_exp(p)
-                add_op(p, ',')
+            comma_exp(p)
             expect(p, ']')
             node.first = p.pop()
         p.add(node)
@@ -144,6 +138,8 @@ def comma_exp(p):
     fnc(p)
     while p.token.type == ',':
         p.next()
+        if p.token.type == ']':
+            break # for list
         fnc(p)
         add_op(p, ',')
         
@@ -234,7 +230,7 @@ def call_or_get_exp(p):
                 factor(p)
                 b = p.pop()
                 a = p.pop()
-                node = AstNode('.')
+                node = AstNode('attr')
                 node.first = a
                 node.second = b
                 p.add(node)
@@ -272,7 +268,7 @@ def _get_path(obj):
         raise
 
 def _path_check(p, node):
-    if node.type == '.':
+    if node.type == 'attr':
         _path_check(p, node.first)
         _path_check(p, node.second)
     elif node.type == 'name':

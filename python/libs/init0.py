@@ -14,7 +14,7 @@ def _import(fname, des_glo, tar = None):
             _code = compilefile(fname + '.py' )
         except Exception as e:
             #del __modules__[fname]
-            raise('fail to compile file "%s.py":\n\t%s'.format(fname, e))
+            raise(sformat('fail to compile file "%s.py":\n\t%s', fname, e))
         load_module(fname, _code)
     g = __modules__[fname]
     if tar == '*':

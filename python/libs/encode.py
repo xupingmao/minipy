@@ -18,7 +18,7 @@ def store(t):
         encode_item(t.first)
         encode_item(t.second)
         emit(SET)
-    elif t.type == '.':
+    elif t.type == 'attr':
         encode_item(t.first)
         load_attr(t.second)
         emit(SET)
@@ -97,14 +97,21 @@ def encode_op_ext(tk):
     emit(op_ext_map[tk.type] )
     store(tk.first)
     
-
+# [1, 2, 3] 
+# will be parsed like.
+#     ^
+#    ^  3
+#  1  2
 def encode_list0(v):
     if v == None: return
-    if v.type == ',':
-        encode_list0(v.first)
-        encode_list0(v.second)
-    else:
-        encode_item(v)
+    newlist = []
+    while v.type == ',':
+        newlist.append(v.second)
+        v = v.first
+    newlist.append(v)
+    newlist.reverse()
+    for item in newlist:
+        encode_item(item)
         emit(LIST_APPEND)
 
         
@@ -273,7 +280,7 @@ def encode_import_one(mod, item):
     emit(POP)
 
 def _import_name2str(mod):
-    if mod.type == '.':
+    if mod.type == 'attr':
         l = _import_name2str(mod.first)
         r = _import_name2str(mod.second)
         return Token('string', l.val + '/' + r.val)
@@ -373,10 +380,10 @@ def do_nothing(tk):
 
 def encode_del(tk):
     item = tk.first
-    if item.type != 'get' and item.type != '.':
+    if item.type != 'get' and item.type != 'attr':
         encode_error(item, 'require get or attr expression')
     encode_item(item.first)
-    if item.type == '.':
+    if item.type == 'attr':
         load_attr(item.second)
     else:
         encode_item(item.second)
@@ -432,7 +439,7 @@ encode_map = {
     'try':encode_try,
     'pass':do_nothing,
     'notin':encode_notin,
-    '.':encode_attr,
+    'attr':encode_attr,
     'in': encode_in,
     '@':encode_debug,
 }

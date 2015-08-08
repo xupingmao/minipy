@@ -1,4 +1,5 @@
-from encode import compile, compilefile
+from encode import compile
+from encode import compilefile
 from boot import *
 from tmcode import *
 

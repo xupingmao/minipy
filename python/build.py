@@ -20,6 +20,7 @@ def build(ccompiler="tcc", libs=None):
     if libs == None:
         libs = [
             Lib("init0", "libs/init0.py"),
+            Lib("builtins", "libs/builtins.py"),
             Lib("tokenize", "libs/tokenize.py"), 
             Lib("parse", "libs/parse.py"), 
             Lib("tmcode", "libs/tmcode.py"),

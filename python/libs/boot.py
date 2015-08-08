@@ -10,8 +10,8 @@ import time
 '''
 bootstrap for standard python to go.
 '''
-def loadlib(path, name):
-    raise "loadlib not implemented"
+def require(path, name):
+    raise "require not implemented"
     
 def do_nothing(*args):
     pass
@@ -135,7 +135,7 @@ def code(type, val):
         
         
 add_builtin("add_builtin", add_builtin)
-add_builtin('loadlib', loadlib)
+add_builtin('require', require)
 add_builtin('add_obj_method', do_nothing)
 add_builtin('istype', istype)
 
