@@ -34,16 +34,6 @@ Object bfVmOpt() {
 	return NONE_OBJECT;
 }
 
-Object bfEnableDebug() {
-	tm->debug = 1;
-	return NONE_OBJECT;
-}
-
-Object bfDisableDebug() {
-	tm->debug = 0;
-	return NONE_OBJECT;
-}
-
 Object bfGetVmInfo() {
     Object tmInfo = newDict();
     dictSetByStr(tmInfo, "vmStructSize", newNumber(sizeof(TmVM)));
@@ -65,7 +55,7 @@ Object bfClock() {
 #ifdef TM_NT
 	return newNumber(clock());
 #else
-	return newNumber(clock()/1000);
+	return newNumber((double)clock()/1000);
 #endif
 }
 
@@ -259,8 +249,6 @@ void regBuiltinsFunc2() {
     regBuiltinFunc("getConstIdx", bfGetConstIdx);
     regBuiltinFunc("getConst", bfGetConst);
     regBuiltinFunc("getExList", bfGetExList);
-    regBuiltinFunc("enableDebug", bfEnableDebug);
-	regBuiltinFunc("disableDebug", bfDisableDebug);
     regBuiltinFunc("setVMState", bfSetVMState);
     regBuiltinFunc("inspectPtr", bfInspectPtr);
 	regBuiltinFunc("getCurrentFrame", bfGetCurrentFrame);

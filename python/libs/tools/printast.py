@@ -1,10 +1,6 @@
 #from boot import *
 from parse import parse
 
-string = loadlib('libs/object/string.py')
-# print(string)
-quote = string.quote
-
 ops_list = [
         'from', '+', '-', '*', '/', '%', ',' ,'=', 
         '+=', '-=', '/=', '*=', 'get',
@@ -53,7 +49,7 @@ def f(n, v, pre = ""):
     #if v != None:print(v)
     return ' ' * n + pre + rs
 def printast0(tree):
-    if not istype(tree, 'list'):
+    if gettype(tree) != 'list':
         print("parameter is not a list")
         print(tree)
         return
@@ -65,7 +61,7 @@ def printast0(tree):
 # tree = parse(open('parse.py').read())
 
 def simple_show(tree):
-    if not istype(tree, "list"):
+    if gettype(tree) != "list":
         print(tree)
     else:
         for i in tree:

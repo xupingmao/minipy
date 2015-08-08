@@ -446,7 +446,7 @@ for k in op_ext_map:
 def encode_item(tk):
     if tk == None: return 0
     # encode for statement list.
-    if istype(tk, 'list'):
+    if gettype(tk) == 'list':
         for i in tk:
             # comment 
             if i.type == 'string':

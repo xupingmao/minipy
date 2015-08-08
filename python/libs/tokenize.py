@@ -70,16 +70,15 @@ def tokenize(s):
     try:
         return dotokenize0(s)
     except Exception as e:
-        compile_error("tokenize", s, T.f, e)
+        compile_error("tokenize", s, T.f)
         
 def dotokenize0(s):
     global T
     T = TData(); i = 0; l = len(s)
-    _T = T # use local var
     while i < l:
-        c = s[i]; _T.f = [_T.y,i-_T.yi+1]
-        if _T.nl: 
-            _T.nl = False
+        c = s[i]; T.f = [T.y,i-T.yi+1]
+        if T.nl: 
+            T.nl = False
             i = do_indent(s,i,l)
         elif c == '\n': i = do_nl(s,i,l)
         elif c in ISYMBOLS: i = do_symbol(s,i,l)

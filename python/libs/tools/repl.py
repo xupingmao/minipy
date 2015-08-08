@@ -44,12 +44,15 @@ def remove_consts(g):
     for k in idx:
         #print('del ' + str(k))
         del g[k]
-        
+
+def getallocmem():
+    return str(getVmInfo().allocated / 1024) + ' kb'
+    
 def repl():
     from parse import parse
-    printast = loadlib("libs/tools/printast.py").printast
-    pyeval = loadlib("libs/tools/pyeval.py").pyeval
-    dis = loadlib("libs/tools/dis.py")
+    printast = require("libs/tools/printast.py").printast
+    pyeval = require("libs/tools/pyeval.py").pyeval
+    dis = require("libs/tools/dis.py")
     from encode import compile
     from tokenize import tokenize
     print("Welcome To TinyMatrix!!!")

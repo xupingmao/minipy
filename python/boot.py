@@ -9,6 +9,7 @@ import time
 # import loadlib
 '''
 bootstrap for standard python to go.
+Run with Python 2.7
 '''
 def loadlib(path, name):
     raise "loadlib not implemented"
@@ -31,6 +32,13 @@ def load(name):
     fp.close()
     return t
 
+def move(src, des):
+    v = load(src)
+    save(des, v)
+def copy(src, des):
+    v = load(src)
+    save(des, v)
+    
 def mtime(fname):
     return os.path.getmtime(fname)
 
@@ -66,9 +74,6 @@ def getConstList():
     
 def mtime(name):
     return os.path.getmtime(name)
-# def makesure(v, expect = None, cur = None):
-    # if not v and cur:
-        # print('error at ' + str(cur.pos) + ' expect ' + expect + ' but see ' + cur.val)
 
 def save(name, content):
     fp = open(name, 'wb')
@@ -77,23 +82,6 @@ def save(name, content):
 
 def remove(fname):
     os.remove(fname)
-rm = remove
-
-def _and(a,b):
-    return a and b
-    
-def _slice(self, start, end):
-    return self[start:end]
-    
-def istype(val,  type):
-    if type == 'string':
-        return isinstance(val, str)
-    elif type == 'number':
-        return isinstance(val, int) or isinstance(val, float)
-    elif type == 'list':
-        return isinstance(val, list) or isinstance(val, tuple)
-    elif type == 'dict':
-        return isinstance(val, dict)
 
 def gettype(val):
     '''to be different with python builtin function type'''
@@ -131,16 +119,16 @@ def codeF(value):
     return struct.pack('d', value)
 
 def code(type, val):
-    if istype(val, "string"):
+    if gettype(val) == "string":
         return chr(type) + code16(len(val))+ val
-    elif istype(val, "number"):
+    elif gettype(val) == "number":
         return chr(type) + codeF(val)
         
         
 add_builtin("add_builtin", add_builtin)
 add_builtin('loadlib', loadlib)
 add_builtin('add_obj_method', do_nothing)
-add_builtin('istype', istype)
+add_builtin('gettype', gettype)
 
 if __name__ == '__main__':
     file = sys.argv[1]

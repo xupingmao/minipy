@@ -116,7 +116,7 @@ Object moduleNew(Object file , Object name, Object code){
   Object m = gcTrack(newObj(TYPE_MODULE, mod));
   /* set module */
   tmSet(tm->modules, file, mod->globals);
-  tmSet(mod->globals, STRING_NAME, name);
+  dictSetByStr(mod->globals, "__name__", name);
   return m;
 }
 

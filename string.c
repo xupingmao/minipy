@@ -81,11 +81,6 @@ int StringIndex(String* s1, String* s2, int start) {
 	return p - ss1;
 }
 
-int StringIndexObj(String* s1, Object value){
-	tmAssertType(value, TYPE_STR, "StringIndex");
-	return StringIndex(s1, GET_STR_OBJ(value), 0);
-}
-
 
 Object subString(String* str, int start, int end) {
     int max_end, len, i;
@@ -240,26 +235,6 @@ Object bmStringJoin() {
 	return StringJoin(self, list);
 }
 
-Object bmStringFormat() {
-	const char* szFunc = "string.format";
-	Object str = getStrArg(szFunc);
-	char* fmt = GET_STR(str);
-	StringBuilder *sb = StringBuilderNew();
-	int i = 0, j = 1;
-	while (i < GET_STR_LEN(str)) {
-		char c = fmt[i];
-		if (c == '%' && fmt[i + 1] == 's') {
-            Object obj = getObjArg(szFunc);
-			StringBuilderAppendObj(sb, obj);
-			i++;j++;
-		} else {
-			StringBuilderAppend(sb, fmt[i]);
-		}
-		i += 1;
-	}
-	return StringBuilderToStr(sb);
-}
-
 
 void regStringMethods() {
 	CLASS_STRING = newDict();
@@ -271,7 +246,6 @@ void regStringMethods() {
 	regModFunc(CLASS_STRING, "lower", bmStringLower);
 	regModFunc(CLASS_STRING, "split", bmStringSplit);
 	regModFunc(CLASS_STRING, "join", bmStringJoin);
-	regModFunc(CLASS_STRING, "format", bmStringFormat);
 }
 
 DataProto* getStringProto() {

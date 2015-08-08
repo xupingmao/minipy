@@ -2,7 +2,7 @@
 #include "include/tmstring.h"
 #include "include/gc.h"
 #include "include/object.h"
-#include "lib/StringBuilder.h"
+#include "include/StringBuilder.h"
 #include <ctype.h>
 #ifdef TM_NT
 	#include <windows.h>
@@ -305,29 +305,6 @@ Object bfExit() {
 	return NONE_OBJECT;
 }
 
-Object bfIsType() {
-	const char* szFnc = "istype";
-	Object typeObj = getObjArg(szFnc);
-	int type = TM_TYPE(typeObj);
-	Object target = getStrArg(szFnc);
-	if (objEqSz(target, "string")) {
-		return newNumber(type == TYPE_STR);
-	} else if (objEqSz(target, "list")) {
-		return newNumber(type == TYPE_LIST);
-	} else if (objEqSz(target, "dict")) {
-		return newNumber(type == TYPE_DICT);
-	} else if (objEqSz(target, "function")) {
-		return newNumber(type == TYPE_FUNCTION);
-	} else if (objEqSz(target, "none")) {
-		return newNumber(type == TYPE_NONE);
-	} else if (objEqSz(target, "number")) {
-		return newNumber(type == TYPE_NUM);
-	} else if (objEqSz(target, "data")) {
-		return newNumber(type == TYPE_DATA);
-	}
-	return NUMBER_FALSE;
-}
-
 Object bfGetType() {
 	Object obj = getObjArg("gettype");
 	switch(TM_TYPE(obj)) {
@@ -483,7 +460,6 @@ void regBuiltinsFunc() {
 	regBuiltinFunc("globals", bfGlobals);
 	regBuiltinFunc("len", bfLen);
 	regBuiltinFunc("exit", bfExit);
-	regBuiltinFunc("istype", bfIsType);
 	regBuiltinFunc("gettype", bfGetType);
 	regBuiltinFunc("chr", bfChr);
 	regBuiltinFunc("ord", bfOrd);

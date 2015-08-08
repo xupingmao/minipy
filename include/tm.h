@@ -53,8 +53,6 @@ Object NONE_OBJECT;
 Object UNDEF;
 Object ARRAY_CHARS;
 
-Object STRING_MAIN;
-Object STRING_NAME;
 
 #include "tmtype.h"
 #include "tmarg.h"

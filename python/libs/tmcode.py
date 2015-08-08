@@ -31,7 +31,10 @@ _opcode_names = [
     'LTEQ_JUMP_ON_FALSE',
     'GTEQ_JUMP_ON_FALSE',
     'EQEQ_JUMP_ON_FALSE',
-    'NOTEQ_JUMP_ON_FALSE'
+    'NOTEQ_JUMP_ON_FALSE',
+    # instructions for vm to optimize.
+    'GET_ATTR',
+    'SET_ATTR'
 ]
 
 # update global values.
@@ -43,12 +46,14 @@ while i < len(_opcode_names):
     tmcodes[i+1] = name
     i += 1
 
-def export_clang_define(des):
+def export_clang_define(des, self = None):
     # check modified time
     # if src is modified before des and cdes, do not convert.
+    if self == None:
+        self = ARGV[0]
     if not exists(des):
         pass
-    elif mtime(ARGV[0]) > mtime(des):
+    elif mtime(self) > mtime(des):
         return
     defines = []
     i = 0

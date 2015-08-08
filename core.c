@@ -5,7 +5,6 @@
 
 #if DEBUG_MALLOC
     #include "map.c"
-	static int _lock = 0;
     static Smap* map;
 #endif
 
@@ -37,7 +36,7 @@ void* tmMalloc(size_t size) {
     Object* func;
 
 	if (size <= 0) {
-		tmRaise("tmMalloc(), you allocate a memory block of size %d!", size);
+		tmRaise("tmMalloc, attempts to allocate a memory block of size %d!", size);
 		return NULL;
 	}
 	block = malloc(size);

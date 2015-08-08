@@ -6,7 +6,7 @@ class Lib:
 
 # built-in functions.
 _libs = [
-    Lib("builtins", "libs/object/builtins.py"),
+    Lib("builtins", "libs/builtins.py"),
     Lib("dis", "libs/tools/dis.py", 1),
     Lib("printast", "libs/tools/printast.py", 1), 
     Lib("repl", "libs/tools/repl.py"),
@@ -14,7 +14,7 @@ _libs = [
     Lib("test", "libs/tools/test.py")
 ]
 
-def loadlib(path, name = None):
+def require(path, name = None):
     'for modules which can not import by import statement'
     if path in __modules__:
         return __modules__[path]
@@ -25,7 +25,7 @@ def loadlib(path, name = None):
     __modules__[path] = m
     return m
 
-add_builtin("loadlib", loadlib)
+add_builtin("require", require)
 
 def reload():
     for item in _libs:
@@ -108,10 +108,10 @@ def boot():
     from encode import compilefile
     for item in _libs:
         if item.load:
-            loadlib(item.path, item.name)
+            require(item.path, item.name)
     argc = len(ARGV)
     if argc == 0:
-        repl = loadlib("libs/tools/repl.py").repl
+        repl = require("libs/tools/repl.py").repl
         repl()
     elif argc == 1:
         if ARGV[0] == '-help':

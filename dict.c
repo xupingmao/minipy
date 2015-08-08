@@ -120,7 +120,7 @@ int setAttr(TmDict* dict, int constId, Object val) {
 	for (i = 0; i < dict->cap; i++) {
         if (nodes[i].used == constId) {
             nodes[i].val = val;
-            return;
+            return i;
         }
     }
     Object key = GET_CONST(constId-2);
