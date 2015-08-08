@@ -130,21 +130,21 @@ int setAttr(TmDict* dict, int constId, Object val) {
     return i;
 }
 
-Object* getAttr(TmDict* dict, int constId) {
+int getAttr(TmDict* dict, int constId) {
     int i;
 	DictNode* nodes = dict->nodes;
     constId += 2; /* prevent first const to be 0, and normal dict node to be 1. */
 	for (i = 0; i < dict->cap; i++) {
         if (nodes[i].used == constId) {
-            return &nodes[i].val;
+            return i;
         }
     }
     DictNode* node = DictGetNode(dict, GET_CONST(constId-2));
     if (node != NULL) {
         node->used = constId;
-        return & node->val;
+        return node - nodes;
     }
-    return NULL;
+    return -1;
 }
 
 DictNode* DictGetNode(TmDict* dict, Object key){

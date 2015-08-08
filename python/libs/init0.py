@@ -47,5 +47,9 @@ add_builtin("newobj", newobj)
 
 def init():
     glo = {}
-    _import("libs/init", glo, '*')
-    glo.boot()
+    if "init" in __modules__:
+        _import("init", glo, "*")
+        glo.boot(False)
+    else:
+        _import("libs/init", glo, '*')
+        glo.boot()

@@ -45,7 +45,7 @@ def remove_consts(g):
         #print('del ' + str(k))
         del g[k]
 
-def getallocmem():
+def getmem():
     return str(getVmInfo().allocated / 1024) + ' kb'
     
 def repl():

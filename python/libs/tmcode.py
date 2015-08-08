@@ -33,8 +33,8 @@ _opcode_names = [
     'EQEQ_JUMP_ON_FALSE',
     'NOTEQ_JUMP_ON_FALSE',
     # instructions for vm to optimize.
-    'GET_ATTR',
-    'SET_ATTR'
+    'FAST_ST_GLO',
+    'FAST_LD_GLO'
 ]
 
 # update global values.
@@ -53,7 +53,7 @@ def export_clang_define(des, self = None):
         self = ARGV[0]
     if not exists(des):
         pass
-    elif mtime(self) > mtime(des):
+    elif mtime(self) < mtime(des):
         return
     defines = []
     i = 0

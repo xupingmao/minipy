@@ -103,15 +103,15 @@ def print_usage():
     printf("%-10s%-10s:debug source code\n", "-debug", "[file]")
     printf("%-10s%-10s:disassemble builtin-func\n", "-dis-bf", "[file]")
 
-def boot():
+def boot(loadlibs=True):
     from tokenize import *
     from encode import compilefile
     for item in _libs:
-        if item.load:
+        if loadlibs and item.load:
             require(item.path, item.name)
     argc = len(ARGV)
     if argc == 0:
-        repl = require("libs/tools/repl.py").repl
+        repl = require("repl").repl
         repl()
     elif argc == 1:
         if ARGV[0] == '-help':

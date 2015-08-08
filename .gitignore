@@ -1,2 +1,4 @@
 *.pyc
-/bin.c
+bin.c
+.DS_Store
+*.exe

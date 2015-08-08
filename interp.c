@@ -245,15 +245,18 @@ Object tmEval(TmFrame* f) {
 
 		case LOAD_GLOBAL: {
             /* tmPrintf("load global %o\n", GET_CONST(i)); */
-			Object *val = getAttr(GET_DICT(globals), i);
-			if (val == NULL) {
-				val = getAttr(GET_DICT(tm->builtins), i);
-				if (val == NULL) {
+			int idx = getAttr(GET_DICT(globals), i);
+			if (idx == -1) {
+				idx = getAttr(GET_DICT(tm->builtins), i);
+				if (idx == -1) {
 					tmRaise("NameError: name %o is not defined", GET_CONST(i));
 				}
-				TM_PUSH(*val);
+				TM_PUSH(GET_DICT(tm->builtins)->nodes[idx].val);
 			} else {
-				TM_PUSH(*val);
+				TM_PUSH(GET_DICT(globals)->nodes[idx].val);
+                pc[0] = FAST_LD_GLO;
+                pc[1] = (idx>>8) & 0xff;
+                pc[2] = idx & 0xff;
 			}
             /*
 			k = GET_CONST(i);
@@ -275,10 +278,23 @@ Object tmEval(TmFrame* f) {
 		case STORE_GLOBAL: {
 			x = TM_POP();
             /* tmPrintf("store global %o\n", GET_CONST(i)); */
-            setAttr(GET_DICT(globals), i, x);
+            int idx = setAttr(GET_DICT(globals), i, x);
 			/* tmSet(globals, GET_CONST(i), x); */
+            pc[0] = FAST_ST_GLO;
+            pc[1] = (idx >> 8) & 0xff;
+            pc[2] = idx & 0xff;
 			break;
 		}
+
+        case FAST_LD_GLO: {
+            TM_PUSH(GET_DICT(globals)->nodes[i].val);
+            break;
+        }
+
+        case FAST_ST_GLO: {
+            GET_DICT(globals)->nodes[i].val = TM_POP();
+            break;
+        }
 
 		case LIST: {
 			TM_PUSH(newList(2));
