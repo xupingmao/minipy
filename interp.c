@@ -79,48 +79,6 @@ void popFrame() {
 	tm->frame --;
 }
 
-FunctionDefine defModFunc(Object mod, unsigned char* s) {
-	CodeCheckResult rs = resolveCode(GET_MODULE(mod), s, 1);
-	Object fnc = newFunction(mod, NONE_OBJECT, NULL);
-	GET_FUNCTION(fnc)->code = rs.code;
-	GET_FUNCTION(fnc)->maxlocals = rs.maxlocals;
-	GET_FUNCTION(fnc)->maxstack = rs.maxstack;
-	FunctionDefine def;
-	def.fnc = fnc;
-	def.len = rs.len;
-	return def;
-}
-
-#define CHECK_EXCEPTION() \
-    if (tm->exitCode == -1) { \
-        f = handleException(); \
-        if (f == NULL) { \
-            return NONE_OBJECT;\
-        }\
-        UPDATE_ENV();\
-        continue;\
-    }
-
-#define UPDATE_ENV() \
-    top = f->top;\
-    locals = f->locals;\
-    pc = f->pc;\
-    cur_fnc = f->fnc;\
-    globals = getGlobals(cur_fnc);
-
-
-#define CATCH() \
-    if (f->jmp == NULL) {\
-        tm->frame = f;\
-        pushException(f);\
-        ret = UNDEF;\
-        goto end;\
-    } else {\
-        f->pc = f->jmp;\
-        f->jmp = NULL;\
-        continue;\
-    }
-
 #define TM_OP(OP_CODE, OP_FUNC) case OP_CODE: \
     *(top-1) = OP_FUNC(*(top-1), *top);--top;\
     break;
@@ -453,11 +411,15 @@ Object tmEval(TmFrame* f) {
 		}
 
 		case TM_DEF: {
-			FunctionDefine def
-			= defModFunc(GET_FUNCTION(cur_fnc)->mod, pc + 3);
-			GET_FUNCTION_NAME(def.fnc) = GET_CONST(i);
-			pc += def.len;
-			TM_PUSH(def.fnc);
+            Object mod = GET_FUNCTION(cur_fnc)->mod;
+            CodeCheckResult rs = resolveCode(GET_MODULE(mod), pc + 3, 1);
+            Object fnc = newFunction(mod, NONE_OBJECT, NULL);
+            GET_FUNCTION(fnc)->code = rs.code;
+            GET_FUNCTION(fnc)->maxlocals = rs.maxlocals;
+            GET_FUNCTION(fnc)->maxstack = rs.maxstack;
+			GET_FUNCTION_NAME(fnc) = GET_CONST(i);
+			pc += rs.len;
+			TM_PUSH(fnc);
 			break;
 		}
 
@@ -565,6 +527,9 @@ Object tmEval(TmFrame* f) {
 			} else {
 				argStart();
 				pushArg(newNumber((long)pc));
+                pushArg(globals);
+                /* how to pass locals? */
+                /* make a list in frame ? store arguments as well as locals*/
 				callFunction(*debugFunc);
                 continue;
 			}			

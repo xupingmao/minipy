@@ -6,35 +6,32 @@ CodeCheckResult resolveCode(TmModule *mod, unsigned char*s, int isFuncDef) {
 	int len = 0;
 	int stacksize = 1;
 	int curstack = 0;
-	int temp = 0;
 	int defCount = 0;
-	int maxlocals = -1;
+	int maxlocals = -1; /* then maxlocals will be 0 when there is no local var.*/
 	int maxstack = 0;
 	st.code = s;
 	if (isFuncDef) {
 		defCount = 1;
 	}
 	while (1) {
-		int ins = next_byte(s);
+		int op = next_byte(s);
 		int val = next_short(s);
 		len += 3;
-        if (ins == NEW_STRING || ins == NEW_NUMBER) {
+        if (op == NEW_STRING || op == NEW_NUMBER) {
             len += val;
             s += val;
-        } else if (ins == LOAD_LOCAL) {
+        } else if (op == LOAD_LOCAL || op == STORE_LOCAL) {
 			maxlocals = max(val, maxlocals);
-		} else if(ins == STORE_LOCAL) {
-			maxlocals = max(val, maxlocals);
-		} else if(ins == TM_EOF){
+		} else if(op == TM_EOF){
 			if (isFuncDef) {
 				defCount--;
 				if (defCount == 0)
-					goto ret;
+					break;
 			}
-		} else if(ins == TM_EOP) {
+		} else if(op == TM_EOP) {
 			mod->resolved = 1;
-			goto ret;
-		} else if(ins == TM_DEF) {
+			break;
+		} else if(op == TM_DEF) {
 			if (isFuncDef) {
 				defCount++;
 			}
@@ -43,10 +40,12 @@ CodeCheckResult resolveCode(TmModule *mod, unsigned char*s, int isFuncDef) {
 	ret: 
     st.len = len;
 	if (isFuncDef) {
-		st.maxlocals = maxlocals + 1; // maxlocals is max localindex in fact
+        /* locals count is max local index + 1. */
+		st.maxlocals = maxlocals + 1;
 	} else {
-		st.maxlocals = 0;
-	}
+        /* set global maxlocals to be 0 */
+        st.maxlocals = 0;
+    }
 	st.maxstack = maxstack;
 	return st;
 }
@@ -157,10 +156,6 @@ unsigned char* getFunctionCode(TmFunction *fnc){
 	resolveModule(GET_MODULE(fnc->mod), fnc);
 	return fnc->code;
 }
-
-/*Object* getFunctionConstants(TmFunction* fnc) {
-	return LIST_NODES(GET_MODULE(fnc->mod)->constants);
-}*/
 
 Object getFunctionGlobals(TmFunction* fnc) {
 	return GET_MODULE(fnc->mod)->globals;
