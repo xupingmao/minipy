@@ -216,7 +216,7 @@ Object tmEval(TmFrame* f) {
             /*
             pc += 3;
             if (pc[0] == SET) {
-                
+                // need to check whether is a dict. 
             } else if(pc[0] == GET) {
                 
             }

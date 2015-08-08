@@ -25,6 +25,9 @@ _opcode_names = [
     # mulity assignment, eg. x,y = 1,2
     'TM_DEBUG',
     'TAG', 
+        # instructions for vm to optimize.
+    'FAST_ST_GLO',
+    'FAST_LD_GLO',
     # unused instructions
     'LT_JUMP_ON_FALSE', 
     'GT_JUMP_ON_FALSE',
@@ -32,9 +35,6 @@ _opcode_names = [
     'GTEQ_JUMP_ON_FALSE',
     'EQEQ_JUMP_ON_FALSE',
     'NOTEQ_JUMP_ON_FALSE',
-    # instructions for vm to optimize.
-    'FAST_ST_GLO',
-    'FAST_LD_GLO'
 ]
 
 # update global values.

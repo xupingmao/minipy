@@ -35,7 +35,10 @@ def reload():
 
 add_builtin('reload', reload)
 
-FILE_SEP = '\\'
+if getosname() == "nt":
+    FILE_SEP = '\\'
+else:
+    FILE_SEP = '/'
 
 def split_path(path):
     cached_pathes = []
@@ -84,12 +87,8 @@ def resolvepath(path):
 def _execute_file(path):
     from encode import compilefile
     fname = resolvepath(path)
-    try:
-        _code = compilefile(fname)
-        load_module(fname, _code, '__main__')
-    except Exception as e:
-        # printf("fail to execute file \"%s\"\n", path)
-        print(e)
+    _code = compilefile(fname)
+    load_module(fname, _code, '__main__')
     
 def print_usage():
     printf("options:\n")

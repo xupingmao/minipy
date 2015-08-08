@@ -46,7 +46,7 @@ def remove_consts(g):
         del g[k]
 
 def getmem():
-    return str(getVmInfo().allocated / 1024) + ' kb'
+    return str(getVmInfo().alloc_mem / 1024) + ' kb'
     
 def repl():
     from parse import parse

@@ -36,18 +36,18 @@ Object bfVmOpt() {
 
 Object bfGetVmInfo() {
     Object tmInfo = newDict();
-    dictSetByStr(tmInfo, "vmStructSize", newNumber(sizeof(TmVM)));
-    dictSetByStr(tmInfo, "objSize", newNumber(sizeof(Object)));
-    dictSetByStr(tmInfo, "intSize", newNumber(sizeof(int)));
-    dictSetByStr(tmInfo, "longSize", newNumber(sizeof(long)));
-    dictSetByStr(tmInfo, "floatSize", newNumber(sizeof(float)));
-    dictSetByStr(tmInfo, "doubleSize", newNumber(sizeof(double)));
-    dictSetByStr(tmInfo, "jmpBufSize", newNumber(sizeof(jmp_buf)));
-    dictSetByStr(tmInfo, "tmAllLen", newNumber(tm->all->len));
-    dictSetByStr(tmInfo, "allocated", newNumber(tm->allocated));
-    dictSetByStr(tmInfo, "gcThreshold", newNumber(tm->gcThreshold));
-    dictSetByStr(tmInfo, "frameIndex", newNumber(tm->frame - tm->frames));
-    dictSetByStr(tmInfo, "constsLen", newNumber(DICT_LEN(tm->constants)));
+    dictSetByStr(tmInfo, "vm_size", newNumber(sizeof(TmVM)));
+    dictSetByStr(tmInfo, "obj_size", newNumber(sizeof(Object)));
+    dictSetByStr(tmInfo, "int_size", newNumber(sizeof(int)));
+    dictSetByStr(tmInfo, "long_size", newNumber(sizeof(long)));
+    dictSetByStr(tmInfo, "float_size", newNumber(sizeof(float)));
+    dictSetByStr(tmInfo, "double_size", newNumber(sizeof(double)));
+    dictSetByStr(tmInfo, "jmp_buf_size", newNumber(sizeof(jmp_buf)));
+    dictSetByStr(tmInfo, "total_obj_len", newNumber(tm->all->len));
+    dictSetByStr(tmInfo, "alloc_mem", newNumber(tm->allocated));
+    dictSetByStr(tmInfo, "gc_threshold", newNumber(tm->gcThreshold));
+    dictSetByStr(tmInfo, "frame_index", newNumber(tm->frame - tm->frames));
+    dictSetByStr(tmInfo, "consts_len", newNumber(DICT_LEN(tm->constants)));
     return tmInfo;
 }
 
@@ -167,7 +167,14 @@ Object bfGetConstIdx() {
 
 Object bfGetConst() {
     int num = getIntArg("getConst");
-    return GET_CONST(num);
+    int idx = num;
+    if (num < 0) {
+        idx += DICT_LEN(tm->constants);
+    }
+    if (idx < 0 || idx >= DICT_LEN(tm->constants)) {
+        tmRaise("getConst(idx): out of range [%d]", num);
+    }
+    return GET_CONST(idx);
 }
 
 Object bfGetExList() {
@@ -244,6 +251,16 @@ Object bfChdir() {
     } 
     return NONE_OBJECT;
 }
+
+Object bfGetOsName() {
+    const char* szFunc = "getosname";
+#ifdef _WINDOWS_H
+    return staticString("nt");
+#else
+    return staticString("posix");
+#endif
+}
+
 void regBuiltinsFunc2() {
     /* functions which has impact on vm follow camel case */
     regBuiltinFunc("getConstIdx", bfGetConstIdx);
@@ -268,5 +285,6 @@ void regBuiltinsFunc2() {
 	regBuiltinFunc("stat", bfStat);
     regBuiltinFunc("getcwd", bfGetcwd);
     regBuiltinFunc("chdir", bfChdir);
+    regBuiltinFunc("getosname", bfGetOsName);
 }
 
