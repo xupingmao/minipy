@@ -487,18 +487,18 @@ Object bfRange() {
 	switch (tm->argumentsCount) {
 	case 1:
 		start = 0;
-		end = getIntArg(szFunc);
+		end = (long)getNumArg(szFunc);
 		inc = 1;
 		break;
 	case 2:
-		start = getIntArg(szFunc);
-		end = getIntArg(szFunc);
+		start = (long)getNumArg(szFunc);
+		end = (long)getNumArg(szFunc);
 		inc = 1;
 		break;
 	case 3:
-		start = getIntArg(szFunc);
-		end = getIntArg(szFunc);
-		inc = getIntArg(szFunc);
+		start = (long)getNumArg(szFunc);
+		end = (long)getNumArg(szFunc);
+		inc = (long)getNumArg(szFunc);
 		break;
 	default:
 		tmRaise("range([n, [ n, [n]]]), but see %d arguments",
