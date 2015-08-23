@@ -1,13 +1,13 @@
 #include "include/tm.h"
 
-
+/*
 CodeCheckResult resolveCode(TmModule *mod, unsigned char*s, int isFuncDef) {
 	CodeCheckResult st;
 	int len = 0;
 	int stacksize = 1;
 	int curstack = 0;
 	int defCount = 0;
-	int maxlocals = -1; /* then maxlocals will be 0 when there is no local var.*/
+	int maxlocals = -1; // then maxlocals will be 0 when there is no local var.
 	int maxstack = 0;
 	st.code = s;
 	if (isFuncDef) {
@@ -40,16 +40,16 @@ CodeCheckResult resolveCode(TmModule *mod, unsigned char*s, int isFuncDef) {
 	ret: 
     st.len = len;
 	if (isFuncDef) {
-        /* locals count is max local index + 1. */
+        /* locals count is max local index + 1. /
 		st.maxlocals = maxlocals + 1;
 	} else {
-        /* set global maxlocals to be 0 */
+        /* set global maxlocals to be 0 /
         st.maxlocals = 0;
     }
 	st.maxstack = maxstack;
 	return st;
 }
-
+*/
 
 Object newFunction(Object mod,
 		Object self,
@@ -143,7 +143,7 @@ Object getFuncAttr(TmFunction* fnc, Object key) {
 	}
 	return NONE_OBJECT;
 }
-
+/*
 void resolveModule(TmModule* mod, TmFunction* fnc){
 	if (! mod->resolved) {
 		CodeCheckResult st = resolveCode(mod, (unsigned char*) GET_STR(mod->code), 0);
@@ -151,9 +151,10 @@ void resolveModule(TmModule* mod, TmFunction* fnc){
 		fnc->maxlocals = st.maxlocals;
 		fnc->maxstack = st.maxstack;
 	}
-}
+}*/
+
 unsigned char* getFunctionCode(TmFunction *fnc){
-	resolveModule(GET_MODULE(fnc->mod), fnc);
+	//resolveModule(GET_MODULE(fnc->mod), fnc);
 	return fnc->code;
 }
 
@@ -162,7 +163,7 @@ Object getFunctionGlobals(TmFunction* fnc) {
 }
 
 int getFunctionMaxLocals(TmFunction* fnc){
-	resolveModule(GET_MODULE(fnc->mod), fnc);
+	//resolveModule(GET_MODULE(fnc->mod), fnc);
 	return fnc->maxlocals;
 }
 
@@ -197,7 +198,7 @@ char* getFuncFileSz(Object func) {
 }
 
 TmModule* getFuncMod(TmFunction* fnc) {
-	resolveModule(GET_MODULE(fnc->mod), fnc);
+	// resolveModule(GET_MODULE(fnc->mod), fnc);
 	return GET_MODULE(fnc->mod);
 }
 #endif

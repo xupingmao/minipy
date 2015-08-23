@@ -10,6 +10,18 @@
 
 #define INTERP_DB 0
 
+typedef struct _code {
+    int op;
+    int val;
+} Code;
+
+Code parseCode(char* s) {
+    Code code;
+    code.op = s[0];
+    code.val = (s[1] << 8) | (s[2] &0xff);
+    return code;
+}
+
 Object callFunction2(Object func) {
     if (NOT_FUNC(func) || IS_NATIVE(func)) {
         return UNDEF;
@@ -389,15 +401,19 @@ Object tmEval(TmFrame* f) {
 		}
 		case TM_DEF: {
             Object mod = GET_FUNCTION(cur_fnc)->mod;
-            CodeCheckResult rs = resolveCode(GET_MODULE(mod), pc + 3, 1);
+            // CodeCheckResult rs = resolveCode(GET_MODULE(mod), pc + 3, 1);
+            pc += 3;
+            Code reg_code = parseCode(pc);
+            pc += 3;
+            Code jmp_code = parseCode(pc);
             Object fnc = newFunction(mod, NONE_OBJECT, NULL);
-            GET_FUNCTION(fnc)->code = rs.code;
-            GET_FUNCTION(fnc)->maxlocals = rs.maxlocals;
-            GET_FUNCTION(fnc)->maxstack = rs.maxstack;
+            GET_FUNCTION(fnc)->code = pc + 3;
+            GET_FUNCTION(fnc)->maxlocals = reg_code.val;
+            GET_FUNCTION(fnc)->maxstack = reg_code.val;
 			GET_FUNCTION_NAME(fnc) = GET_CONST(i);
-			pc += rs.len;
+			pc += jmp_code.val * 3;
 			TM_PUSH(fnc);
-			break;
+			continue;
 		}
 		case RETURN: {
             ret = TM_POP();
