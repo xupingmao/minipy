@@ -55,14 +55,14 @@ def mtime(fname):
     return obj.st_mtime
 add_builtin("mtime", mtime)
 
-def range(size):
+def newlist(size):
     i = 0
     list = []
     while i < size:
         list.append(i)
         i+=1
     return list
-add_builtin("range", range)
+add_builtin("newlist", newlist)
 
 
 # string methods.

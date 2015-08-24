@@ -10,6 +10,18 @@
 
 #define INTERP_DB 0
 
+typedef struct _code {
+    int op;
+    int val;
+} Code;
+
+Code parseCode(char* s) {
+    Code code;
+    code.op = s[0];
+    code.val = (s[1] << 8) | (s[2] &0xff);
+    return code;
+}
+
 Object callFunction2(Object func) {
     if (NOT_FUNC(func) || IS_NATIVE(func)) {
         return UNDEF;
@@ -82,7 +94,7 @@ void popFrame() {
 #define TM_OP(OP_CODE, OP_FUNC) case OP_CODE: \
     *(top-1) = OP_FUNC(*(top-1), *top);--top;\
     break;
-
+    
 #define FRAME_CHECK_GC()  \
 f->top = top; \
 if (tm->allocated > tm->gcThreshold) {   \
@@ -232,7 +244,6 @@ Object tmEval(TmFrame* f) {
             */
 			break;
 		}
-
 		case STORE_GLOBAL: {
 			x = TM_POP();
             /* tmPrintf("store global %o\n", GET_CONST(i)); */
@@ -243,30 +254,25 @@ Object tmEval(TmFrame* f) {
             pc[2] = idx & 0xff;
 			break;
 		}
-
         case FAST_LD_GLO: {
             TM_PUSH(GET_DICT(globals)->nodes[i].val);
             break;
         }
-
         case FAST_ST_GLO: {
             GET_DICT(globals)->nodes[i].val = TM_POP();
             break;
         }
-
 		case LIST: {
 			TM_PUSH(newList(2));
 			FRAME_CHECK_GC();
 			break;
 		}
-
 		case LIST_APPEND:
 			v = TM_POP();
 			x = TM_TOP();
 			tmAssertType(x, TYPE_LIST, "tmEval: LIST_APPEND");
 			_listAppend(GET_LIST(x), v);
 			break;
-
 		case DICT_SET:
 			v = TM_POP();
 			k = TM_POP();
@@ -274,13 +280,11 @@ Object tmEval(TmFrame* f) {
 			tmAssertType(x, TYPE_DICT, "tmEval: DICT_SET");
 			tmSet(x, k, v);
 			break;
-
 		case DICT: {
 			TM_PUSH(newDict());
 			FRAME_CHECK_GC();
 			break;
 		}
-
 		TM_OP(ADD, tmAdd)
 		TM_OP(SUB, tmSub)
 		TM_OP(MUL, tmMul)
@@ -336,14 +340,6 @@ Object tmEval(TmFrame* f) {
             *top = newNumber(!tmBool(*top));
             break;
         }
-
-		/*   TM_OP2( LT_JUMP_ON_FALSE, tm_bool_lt );
-		 TM_OP2( GT_JUMP_ON_FALSE, tm_bool_gt );
-		 TM_OP2( LTEQ_JUMP_ON_FALSE, tm_bool_lteq);
-		 TM_OP2( GTEQ_JUMP_ON_FALSE, tm_bool_gteq);
-		 TM_OP2( EQEQ_JUMP_ON_FALSE, tm_bool_eqeq);
-		 TM_OP2( NOTEQ_JUMP_ON_FALSE, tm_bool_noteq); */
-         
 		case SET:
 			k = TM_POP();
 			x = TM_POP();
@@ -353,7 +349,6 @@ Object tmEval(TmFrame* f) {
             #endif
 			tmSet(x, k, v);
 			break;
-
 		case POP: {
 			top--;
 			break;
@@ -361,7 +356,6 @@ Object tmEval(TmFrame* f) {
 		case NEG:
 			TM_TOP() = tmNeg(TM_TOP());
 			break;
-
 		case CALL: {
             f->top = top;
 			top -= i;
@@ -375,7 +369,6 @@ Object tmEval(TmFrame* f) {
             FRAME_CHECK_GC();
             break;
 		}
-
 		case LOAD_PARAMS: {
             // tmPrintf("load %d params\n", tm->argumentsCount);
 			for(i = 0; i < tm->argumentsCount; i++){
@@ -383,7 +376,6 @@ Object tmEval(TmFrame* f) {
 			}
 			break;
 		}
-        
         case TM_NARG: {
             Object list = newList(tm->argumentsCount);
             for(i = 0; i < tm->argumentsCount; i++) {
@@ -392,12 +384,10 @@ Object tmEval(TmFrame* f) {
             locals[0] = list;
             break;
         }
-
 		case ITER_NEW: {
 			*top = iterNew(*top);
 			break;
 		}
-
 		case TM_NEXT: {
 			Object *next = tmNext(*top);
 			if (next != NULL) {
@@ -409,20 +399,22 @@ Object tmEval(TmFrame* f) {
 			}
 			break;
 		}
-
 		case TM_DEF: {
             Object mod = GET_FUNCTION(cur_fnc)->mod;
-            CodeCheckResult rs = resolveCode(GET_MODULE(mod), pc + 3, 1);
+            // CodeCheckResult rs = resolveCode(GET_MODULE(mod), pc + 3, 1);
+            pc += 3;
+            Code reg_code = parseCode(pc);
+            pc += 3;
+            Code jmp_code = parseCode(pc);
             Object fnc = newFunction(mod, NONE_OBJECT, NULL);
-            GET_FUNCTION(fnc)->code = rs.code;
-            GET_FUNCTION(fnc)->maxlocals = rs.maxlocals;
-            GET_FUNCTION(fnc)->maxstack = rs.maxstack;
+            GET_FUNCTION(fnc)->code = pc + 3;
+            GET_FUNCTION(fnc)->maxlocals = reg_code.val;
+            GET_FUNCTION(fnc)->maxstack = reg_code.val;
 			GET_FUNCTION_NAME(fnc) = GET_CONST(i);
-			pc += rs.len;
+			pc += jmp_code.val * 3;
 			TM_PUSH(fnc);
-			break;
+			continue;
 		}
-
 		case RETURN: {
             ret = TM_POP();
             goto end;
@@ -435,8 +427,8 @@ Object tmEval(TmFrame* f) {
 				*(top-j) = *(top - i + j + 1);
 				*(top-i+j+1) = temp;
 			}
-		};
-		break;
+            break;
+		}
 		case TM_UNARRAY: {
 			x = TM_POP();
 			tmAssertType(x, TYPE_LIST, "tmEval:TM_UNARRAY");

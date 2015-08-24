@@ -91,6 +91,9 @@ def asm_switch_out():
     global out_ext
     out, out_ext = out_ext, out
 
+def asm_get_regs():
+    return len(names.scope.locals)
+
 def store_glo(glo):
     idx = getConstIdx(glo.val)
     emit(STORE_GLOBAL, idx)
