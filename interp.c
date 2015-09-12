@@ -511,6 +511,11 @@ Object tmEval(TmFrame* f) {
             }*/
 			break;
 		}
+        
+        case TM_LINE: {
+            f->lineno = i;
+            break;
+        }
 
 		case TM_DEBUG: {
 			Object *debugFunc = getBuiltin("__debug__");

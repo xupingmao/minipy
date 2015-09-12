@@ -4,8 +4,8 @@
 void pushException(TmFrame* f){
 	Object file = GET_FUNCTION_FILE(f->fnc);
 	Object fncName = GET_FUNCTION_NAME(f->fnc);
-	Object ex = tmFormat("  File %o: in %o , %o", file, fncName,
-			f->line);
+	Object ex = tmFormat("  File %o: in %o , at line %d", file, fncName,
+			f->lineno);
 	_listAppend(GET_LIST(tm->exList), ex);
 }
 

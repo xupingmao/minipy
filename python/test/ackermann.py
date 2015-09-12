@@ -1,5 +1,7 @@
 from boot import *
-from libs.tools.test import testfunc
+PATH = "libs"
+from test import *
+
 def ackermann(x, y):
     if y == 0: return 0
     elif x == 0:return y * 2

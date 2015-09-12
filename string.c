@@ -215,6 +215,8 @@ Object bmStringSplit() {
 	return list;
 }
 
+/* 
+this may cause GC trash.
 Object StringJoin(Object self, Object list) {
 	Object str = newString0("", 0);
 	int i = 0;
@@ -234,6 +236,7 @@ Object bmStringJoin() {
 	Object list = getListArg(szFunc);
 	return StringJoin(self, list);
 }
+*/
 
 
 void regStringMethods() {
@@ -245,7 +248,6 @@ void regStringMethods() {
 	regModFunc(CLASS_STRING, "upper", bmStringUpper);
 	regModFunc(CLASS_STRING, "lower", bmStringLower);
 	regModFunc(CLASS_STRING, "split", bmStringSplit);
-	regModFunc(CLASS_STRING, "join", bmStringJoin);
 }
 
 DataProto* getStringProto() {

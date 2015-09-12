@@ -45,6 +45,11 @@ op_dict = {
     TM_DEL: _op_del
 }
 
+op_skip = {
+    TM_LINE: "TM_LINE",
+    SETJUMP: "SETJUMP"
+}
+
 class Env:
     def __init__(self, globals):
         self._glo = globals
@@ -161,8 +166,8 @@ def pyeval(src, glo_vars = None, debug = False):
             collection.reverse()
             for x in collection:
                 stack.append(x)
-        elif op == SETJUMP:
-            print("SETJUMP not implemented")
+        elif op in op_skip:
+            pass
         elif op == POP_JUMP_ON_FALSE:
             r = stack.pop()
             if not r:

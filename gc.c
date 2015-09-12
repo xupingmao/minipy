@@ -16,13 +16,21 @@
 #define GC_DEBUG 0
 #define get_char(n) ARRAY_CHARS[n]
 
+#if GC_DEBUG
+void log_debug(char* fmt, ...) {
+    FILE* fp = fopen("gc.log", "a");
+    va_list ap;
+    va_start(ap, fmt);
+    vfprintf(fp, fmt, ap);
+    va_end(ap);
+    fclose(fp);
+}
+#endif
 
 
 void gcInit() {
     int init_size = 100;
     int i;
-
-    initMemory();
     
     /* initialize constants */
     NUMBER_TRUE = newNumber(1);
@@ -64,7 +72,7 @@ void gcInit() {
 		TmFrame* f = tm->frames + i;
 		f->stack = f->top = tm->stack;
 		/* f->ex = NONE_OBJECT; */
-		f->line = NONE_OBJECT;
+		// f->line = NONE_OBJECT;
 		f->fnc = NONE_OBJECT;
 		f->pc = NULL;
 		f->maxlocals = 0;
@@ -75,6 +83,49 @@ void gcInit() {
 	tm->framesInitDone = 1;
 	tm->frame = tm->frames;
 }
+
+
+void* tmMalloc(size_t size) {
+    void* block;
+    Object* func;
+
+	if (size <= 0) {
+		tmRaise("tmMalloc, attempts to allocate a memory block of size %d!", size);
+		return NULL;
+	}
+	block = malloc(size);
+#if GC_DEBUG
+    if (size > 100)
+        log_debug("%d -> %d , +%d\n", tm->allocated, tm->allocated + size, size);
+#endif
+	if (block == NULL) {
+		tmRaise("tmMalloc: fail to malloc memory block of size %d", size);
+	}
+	tm->allocated += size;
+	return block;
+}
+
+void* tmRealloc(void* o, size_t osize, size_t nsize) {
+	void* block = tmMalloc(nsize);
+	memcpy(block, o, osize);
+	tmFree(o, osize);
+	return block;
+}
+
+void tmFree(void* o, size_t size) {
+	if (o == NULL)
+		return;
+#if GC_DEBUG
+    if (size > 100)
+	log_debug("Free %p, %d -> %d , -%d\n",o, tm->allocated, tm->allocated - size, size);
+	if(size<=0) {
+		tmRaise("tmFree: you are free a block of size %d", size);
+	}
+#endif
+	free(o);
+	tm->allocated -= size;
+}
+
 Object gcTrack(Object v) {
 	switch (v.type) {
 	case TYPE_NUM:
@@ -263,7 +314,7 @@ void gcFull() {
 	tm->gcThreshold = tm->allocated * 2;
 	t2 = clock();
 #if GC_DEBUG
-    printf("fullGC %dK => %dK, elasped time = %ld\n",
+    log_debug("fullGC %dK => %dK, elasped time = %ld\n",
 			old / 1024, tm->allocated / 1024, t2 - t1);
 #endif
 }
@@ -276,7 +327,6 @@ void gcFree() {
 	}
 
 	freeList(tm->all);
-	freeMemory();
 
 #if !PRODUCT
 	if (tm->allocated != 0) {

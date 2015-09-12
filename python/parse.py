@@ -13,14 +13,14 @@ def AstNode(type=None):
     
 class ParserCtx:
     def __init__(self, r, txt):
-        r.append(Token('nl'))
-        r.append(Token('eof'))
+        self.token = Token("nl", 'nl', None)
+        self.eof = Token("eof", 'eof', None)
+        r.append(self.token)
+        r.append(self.eof)
         self.r = r
         self.i = 0
         self.l = len(r)
         self.tree = []
-        self.token = Token("nl", 'nl', [0,0])
-        self.eof = Token("eof", 'eof', [0,0])
         self.src = txt
 
     def next(self):
@@ -68,6 +68,8 @@ def findpos(token):
 
 def parse_error(p, token=None, msg="Unknown"):
     if token != None:
+        if token.type in ('eof', 'dedent'):
+            compile_error('unexpected EOF while parsing', p.src, findpos(token), msg)
         compile_error('parse', p.src, findpos(token), msg)
     else:
         raise("assert_type error")

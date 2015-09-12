@@ -177,6 +177,10 @@ Object bfGetConst() {
     }
     return GET_CONST(idx);
 }
+/* for save */
+Object bfGetConstLen() {
+    return newNumber(DICT_LEN(tm->constants));
+}
 
 Object bfGetExList() {
     return tm->exList;
@@ -266,13 +270,13 @@ void regBuiltinsFunc2() {
     /* functions which has impact on vm follow camel case */
     regBuiltinFunc("getConstIdx", bfGetConstIdx);
     regBuiltinFunc("getConst", bfGetConst);
+    regBuiltinFunc("getConstLen", bfGetConstLen);
     regBuiltinFunc("getExList", bfGetExList);
     regBuiltinFunc("setVMState", bfSetVMState);
     regBuiltinFunc("inspectPtr", bfInspectPtr);
 	regBuiltinFunc("getCurrentFrame", bfGetCurrentFrame);
 	regBuiltinFunc("vmopt", bfVmOpt);
     regBuiltinFunc("getVmInfo", bfGetVmInfo);
-    regBuiltinFunc("getMallocInfo", bfGetMallocInfo);
 
     regBuiltinFunc("clock", bfClock);
     regBuiltinFunc("add_obj_method", bfAddObjMethod);
