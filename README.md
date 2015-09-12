@@ -2,7 +2,7 @@
 a subset of python
 
 ## How to start
-run `python setup gcc` in console(or you may use other c compiler)
+run `python setup.py gcc` in console(or you may use other c compiler)
 
 ## features
 
@@ -21,6 +21,8 @@ run `python setup gcc` in console(or you may use other c compiler)
 ### vm hierarchy
 `vm.c` entry
 `interp.c` interpreter
+`builtins.c` built-in functions
+`builtins2.c` built-in functions for developers.
 
 ### objects
 1. string, strings are immutable.
