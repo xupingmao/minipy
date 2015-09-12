@@ -1,5 +1,6 @@
-from libs.tools.dis import dis_txt
-from libs.tools.pyeval import pyeval
+PATH = "libs"
+from dis import *
+from pyeval import *
 
 src = '''
 for x in ITER():
@@ -16,7 +17,7 @@ src = '''
 i = range(2, 4)
 for y in i:
     print(y)'''
-#pyeval(src, globals(), 1)
+pyeval(src, globals(), 1)
 print("=" * 40)
 def iter(i):
     list = []

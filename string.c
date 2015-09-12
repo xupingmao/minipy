@@ -124,27 +124,9 @@ Object bmStringUpper() {
 	Object nstr = newString0(NULL, len);
 	char*news = GET_STR(nstr);
 	for (i = 0; i < len; i++) {
-		if (s[i] >= 'a' && s[i] <= 'z') {
-			news[i] = s[i] + 'A' - 'a';
-		} else {
-			news[i] = s[i];
-		}
+		news[i] = toupper(s[i]);
 	}
 	return nstr;
-}
-
-Object bmStringIsUpper() {
-	Object self = getStrArg("isupper");
-	int i;
-	for (i = 0; i < GET_STR_LEN(self); i++) {
-		char c = GET_STR(self)[i];
-		if (c >= 'A' && c <= 'Z') {
-
-		} else {
-			return NUMBER_FALSE;
-		}
-	}
-	return NUMBER_TRUE;
 }
 
 Object bmStringLower() {
@@ -155,14 +137,11 @@ Object bmStringLower() {
 	Object nstr = newString0(NULL, len);
 	char*news = GET_STR(nstr);
 	for (i = 0; i < len; i++) {
-		if (s[i] >= 'A' && s[i] <= 'Z') {
-			news[i] = s[i] + 'a' - 'A';
-		} else {
-			news[i] = s[i];
-		}
+		news[i] = tolower(s[i]);
 	}
 	return nstr;
 }
+
 
 Object bmStringReplace() {
     static const char* szFunc;
@@ -215,6 +194,8 @@ Object bmStringSplit() {
 	return list;
 }
 
+/* 
+this may cause GC trash.
 Object StringJoin(Object self, Object list) {
 	Object str = newString0("", 0);
 	int i = 0;
@@ -234,6 +215,7 @@ Object bmStringJoin() {
 	Object list = getListArg(szFunc);
 	return StringJoin(self, list);
 }
+*/
 
 
 void regStringMethods() {
@@ -245,7 +227,6 @@ void regStringMethods() {
 	regModFunc(CLASS_STRING, "upper", bmStringUpper);
 	regModFunc(CLASS_STRING, "lower", bmStringLower);
 	regModFunc(CLASS_STRING, "split", bmStringSplit);
-	regModFunc(CLASS_STRING, "join", bmStringJoin);
 }
 
 DataProto* getStringProto() {

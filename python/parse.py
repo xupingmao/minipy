@@ -2,8 +2,8 @@ from tokenize import *
 from boot import *
 
 
-stm_end_list = ['nl', 'dedent']
-skip_op = ['nl', ';']
+_stm_end_list = ['nl', 'dedent']
+_skip_op = ['nl', ';']
 
 
 def AstNode(type=None):
@@ -13,14 +13,14 @@ def AstNode(type=None):
     
 class ParserCtx:
     def __init__(self, r, txt):
-        r.append(Token('nl'))
-        r.append(Token('eof'))
+        self.token = Token("nl", 'nl', None)
+        self.eof = Token("eof", 'eof', None)
+        r.append(self.token)
+        r.append(self.eof)
         self.r = r
         self.i = 0
         self.l = len(r)
         self.tree = []
-        self.token = Token("nl", 'nl', [0,0])
-        self.eof = Token("eof", 'eof', [0,0])
         self.src = txt
 
     def next(self):
@@ -68,6 +68,8 @@ def findpos(token):
 
 def parse_error(p, token=None, msg="Unknown"):
     if token != None:
+        if token.type in ('eof', 'dedent'):
+            compile_error('unexpected EOF while parsing', p.src, findpos(token), msg)
         compile_error('parse', p.src, findpos(token), msg)
     else:
         raise("assert_type error")
@@ -236,25 +238,6 @@ def call_or_get_exp(p):
                 p.add(node)
 expr = assign_exp
 
-def parse(v):
-    r = tokenize(v)
-    p = ParserCtx(r, v)
-    x = parse_prog(p)
-    # except:
-    if x == None:
-        p.error()
-    return x
-
-def parsefile(fname):
-    try:
-        txt = load(fname)
-        r = tokenize(txt)
-        p = ParserCtx(r, txt)
-        x = parse_prog(p)
-        return x
-    except Exception as e:
-        printf("parse file %s FAIL", fname)
-
 def _get_path(obj):
     t = obj.type
     if t == 'get':
@@ -278,12 +261,12 @@ def _path_check(p, node):
 
 def _name_check(p, node):
     if node.type == ',':
-        _path_check(p, node.first)
-        _path_check(p, node.second)
+        _name_check(p, node.first)
+        _name_check(p, node.second)
     elif node.type == 'name':
         return True
     else:
-        parse_error(p, node, 'import error')
+        parse_error(p, node, 'import error' + node.type)
 
 def parse_from(p):
     p.next()
@@ -311,7 +294,7 @@ def parse_import(p):
 
 # count = 1
 def skip_nl(p):
-    while p.token.type in skip_op:
+    while p.token.type in _skip_op:
         p.next()
 
 def call_node(fnc, args):
@@ -462,7 +445,7 @@ def parse_class(p):
 def parse_stm1(p, type):
     p.next()
     node = AstNode(type)
-    if p.token.type in stm_end_list:
+    if p.token.type in _stm_end_list:
         node.first = None
     else:
         expr(p)
@@ -547,28 +530,26 @@ def parse_block(p):
             else:parse_stm(p)
         skip_nl(p)
             
-
-
-
-def parse_prog(p):
+    
+def parse(v):
+    r = tokenize(v)
+    p = ParserCtx(r, v)
     p.next()
     while p.token.type != 'eof':
         parse_block(p)
-    return p.tree
+    x = p.tree
+    # except:
+    if x == None:
+        p.error()
+    return x
+
+def parsefile(fname):
+    try:
+        return parse(load(fname))
+    except Exception as e:
+        printf("parse file %s FAIL", fname)
 
 def tk_list_len(tk):
     if tk == None: return 0
     if tk.type == ',':return tk_list_len(tk.first) + tk_list_len(tk.second)
     return 1
-
-    
-def main():
-    if len(ARGV) > 1:
-        f = ARGV[1]
-    else:
-        print("parse.py file")
-        return
-    
-if __name__ == "__main__":
-    pass
-    

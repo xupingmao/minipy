@@ -462,7 +462,7 @@ Object* rangeNext(RangeIter* data) {
         data->cur_obj = newNumber(cur);
         return &data->cur_obj;
     } else if (data->inc < 0 && cur > data->stop) {
-        data->cur -= data->inc;
+        data->cur += data->inc;
         data->cur_obj = newNumber(cur);
         return &data->cur_obj;
     }
@@ -521,6 +521,7 @@ Object bfRange() {
 void regBuiltinsFunc() {
 	regBuiltinFunc("load", bfLoad);
 	regBuiltinFunc("save", bfSave);
+    regBuiltinFunc("remove", bfRemove);
 	regBuiltinFunc("print", bfPrint);
 	regBuiltinFunc("write", bfWrite);
 	regBuiltinFunc("input", bfInput);

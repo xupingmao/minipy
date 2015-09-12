@@ -24,6 +24,7 @@ _opcode_names = [
     'TM_EOP',
     # mulity assignment, eg. x,y = 1,2
     'TM_DEBUG',
+    'TM_LINE',
     'TAG', 
         # instructions for vm to optimize.
     'FAST_ST_GLO',

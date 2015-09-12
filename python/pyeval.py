@@ -45,10 +45,24 @@ op_dict = {
     TM_DEL: _op_del
 }
 
+op_skip = {
+    TM_LINE: "TM_LINE",
+    SETJUMP: "SETJUMP"
+}
+
+class Env:
+    def __init__(self, globals):
+        self._glo = globals
+        
+    def globals(self):
+        return self._glo
+
 def pyeval(src, glo_vars = None, debug = False):
     # this will save a little memory
     # because varg will always asigned with given value.
     glo_vars = glo_vars or {}
+    env = Env(glo_vars)
+    glo_vars['globals'] = env.globals
     code = compile(src)
     ins_list = split_instr(code)
     # print(ins_list)
@@ -152,8 +166,8 @@ def pyeval(src, glo_vars = None, debug = False):
             collection.reverse()
             for x in collection:
                 stack.append(x)
-        elif op == SETJUMP:
-            print("SETJUMP not implemented")
+        elif op in op_skip:
+            pass
         elif op == POP_JUMP_ON_FALSE:
             r = stack.pop()
             if not r:

@@ -453,7 +453,13 @@ for k in op_map:
 for k in op_ext_map:
     encode_map[k] = encode_op_ext
 
-
+def getlineno(tk):
+    if hasattr(tk, 'pos'):
+        return tk.pos[0]
+    elif hasattr(tk, 'first'):
+        return getlineno(tk.first)
+    return None
+    
 def encode_item(tk):
     if tk == None: return 0
     # encode for statement list.
@@ -462,6 +468,8 @@ def encode_item(tk):
             # comment 
             if i.type == 'string':
                 continue
+            lineno = getlineno(i)
+            if lineno != None: emit(TM_LINE, lineno)
             encode_item(i)
             if i.type == 'call': emit(POP)
         return

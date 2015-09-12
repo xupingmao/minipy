@@ -90,7 +90,8 @@ typedef struct TmFrame {
   int stacksize;
   int maxlocals;
   int maxstack;
-  Object line; /* current line */
+  // Object line; /* current line */
+  int lineno;
   Object fnc;
   jmp_buf buf;
   int idx;

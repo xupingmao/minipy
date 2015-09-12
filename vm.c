@@ -6,7 +6,6 @@
 #include "list.c"
 #include "number.c"
 #include "gc.c"
-#include "core.c"
 #include "builtins.c"
 #include "builtins2.c"
 #include "ops.c"
@@ -14,7 +13,7 @@
 #include "function.c"
 #include "interp.c"
 #include "exception.c"
-#include "code.c"
+#include "util.c"
 #include "tmdata.c"
 #include "tmarg.c"
 #include "bin.c"
@@ -35,7 +34,9 @@ void regBuiltinFunc(char* name, Object (*native)()) {
 
 void builtinsInit() {
     /* set module boot */
-	dictSetByStr(tm->modules, "boot", newDict());
+    Object boot = newDict();
+	dictSetByStr(tm->modules, "boot", boot);
+    dictSetByStr(boot, "__name__", staticString("boot"));
 	dictSetByStr(tm->builtins, "tm", newNumber(1));
 	dictSetByStr(tm->builtins, "True", newNumber(1));
 	dictSetByStr(tm->builtins, "False", newNumber(0));
@@ -90,7 +91,7 @@ int tmRun(int argc, char* argv[]) {
 	builtinsInit();
 	dictSetByStr(tm->builtins, "ARGV", p);
     loadBinary();
-    callModFunc("init0", "init");
+    callModFunc("init", "boot");
     return 0;
 }
 

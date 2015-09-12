@@ -23,8 +23,11 @@ def find_error_line(s, pos):
     return r
 
 def compile_error(ctx, s, pos, eMsg = ""):
-    r = find_error_line(s, pos)
-    raise('Error at '+ctx+':\n'+r + eMsg)
+    if pos != None: 
+        r = find_error_line(s, pos)
+        raise Exception('Error at '+ctx+':\n'+r + eMsg)
+    else:
+        raise Exception(eMsg)
     #raise
 
 ISYMBOLS = '-=[];,./!%*()+{}:<>@^$'
@@ -68,11 +71,11 @@ def tokenize(s):
     global T
     s = clean(s)
     try:
-        return dotokenize0(s)
+        return dotokenize(s)
     except Exception as e:
         compile_error("tokenize", s, T.f)
         
-def dotokenize0(s):
+def dotokenize(s):
     global T
     T = TData(); i = 0; l = len(s)
     while i < l:
@@ -90,7 +93,7 @@ def dotokenize0(s):
         elif c == '\\' and s[i+1] == '\n':
             i += 2; T.y+=1; T.yi = i
         elif c == ' ' or c == '\t': i += 1
-        else: compile_error('dotokenize0',s, T.f)
+        else: compile_error('dotokenize',s, T.f)
     indent(0)
     r = T.res; T = None
     return r
@@ -108,7 +111,10 @@ def do_indent(s,i,l):
         c = s[i]
         if c != ' ' and c != '\t': break
         i+=1;v+=1
-    if c != '\n' and c != '#' and not T.braces: indent(v)
+    # skip blank line or comment line.
+    # i >= l means reaching EOF, which do not need to indent or dedent
+    if not T.braces and c != '\n' and c != '#' and i < l:
+        indent(v)
     return i
 
 def indent(v):
@@ -208,23 +214,3 @@ def do_comment(s,i,l):
         if c == '\n': break
         i += 1
     return i
-
-def tokenizeFromText(v):
-    r = tokenize(v)
-    for tk in r:
-        print("%s: %s => %s".format(str(tk.pos).ljust(10), tk.type.ljust(10), str(tk.val).ljust(10)))
-def tokenize0(f):
-    v = load(f)
-    print('tokenize %s, length = %s\n'.format(f, len(v)))
-    tokenizeFromText(v)
-    
-def printSource(f):
-    v = load(f)
-    print('tokenize %s , length = %s'.format(f, len(v)))
-    print(v)
-    tokenizeFromText(v)
-if __name__ == "__main__":
-    if len(ARGV) < 2: pass
-    else:
-        tokenize0(ARGV[1])
-

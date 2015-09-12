@@ -1,8 +1,7 @@
-from boot import *
+if str(1.0) == '1.0':
+    from boot import *
 
 a, b, c, d, e, f  = 1,2,3,4,5,6
-def _clock():
-    return time.time() * 1000
 
 i = 0
 j = 0

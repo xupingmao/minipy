@@ -1,11 +1,10 @@
-from boot import *
-
 i = 0
 list = []
 code = 'code = ['
-while i < 200:
-    code += str(i) + ','
+while i < 1000:
+    list.append(str(i))
     i+=1
-code += '200]'
+code += ','.join(list) + ']'
+code += '\nprint(code)'
 
 save("big-list.py", code)
