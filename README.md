@@ -19,10 +19,10 @@ run `python setup.py gcc` in console(or you may use other c compiler)
 5. exception can be tracked by lineno and handled.
 
 ### vm hierarchy
-`vm.c` entry
-`interp.c` interpreter
-`builtins.c` built-in functions
-`builtins2.c` built-in functions for developers.
+1. `vm.c` entry
+2. `interp.c` interpreter
+3. `builtins.c` built-in functions
+4. `builtins2.c` built-in functions for developers.
 
 ### objects
 1. string, strings are immutable.
