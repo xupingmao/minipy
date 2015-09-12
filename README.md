@@ -2,6 +2,9 @@
 
 ## a subset of python
 
+## How to start
+run 'python setup gcc' in console(or you may use other c compiler)
+
 ## compiler
 1. `tokenize.py` tokenizer modified from tinypy/tokenize
 2. `parse.py` handwrite LL parser
