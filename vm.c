@@ -34,7 +34,9 @@ void regBuiltinFunc(char* name, Object (*native)()) {
 
 void builtinsInit() {
     /* set module boot */
-	dictSetByStr(tm->modules, "boot", newDict());
+    Object boot = newDict();
+	dictSetByStr(tm->modules, "boot", boot);
+    dictSetByStr(boot, "__name__", staticString("boot"));
 	dictSetByStr(tm->builtins, "tm", newNumber(1));
 	dictSetByStr(tm->builtins, "True", newNumber(1));
 	dictSetByStr(tm->builtins, "False", newNumber(0));

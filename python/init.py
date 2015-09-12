@@ -123,15 +123,6 @@ def mtime(fname):
     return obj.st_mtime
 add_builtin("mtime", mtime)
 
-def newlist(size):
-    i = 0
-    list = []
-    while i < size:
-        list.append(i)
-        i+=1
-    return list
-add_builtin("newlist", newlist)
-
 def escape(text):
     if gettype(text) != 'string':
         raise "<function escape> expect a string"
@@ -171,14 +162,17 @@ def _import(fname, des_glo, tar = None):
     else:
         # printf("try to load module %s\n", fname)
         from encode import compilefile
-        if not exists(fname):
+        # can not find file in current dir.
+        if not exists(fname + '.py'):
+            # try to find in PATH defined in file.
             if 'PATH' in des_glo:
-                fname = des_glo["PATH"] + '/' + fname
-            else:
-                raise(sformat("import error, can not open file '%s.py'\n", fname))
+                fname = des_glo["PATH"] + FILE_SEP + fname
+            # still can not be found? find in LIB_PATH
+            if not exists(fname + '.py'):
+                fname = LIB_PATH + FILE_SEP + fname
         try:
             #__modules__[fname] = {}
-            _code = compilefile(fname + '.py' )
+            _code = compilefile(fname + '.py')
         except Exception as e:
             #del __modules__[fname]
             raise(sformat('import error: fail to compile file "%s.py":\n\t%s', fname, e))
@@ -190,6 +184,8 @@ def _import(fname, des_glo, tar = None):
             # and #N is a special variable created by tinyvm compiler
             if k[0] != '_' and k[0] != '#':
                 des_glo[k] = g[k]
+    elif tar == None:
+        des_glo[fname] = g
     else:
         if tar not in g:
             raise(sformat("import error, no definition named '%s'", tar))
@@ -306,13 +302,17 @@ def _execute_file(path):
     _code = compilefile(fname)
     # printf("run file %s ...\n", fname)
     load_module(fname, _code, '__main__')
-
+    
+LIB_PATH = ''
 def boot(loadlibs=True):
     from tokenize import *
     from encode import compilefile
     from repl import repl
+    global LIB_PATH
     argc = len(ARGV)
-    
+    pathes = split_path(getcwd())
+    pathes.append("libs")
+    LIB_PATH = join_path(pathes)
     if argc == 0:
         repl()
     else:

@@ -1,5 +1,4 @@
 from boot import *
-PATH = "libs"
 from test import *
 
 def ackermann(x, y):
