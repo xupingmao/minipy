@@ -225,23 +225,8 @@ Object tmEval(TmFrame* f) {
 			} else {
 				TM_PUSH(GET_DICT(globals)->nodes[idx].val);
                 pc[0] = FAST_LD_GLO;
-                pc[1] = (idx>>8) & 0xff;
-                pc[2] = idx & 0xff;
+                code16(pc+1, idx);
 			}
-            /*
-			k = GET_CONST(i);
-			DictNode* node = DictGetNode(GET_DICT(globals), k);
-			if (node == NULL) {
-				node = DictGetNode(GET_DICT(tm->builtins), k);
-				if (node == NULL) {
-					tmRaise("NameError: name %o is not defined", k);
-				}
-				v = node->val;
-			} else {
-				v = node->val;
-			}
-			TM_PUSH(v);
-            */
 			break;
 		}
 		case STORE_GLOBAL: {
@@ -250,8 +235,7 @@ Object tmEval(TmFrame* f) {
             int idx = setAttr(GET_DICT(globals), i, x);
 			/* tmSet(globals, GET_CONST(i), x); */
             pc[0] = FAST_ST_GLO;
-            pc[1] = (idx >> 8) & 0xff;
-            pc[2] = idx & 0xff;
+            code16(pc+1, idx);
 			break;
 		}
         case FAST_LD_GLO: {
