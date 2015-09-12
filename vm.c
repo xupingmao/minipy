@@ -90,7 +90,7 @@ int tmRun(int argc, char* argv[]) {
 	builtinsInit();
 	dictSetByStr(tm->builtins, "ARGV", p);
     loadBinary();
-    callModFunc("init0", "init");
+    callModFunc("init", "boot");
     return 0;
 }
 

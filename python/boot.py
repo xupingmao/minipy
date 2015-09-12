@@ -9,10 +9,9 @@ import time
 # import loadlib
 '''
 bootstrap for standard python to go.
-Run with Python 2.7
 '''
-def loadlib(path, name):
-    raise "loadlib not implemented"
+def require(path, name):
+    raise "require not implemented"
     
 def do_nothing(*args):
     pass
@@ -20,25 +19,15 @@ def do_nothing(*args):
 class Obj:
     pass
 
-def clock():
-    return time.time() * 1000
-    
 def newobj():
     return Obj()
 
 def load(name):
-    fp = open(name, "rb")
+    fp = open(name, "r")
     t = fp.read()
     fp.close()
     return t
 
-def move(src, des):
-    v = load(src)
-    save(des, v)
-def copy(src, des):
-    v = load(src)
-    save(des, v)
-    
 def mtime(fname):
     return os.path.getmtime(fname)
 
@@ -74,14 +63,34 @@ def getConstList():
     
 def mtime(name):
     return os.path.getmtime(name)
+# def makesure(v, expect = None, cur = None):
+    # if not v and cur:
+        # print('error at ' + str(cur.pos) + ' expect ' + expect + ' but see ' + cur.val)
 
 def save(name, content):
-    fp = open(name, 'wb')
+    fp = open(name, 'w')
     fp.write(content)
     fp.close()
 
 def remove(fname):
     os.remove(fname)
+rm = remove
+
+def _and(a,b):
+    return a and b
+    
+def _slice(self, start, end):
+    return self[start:end]
+    
+def istype(val,  type):
+    if type == 'string':
+        return isinstance(val, str)
+    elif type == 'number':
+        return isinstance(val, int) or isinstance(val, float)
+    elif type == 'list':
+        return isinstance(val, list) or isinstance(val, tuple)
+    elif type == 'dict':
+        return isinstance(val, dict)
 
 def gettype(val):
     '''to be different with python builtin function type'''
@@ -119,16 +128,16 @@ def codeF(value):
     return struct.pack('d', value)
 
 def code(type, val):
-    if gettype(val) == "string":
+    if istype(val, "string"):
         return chr(type) + code16(len(val))+ val
-    elif gettype(val) == "number":
+    elif istype(val, "number"):
         return chr(type) + codeF(val)
         
         
 add_builtin("add_builtin", add_builtin)
-add_builtin('loadlib', loadlib)
+add_builtin('require', require)
 add_builtin('add_obj_method', do_nothing)
-add_builtin('gettype', gettype)
+add_builtin('istype', istype)
 
 if __name__ == '__main__':
     file = sys.argv[1]

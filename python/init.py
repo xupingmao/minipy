@@ -1,3 +1,51 @@
+
+
+'''
+tools for tinyvm to bootstrap
+'''
+
+def _import(fname, des_glo, tar = None):
+    'this _import function can not prevent import circle'
+    if fname in __modules__:
+        pass
+    else:
+        from encode import compilefile
+        try:
+            #__modules__[fname] = {}
+            _code = compilefile(fname + '.py' )
+        except Exception as e:
+            #del __modules__[fname]
+            raise(sformat('fail to compile file "%s.py":\n\t%s', fname, e))
+        load_module(fname, _code)
+    g = __modules__[fname]
+    if tar == '*':
+        for k in g:
+            # _ stands for private variable
+            # and #N is a special variable created by tinyvm compiler
+            if k[0] != '_' and k[0] != '#':
+                des_glo[k] = g[k]
+    else:
+        des_glo[tar] = g[tar]
+
+
+def newobj():
+    return {}
+
+def hasattr(obj, name):
+    return name in obj
+
+def Exception(e):
+    return e
+
+def add_builtin(name, func):
+    __builtins__[name] = func
+
+add_builtin("add_builtin", add_builtin)
+add_builtin("Exception", Exception)
+add_builtin("hasattr", hasattr)
+add_builtin("_import", _import)
+add_builtin("newobj", newobj)
+
 class Lib:
     def __init__(self, name, path, load = 1):
         self.name = name
@@ -5,14 +53,14 @@ class Lib:
         self.load = load
 
 # built-in functions.
-_libs = [
-    Lib("builtins", "libs/builtins.py"),
-    Lib("dis", "libs/tools/dis.py", 1),
-    Lib("printast", "libs/tools/printast.py", 1), 
-    Lib("repl", "libs/tools/repl.py"),
-    Lib("pyeval", "libs/tools/pyeval.py"),
-    Lib("test", "libs/tools/test.py")
-]
+#_libs = [
+    #Lib("builtins", "libs/builtins.py"),
+    #Lib("dis", "libs/tools/dis.py", 1),
+    #Lib("printast", "libs/tools/printast.py", 1), 
+    #Lib("repl", "libs/tools/repl.py"),
+    #Lib("pyeval", "libs/tools/pyeval.py"),
+    #Lib("test", "libs/tools/test.py")
+#]
 
 def require(path, name = None):
     'for modules which can not import by import statement'
@@ -105,14 +153,15 @@ def print_usage():
 def boot(loadlibs=True):
     from tokenize import *
     from encode import compilefile
-    for item in _libs:
-        if loadlibs and item.load:
-            require(item.path, item.name)
+    from repl import repl
     argc = len(ARGV)
+    
     if argc == 0:
-        repl = require("repl").repl
         repl()
-    elif argc == 1:
+    else:
+        _execute_file(ARGV[0])
+    return
+    if argc == 1:
         if ARGV[0] == '-help':
             print_usage()
         else:
@@ -135,13 +184,13 @@ def boot(loadlibs=True):
         elif opt == '-dump':
             compilefile(name, name + '.bin')
         elif opt == '-ast':
-            ast = loadlib('libs/tools/printast.py').printast
+            ast = loadlib('printast.py').printast
             ast(load(name))
         elif opt == '-transform':
-            trans = loadlib('libs/tools/transform.py').main
+            trans = loadlib('transform.py').main
             tran(ARGV)
         elif opt == '-dis-bf':
-            dis_func = loadlib('libs/tools/dis.py').dis_func
+            dis_func = loadlib('dis.py').dis_func
             dis_func(__builtins__[name])
         else:
             # normal execute file

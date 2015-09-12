@@ -45,10 +45,19 @@ op_dict = {
     TM_DEL: _op_del
 }
 
+class Env:
+    def __init__(self, globals):
+        self._glo = globals
+        
+    def globals(self):
+        return self._glo
+
 def pyeval(src, glo_vars = None, debug = False):
     # this will save a little memory
     # because varg will always asigned with given value.
     glo_vars = glo_vars or {}
+    env = Env(glo_vars)
+    glo_vars['globals'] = env.globals
     code = compile(src)
     ins_list = split_instr(code)
     # print(ins_list)

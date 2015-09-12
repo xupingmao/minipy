@@ -50,11 +50,9 @@ def getmem():
     
 def repl():
     from parse import parse
-    printast = require("libs/tools/printast.py").printast
-    pyeval = require("libs/tools/pyeval.py").pyeval
-    dis = require("libs/tools/dis.py")
     from encode import compile
     from tokenize import tokenize
+    from pyeval import pyeval
     print("Welcome To TinyMatrix!!!")
     
     global debug
@@ -63,15 +61,13 @@ def repl():
     g = {}
     g.update(globals())
     g['g'] = g
-    g.update(dis)
-    g.pyeval = pyeval
-    g.printast = printast
     remove_consts(g)
-
     while 1:
         x = input(">>> ")
         if x != '':
             try:
+                if x == 'exit':
+                    break
                 if 'debug' not in g:
                     g['debug'] = 0
                 v = pyeval(x, g, g['debug'])

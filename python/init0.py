@@ -51,5 +51,5 @@ def init():
         _import("init", glo, "*")
         glo.boot(False)
     else:
-        _import("libs/init", glo, '*')
+        _import("init", glo, '*')
         glo.boot()

@@ -36,6 +36,7 @@ Object bfVmOpt() {
 
 Object bfGetVmInfo() {
     Object tmInfo = newDict();
+    dictSetByStr(tmInfo, "name", newString("tm"));
     dictSetByStr(tmInfo, "vm_size", newNumber(sizeof(TmVM)));
     dictSetByStr(tmInfo, "obj_size", newNumber(sizeof(Object)));
     dictSetByStr(tmInfo, "int_size", newNumber(sizeof(int)));
