@@ -169,6 +169,8 @@ def sformat0(args):
     
 def sformat(*narg):
     return sformat0(narg)
+add_obj_method("str", "format", sformat)
+
 add_builtin("sformat0", sformat0)
 add_builtin("sformat", sformat)
 
