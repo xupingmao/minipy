@@ -74,8 +74,14 @@ void ListSet(TmList* list, int n, Object val) {
 void listCheck(TmList* list) {
 	if (list->len >= list->cap) {
 		int ocap = list->cap;
+		int newsize;
         /* in case malloc crash */
-        int newsize = list->cap * 3 / 2 + 1;
+        if (ocap < 10) {
+        	newsize = ocap + 2;
+        } else {
+        	newsize = ocap / 2 + ocap;
+        }
+        /*int newsize = list->cap * 3 / 2 + 1;*/
 		list->nodes = tmRealloc(list->nodes, OBJ_SIZE * ocap,
 				OBJ_SIZE * newsize);
         list->cap = newsize;

@@ -61,9 +61,12 @@ void DictCheck(TmDict* dict){
 	if(dict->len < dict->cap)
 		return;
 	int osize = dict->cap;
-	int i;
-    int j;
-	int nsize = osize + osize / 2 + 1;
+	int i, j, nsize;
+    if (osize < 10) {
+        nsize = osize + 2;
+    } else {
+        nsize = osize + osize / 2 + 1;
+    }
 	DictNode* nodes = tmMalloc(nsize * sizeof(DictNode));
     for(i = 0; i < nsize; i++) {
         nodes[i].used = 0;
