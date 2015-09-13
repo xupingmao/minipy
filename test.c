@@ -97,7 +97,7 @@ void testRun(int argc, char* argv[]) {
     max = newNumber(1000000);
     n34 = newNumber(34);
     n1 = newNumber(1);
-    while (tmBool(tmLessThan(i, max))) {
+    while (tm_bool(tmLessThan(i, max))) {
         // j = tmMul(i, n34);
         if (IS_NUM(i) && IS_NUM(n34)) {
             Object temp = newNumber(GET_NUM(i) * GET_NUM(n34));

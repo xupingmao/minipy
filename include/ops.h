@@ -17,7 +17,7 @@ Object    tmSub(Object a, Object b);
 Object    tmMul(Object a, Object b);
 Object    tmDiv(Object a, Object b);
 Object    tmMod(Object a, Object b);
-Object    tmNeg(Object o) ;
+Object    tm_neg(Object o) ;
 int tmEquals(Object a, Object b);
 
 /*
@@ -32,17 +32,14 @@ Object objNotEquals(Object, Object);
 */
 
 int tmCmp(Object a, Object b);
-Object* tmNext(Object iterator);
+Object* tm_next(Object iterator);
 Object iterNew(Object collections);
 Object tmGet(Object self, Object k);
 void tmSet(Object self, Object k, Object v);
 
 Object tmStr(Object obj);
-int tmLen(Object o);
-Object tmHas(Object a, Object b);
-
-int tmBool(Object v);
+int tm_bool(Object v);
 int tmIter(Object self, Object *k);
-void tmDel(Object self, Object k);
+void tm_del(Object self, Object k);
 
 #endif /* OPS_H_ */

@@ -1,9 +1,9 @@
-
+# run with python3
 import os, sys
 
 def copy(src, des):
-    fp = open(des, "wb")
-    for line in open(src, "rb"):
+    fp = open(des, "w")
+    for line in open(src):
         fp.write(line)
     fp.close()
 
@@ -22,18 +22,19 @@ def rename(dirname, changes, file_exts = (".h", ".c"), bakdir = "bak"):
     for fname in os.listdir(dirname):
         abspath = os.path.join(dirname, fname)
         if os.path.isfile(abspath) and fname.endswith(file_exts):
-            text = open(abspath, "rb").read()
+            print("load file %s" % abspath)
+            text = open(abspath).read()
             if oldname not in text:
                 continue
             print("replace file %s" % abspath)
             newtext = text.replace(oldname, newname)
-            open(abspath, "wb").write(newtext)
+            open(abspath, "w").write(newtext)
 
 def do_replace(oldname, newname):
     changes = oldname, newname
     rename(".", changes)
     rename("include", changes)
-    rename("lib", changes)
+    #rename("lib", changes)
 
 def clean_baks():
     print("<function clean_baks> not implemented")

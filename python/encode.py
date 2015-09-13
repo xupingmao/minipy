@@ -4,7 +4,7 @@ from boot import *
 
 def encode_error(token, msg):
     global ctx
-    compile_error("encode", ctx.src, findpos(token), msg)
+    compile_error("encode", ctx.src, token, msg)
     
 def load_attr(name):
     if name.type == 'name':
@@ -53,8 +53,8 @@ op_map = {
     '*':MUL,
     '/':DIV,
     '%':MOD,
-    '>' : GT,
-    '<' : LT,
+    '>' : OP_GT,
+    '<' : OP_LT,
     '>=': GTEQ,
     '<=': LTEQ,
     '==': EQEQ,
@@ -202,6 +202,8 @@ def encode_def(tk, in_class = 0):
     # loc_num_ins = emit(LOC_NUM, 0)
     push_scope()
     narg = 0
+    parg = 0
+    varg = 0
     for item in tk.second:
         def_local(item.first)
         # regs.append(item.first)
@@ -210,10 +212,13 @@ def encode_def(tk, in_class = 0):
             emit(TM_NARG)
             break
         if item.second:
+            varg += 1
             encode_item(item.second)
             store(item.first)
+        else:
+            parg += 1
     if not narg:
-        emit(LOAD_PARAMS)
+        emit(LOAD_PARAMS, parg*256 + varg)
     encode_item(tk.third)
     emit(TM_EOF)
     regs[1] = asm_get_regs()

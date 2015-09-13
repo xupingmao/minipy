@@ -47,7 +47,7 @@ void _listAppend(TmList* list, Object v);
 #define listIndex(list, val) _listIndex(GET_LIST(list), val)
 #define listAdd(a, b) _listAdd(GET_LIST(a), GET_LIST(b))
 
-/* 宏函数 */
+/* macros */
 #define APPEND(list, v) _listAppend(GET_LIST(list), v)
 #define LIST_GET(obj, i) ListGet(GET_LIST(obj), i)
 #define LIST_NODES(obj) (GET_LIST(obj))->nodes

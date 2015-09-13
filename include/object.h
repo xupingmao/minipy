@@ -129,7 +129,7 @@ typedef struct TmVM {
   Object *arguments;
 
   
-  int argumentsCount;
+  int arg_cnt;
   int argumentsLoaded;
 
   Object constants;
@@ -149,6 +149,7 @@ typedef struct TmVM {
  * global virtual machine
  */
 TmVM* tm;
+Object* tm_stack_end;
 
 int              objEqSz(Object str, const char* value);
 void             tmRaise(char*fmt , ...);

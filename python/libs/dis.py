@@ -15,10 +15,10 @@ def dis(fname ,constants = ['None']):
         if op in (NEW_STRING, NEW_NUMBER):
             vv = s.substring(i, i + val)
             i += val
-        elif ins in global_mod_list:
-            print(tmcodes[ins], getConst(val))
+        elif op in global_mod_list:
+            print(tmcodes[op], getConst(val))
         else:
-            print(tmcodes[ins], val)
+            print(tmcodes[op], val)
 
 def dis_func(func):
     code = get_func_code(func)

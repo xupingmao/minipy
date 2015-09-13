@@ -169,7 +169,7 @@ int getFunctionMaxLocals(TmFunction* fnc){
 
 Object getModuleCreateIfNotExist(char* modName) {
 	Object mod = newString0(modName, -1);
-	if(bTmHas(tm->modules, mod)) {
+	if(tm_has(tm->modules, mod)) {
 		return tmGet(tm->modules, mod);
 	}else {
 		tmSet(tm->modules, mod, newDict());

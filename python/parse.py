@@ -61,16 +61,9 @@ def add_op(p, v):
     p.tree.append(node)
 
 
-def findpos(token):
-    if not hasattr(token, 'pos'):
-        return findpos(token.first)
-    return token.pos
-
 def parse_error(p, token=None, msg="Unknown"):
     if token != None:
-        if token.type in ('eof', 'dedent'):
-            compile_error('unexpected EOF while parsing', p.src, findpos(token), msg)
-        compile_error('parse', p.src, findpos(token), msg)
+        compile_error('parse', p.src, token, msg)
     else:
         raise("assert_type error")
 
@@ -364,8 +357,7 @@ def parse_while(p):
 
 
 def parse_for_while(p, type):
-    ast = AstNode()
-    ast.type = type
+    ast = AstNode(type)
     p.next()
     expr(p)
     ast.first = p.pop()

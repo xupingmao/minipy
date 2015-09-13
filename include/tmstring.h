@@ -17,7 +17,7 @@ typedef struct {
 typedef struct String {
 	int marked;
 	int len;
-	int stype; /* 字符串类型 */
+	int stype; /* string type, static or not */
 	char *value;
 } String;
 
@@ -46,7 +46,7 @@ DataProto*  getStringProto();
 Object 		stringIterNew(String* s);
 Object* 	stringNext(StringIterator* iterator);
 
-/* 宏函数 */
+/* macros */
 #define GET_STR(obj) (obj).value.str->value
 #define GET_STR_OBJ(obj) (obj).value.str
 #define GET_STR_LEN(obj) (obj).value.str->len

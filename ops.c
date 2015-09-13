@@ -97,7 +97,7 @@ Object tmSub(Object a, Object b) {
             return a;
 		}
 	}
-	tmRaise("tmSub: can not sub %o and %o", a, b);
+	tmRaise("tmSub: can not substract %o and %o", a, b);
 	return NONE_OBJECT;
 }
 
@@ -244,7 +244,7 @@ Object tmMul(Object a, Object b) {
 		}
 		return des;
 	}
-	tmRaise("tmMul: can not mul %o and %o", a, b);
+	tmRaise("tmMul: can not multiply %o and %o", a, b);
 	return NONE_OBJECT;
 }
 
@@ -253,7 +253,7 @@ Object tmDiv(Object a, Object b) {
 		GET_NUM(a) /= GET_NUM(b);
         return a;
 	}
-	tmRaise("tmDiv: can not div %o and %o", a, b);
+	tmRaise("tmDiv: can not divide %o and %o", a, b);
 	return NONE_OBJECT;
 }
 
@@ -276,7 +276,7 @@ Object tmMod(Object a, Object b) {
 }
 
 /* a has b */
-int bTmHas(Object a, Object b) {
+int tm_has(Object a, Object b) {
 	switch (TM_TYPE(a)) {
 	case TYPE_LIST: {
 		return (_listIndex(GET_LIST(a), b) != -1);
@@ -296,7 +296,7 @@ int bTmHas(Object a, Object b) {
 	}
 	return 0;
 }
-int tmBool(Object v) {
+int tm_bool(Object v) {
 	switch (TM_TYPE(v)) {
 	case TYPE_NUM:
 		return GET_NUM(v) != 0;
@@ -315,12 +315,12 @@ int tmBool(Object v) {
 	return 0;
 }
 
-Object tmNeg(Object o) {
+Object tm_neg(Object o) {
 	if (o.type == TYPE_NUM) {
 		GET_NUM(o) = -GET_NUM(o);
 		return o;
 	}
-	tmRaise("tmNeg: can not handle %o", o);
+	tmRaise("tm_neg: can not handle %o", o);
 	return NONE_OBJECT;
 }
 
@@ -336,11 +336,11 @@ Object iterNew(Object collections) {
 	return NONE_OBJECT;
 }
 
-Object* tmNext(Object iterator) {
+Object* tm_next(Object iterator) {
     return GET_DATA_PROTO(iterator)->next(GET_DATA(iterator));
 }
 
-void tmDel(Object self, Object k) {
+void tm_del(Object self, Object k) {
 	switch(TM_TYPE(self)) {
 		case TYPE_DICT:{
 			dictDel(self, k);
@@ -351,7 +351,7 @@ void tmDel(Object self, Object k) {
 			break;
 		}
         default:
-            tmRaise("tmDel: not supported type %s", getTypeByObj(self));
+            tmRaise("tm_del: not supported type %s", getTypeByObj(self));
 	}
 }
 

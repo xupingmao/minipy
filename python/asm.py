@@ -139,14 +139,15 @@ jmp_list = [
     TM_NEXT
 ]
 
-jmp_optimize_map = {
-    LT: LT_JUMP_ON_FALSE,
-    GT: GT_JUMP_ON_FALSE,
-    LTEQ: LTEQ_JUMP_ON_FALSE,
-    GTEQ: GTEQ_JUMP_ON_FALSE,
-    EQEQ: EQEQ_JUMP_ON_FALSE,
-    NOTEQ: NOTEQ_JUMP_ON_FALSE
-}
+
+#jmp_optimize_map = {
+#    OP_LT: LT_JUMP_ON_FALSE,
+#    GT: GT_JUMP_ON_FALSE,
+#    LTEQ: LTEQ_JUMP_ON_FALSE,
+#    GTEQ: GTEQ_JUMP_ON_FALSE,
+#    EQEQ: EQEQ_JUMP_ON_FALSE,
+#    NOTEQ: NOTEQ_JUMP_ON_FALSE
+#}
         
 def asm_save_bin(lst):
     bin = ''
@@ -171,21 +172,21 @@ def optimize0(nx, x,tags, jmp_list):
         else:
             nx.append(ins)
             
-def optimize1(nx, x, tags, jmp_list):
-    for ins in x:
-        if ins[0] in jmp_list:
-            if ins[1] in tags:
-                ins[1] = tags[ins[1]]
-            pre = nx.pop()
-            if ins[0] == POP_JUMP_ON_FALSE and pre[0] in jmp_optimize_map:
-                ins[0] = jmp_optimize_map[pre[0]]
-            else:
-                nx.append(pre)
-            nx.append(ins)
-        elif ins[1] == None:
+#def optimize1(nx, x, tags, jmp_list):
+#    for ins in x:
+#        if ins[0] in jmp_list:
+#            if ins[1] in tags:
+#                ins[1] = tags[ins[1]]
+#            pre = nx.pop()
+#            if ins[0] == POP_JUMP_ON_FALSE and pre[0] in jmp_optimize_map:
+#                ins[0] = jmp_optimize_map[pre[0]]
+#            else:
+#                nx.append(pre)
+#            nx.append(ins)
+#        elif ins[1] == None:
             pass
-        else:
-            nx.append(ins)
+#        else:
+#            nx.append(ins)
 
 def findTag(code, val):
     cur = 0

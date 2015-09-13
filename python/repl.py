@@ -1,4 +1,6 @@
 _PRINT_STR_LEN = 40
+from encode import compile
+from encode import compilefile
 
 def replPrint(p, n = 0, depth = 2):
     if depth <= 0:
@@ -47,10 +49,18 @@ def remove_consts(g):
 
 def getmem():
     return str(getVmInfo().alloc_mem / 1024) + ' kb'
+
+def run(path, args = None):
+    bak_argv = ARGV
+    if args == None:
+        args = [path]
+    else:
+        args.insert(0, path)
+    load_module(path, compilefile(path))
+    ARGV = bak_argv
     
 def repl():
     from parse import parse
-    from encode import compile
     from tokenize import tokenize
     from pyeval import pyeval
     print("Welcome To TinyMatrix!!!")

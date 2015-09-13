@@ -32,8 +32,7 @@ typedef struct _GlobalCache {
     Object globals;
 } GlobalCache;
 */
-
-#define TM_PUSH(x) *(++top) = (x); /*if( top - f->stack >= 50) tmRaise("stack overflow");*/
+#define TM_PUSH(x) *(++top) = (x); if(top > tm_stack_end) tmRaise("stack overflow");
 #define TM_POP() *(top--)
 #define TM_TOP() (*top)
 #define GET_CONST(i) GET_DICT(tm->constants)->nodes[i].key

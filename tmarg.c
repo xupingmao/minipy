@@ -4,22 +4,22 @@
 void argStart() {
 	tm->arguments = tm->internalArgStack;
 	tm->argumentsLoaded = 0;
-	tm->argumentsCount = 0;
+	tm->arg_cnt = 0;
 }
 
 void pushArg(Object obj) {
 	tm->arguments = tm->internalArgStack;
 	tm->argumentsLoaded = 0;
-	tm->arguments[tm->argumentsCount] = obj;
-	tm->argumentsCount += 1;
-	if(tm->argumentsCount > MAX_ARG_COUNT) {
+	tm->arguments[tm->arg_cnt] = obj;
+	tm->arg_cnt += 1;
+	if(tm->arg_cnt > MAX_ARG_COUNT) {
 		tmRaise("pushArg(): too many arguments! over %d", MAX_ARG_COUNT);
 	}
 }
 
 void tmSetArguments(Object* first, int len) {
 	tm->arguments = first;
-	tm->argumentsCount = len;
+	tm->arg_cnt = len;
 	tm->argumentsLoaded = 0;
 }
 
@@ -28,27 +28,27 @@ void _resolveMethodSelf(TmFunction *fnc) {
 		return;
 	}
 	int i;
-	for (i = tm->argumentsCount; i > 0; i--) {
+	for (i = tm->arg_cnt; i > 0; i--) {
 		tm->arguments[i] = tm->arguments[i - 1];
 	}
     #if 0
         tmPrintf("Self = %o\n", fnc->self);
     #endif
 	tm->arguments[0] = fnc->self;
-	tm->argumentsCount += 1;
+	tm->arg_cnt += 1;
 }
 
 Object getArgFromVM0(const char* fnc) {
-	if (tm->argumentsLoaded >= tm->argumentsCount)
+	if (tm->argumentsLoaded >= tm->arg_cnt)
 		tmRaise("%s :no argument! total %d, current %d",
-				fnc, tm->argumentsCount, tm->argumentsLoaded);
+				fnc, tm->arg_cnt, tm->argumentsLoaded);
 	tm->argumentsLoaded += 1;
 	return tm->arguments[tm->argumentsLoaded - 1];
 }
 
 
 int hasArg() {
-	return tm->argumentsLoaded < tm->argumentsCount;
+	return tm->argumentsLoaded < tm->arg_cnt;
 }
 
 Object getArgFromVM(int type) {
@@ -148,5 +148,5 @@ Object getDataArg(const char* fnc) {
 	return v;
 }
 int getArgsCount() {
-	return tm->argumentsCount;
+	return tm->arg_cnt;
 }

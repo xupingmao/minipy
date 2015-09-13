@@ -136,6 +136,17 @@ TmFrame* pushFrame(Object fnc) {
 }
 
 
+#define PREDICT_JMP(flag) \
+    if (!flag && pc[3] == POP_JUMP_ON_FALSE) { \
+        top--;\
+        pc += 3; \
+        i = (pc[1] << 8) | pc[2]; \
+        pc += i * 3; \
+        continue;\
+    } else { \
+        *top = newNumber(flag); \
+    }
+
 /** 
 ** evaluate byte code.
 ** @param f: Frame
@@ -285,9 +296,13 @@ Object tmEval(TmFrame* f) {
             top--;
             break;
         }
-        case LT: {
+        case OP_LT: {
             *(top-1) = newNumber(tmCmp(*(top-1), *top)<0);
             top--;
+            // int flag = tmCmp(*(top-1), *top) < 0;
+            // top--;
+            // predict
+            // PREDICT_JMP(flag);
             break;
         }
         case LTEQ: {
@@ -295,7 +310,7 @@ Object tmEval(TmFrame* f) {
             top--;
             break;
         }
-        case GT: {
+        case OP_GT: {
             *(top-1) = newNumber(tmCmp(*(top-1), *top)>0);
             top--;
             break;
@@ -306,22 +321,22 @@ Object tmEval(TmFrame* f) {
             break;
         }
         case OP_IN: {
-            *(top-1) = newNumber(bTmHas(*top, *(top-1)));
+            *(top-1) = newNumber(tm_has(*top, *(top-1)));
             top--;
             break;
         }
         case AND: {
-            *(top-1) = newNumber(tmBool(*(top-1)) && tmBool(*top));
+            *(top-1) = newNumber(tm_bool(*(top-1)) && tm_bool(*top));
             top--;
             break;
         }
         case OR: {
-            *(top-1) = newNumber(tmBool(*(top-1)) || tmBool(*top));
+            *(top-1) = newNumber(tm_bool(*(top-1)) || tm_bool(*top));
             top--;
             break;
         }
         case NOT:{
-            *top = newNumber(!tmBool(*top));
+            *top = newNumber(!tm_bool(*top));
             break;
         }
 		case SET:
@@ -338,7 +353,7 @@ Object tmEval(TmFrame* f) {
 			break;
 		}
 		case NEG:
-			TM_TOP() = tmNeg(TM_TOP());
+			TM_TOP() = tm_neg(TM_TOP());
 			break;
 		case CALL: {
             f->top = top;
@@ -354,15 +369,20 @@ Object tmEval(TmFrame* f) {
             break;
 		}
 		case LOAD_PARAMS: {
-            // tmPrintf("load %d params\n", tm->argumentsCount);
-			for(i = 0; i < tm->argumentsCount; i++){
+            int parg = pc[1];
+            int varg = pc[2];
+            if (tm->arg_cnt < parg || tm->arg_cnt > parg + varg) {
+                tmRaise("arguments do not match, define parg %d, varg %d,but given %d", 
+                    parg, varg, tm->arg_cnt);
+            }
+			for(i = 0; i < tm->arg_cnt; i++){
 				locals[i] = tm->arguments[i];
 			}
 			break;
 		}
         case TM_NARG: {
-            Object list = newList(tm->argumentsCount);
-            for(i = 0; i < tm->argumentsCount; i++) {
+            Object list = newList(tm->arg_cnt);
+            for(i = 0; i < tm->arg_cnt; i++) {
                 APPEND(list, tm->arguments[i]);
             }
             locals[0] = list;
@@ -373,7 +393,7 @@ Object tmEval(TmFrame* f) {
 			break;
 		}
 		case TM_NEXT: {
-			Object *next = tmNext(*top);
+			Object *next = tm_next(*top);
 			if (next != NULL) {
 				TM_PUSH(*next);
 				break;
@@ -426,12 +446,12 @@ Object tmEval(TmFrame* f) {
 		case TM_DEL: {
 			k = TM_POP();
 			x = TM_POP();
-			tmDel(x, k);
+			tm_del(x, k);
 			break;
 		}
 
 		case POP_JUMP_ON_FALSE: {
-			if (!tmBool(TM_POP())) {
+			if (!tm_bool(TM_POP())) {
 				pc += i * 3;
 				continue;
 			}
@@ -439,7 +459,7 @@ Object tmEval(TmFrame* f) {
 		}
 
 		case JUMP_ON_TRUE: {
-			if (tmBool(TM_TOP())) {
+			if (tm_bool(TM_TOP())) {
 				pc += i * 3;
 				continue;
 			}
@@ -447,7 +467,7 @@ Object tmEval(TmFrame* f) {
 		}
 
 		case JUMP_ON_FALSE: {
-			if (!tmBool(TM_TOP())) {
+			if (!tm_bool(TM_TOP())) {
 				pc += i * 3;
 				continue;
 			}
@@ -506,12 +526,12 @@ Object tmEval(TmFrame* f) {
 			if (debugFunc == NULL) {
 				tmRaise("__debug__ is not defined");
 			} else {
-				argStart();
-				pushArg(newNumber((long)pc));
-                pushArg(globals);
+				//argStart();
+				//pushArg(newNumber((long long)pc));
+                //pushArg(globals);
                 /* how to pass locals? */
                 /* make a list in frame ? store arguments as well as locals*/
-				callFunction(*debugFunc);
+				//callFunction(*debugFunc);
                 continue;
 			}			
 			break;

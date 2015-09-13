@@ -12,15 +12,15 @@
 Object bfInspectPtr() {
 	double _ptr = getNumArg("inspectPtr");
 	int idx = getIntArg("inspectPtr");
-    char* ptr = (char*)(long)_ptr;
+    char* ptr = (char*)(long long)_ptr;
 	return tmChr(ptr[idx]);
 }
 
 Object bfGetCurrentFrame() {
 	Object frameInfo = newDict();
 	dictSetByStr(frameInfo, "function", tm->frame->fnc);
-	dictSetByStr(frameInfo, "pc", newNumber((long)tm->frame->pc));
-    dictSetByStr(frameInfo, "index", newNumber((long) (tm->frame - tm->frames)));
+	// dictSetByStr(frameInfo, "pc", newNumber((long long)tm->frame->pc));
+    dictSetByStr(frameInfo, "index", newNumber((long long) (tm->frame - tm->frames)));
 	return frameInfo;
 }
 
@@ -41,6 +41,7 @@ Object bfGetVmInfo() {
     dictSetByStr(tmInfo, "obj_size", newNumber(sizeof(Object)));
     dictSetByStr(tmInfo, "int_size", newNumber(sizeof(int)));
     dictSetByStr(tmInfo, "long_size", newNumber(sizeof(long)));
+    dictSetByStr(tmInfo, "long_long_size", newNumber(sizeof(long long)));
     dictSetByStr(tmInfo, "float_size", newNumber(sizeof(float)));
     dictSetByStr(tmInfo, "double_size", newNumber(sizeof(double)));
     dictSetByStr(tmInfo, "jmp_buf_size", newNumber(sizeof(jmp_buf)));
@@ -134,7 +135,7 @@ Object bfIter() {
 
 Object bfNext() {
     Object iter = getDataArg("next");
-    Object *ret = tmNext(iter);
+    Object *ret = tm_next(iter);
     if (ret == NULL) {
         tmRaise("");
         return NONE_OBJECT;

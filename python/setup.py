@@ -67,8 +67,8 @@ def build_one(cc):
             Lib("tmcode", "tmcode.py"),
             Lib("asm", "asm.py"), 
             Lib("encode", "encode.py"),
-            Lib("repl", "repl.py"),
             Lib("pyeval", "pyeval.py"),
+            Lib("repl", "repl.py"),
             #Lib("dis.py", "dis.py"),
             #Lib("printast.py", "printast.py")
         ]

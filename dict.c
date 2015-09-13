@@ -1,6 +1,5 @@
 
 /**
-* HashMap实现，采用链路分离法
 * @Author xupingmao <578749341@qq.com>
 */
 
@@ -181,7 +180,7 @@ void _dictSetByStr(TmDict* dict, char* key, Object value) {
 void _dictDel(TmDict* dict, Object key) {
 	DictNode* node = DictGetNode(dict, key);
     if (node == NULL) {
-        tmRaise("tmDel: keyError %o", key);
+        tmRaise("tm_del: keyError %o", key);
     }
     node->used = 0;
     dict->len--;

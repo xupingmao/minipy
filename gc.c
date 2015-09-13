@@ -82,6 +82,7 @@ void gcInit() {
 	}
 	tm->framesInitDone = 1;
 	tm->frame = tm->frames;
+    tm_stack_end = tm->stack + STACK_SIZE;
 }
 
 

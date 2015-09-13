@@ -12,7 +12,7 @@ ctail = "\n#endif\n\n"
 _opcode_names = [
     'NEW_STRING', 'NEW_NUMBER',
     'ADD', 'SUB', 'MUL', 'DIV', 'MOD', 'NEG',
-    'NOT', 'GT', 'LT', 'GTEQ', 'LTEQ', 'EQEQ', 'NOTEQ', 'OP_IN', 'NOTIN',
+    'NOT', 'OP_GT', 'OP_LT', 'GTEQ', 'LTEQ', 'EQEQ', 'NOTEQ', 'OP_IN', 'NOTIN',
     'AND', 'OR', 'SET', 'GET',
     'LOAD_NONE', 'STORE_LOCAL', 'STORE_GLOBAL', 'LOAD_LOCAL', 'LOAD_GLOBAL', 'LOAD_CONSTANT',
     'LOAD_GLOBALS', 'POP', 
@@ -26,16 +26,16 @@ _opcode_names = [
     'TM_DEBUG',
     'TM_LINE',
     'TAG', 
-        # instructions for vm to optimize.
+    # instructions for vm to optimize.
     'FAST_ST_GLO',
     'FAST_LD_GLO',
     # unused instructions
-    'LT_JUMP_ON_FALSE', 
-    'GT_JUMP_ON_FALSE',
-    'LTEQ_JUMP_ON_FALSE',
-    'GTEQ_JUMP_ON_FALSE',
-    'EQEQ_JUMP_ON_FALSE',
-    'NOTEQ_JUMP_ON_FALSE',
+    #'LT_JUMP_ON_FALSE', 
+    #'GT_JUMP_ON_FALSE',
+    #'LTEQ_JUMP_ON_FALSE',
+    #'GTEQ_JUMP_ON_FALSE',
+    #'EQEQ_JUMP_ON_FALSE',
+    #'NOTEQ_JUMP_ON_FALSE',
 ]
 
 # update global values.

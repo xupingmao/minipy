@@ -87,19 +87,6 @@ Object tmStr(Object a) {
 	return newString0("", 0);
 }
 
-int tmLen(Object o) {
-	switch (TM_TYPE(o)) {
-	case TYPE_STR:
-		return GET_STR_LEN(o);
-	case TYPE_LIST:
-		return LIST_LEN(o);
-	case TYPE_DICT:
-		return DICT_LEN(o);
-	}
-	tmRaise("tmLen: %o has no attribute len", o);
-	return 0;
-}
-
 void tmPrint(Object o) {
 	Object str = tmStr(o);
 	int i;
@@ -376,7 +363,19 @@ Object bfStr() {
 
 Object bfLen() {
 	Object o = getObjArg("len");
-	return newNumber(tmLen(o));
+    int len = -1;
+    switch (TM_TYPE(o)) {
+	case TYPE_STR:
+		len = GET_STR_LEN(o);
+	case TYPE_LIST:
+		len = LIST_LEN(o);
+	case TYPE_DICT:
+		len = DICT_LEN(o);
+	}
+    if (len < 0) {
+        tmRaise("tmLen: %o has no attribute len", o);
+    }
+	return newNumber(len);
 }
 
 Object bfPrint() {
@@ -484,7 +483,7 @@ Object bfRange() {
 	long end = 0;
 	int inc;
     static const char* szFunc = "range";
-	switch (tm->argumentsCount) {
+	switch (tm->arg_cnt) {
 	case 1:
 		start = 0;
 		end = (long)getNumArg(szFunc);
@@ -502,7 +501,7 @@ Object bfRange() {
 		break;
 	default:
 		tmRaise("range([n, [ n, [n]]]), but see %d arguments",
-				tm->argumentsCount);
+				tm->arg_cnt);
 	}
 	if (inc == 0)
 		tmRaise("range(): increment can not be 0!");
