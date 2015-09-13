@@ -130,7 +130,7 @@ typedef struct TmVM {
 
   
   int arg_cnt;
-  int argumentsLoaded;
+  int arg_loaded;
 
   Object constants;
   Object modules;

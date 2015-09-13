@@ -13,8 +13,6 @@ void tmSetArguments(Object* first, int len);
 void _resolveMethodSelf(TmFunction *fnc);
 #define resolveMethodSelf(fnc) _resolveMethodSelf(GET_FUNCTION((fnc)))
 void printArguments();
-Object getArgFromVM(int type);
-
 int hasArg();
 Object getStrArg(const char* fnc);
 char*  getSzArg(const char* fnc);

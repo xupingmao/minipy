@@ -63,8 +63,7 @@ Object bfClock() {
 
 Object bfSleep() {
     int i = 0;
-    Object time = getArgFromVM(TYPE_NUM);
-    int t = GET_NUM(time);
+    int t = getIntArg("sleep");
 #ifdef _WINDOWS_H
     Sleep(t);
 #else

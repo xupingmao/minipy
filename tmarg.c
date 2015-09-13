@@ -3,13 +3,13 @@
 
 void argStart() {
 	tm->arguments = tm->internalArgStack;
-	tm->argumentsLoaded = 0;
+	tm->arg_loaded = 0;
 	tm->arg_cnt = 0;
 }
 
 void pushArg(Object obj) {
 	tm->arguments = tm->internalArgStack;
-	tm->argumentsLoaded = 0;
+	tm->arg_loaded = 0;
 	tm->arguments[tm->arg_cnt] = obj;
 	tm->arg_cnt += 1;
 	if(tm->arg_cnt > MAX_ARG_COUNT) {
@@ -20,7 +20,7 @@ void pushArg(Object obj) {
 void tmSetArguments(Object* first, int len) {
 	tm->arguments = first;
 	tm->arg_cnt = len;
-	tm->argumentsLoaded = 0;
+	tm->arg_loaded = 0;
 }
 
 void _resolveMethodSelf(TmFunction *fnc) {
@@ -39,26 +39,16 @@ void _resolveMethodSelf(TmFunction *fnc) {
 }
 
 Object getArgFromVM0(const char* fnc) {
-	if (tm->argumentsLoaded >= tm->arg_cnt)
+	if (tm->arg_loaded >= tm->arg_cnt)
 		tmRaise("%s :no argument! total %d, current %d",
-				fnc, tm->arg_cnt, tm->argumentsLoaded);
-	tm->argumentsLoaded += 1;
-	return tm->arguments[tm->argumentsLoaded - 1];
+				fnc, tm->arg_cnt, tm->arg_loaded);
+	tm->arg_loaded += 1;
+	return tm->arguments[tm->arg_loaded - 1];
 }
 
 
 int hasArg() {
-	return tm->argumentsLoaded < tm->arg_cnt;
-}
-
-Object getArgFromVM(int type) {
-	Object value = getArgFromVM0("getArgFromVM");
-	if (type == -1)
-		return value;
-	if (type != value.type)
-		tmRaise("getArgFromVM():expect type %s, but see %s", getTypeByInt(type),
-				getTypeByInt(value.type));
-	return value;
+	return tm->arg_loaded < tm->arg_cnt;
 }
 
 Object getArgFromVM2(int type, const char* fnc) {

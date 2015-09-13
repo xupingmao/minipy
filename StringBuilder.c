@@ -6,7 +6,7 @@ DataProto* getStringBuilderProto() {
 		stringBuilderProto.get = StringBuilderGet;
 		stringBuilderProto.str = StringBuilderToStr;
 		stringBuilderProto.dataSize = sizeof(StringBuilder);
-		stringBuilderProto.free = StringBuilderDel;
+                stringBuilderProto.free = sb_free;
 	}
 	return &stringBuilderProto;
 }
@@ -26,7 +26,7 @@ Object StringBuilderObjNew() {
 	return data;
 }
 
-void StringBuilderDel(StringBuilder* sb){
+void sb_free(StringBuilder* sb){
     tmFree((sb)->value, (sb)->cap);
     tmFree(sb, sizeof(StringBuilder));
 }
@@ -87,8 +87,7 @@ void StringBuilderAppendChar(StringBuilder* sb, char c){
 }
 
 Object StringBuilderToStr(StringBuilder*sb){
-    Object str = newString0(sb->value, sb->len);
-    return str;
+    return newString0(sb->value, sb->len);
 }
 
 char* StringBuilderToChars(StringBuilder* sb) {

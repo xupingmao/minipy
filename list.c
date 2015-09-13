@@ -197,16 +197,6 @@ Object bmListInsert() {
 	return self;
 }
 
-Object bmListExtend() {
-	Object self = getArgFromVM(TYPE_LIST);
-	Object des = getArgFromVM(TYPE_LIST);
-	int i;
-	for (i = 0; i < LIST_LEN(des); i++) {
-		APPEND((self), LIST_NODES(des)[i]);
-	}
-	return NONE_OBJECT;
-}
-
 Object bm_listIndex() {
 	TmList* self = getListPtrArg("listIndex");
 	Object v = getObjArg("listIndex");
@@ -249,7 +239,6 @@ void regListMethods() {
 	regModFunc(CLASS_LIST, "append", bm_listAppend);
 	regModFunc(CLASS_LIST, "pop", bmListPop);
 	regModFunc(CLASS_LIST, "insert", bmListInsert);
-	regModFunc(CLASS_LIST, "extend", bmListExtend);
 	regModFunc(CLASS_LIST, "index", bm_listIndex);
 	regModFunc(CLASS_LIST, "reverse", bmListReverse);
 	regModFunc(CLASS_LIST, "remove", bmListRemove);
