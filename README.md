@@ -1,5 +1,5 @@
 # subpy
-a subset of python
+a subset of python, vm implemented with ANSI C and compiler implemented with Python.
 
 ## How to start
 run `python setup.py gcc` in console(or you may use other c compiler)
