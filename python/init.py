@@ -26,9 +26,6 @@ def endswith(self, end):
     idx = self.find(end)
     if idx < 0: return False
     return idx + len(end) == len(self)
-    
-def slice(src, start, end):
-    pass
 def sformat0(args):
     fmt = args[0]
     fmt_len = len(fmt)
@@ -84,6 +81,9 @@ def str_join(sep, list):
         else:
             text += list[i]
     return text
+
+def list_join(list, sep):
+    return str_join(sep, list)
     
 add_obj_method("str", "format", sformat)
 add_obj_method('str', 'ljust', ljust)
@@ -92,6 +92,7 @@ add_obj_method('str', 'center', center)
 add_obj_method('str', 'startswith', startswith)
 add_obj_method('str', 'endswith', endswith)
 add_obj_method('str', 'join', str_join)
+add_obj_method('list', 'join', list_join)
 
 ## dict.
 def _dict_update(self, dict):
@@ -113,16 +114,6 @@ add_builtin("printf", printf)
 def uncode16(a,b):
     return ord(a) * 256 + ord(b)
 
-def dir(obj):
-    if istype(obj, "string"):return __strclass__.keys()
-    elif istype(obj, "function"):return __funcclass__.keys()
-    elif istype(obj, "number"):return None
-
-def mtime(fname):
-    obj = stat(fname)
-    return obj.st_mtime
-add_builtin("mtime", mtime)
-
 def escape(text):
     if gettype(text) != 'string':
         raise "<function escape> expect a string"
@@ -143,13 +134,16 @@ def quote(obj):
         return '"' + escape(obj) + '"'
     else:
         return str(obj)
-add_builtin("quote", quote)
 
 
 ''' file system tools '''
 def copy(src, des):
     bin = load(src)
     save(des, bin)
+    
+def mtime(fname):
+    obj = stat(fname)
+    return obj.st_mtime
 
 '''
 tools for tinyvm to bootstrap
@@ -208,9 +202,11 @@ add_builtin("hasattr", hasattr)
 add_builtin("_import", _import)
 add_builtin("newobj", newobj)
 add_builtin("copy", copy)
+add_builtin("mtime", mtime)
 add_builtin("sformat0", sformat0)
 add_builtin("sformat", sformat)
 add_builtin("escape", escape)
+add_builtin("quote", quote)
 
 
 class Lib:
@@ -241,14 +237,6 @@ def require(path, name = None):
     return m
 
 add_builtin("require", require)
-
-def reload():
-    for item in _libs:
-        if item.load:
-            code = compilefile(item.path)
-            load_module(item.name, code)
-
-add_builtin('reload', reload)
 
 if getosname() == "nt":
     FILE_SEP = '\\'
