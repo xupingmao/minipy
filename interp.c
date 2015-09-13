@@ -184,7 +184,7 @@ Object tmEval(TmFrame* f) {
 		}
 
 		case NEW_STRING: {
-			v = newString0((char*)pc + 3, i);
+			v = string_alloc((char*)pc + 3, i);
 			pc += i;
 			/* APPEND(tm->constants,v); */
             dictSet(tm->constants, v, NONE_OBJECT);
@@ -258,7 +258,7 @@ Object tmEval(TmFrame* f) {
             break;
         }
 		case LIST: {
-			TM_PUSH(newList(2));
+			TM_PUSH(list_new(2));
 			FRAME_CHECK_GC();
 			break;
 		}
@@ -381,7 +381,7 @@ Object tmEval(TmFrame* f) {
 			break;
 		}
         case TM_NARG: {
-            Object list = newList(tm->arg_cnt);
+            Object list = list_new(tm->arg_cnt);
             for(i = 0; i < tm->arg_cnt; i++) {
                 APPEND(list, tm->arguments[i]);
             }

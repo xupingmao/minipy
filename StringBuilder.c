@@ -21,20 +21,20 @@ Object StringBuilderObjNew() {
 	StringBuilder* sb = (StringBuilder*)GET_DATA(data);
 	sb->len = 0;
 	sb->cap = 10;
-	sb->value = tmMalloc(sb->cap);
+	sb->value = tm_malloc(sb->cap);
 	sb->proto = getStringBuilderProto();
 	return data;
 }
 
 void sb_free(StringBuilder* sb){
-    tmFree((sb)->value, (sb)->cap);
-    tmFree(sb, sizeof(StringBuilder));
+    tm_free((sb)->value, (sb)->cap);
+    tm_free(sb, sizeof(StringBuilder));
 }
 
 void _sbcheck(StringBuilder* sb, int n){
     if(sb->len + n >= sb->cap){
         int ncap = sb->cap + n + sb->cap / 2;
-        sb->value = tmRealloc(sb->value, sb->cap, ncap);
+        sb->value = tm_realloc(sb->value, sb->cap, ncap);
         sb->cap = ncap;
     }
 }
@@ -87,7 +87,7 @@ void StringBuilderAppendChar(StringBuilder* sb, char c){
 }
 
 Object StringBuilderToStr(StringBuilder*sb){
-    return newString0(sb->value, sb->len);
+    return string_alloc(sb->value, sb->len);
 }
 
 char* StringBuilderToChars(StringBuilder* sb) {

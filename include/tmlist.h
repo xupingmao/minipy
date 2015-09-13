@@ -21,13 +21,13 @@ void listCheck(TmList*);
 
 /* private end */
 
-Object           newList(int cap);
-TmList*         newUntrackedList(int cap);
+Object           list_new(int cap);
+TmList*         list_alloc_untracked(int cap);
 
-void             ListSet(TmList* list, int n, Object v);
-Object ListGet(TmList* list, int n);
-void freeList(TmList* );
-Object newListFromVaList(int n, ...);
+void             list_set(TmList* list, int n, Object v);
+Object list_get(TmList* list, int n);
+void list_free(TmList* );
+Object list_newFromVaList(int n, ...);
 void regListMethods();
 
 
@@ -49,7 +49,7 @@ void _listAppend(TmList* list, Object v);
 
 /* macros */
 #define APPEND(list, v) _listAppend(GET_LIST(list), v)
-#define LIST_GET(obj, i) ListGet(GET_LIST(obj), i)
+#define LIST_GET(obj, i) list_get(GET_LIST(obj), i)
 #define LIST_NODES(obj) (GET_LIST(obj))->nodes
 #define LIST_LEN(obj) GET_LIST(obj)->len
 

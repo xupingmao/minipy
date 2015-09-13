@@ -13,7 +13,7 @@ Object bfInspectPtr() {
 	double _ptr = getNumArg("inspectPtr");
 	int idx = getIntArg("inspectPtr");
     char* ptr = (char*)(long long)_ptr;
-	return tmChr(ptr[idx]);
+	return string_chr(ptr[idx]);
 }
 
 Object bfGetCurrentFrame() {
@@ -29,14 +29,14 @@ Object bfVmOpt() {
     if (strcmp(opt, "gc") == 0) {
         gcFull();
     } else if (strcmp(opt, "help") == 0) {
-        return staticString("gc, help");
+        return string_static("gc, help");
     }
 	return NONE_OBJECT;
 }
 
 Object bfGetVmInfo() {
     Object tmInfo = newDict();
-    dictSetByStr(tmInfo, "name", newString("tm"));
+    dictSetByStr(tmInfo, "name", string_new("tm"));
     dictSetByStr(tmInfo, "vm_size", newNumber(sizeof(TmVM)));
     dictSetByStr(tmInfo, "obj_size", newNumber(sizeof(Object)));
     dictSetByStr(tmInfo, "int_size", newNumber(sizeof(int)));
@@ -117,7 +117,7 @@ Object bfReadFile() {
                 break;
             }
         }
-        pushArg(newString0(buf, i));
+        pushArg(string_alloc(buf, i));
         callFunction(func);
         if (end) {
             break;
@@ -227,7 +227,7 @@ Object bfGetFuncCode() {
         len += 3;
     }
     len += 3; /* TM_EOF */
-    return newString0((char*)code, len);
+    return string_alloc((char*)code, len);
 }
 
 Object bfGetcwd() {
@@ -244,7 +244,7 @@ Object bfGetcwd() {
         }
         tmRaise("%s: error -- %s", szFunc, msg);
     }
-    return newString(buf);
+    return string_new(buf);
 }
 
 Object bfChdir() {
@@ -260,9 +260,9 @@ Object bfChdir() {
 Object bfGetOsName() {
     const char* szFunc = "getosname";
 #ifdef _WINDOWS_H
-    return staticString("nt");
+    return string_static("nt");
 #else
-    return staticString("posix");
+    return string_static("posix");
 #endif
 }
 

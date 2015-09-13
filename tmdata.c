@@ -34,10 +34,10 @@ Object newObj(int type, void * value) {
 void objectFree(Object o) {
 	switch (TM_TYPE(o)) {
 	case TYPE_STR:
-		StringFree(GET_STR_OBJ(o));
+		string_free(GET_STR_OBJ(o));
 		break;
 	case TYPE_LIST:
-		freeList(GET_LIST(o));
+		list_free(GET_LIST(o));
 		break;
 	case TYPE_DICT:
 		freeDict(GET_DICT(o));
@@ -110,7 +110,7 @@ void initDataProto(DataProto* proto) {
 Object dataNew(size_t dataSize) {
 	Object data;
 	data.type = TYPE_DATA;
-	GET_DATA(data) = tmMalloc(dataSize);
+	GET_DATA(data) = tm_malloc(dataSize);
 /*	GET_DATA_PROTO(data)->next = dataNext;
 	GET_DATA_PROTO(data)->mark = dataMark;
 	GET_DATA_PROTO(data)->free = dataFree;
@@ -125,7 +125,7 @@ void dataMark(DataObject* data) {
 }
 
 void dataFree(TmData* data) {
-	tmFree(data, data->proto->dataSize);
+	tm_free(data, data->proto->dataSize);
 }
 
 Object dataGet(Object self, Object key) {
@@ -137,5 +137,5 @@ void dataSet(Object self, Object key, Object value) {
 }
 
 Object dataStr(Object self) {
-	return newString0("data", -1);
+	return string_alloc("data", -1);
 }

@@ -4,9 +4,9 @@
 #include "tm.h"
 #define GC_DEBUG_LIST 0
 
-void*            tmMalloc( size_t size);
-void*            tmRealloc(void* o, size_t osize, size_t nsize);
-void             tmFree(void* o, size_t size);
+void*            tm_malloc( size_t size);
+void*            tm_realloc(void* o, size_t osize, size_t nsize);
+void             tm_free(void* o, size_t size);
 void initMemory();
 void freeMemory();
 

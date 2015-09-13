@@ -28,16 +28,16 @@ typedef struct StringIterator {
 }StringIterator;
 
 Object newChar(int c);
-Object newString0(char* s, int size);
-#define staticString(s) newString0(s, -1)
-#define newString(s) newString0(s, strlen(s))
-void StringFree(String*);
+Object string_alloc(char* s, int size);
+#define string_static(s) string_alloc(s, -1)
+#define string_new(s) string_alloc(s, strlen(s))
+void string_free(String*);
 int StringEquals(String*s0, String*s1);
 
-Object subString(String* str, int start, int end) ;
+Object string_substring(String* str, int start, int end) ;
 Object bfStringFormat();
 Object tmStr(Object obj);
-Object tmChr(int n);
+Object string_chr(int n);
 Object StringJoin(Object self, Object list);
 void regStringMethods();
 

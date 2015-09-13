@@ -1,28 +1,28 @@
 #include "include/tm.h"
 #include "include/tmlist.h"
 
-TmList* newUntrackedList(int cap) {
-	TmList* list = tmMalloc(sizeof(TmList));
+TmList* list_alloc_untracked(int cap) {
+	TmList* list = tm_malloc(sizeof(TmList));
 	list->len = 0;
 	if (cap <= 0) {
 		cap = 2;
 	}
 	list->cap = cap;
-	list->nodes = tmMalloc(OBJ_SIZE * list->cap);
+	list->nodes = tm_malloc(OBJ_SIZE * list->cap);
 	list->cur = 0;
 	return list;
 }
 
-Object newList(int cap) {
+Object list_new(int cap) {
 	Object v;
 	v.type = TYPE_LIST;
-	v.value.list = newUntrackedList(cap);
+	v.value.list = list_alloc_untracked(cap);
 	return gcTrack(v);
 }
 
 /* build list of length n from object list */
-Object newListFromVaList(int n, ...) {
-	Object list = newList(n);
+Object list_newFromVaList(int n, ...) {
+	Object list = list_new(n);
 	va_list a;
 	va_start(a, n);
 	int i;
@@ -34,8 +34,8 @@ Object newListFromVaList(int n, ...) {
 }
 
 /* build list from Object arrays */
-Object newListFromArray(int n, Object* items) {
-	Object obj = newList(n);
+Object list_newFromArray(int n, Object* items) {
+	Object obj = list_new(n);
 	int i;
 	for (i = 0; i < n; i++) {
 		APPEND(obj, items[i]);
@@ -43,14 +43,14 @@ Object newListFromArray(int n, Object* items) {
 	return obj;
 }
 
-void freeList(TmList* list) {
+void list_free(TmList* list) {
 	PRINT_OBJ_GC_INFO_START();
-	tmFree(list->nodes, list->cap * OBJ_SIZE);
-	tmFree(list, sizeof(TmList));
+	tm_free(list->nodes, list->cap * OBJ_SIZE);
+	tm_free(list, sizeof(TmList));
 	PRINT_OBJ_GC_INFO_END("list", list);
 }
 
-Object ListGet(TmList* list, int n) {
+Object list_get(TmList* list, int n) {
 	if (n < 0) {
 		n += list->len;
 	}
@@ -60,7 +60,7 @@ Object ListGet(TmList* list, int n) {
 	return list->nodes[n];
 }
 
-void ListSet(TmList* list, int n, Object val) {
+void list_set(TmList* list, int n, Object val) {
 	if (n < 0) {
 		n += list->len;
 	}
@@ -82,7 +82,7 @@ void listCheck(TmList* list) {
         	newsize = ocap / 2 + ocap;
         }
         /*int newsize = list->cap * 3 / 2 + 1;*/
-		list->nodes = tmRealloc(list->nodes, OBJ_SIZE * ocap,
+		list->nodes = tm_realloc(list->nodes, OBJ_SIZE * ocap,
 				OBJ_SIZE * newsize);
         list->cap = newsize;
 #if GC_DEBUG_LIST
@@ -159,7 +159,7 @@ void _listDel(TmList* list, Object key) {
 
 Object _listAdd(TmList* list1, TmList*list2) {
 	int newl = list1->len + list2->len;
-	Object newlist = newList(newl);
+	Object newlist = list_new(newl);
 	TmList* list = GET_LIST(newlist);
 	list->len = newl;
 	int list1_nodes_size = list1->len * OBJ_SIZE;
@@ -226,7 +226,7 @@ Object bmListRemove() {
 Object bmListClone() {
 	Object self = getObjArg("listClone");
 	TmList* list = GET_LIST(self);
-	Object _newlist = newList(list->cap);
+	Object _newlist = list_new(list->cap);
 	TmList* newlist = GET_LIST(_newlist);
 	newlist->len = list->len;
 	memcpy(newlist->nodes, list->nodes, list->len * OBJ_SIZE);

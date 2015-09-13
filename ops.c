@@ -30,7 +30,7 @@ void tmSet(Object self, Object k, Object v) {
 		tmAssertType(k, TYPE_NUM, "tmSet");
 		double d = GET_NUM(k);
 		tmAssertInt(d, "listSet");
-		ListSet(GET_LIST(self), (int)d, v);
+		list_set(GET_LIST(self), (int)d, v);
 	}
 		return;
 	case TYPE_DICT:
@@ -55,7 +55,7 @@ Object tmGet(Object self, Object k) {
 			if (n >= GET_STR_LEN(self) || n < 0)
 				tmRaise("StringGet: index overflow ,len=%d,index=%d, str=%o",
 						GET_STR_LEN(self), n, self);
-			return tmChr(0xff & GET_STR(self)[n]);
+			return string_chr(0xff & GET_STR(self)[n]);
 		} else if ((node = DictGetNode(GET_DICT(CLASS_STRING), k)) != NULL) {
 			return methodNew(node->val, self);
 		}
@@ -64,7 +64,7 @@ Object tmGet(Object self, Object k) {
 	case TYPE_LIST:{
 		DictNode* node;
 		if (TM_TYPE(k) == TYPE_NUM) {
-			return ListGet(GET_LIST(self), GET_NUM(k));
+			return list_get(GET_LIST(self), GET_NUM(k));
 		} else if ((node = DictGetNode(GET_DICT(CLASS_LIST), k))!=NULL) {
 			return methodNew(node->val, self);
 		}
@@ -115,7 +115,7 @@ Object tmAdd(Object a, Object b) {
 			if (la == 0) {return b;	}
 			if (lb == 0) {return a;	}
 			int len = la + lb;
-			Object des = newString0(NULL, len);
+			Object des = string_alloc(NULL, len);
 			char*s = GET_STR(des);
 			memcpy(s, sa, la);
 			memcpy(s + la, sb, lb);
@@ -232,10 +232,10 @@ Object tmMul(Object a, Object b) {
 			return a;
 		int times = (int) GET_NUM(b);
 		if (times <= 0)
-			return staticString("");
+			return string_static("");
 		if (times == 1)
 			return a;
-        des = newString0(NULL, len * times);
+        des = string_alloc(NULL, len * times);
         char* s = GET_STR(des);
 		int i;
 		for (i = 0; i < times; i++) {
@@ -284,7 +284,7 @@ int tm_has(Object a, Object b) {
 	case TYPE_STR: {
 		if (TM_TYPE(b) != TYPE_STR)
 			return 0;
-		return StringIndex(GET_STR_OBJ(a), GET_STR_OBJ(b), 0) != -1;
+		return string_index(GET_STR_OBJ(a), GET_STR_OBJ(b), 0) != -1;
 	}
 	case TYPE_DICT: {
 		DictNode* node = DictGetNode(GET_DICT(a), b);

@@ -24,7 +24,7 @@ void regConst(Object constant) {
 
 void regModFunc(Object mod, char* name, Object (*native)()) {
 	Object func = newFunction(NONE_OBJECT, NONE_OBJECT, native);
-	GET_FUNCTION(func)->name = newString0(name, -1);
+	GET_FUNCTION(func)->name = string_alloc(name, -1);
 	tmSet(mod,GET_FUNCTION(func)->name, func);
 }
 
@@ -36,7 +36,7 @@ void builtinsInit() {
     /* set module boot */
     Object boot = newDict();
 	dictSetByStr(tm->modules, "boot", boot);
-    dictSetByStr(boot, "__name__", staticString("boot"));
+    dictSetByStr(boot, "__name__", string_static("boot"));
 	dictSetByStr(tm->builtins, "tm", newNumber(1));
 	dictSetByStr(tm->builtins, "True", newNumber(1));
 	dictSetByStr(tm->builtins, "False", newNumber(0));
@@ -54,13 +54,13 @@ void loadModule(Object name, Object code) {
 	Object mod = moduleNew(name, name, code);
 	Object fnc = newFunction(mod, NONE_OBJECT, NULL);
 	GET_FUNCTION(fnc)->code = (unsigned char*) GET_STR(code);
-	GET_FUNCTION(fnc)->name = staticString("#main");
+	GET_FUNCTION(fnc)->name = string_static("#main");
 	callFunction(fnc);
 }
 
 int callModFunc(char* mod, char* szFnc) {
-    Object m = tmGet(tm->modules, newString(mod));
-    Object fnc = tmGet(m, newString(szFnc));
+    Object m = tmGet(tm->modules, string_new(mod));
+    Object fnc = tmGet(m, string_new(szFnc));
     argStart();
     callFunction(fnc);
 	return 0;
@@ -71,10 +71,10 @@ int loadBinary() {
     int count = uncode32(&text);
     int i;for(i = 0; i < count; i++) {
         int nameLen = uncode32(&text);
-        Object name = newString0((char*)text, nameLen);
+        Object name = string_alloc((char*)text, nameLen);
         text += nameLen;
         int codeLen = uncode32(&text);
-        Object code = newString0((char*)text, codeLen);
+        Object code = string_alloc((char*)text, codeLen);
         text += codeLen;
         loadModule(name, code);
     }
@@ -82,10 +82,10 @@ int loadBinary() {
 }
 
 int tmRun(int argc, char* argv[]) {
-	Object p = newList(argc);
+	Object p = list_new(argc);
 	int i;
 	for (i = 1; i < argc; i++) {
-		Object arg = newString0(argv[i], strlen(argv[i]));
+		Object arg = string_alloc(argv[i], strlen(argv[i]));
 		APPEND(p, arg);
 	}
 	builtinsInit();

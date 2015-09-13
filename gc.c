@@ -43,22 +43,22 @@ void gcInit() {
 	tm->allocated = 0;
 	tm->gcThreshold = 1024 * 8; // set 8k to see gc process
 
-	tm->all = newUntrackedList(init_size);
+	tm->all = list_alloc_untracked(init_size);
     
-    tm->root = newList(100);
+    tm->root = list_new(100);
 	tm->builtins = newDict();
 	APPEND(tm->root, tm->builtins);
 	tm->modules = newDict();
 	APPEND(tm->root, tm->modules);
 
-	tm->exList = newList(10);
+	tm->exList = list_new(10);
 	APPEND(tm->root, tm->exList);
 	
 	tm->constants = newDict();
 	APPEND(tm->root, tm->constants);
 
     /* initialize chars */
-	ARRAY_CHARS = newList(256);
+	ARRAY_CHARS = list_new(256);
 	for (i = 0; i < 256; i++) {
 		APPEND(ARRAY_CHARS, newChar(i));
 	}
@@ -86,12 +86,12 @@ void gcInit() {
 }
 
 
-void* tmMalloc(size_t size) {
+void* tm_malloc(size_t size) {
     void* block;
     Object* func;
 
 	if (size <= 0) {
-		tmRaise("tmMalloc, attempts to allocate a memory block of size %d!", size);
+		tmRaise("tm_malloc, attempts to allocate a memory block of size %d!", size);
 		return NULL;
 	}
 	block = malloc(size);
@@ -100,27 +100,27 @@ void* tmMalloc(size_t size) {
         log_debug("%d -> %d , +%d\n", tm->allocated, tm->allocated + size, size);
 #endif
 	if (block == NULL) {
-		tmRaise("tmMalloc: fail to malloc memory block of size %d", size);
+		tmRaise("tm_malloc: fail to malloc memory block of size %d", size);
 	}
 	tm->allocated += size;
 	return block;
 }
 
-void* tmRealloc(void* o, size_t osize, size_t nsize) {
-	void* block = tmMalloc(nsize);
+void* tm_realloc(void* o, size_t osize, size_t nsize) {
+	void* block = tm_malloc(nsize);
 	memcpy(block, o, osize);
-	tmFree(o, osize);
+	tm_free(o, osize);
 	return block;
 }
 
-void tmFree(void* o, size_t size) {
+void tm_free(void* o, size_t size) {
 	if (o == NULL)
 		return;
 #if GC_DEBUG
     if (size > 100)
 	log_debug("Free %p, %d -> %d , -%d\n",o, tm->allocated, tm->allocated - size, size);
 	if(size<=0) {
-		tmRaise("tmFree: you are free a block of size %d", size);
+		tmRaise("tm_free: you are free a block of size %d", size);
 	}
 #endif
 	free(o);
@@ -258,7 +258,7 @@ void gcMarkLocalsAndStack() {
 void gcWipe() {
 	int n, i;
 
-	TmList* temp = newUntrackedList(200);
+	TmList* temp = list_alloc_untracked(200);
 	TmList* all = tm->all;
 	for (i = 0; i < all->len; i++) {
 		if (GC_MARKED(tm->all->nodes[i])) {
@@ -267,7 +267,7 @@ void gcWipe() {
 			objectFree(all->nodes[i]);
 		}
 	}
-	freeList(tm->all);
+	list_free(tm->all);
 	tm->all = temp;
 }
 
@@ -327,7 +327,7 @@ void gcFree() {
 		objectFree(all->nodes[i]);
 	}
 
-	freeList(tm->all);
+	list_free(tm->all);
 
 #if !PRODUCT
 	if (tm->allocated != 0) {

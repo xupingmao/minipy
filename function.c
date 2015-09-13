@@ -54,7 +54,7 @@ CodeCheckResult resolveCode(TmModule *mod, unsigned char*s, int isFuncDef) {
 Object newFunction(Object mod,
 		Object self,
 		Object (*native_func)()){
-  TmFunction* f= tmMalloc(sizeof(TmFunction));
+  TmFunction* f= tm_malloc(sizeof(TmFunction));
   f->mod = mod;
   // f->code = code;
   f->code = NULL;
@@ -97,7 +97,7 @@ void functionFree(TmFunction* func){
  printf("free function %p...\n", func);
  int old = tm->allocated_mem;
 #endif
-  tmFree(func, sizeof(TmFunction));
+  tm_free(func, sizeof(TmFunction));
 #if DEBUG_GC
 int _new = tm->allocated_mem;
   printf("free function ,%d => %d , free %d B\n", old, _new, old - _new );
@@ -105,11 +105,11 @@ int _new = tm->allocated_mem;
 }
 
 Object moduleNew(Object file , Object name, Object code){
-  TmModule *mod = tmMalloc(sizeof(TmModule));
+  TmModule *mod = tm_malloc(sizeof(TmModule));
   mod->file = file;
   mod->code = code;
   mod->resolved = 0;
-  /*mod->constants = newList(20);*/
+  /*mod->constants = list_new(20);*/
   /*_listAppend(GET_LIST(mod->constants), NONE_OBJECT);*/
   mod->globals = newDict();
   Object m = gcTrack(newObj(TYPE_MODULE, mod));
@@ -120,7 +120,7 @@ Object moduleNew(Object file , Object name, Object code){
 }
 
 void moduleFree(TmModule* mod){
-  tmFree(mod, sizeof(TmModule));
+  tm_free(mod, sizeof(TmModule));
 }
 
 
@@ -168,7 +168,7 @@ int getFunctionMaxLocals(TmFunction* fnc){
 }
 
 Object getModuleCreateIfNotExist(char* modName) {
-	Object mod = newString0(modName, -1);
+	Object mod = string_alloc(modName, -1);
 	if(tm_has(tm->modules, mod)) {
 		return tmGet(tm->modules, mod);
 	}else {

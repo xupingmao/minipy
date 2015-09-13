@@ -47,7 +47,7 @@ Object tmStr(Object a) {
 		char s[20];
 		double v = GET_NUM(a);
 		numberFormat(s, a);
-		return newString(s);
+		return string_new(s);
 	}
 	case TYPE_LIST: {
 		StringBuilder* sb = StringBuilderNew();
@@ -73,18 +73,18 @@ Object tmStr(Object a) {
 	}
 	case TYPE_DICT:
 		sprintf(buf, "<dict at %p>", GET_DICT(a));
-		return newString(buf);
+		return string_new(buf);
 	case TYPE_FUNCTION:
 		functionFormat(buf, a);
-		return newString(buf);
+		return string_new(buf);
 	case TYPE_NONE:
-		return staticString("None");
+		return string_static("None");
 	case TYPE_DATA:
 		return GET_DATA_PROTO(a)->str(GET_DATA(a));
 	default:
 		tmRaise("str: not supported type %d", a.type);
 	}
-	return newString0("", 0);
+	return string_alloc("", 0);
 }
 
 void tmPrint(Object o) {
@@ -111,7 +111,7 @@ void tmPrintln(Object o) {
 Object tmFormatVaList(char* fmt, va_list ap, int acquireNewLine) {
 	int i;
 	int len = strlen(fmt);
-	Object nstr = staticString("");
+	Object nstr = string_static("");
 	int templ = 0;
 	char* start = fmt;
 	int istrans = 1;
@@ -201,7 +201,7 @@ Object tmLoad(char* fname){
 		tmRaise("load: file too big to load, size = %d", (len));
 		return NONE_OBJECT;
 	}
-	Object text = newString0(NULL, len);
+	Object text = string_alloc(NULL, len);
 	char* s = GET_STR(text);
 	fread(s, 1, len, fp);
 	fclose(fp);
@@ -234,7 +234,7 @@ Object bfInput() {
 	if(buf[len-1]=='\n'){
 		buf[len-1] = '\0';
 	}
-	return newString(buf);
+	return string_new(buf);
 }
 
 Object bfInt() {
@@ -274,7 +274,7 @@ Object bfLoadModule() {
 	}
 	Object fnc = newFunction(mod, NONE_OBJECT, NULL);
 	GET_FUNCTION(fnc)->code = (unsigned char*) GET_STR(code);
-	GET_FUNCTION(fnc)->name = newString("#main");
+	GET_FUNCTION(fnc)->name = string_new("#main");
 	callFunction(fnc);
 	return GET_MODULE(mod)->globals;
 }
@@ -295,13 +295,13 @@ Object bfExit() {
 Object bfGetType() {
 	Object obj = getObjArg("gettype");
 	switch(TM_TYPE(obj)) {
-		case TYPE_STR: return staticString("string");
-		case TYPE_NUM: return staticString("number");
-		case TYPE_LIST: return staticString("list");
-		case TYPE_DICT: return staticString("dict");
-		case TYPE_FUNCTION: return staticString("function");
-		case TYPE_DATA: return staticString("data");
-		case TYPE_NONE: return staticString("None");
+		case TYPE_STR: return string_static("string");
+		case TYPE_NUM: return string_static("number");
+		case TYPE_LIST: return string_static("list");
+		case TYPE_DICT: return string_static("dict");
+		case TYPE_FUNCTION: return string_static("function");
+		case TYPE_DATA: return string_static("data");
+		case TYPE_NONE: return string_static("None");
 		default: tmRaise("gettype(%o)", obj);
     }
 	return NONE_OBJECT;
@@ -309,7 +309,7 @@ Object bfGetType() {
 
 Object bfChr() {
 	int n = getIntArg("chr");
-	return tmChr(n);
+	return string_chr(n);
 }
 
 Object bfOrd() {
@@ -322,21 +322,21 @@ Object bfCode8() {
 	int n = getIntArg("code8");
 	if (n < 0 || n > 255)
 		tmRaise("code8(): expect number 0-255, but see %d", n);
-	return tmChr(n);
+	return string_chr(n);
 }
 
 Object bfCode16() {
 	int n = getIntArg("code16");
 	if (n < 0 || n > 0xffff)
 		tmRaise("code16(): expect number 0-0xffff, but see %x", n);
-	Object nchar = newString0(NULL, 2);
+	Object nchar = string_alloc(NULL, 2);
 	code16((unsigned char*) GET_STR(nchar), n);
 	return nchar;
 }
 
 Object bfCode32() {
 	int n = getIntArg("code32");
-	Object c = newString0(NULL, 4);
+	Object c = string_alloc(NULL, 4);
 	code32((unsigned char*) GET_STR(c), n);
 	return c;
 }

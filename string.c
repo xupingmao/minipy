@@ -2,10 +2,10 @@
 #include "include/vm.h"
 
 Object newChar(int c) {
-	String* str = tmMalloc(sizeof(String));
+	String* str = tm_malloc(sizeof(String));
     struct Object obj;
 	str->stype = 1;
-	str->value = tmMalloc(2);
+	str->value = tm_malloc(2);
 	str->len = 1;
 	str->value[0] = c;
 	str->value[1] = '\0';
@@ -14,13 +14,13 @@ Object newChar(int c) {
 	return gcTrack(obj);
 }
 
-Object newString0(char *s, int size) {
-	String* str = tmMalloc(sizeof(String));
+Object string_alloc(char *s, int size) {
+	String* str = tm_malloc(sizeof(String));
     Object v;
     /* malloc new memory */
 	if (size > 0) {
 		str->stype = 1;
-		str->value = tmMalloc(size + 1);
+		str->value = tm_malloc(size + 1);
 		str->len = size;
 		if (s != NULL) {
 			memcpy(str->value, s, size);
@@ -29,7 +29,7 @@ Object newString0(char *s, int size) {
 		}
 		str->value[size] = '\0';
 	} else if(size == 1){
-		return tmChr(s[0]);
+		return string_chr(s[0]);
 	/* use string ptr in C stack */
 	} else {
 		str->stype = 0;
@@ -46,19 +46,19 @@ Object newString0(char *s, int size) {
 	return gcTrack(v);
 }
 
-Object tmChr(int n) {
-	return ListGet(GET_LIST(ARRAY_CHARS), n);
+Object string_chr(int n) {
+	return list_get(GET_LIST(ARRAY_CHARS), n);
 }
 
-void StringFree(String *str) {
+void string_free(String *str) {
 #if DEBUG_GC
 	int old = tm->allocate;
 	printf("free string %p...\n", str);
 #endif
 	if (str->stype) {
-		tmFree(str->value, str->len + 1);
+		tm_free(str->value, str->len + 1);
 	}
-	tmFree(str, sizeof(String));
+	tm_free(str, sizeof(String));
 #if DEBUG_GC
 	int _new = tm->allocated_mem;
 	printf("free string , %d => %d, freed %d B\n", old, _new, old - _new);
@@ -72,7 +72,7 @@ int StringEquals(String* s1, String* s2) {
 					&& strncmp(s1->value, s2->value, s1->len) == 0);
 }*/
 
-int StringIndex(String* s1, String* s2, int start) {
+int string_index(String* s1, String* s2, int start) {
 	char* ss1 = s1->value;
 	char* ss2 = s2->value;
 	char* p = strstr(ss1 + start, ss2);
@@ -82,7 +82,7 @@ int StringIndex(String* s1, String* s2, int start) {
 }
 
 
-Object subString(String* str, int start, int end) {
+Object string_substring(String* str, int start, int end) {
     int max_end, len, i;
     char* s;
     Object new_str;
@@ -92,8 +92,8 @@ Object subString(String* str, int start, int end) {
 	end = max_end < end ? max_end : end;
 	len = end - start;
 	if (len <= 0)
-		return staticString("");
-	new_str = newString0(NULL, len);
+		return string_static("");
+	new_str = string_alloc(NULL, len);
 	s = GET_STR(new_str);
 	for (i = start; i < end; i++) {
 		*(s++) = str->value[i];
@@ -101,11 +101,11 @@ Object subString(String* str, int start, int end) {
 	return new_str;
 }
 
-Object bmStringFind() {
+Object bm_string_find() {
     static const char* szFunc = "find";
 	Object self = getStrArg(szFunc);
 	Object str = getStrArg(szFunc);
-	return newNumber(StringIndex(self.value.str, str.value.str, 0));
+	return newNumber(string_index(self.value.str, str.value.str, 0));
 }
 
 Object bmSubString() {
@@ -113,7 +113,7 @@ Object bmSubString() {
 	Object self = getStrArg(szFunc);
 	int start = getIntArg(szFunc);
 	int end = getIntArg(szFunc);
-	return subString(self.value.str, start, end);
+	return string_substring(self.value.str, start, end);
 }
 
 Object bmStringUpper() {
@@ -121,7 +121,7 @@ Object bmStringUpper() {
 	int i;
 	char*s = GET_STR(self);
 	int len = GET_STR_LEN(self);
-	Object nstr = newString0(NULL, len);
+	Object nstr = string_alloc(NULL, len);
 	char*news = GET_STR(nstr);
 	for (i = 0; i < len; i++) {
 		news[i] = toupper(s[i]);
@@ -134,7 +134,7 @@ Object bmStringLower() {
 	int i;
 	char*s = GET_STR(self);
 	int len = GET_STR_LEN(self);
-	Object nstr = newString0(NULL, len);
+	Object nstr = string_alloc(NULL, len);
 	char*news = GET_STR(nstr);
 	for (i = 0; i < len; i++) {
 		news[i] = tolower(s[i]);
@@ -149,20 +149,20 @@ Object bmStringReplace() {
 	Object src = getStrArg(szFunc);
 	Object des = getStrArg(szFunc);
 
-	Object nstr = newString0("", 0);
-	int pos = StringIndex(self.value.str, src.value.str, 0);
+	Object nstr = string_alloc("", 0);
+	int pos = string_index(self.value.str, src.value.str, 0);
 	int lastpos = 0;
 	while (pos != -1 && pos < GET_STR_LEN(self)) {
 		if (pos != 0){
 			nstr = tmAdd(nstr,
-					subString(self.value.str, lastpos, pos));
+					string_substring(self.value.str, lastpos, pos));
 		}
 		nstr = tmAdd(nstr, des);
 		lastpos = pos + GET_STR_LEN(src);
-		pos = StringIndex(self.value.str, src.value.str, lastpos);
+		pos = string_index(self.value.str, src.value.str, lastpos);
 		// printf("lastpos = %d\n", lastpos);
 	}
-	nstr = tmAdd(nstr, subString(self.value.str, lastpos, GET_STR_LEN(self)));
+	nstr = tmAdd(nstr, string_substring(self.value.str, lastpos, GET_STR_LEN(self)));
 	return nstr;
 }
 
@@ -176,28 +176,28 @@ Object bmStringSplit() {
 		/* currently return none */
 		return NONE_OBJECT;
 	}
-	pos = StringIndex(self.value.str, pattern.value.str, 0);
+	pos = string_index(self.value.str, pattern.value.str, 0);
 	lastpos = 0;
-	nstr = newString0("", 0);
-	list = newList(10);
+	nstr = string_alloc("", 0);
+	list = list_new(10);
 	while (pos != -1 && pos < GET_STR_LEN(self)) {
 		if (pos == 0) {
-			_listAppend(GET_LIST(list), newString0("", -1));
+			_listAppend(GET_LIST(list), string_alloc("", -1));
 		} else {
-			Object str = subString(self.value.str, lastpos, pos);
+			Object str = string_substring(self.value.str, lastpos, pos);
 			_listAppend(GET_LIST(list), str);
 		}
 		lastpos = pos + GET_STR_LEN(pattern);
-		pos = StringIndex(self.value.str, pattern.value.str, lastpos);
+		pos = string_index(self.value.str, pattern.value.str, lastpos);
 	}
-	_listAppend(GET_LIST(list), subString(self.value.str, lastpos, GET_STR_LEN(self)));
+	_listAppend(GET_LIST(list), string_substring(self.value.str, lastpos, GET_STR_LEN(self)));
 	return list;
 }
 
 /* 
 this may cause GC trash.
 Object StringJoin(Object self, Object list) {
-	Object str = newString0("", 0);
+	Object str = string_alloc("", 0);
 	int i = 0;
 	for (i = 0; i < LIST_LEN(list); i++) {
 		Object s = LIST_NODES(list)[i];
@@ -222,7 +222,7 @@ void regStringMethods() {
 	CLASS_STRING = newDict();
 	regConst(CLASS_STRING);
 	regModFunc(CLASS_STRING, "replace", bmStringReplace);
-	regModFunc(CLASS_STRING, "find", bmStringFind);
+	regModFunc(CLASS_STRING, "find", bm_string_find);
 	regModFunc(CLASS_STRING, "substring", bmSubString);
 	regModFunc(CLASS_STRING, "upper", bmStringUpper);
 	regModFunc(CLASS_STRING, "lower", bmStringLower);
@@ -253,6 +253,6 @@ Object* stringNext(StringIterator* iterator) {
 		return NULL;
 	}
 	iterator->cur += 1;
-	obj = tmChr(iterator->string->value[iterator->cur-1]);
+	obj = string_chr(iterator->string->value[iterator->cur-1]);
     return &obj;
 }

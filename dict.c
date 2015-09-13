@@ -37,10 +37,10 @@ int DictHash(Object key) {
 
 TmDict* DictInit(){
     int i;
-	TmDict * dict = tmMalloc(sizeof(TmDict));
+	TmDict * dict = tm_malloc(sizeof(TmDict));
     dict->cap = 3;
     dict->extend = 2;
-	dict->nodes = tmMalloc(sizeof(DictNode) * (dict->cap));
+	dict->nodes = tm_malloc(sizeof(DictNode) * (dict->cap));
 	// to mark that the node is not allocated.
 	for(i = 0; i < dict->cap; i++){
 		dict->nodes[i].used = 0;
@@ -67,7 +67,7 @@ void DictCheck(TmDict* dict){
     } else {
         nsize = osize + osize / 2 + 1;
     }
-	DictNode* nodes = tmMalloc(nsize * sizeof(DictNode));
+	DictNode* nodes = tm_malloc(nsize * sizeof(DictNode));
     for(i = 0; i < nsize; i++) {
         nodes[i].used = 0;
     }
@@ -81,13 +81,13 @@ void DictCheck(TmDict* dict){
     DictNode* temp = dict->nodes;
     dict->nodes = nodes;
     dict->cap = nsize;
-    tmFree(temp, osize * sizeof(DictNode));
+    tm_free(temp, osize * sizeof(DictNode));
 }
 
 void freeDict(TmDict* dict){
 	PRINT_OBJ_GC_INFO_START();
-	tmFree(dict->nodes, (dict->cap) * sizeof(DictNode));
-	tmFree(dict, sizeof(TmDict));
+	tm_free(dict->nodes, (dict->cap) * sizeof(DictNode));
+	tm_free(dict, sizeof(TmDict));
 	PRINT_OBJ_GC_INFO_END("dict", dict);
 }
 
@@ -177,7 +177,7 @@ Object* DictGetByStr(TmDict* dict, char* key) {
 }
 
 void _dictSetByStr(TmDict* dict, char* key, Object value) {
-	DictSet(dict, staticString(key), value);
+	DictSet(dict, string_static(key), value);
 }
 
 void _dictDel(TmDict* dict, Object key) {
@@ -191,7 +191,7 @@ void _dictDel(TmDict* dict, Object key) {
 }
 
 Object DictKeys(TmDict* dict){
-    Object list = newList(dict->len);
+    Object list = list_new(dict->len);
     int i;
     for(i = 0; i < dict->cap; i++) {
         if (dict->nodes[i].used) {
@@ -209,7 +209,7 @@ Object bmDictKeys(){
 Object bmDictValues() {
     Object _d = getDictArg("dict.values");
     TmDict* dict = GET_DICT(_d);
-    Object list = newList(dict->len);
+    Object list = list_new(dict->len);
     int i;
     for(i = 0; i < dict->cap; i++) {
         if (dict->nodes[i].used) {

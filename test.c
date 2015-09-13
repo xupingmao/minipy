@@ -25,7 +25,7 @@ void regConst(Object constant) {
 
 void regModFunc(Object mod, char* name, Object (*native)()) {
 	Object func = newFunction(NONE_OBJECT, NONE_OBJECT, native);
-	GET_FUNCTION(func)->name = newString0(name, -1);
+	GET_FUNCTION(func)->name = string_alloc(name, -1);
 	tmSet(mod,GET_FUNCTION(func)->name, func);
 }
 
@@ -41,9 +41,9 @@ void builtinsInit() {
 	dictSetByStr(tm->builtins, "False", newNumber(0));
 	dictSetByStr(tm->builtins, "__builtins__", tm->builtins);
 	dictSetByStr(tm->builtins, "__modules__", tm->modules);
-	STRING_MAIN = newString0("__main__", -1); 
+	STRING_MAIN = string_alloc("__main__", -1); 
 	regConst(STRING_MAIN);
-	STRING_NAME = newString0("__name__", -1);
+	STRING_NAME = string_alloc("__name__", -1);
 	regConst(STRING_NAME);
 
 	regListMethods();
@@ -55,8 +55,8 @@ void builtinsInit() {
 
 
 void loadModule(char* fname, unsigned char* s) {
-	Object modName = newString0(fname, strlen(fname));
-	Object code = newString0((char*) s, -1);
+	Object modName = string_alloc(fname, strlen(fname));
+	Object code = string_alloc((char*) s, -1);
 	Object mod = moduleNew(modName, modName, code);
 	Object fnc = newFunction(mod, NONE_OBJECT, NULL);
 	GET_FUNCTION(fnc)->code = (unsigned char*) GET_STR(code);
@@ -73,8 +73,8 @@ void loadModule2(Object name, Object code) {
 }
 
 int callModFunc(char* mod, char* szFnc) {
-    Object m = tmGet(tm->modules, newString0(mod, strlen(mod)));
-    Object fnc = tmGet(m, newString0(szFnc, strlen(szFnc)));
+    Object m = tmGet(tm->modules, string_alloc(mod, strlen(mod)));
+    Object fnc = tmGet(m, string_alloc(szFnc, strlen(szFnc)));
     argStart();
     callFunction(fnc);
 	return 0;
@@ -120,10 +120,10 @@ void testRun(int argc, char* argv[]) {
 
 
 void testString() {
-    Object s0 = staticString("abcdefg");
-    Object s1 = staticString("cd");
-    Object s2 = staticString("==");
-    Object s3 = subString(s0.value.str, 0, 2);
+    Object s0 = string_static("abcdefg");
+    Object s1 = string_static("cd");
+    Object s2 = string_static("==");
+    Object s3 = string_substring(s0.value.str, 0, 2);
 
     argStart();
     pushArg(s0);
@@ -136,12 +136,12 @@ void testString() {
 
 void testDict() {
 	Object d = newDict();
-	Object v = newString0("test", -1);
-	Object k = newString0("name", -1);
+	Object v = string_alloc("test", -1);
+	Object k = string_alloc("name", -1);
 	Object k2 = newNumber(12);
-	Object k3 = newString0("age",-1);
-	Object k4 = newString0("just", -1);
-	Object k5 = newString0("just2", -1);
+	Object k3 = string_alloc("age",-1);
+	Object k4 = string_alloc("just", -1);
+	Object k5 = string_alloc("just2", -1);
 	tmSet(d,k,v);
 	tmSet(d,k2,v);
 	tmSet(d,k3,v);
