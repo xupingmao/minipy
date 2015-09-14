@@ -1,60 +1,41 @@
 #include "include/tm.h"
 
-/*
-CodeCheckResult resolveCode(TmModule *mod, unsigned char*s, int isFuncDef) {
-	CodeCheckResult st;
-	int len = 0;
-	int stacksize = 1;
-	int curstack = 0;
-	int defCount = 0;
-	int maxlocals = -1; // then maxlocals will be 0 when there is no local var.
-	int maxstack = 0;
-	st.code = s;
-	if (isFuncDef) {
-		defCount = 1;
-	}
-	while (1) {
+unsigned char* resolve_func(TmFunction* fnc, unsigned char* pc) {
+    int maxlocals = -1;
+    int maxstack = 0;
+    int defs = 0;
+    unsigned char* s = pc;
+    if (fnc->resolved) {
+        return fnc->end;
+    }
+    while (1) {
 		int op = next_byte(s);
 		int val = next_short(s);
-		len += 3;
         if (op == NEW_STRING || op == NEW_NUMBER) {
-            len += val;
             s += val;
         } else if (op == LOAD_LOCAL || op == STORE_LOCAL) {
 			maxlocals = max(val, maxlocals);
 		} else if(op == TM_EOF){
-			if (isFuncDef) {
-				defCount--;
-				if (defCount == 0)
-					break;
-			}
+			defs--;
+            if (defs == 0) break;
 		} else if(op == TM_EOP) {
-			mod->resolved = 1;
 			break;
 		} else if(op == TM_DEF) {
-			if (isFuncDef) {
-				defCount++;
-			}
+			defs++;
 		}
 	}
-	ret: 
-    st.len = len;
-	if (isFuncDef) {
-        /* locals count is max local index + 1. /
-		st.maxlocals = maxlocals + 1;
-	} else {
-        /* set global maxlocals to be 0 /
-        st.maxlocals = 0;
-    }
-	st.maxstack = maxstack;
-	return st;
+    fnc->resolved = 1;
+    fnc->maxlocals = maxlocals + 1;
+    fnc->code = pc + 3;
+    fnc->end = s;
+    return fnc->end;
 }
-*/
 
-Object newFunction(Object mod,
+Object func_new(Object mod,
 		Object self,
 		Object (*native_func)()){
   TmFunction* f= tm_malloc(sizeof(TmFunction));
+  f->resolved = 0;
   f->mod = mod;
   // f->code = code;
   f->code = NULL;
@@ -67,7 +48,7 @@ Object newFunction(Object mod,
 
 Object methodNew(Object _fnc, Object self){
   TmFunction* fnc = GET_FUNCTION(_fnc);
-  Object nfnc = newFunction(fnc->mod, self, fnc->native);
+  Object nfnc = func_new(fnc->mod, self, fnc->native);
   GET_FUNCTION(nfnc)->name = GET_FUNCTION(_fnc)->name;
   GET_FUNCTION(nfnc)->maxlocals = GET_FUNCTION(_fnc)->maxlocals;
   GET_FUNCTION(nfnc)->code = GET_FUNCTION(_fnc)->code;
@@ -77,7 +58,7 @@ Object methodNew(Object _fnc, Object self){
 Object classNew(Object clazz){
   TmDict* cl = GET_DICT(clazz);
   Object k,v;
-  Object instance = newDict();
+  Object instance = dict_new();
   DictNode* nodes = cl->nodes;
   int i;
   for(i = 0; i < cl->cap; i++) {
@@ -111,7 +92,7 @@ Object moduleNew(Object file , Object name, Object code){
   mod->resolved = 0;
   /*mod->constants = list_new(20);*/
   /*_listAppend(GET_LIST(mod->constants), NONE_OBJECT);*/
-  mod->globals = newDict();
+  mod->globals = dict_new();
   Object m = gcTrack(newObj(TYPE_MODULE, mod));
   /* set module */
   tmSet(tm->modules, file, mod->globals);
@@ -172,7 +153,7 @@ Object getModuleCreateIfNotExist(char* modName) {
 	if(tm_has(tm->modules, mod)) {
 		return tmGet(tm->modules, mod);
 	}else {
-		tmSet(tm->modules, mod, newDict());
+		tmSet(tm->modules, mod, dict_new());
 		return tmGet(tm->modules, mod);
 	}
 }

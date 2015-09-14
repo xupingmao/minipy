@@ -24,7 +24,7 @@ void regConst(Object constant) {
 }
 
 void regModFunc(Object mod, char* name, Object (*native)()) {
-	Object func = newFunction(NONE_OBJECT, NONE_OBJECT, native);
+	Object func = func_new(NONE_OBJECT, NONE_OBJECT, native);
 	GET_FUNCTION(func)->name = string_alloc(name, -1);
 	tmSet(mod,GET_FUNCTION(func)->name, func);
 }
@@ -35,10 +35,10 @@ void regBuiltinFunc(char* name, Object (*native)()) {
 
 void builtinsInit() {
     /* set module boot */
-	dictSetByStr(tm->modules, "boot", newDict());
-	dictSetByStr(tm->builtins, "tm", newNumber(1));
-	dictSetByStr(tm->builtins, "True", newNumber(1));
-	dictSetByStr(tm->builtins, "False", newNumber(0));
+	dictSetByStr(tm->modules, "boot", dict_new());
+	dictSetByStr(tm->builtins, "tm", tm_number(1));
+	dictSetByStr(tm->builtins, "True", tm_number(1));
+	dictSetByStr(tm->builtins, "False", tm_number(0));
 	dictSetByStr(tm->builtins, "__builtins__", tm->builtins);
 	dictSetByStr(tm->builtins, "__modules__", tm->modules);
 	STRING_MAIN = string_alloc("__main__", -1); 
@@ -58,7 +58,7 @@ void loadModule(char* fname, unsigned char* s) {
 	Object modName = string_alloc(fname, strlen(fname));
 	Object code = string_alloc((char*) s, -1);
 	Object mod = moduleNew(modName, modName, code);
-	Object fnc = newFunction(mod, NONE_OBJECT, NULL);
+	Object fnc = func_new(mod, NONE_OBJECT, NULL);
 	GET_FUNCTION(fnc)->code = (unsigned char*) GET_STR(code);
 	GET_FUNCTION(fnc)->name = STRING_MAIN;
 	callFunction(fnc);
@@ -66,7 +66,7 @@ void loadModule(char* fname, unsigned char* s) {
 
 void loadModule2(Object name, Object code) {
 	Object mod = moduleNew(name, name, code);
-	Object fnc = newFunction(mod, NONE_OBJECT, NULL);
+	Object fnc = func_new(mod, NONE_OBJECT, NULL);
 	GET_FUNCTION(fnc)->code = (unsigned char*) GET_STR(code);
 	GET_FUNCTION(fnc)->name = STRING_MAIN;
 	callFunction(fnc);
@@ -93,14 +93,14 @@ void testRun(int argc, char* argv[]) {
     Object i, j, n1, n34, max;
     long t1, t2;
     t1 = test_clock();
-    i = newNumber(0);
-    max = newNumber(1000000);
-    n34 = newNumber(34);
-    n1 = newNumber(1);
+    i = tm_number(0);
+    max = tm_number(1000000);
+    n34 = tm_number(34);
+    n1 = tm_number(1);
     while (tm_bool(tmLessThan(i, max))) {
         // j = tmMul(i, n34);
         if (IS_NUM(i) && IS_NUM(n34)) {
-            Object temp = newNumber(GET_NUM(i) * GET_NUM(n34));
+            Object temp = tm_number(GET_NUM(i) * GET_NUM(n34));
             j = temp;
         }
         i = tmAdd(i, n1);
@@ -135,10 +135,10 @@ void testString() {
 }
 
 void testDict() {
-	Object d = newDict();
+	Object d = dict_new();
 	Object v = string_alloc("test", -1);
 	Object k = string_alloc("name", -1);
-	Object k2 = newNumber(12);
+	Object k2 = tm_number(12);
 	Object k3 = string_alloc("age",-1);
 	Object k4 = string_alloc("just", -1);
 	Object k5 = string_alloc("just2", -1);

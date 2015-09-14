@@ -49,7 +49,7 @@ TmDict* DictInit(){
 	return dict;
 }
 
-Object newDict(){
+Object dict_new(){
 	Object o;
 	o.type = TYPE_DICT;
 	GET_DICT(o) = DictInit();
@@ -155,7 +155,7 @@ DictNode* DictGetNode(TmDict* dict, Object key){
     int i;
 	DictNode* nodes = dict->nodes;
 	for (i = 0; i < dict->cap; i++) {
-        if (nodes[i].used && tmEquals(nodes[i].key, key)) {
+        if (nodes[i].used && tm_equals(nodes[i].key, key)) {
             return nodes + i;
         }
     }
@@ -220,7 +220,7 @@ Object bmDictValues() {
 }
 
 void regDictMethods() {
-	CLASS_DICT = newDict();
+	CLASS_DICT = dict_new();
 	/* build dict class */
 	regConst(CLASS_DICT);
 	regModFunc(CLASS_DICT, "keys", bmDictKeys);

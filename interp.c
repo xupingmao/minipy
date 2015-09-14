@@ -28,16 +28,16 @@ Object callFunction2(Object func) {
     }
     resolveMethodSelf(func);
     TmFrame* f = pushFrame(func);
-    reCall:
+    L_recall:
     if (setjmp(f->buf)==0) {
-        return tmEval(f);
+        return tm_eval(f);
     } else {
         f = tm->frame;
         /* handle exception in this frame */
         if (f->jmp != NULL) {
             f->pc = f->jmp;
             f->jmp = NULL;
-            goto reCall;
+            goto L_recall;
         /* there is no handler, throw to last frame */
         } else {
             pushException(f);
@@ -56,16 +56,16 @@ Object callFunction(Object func) {
             return GET_FUNCTION(func)->native();
         } else {
             TmFrame* f = pushFrame(func);
-            reCall:
+            L_recall:
             if (setjmp(f->buf)==0) {
-                return tmEval(f);
+                return tm_eval(f);
             } else {
                 f = tm->frame;
                 /* handle exception in this frame */
                 if (f->jmp != NULL) {
                     f->pc = f->jmp;
                     f->jmp = NULL;
-                    goto reCall;
+                    goto L_recall;
                 /* there is no handler, throw to last frame */
                 } else {
                     pushException(f);
@@ -144,7 +144,7 @@ TmFrame* pushFrame(Object fnc) {
         pc += i * 3; \
         continue;\
     } else { \
-        *top = newNumber(flag); \
+        *top = tm_number(flag); \
     }
 
 /** 
@@ -152,7 +152,7 @@ TmFrame* pushFrame(Object fnc) {
 ** @param f: Frame
 ** @return evaluated value.
 */
-Object tmEval(TmFrame* f) {
+Object tm_eval(TmFrame* f) {
 	Object* locals = f->locals;
 	Object* top = f->stack;
 	Object cur_fnc = f->fnc;
@@ -177,7 +177,7 @@ Object tmEval(TmFrame* f) {
 		case NEW_NUMBER: {
 			double d = atof((char*)pc + 3);
 			pc += i;
-			v = newNumber(d);
+			v = tm_number(d);
 			/* APPEND(tm->constants,v);*/
             dictSet(tm->constants, v, NONE_OBJECT);
 			break;
@@ -265,18 +265,18 @@ Object tmEval(TmFrame* f) {
 		case LIST_APPEND:
 			v = TM_POP();
 			x = TM_TOP();
-			tmAssertType(x, TYPE_LIST, "tmEval: LIST_APPEND");
+			tmAssertType(x, TYPE_LIST, "tm_eval: LIST_APPEND");
 			_listAppend(GET_LIST(x), v);
 			break;
 		case DICT_SET:
 			v = TM_POP();
 			k = TM_POP();
 			x = TM_TOP();
-			tmAssertType(x, TYPE_DICT, "tmEval: DICT_SET");
+			tmAssertType(x, TYPE_DICT, "tm_eval: DICT_SET");
 			tmSet(x, k, v);
 			break;
 		case DICT: {
-			TM_PUSH(newDict());
+			TM_PUSH(dict_new());
 			FRAME_CHECK_GC();
 			break;
 		}
@@ -287,56 +287,56 @@ Object tmEval(TmFrame* f) {
 		TM_OP(MOD, tmMod)
 		TM_OP(GET, tmGet)
 		case EQEQ: {
-            *(top-1) = newNumber(tmEquals(*(top-1), *top));
+            *(top-1) = tm_number(tm_equals(*(top-1), *top));
             top--;
             break;
         }
         case NOTEQ: {
-            *(top-1) = newNumber(!tmEquals(*(top-1), *top));
+            *(top-1) = tm_number(!tm_equals(*(top-1), *top));
             top--;
             break;
         }
         case OP_LT: {
-            *(top-1) = newNumber(tmCmp(*(top-1), *top)<0);
+            *(top-1) = tm_number(tm_cmp(*(top-1), *top)<0);
             top--;
-            // int flag = tmCmp(*(top-1), *top) < 0;
+            // int flag = tm_cmp(*(top-1), *top) < 0;
             // top--;
             // predict
             // PREDICT_JMP(flag);
             break;
         }
         case LTEQ: {
-            *(top-1) = newNumber(tmCmp(*(top-1), *top)<=0);
+            *(top-1) = tm_number(tm_cmp(*(top-1), *top)<=0);
             top--;
             break;
         }
         case OP_GT: {
-            *(top-1) = newNumber(tmCmp(*(top-1), *top)>0);
+            *(top-1) = tm_number(tm_cmp(*(top-1), *top)>0);
             top--;
             break;
         }
         case GTEQ: {
-            *(top-1) = newNumber(tmCmp(*(top-1), *top)>=0);
+            *(top-1) = tm_number(tm_cmp(*(top-1), *top)>=0);
             top--;
             break;
         }
         case OP_IN: {
-            *(top-1) = newNumber(tm_has(*top, *(top-1)));
+            *(top-1) = tm_number(tm_has(*top, *(top-1)));
             top--;
             break;
         }
         case AND: {
-            *(top-1) = newNumber(tm_bool(*(top-1)) && tm_bool(*top));
+            *(top-1) = tm_number(tm_bool(*(top-1)) && tm_bool(*top));
             top--;
             break;
         }
         case OR: {
-            *(top-1) = newNumber(tm_bool(*(top-1)) || tm_bool(*top));
+            *(top-1) = tm_number(tm_bool(*(top-1)) || tm_bool(*top));
             top--;
             break;
         }
         case NOT:{
-            *top = newNumber(!tm_bool(*top));
+            *top = tm_number(!tm_bool(*top));
             break;
         }
 		case SET:
@@ -389,7 +389,7 @@ Object tmEval(TmFrame* f) {
             break;
         }
 		case ITER_NEW: {
-			*top = iterNew(*top);
+			*top = iter_new(*top);
 			break;
 		}
 		case TM_NEXT: {
@@ -405,17 +405,17 @@ Object tmEval(TmFrame* f) {
 		}
 		case TM_DEF: {
             Object mod = GET_FUNCTION(cur_fnc)->mod;
-            // CodeCheckResult rs = resolveCode(GET_MODULE(mod), pc + 3, 1);
-            pc += 3;
-            Code reg_code = parseCode(pc);
-            pc += 3;
-            Code jmp_code = parseCode(pc);
-            Object fnc = newFunction(mod, NONE_OBJECT, NULL);
-            GET_FUNCTION(fnc)->code = pc + 3;
-            GET_FUNCTION(fnc)->maxlocals = reg_code.val;
-            GET_FUNCTION(fnc)->maxstack = reg_code.val;
+            //pc += 3;
+            //Code reg_code = parseCode(pc);
+            //pc += 3;
+            //Code jmp_code = parseCode(pc);
+            Object fnc = func_new(mod, NONE_OBJECT, NULL);
+            pc = resolve_func(GET_FUNCTION(fnc), pc);
+            // GET_FUNCTION(fnc)->code = pc + 3;
+            // GET_FUNCTION(fnc)->maxlocals = reg_code.val;
+            // GET_FUNCTION(fnc)->maxstack = reg_code.val;
 			GET_FUNCTION_NAME(fnc) = GET_CONST(i);
-			pc += jmp_code.val * 3;
+			// pc += jmp_code.val * 3;
 			TM_PUSH(fnc);
 			continue;
 		}
@@ -435,7 +435,7 @@ Object tmEval(TmFrame* f) {
 		}
 		case TM_UNARRAY: {
 			x = TM_POP();
-			tmAssertType(x, TYPE_LIST, "tmEval:TM_UNARRAY");
+			tmAssertType(x, TYPE_LIST, "tm_eval:TM_UNARRAY");
 			int j;
 			for(j = LIST_LEN(x)-1; j >= 0; j--) {
 				TM_PUSH(LIST_GET(x, j));
@@ -527,7 +527,7 @@ Object tmEval(TmFrame* f) {
 				tmRaise("__debug__ is not defined");
 			} else {
 				//argStart();
-				//pushArg(newNumber((long long)pc));
+				//pushArg(tm_number((long long)pc));
                 //pushArg(globals);
                 /* how to pass locals? */
                 /* make a list in frame ? store arguments as well as locals*/
@@ -549,7 +549,7 @@ Object tmEval(TmFrame* f) {
 	end:
     /*
 	if (top != f->stack) {
-        tmRaise("tmEval: operand stack overflow");
+        tmRaise("tm_eval: operand stack overflow");
 	}*/
     popFrame();
 	return ret;

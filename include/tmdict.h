@@ -24,7 +24,7 @@ typedef struct _TmDictIterator {
 } TmDictIterator;
 
 
-Object           newDict();
+Object           dict_new();
 TmDict*          DictInit();
 void             freeDict(TmDict* dict);
 int             DictSet(TmDict* dict, Object key, Object val);

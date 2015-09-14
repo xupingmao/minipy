@@ -123,7 +123,7 @@ int _listIndex(TmList* list, Object v) {
 	int len = list->len;
 	Object* nodes = list->nodes;
 	for (i = 0; i < len; i++) {
-		if (tmEquals(nodes[i], v)) {
+		if (tm_equals(nodes[i], v)) {
 			return i;
 		}
 	}
@@ -200,7 +200,7 @@ Object bmListInsert() {
 Object bm_listIndex() {
 	TmList* self = getListPtrArg("listIndex");
 	Object v = getObjArg("listIndex");
-	return newNumber(_listIndex(self, v));
+	return tm_number(_listIndex(self, v));
 }
 
 Object bmListReverse() {
@@ -234,7 +234,7 @@ Object bmListClone() {
 }
 
 void regListMethods() {
-	CLASS_LIST = newDict();
+	CLASS_LIST = dict_new();
 	regConst(CLASS_LIST);
 	regModFunc(CLASS_LIST, "append", bm_listAppend);
 	regModFunc(CLASS_LIST, "pop", bmListPop);

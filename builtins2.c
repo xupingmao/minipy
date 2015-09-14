@@ -17,10 +17,10 @@ Object bfInspectPtr() {
 }
 
 Object bfGetCurrentFrame() {
-	Object frameInfo = newDict();
+	Object frameInfo = dict_new();
 	dictSetByStr(frameInfo, "function", tm->frame->fnc);
-	// dictSetByStr(frameInfo, "pc", newNumber((long long)tm->frame->pc));
-    dictSetByStr(frameInfo, "index", newNumber((long long) (tm->frame - tm->frames)));
+	// dictSetByStr(frameInfo, "pc", tm_number((long long)tm->frame->pc));
+    dictSetByStr(frameInfo, "index", tm_number((long long) (tm->frame - tm->frames)));
 	return frameInfo;
 }
 
@@ -35,29 +35,29 @@ Object bfVmOpt() {
 }
 
 Object bfGetVmInfo() {
-    Object tmInfo = newDict();
+    Object tmInfo = dict_new();
     dictSetByStr(tmInfo, "name", string_new("tm"));
-    dictSetByStr(tmInfo, "vm_size", newNumber(sizeof(TmVM)));
-    dictSetByStr(tmInfo, "obj_size", newNumber(sizeof(Object)));
-    dictSetByStr(tmInfo, "int_size", newNumber(sizeof(int)));
-    dictSetByStr(tmInfo, "long_size", newNumber(sizeof(long)));
-    dictSetByStr(tmInfo, "long_long_size", newNumber(sizeof(long long)));
-    dictSetByStr(tmInfo, "float_size", newNumber(sizeof(float)));
-    dictSetByStr(tmInfo, "double_size", newNumber(sizeof(double)));
-    dictSetByStr(tmInfo, "jmp_buf_size", newNumber(sizeof(jmp_buf)));
-    dictSetByStr(tmInfo, "total_obj_len", newNumber(tm->all->len));
-    dictSetByStr(tmInfo, "alloc_mem", newNumber(tm->allocated));
-    dictSetByStr(tmInfo, "gc_threshold", newNumber(tm->gcThreshold));
-    dictSetByStr(tmInfo, "frame_index", newNumber(tm->frame - tm->frames));
-    dictSetByStr(tmInfo, "consts_len", newNumber(DICT_LEN(tm->constants)));
+    dictSetByStr(tmInfo, "vm_size", tm_number(sizeof(TmVM)));
+    dictSetByStr(tmInfo, "obj_size", tm_number(sizeof(Object)));
+    dictSetByStr(tmInfo, "int_size", tm_number(sizeof(int)));
+    dictSetByStr(tmInfo, "long_size", tm_number(sizeof(long)));
+    dictSetByStr(tmInfo, "long_long_size", tm_number(sizeof(long long)));
+    dictSetByStr(tmInfo, "float_size", tm_number(sizeof(float)));
+    dictSetByStr(tmInfo, "double_size", tm_number(sizeof(double)));
+    dictSetByStr(tmInfo, "jmp_buf_size", tm_number(sizeof(jmp_buf)));
+    dictSetByStr(tmInfo, "total_obj_len", tm_number(tm->all->len));
+    dictSetByStr(tmInfo, "alloc_mem", tm_number(tm->allocated));
+    dictSetByStr(tmInfo, "gc_threshold", tm_number(tm->gcThreshold));
+    dictSetByStr(tmInfo, "frame_index", tm_number(tm->frame - tm->frames));
+    dictSetByStr(tmInfo, "consts_len", tm_number(DICT_LEN(tm->constants)));
     return tmInfo;
 }
 
 Object bfClock() {
 #ifdef TM_NT
-	return newNumber(clock());
+	return tm_number(clock());
 #else
-	return newNumber((double)clock()/1000);
+	return tm_number((double)clock()/1000);
 #endif
 }
 
@@ -129,7 +129,7 @@ Object bfReadFile() {
 
 Object bfIter() {
     Object func = getObjArg("iter");
-    return iterNew(func);
+    return iter_new(func);
 }
 
 Object bfNext() {
@@ -163,7 +163,7 @@ Object bfGetConstIdx() {
     }*/
     /*DEBUG tmPrintf("LoadConst %d:%o\n", i, LIST_GET(tm->constants,i)); */
     /* here can check again in case of memory leak */
-    return newNumber(i);
+    return tm_number(i);
 }
 
 Object bfGetConst() {
@@ -179,7 +179,7 @@ Object bfGetConst() {
 }
 /* for save */
 Object bfGetConstLen() {
-    return newNumber(DICT_LEN(tm->constants));
+    return tm_number(DICT_LEN(tm->constants));
 }
 
 Object bfGetExList() {
@@ -199,17 +199,17 @@ Object bfStat(){
     const char *s = getSzArg("stat");
     struct stat stbuf;
     if (!stat(s,&stbuf)) { 
-        Object st = newDict();
-        dictSetByStr(st, "st_mtime", newNumber(stbuf.st_mtime));
-        dictSetByStr(st, "st_atime", newNumber(stbuf.st_atime));
-        dictSetByStr(st, "st_ctime", newNumber(stbuf.st_ctime));
-        dictSetByStr(st, "st_size" , newNumber(stbuf.st_size));
-        dictSetByStr(st, "st_mode",  newNumber(stbuf.st_mode));
-        dictSetByStr(st, "st_nlink", newNumber(stbuf.st_nlink));
-        dictSetByStr(st, "st_dev",   newNumber(stbuf.st_dev));
-        dictSetByStr(st, "st_ino",   newNumber(stbuf.st_ino));
-        dictSetByStr(st, "st_uid",   newNumber(stbuf.st_uid));
-        dictSetByStr(st, "st_gid",   newNumber(stbuf.st_gid));
+        Object st = dict_new();
+        dictSetByStr(st, "st_mtime", tm_number(stbuf.st_mtime));
+        dictSetByStr(st, "st_atime", tm_number(stbuf.st_atime));
+        dictSetByStr(st, "st_ctime", tm_number(stbuf.st_ctime));
+        dictSetByStr(st, "st_size" , tm_number(stbuf.st_size));
+        dictSetByStr(st, "st_mode",  tm_number(stbuf.st_mode));
+        dictSetByStr(st, "st_nlink", tm_number(stbuf.st_nlink));
+        dictSetByStr(st, "st_dev",   tm_number(stbuf.st_dev));
+        dictSetByStr(st, "st_ino",   tm_number(stbuf.st_ino));
+        dictSetByStr(st, "st_uid",   tm_number(stbuf.st_uid));
+        dictSetByStr(st, "st_gid",   tm_number(stbuf.st_gid));
         return st;
     }
     tmRaise("stat(%s), file not exists or accessable.",s);

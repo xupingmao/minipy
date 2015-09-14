@@ -130,7 +130,7 @@ Object tmAdd(Object a, Object b) {
 	return NONE_OBJECT;
 }
 
-int tmEquals(Object a, Object b){
+int tm_equals(Object a, Object b){
 	if(TM_TYPE(a) != TM_TYPE(b)) return 0;
 	switch(TM_TYPE(a)){
 		case TYPE_NUM:return GET_NUM(a) == GET_NUM(b);
@@ -147,7 +147,7 @@ int tmEquals(Object a, Object b){
 			Object* nodes1 = GET_LIST(a)->nodes;
 			Object* nodes2 = GET_LIST(b)->nodes;
 			for(i = 0; i < len; i++){
-				if(!tmEquals(nodes1[i], nodes2[i]) ){
+				if(!tm_equals(nodes1[i], nodes2[i]) ){
 					return 0;
 				}
 			}
@@ -190,7 +190,7 @@ DEF_CMP_FUNC(tmLessEqual, <=);
 DEF_CMP_FUNC(tmGreaterEqual, >=);
 */
 
-int tmCmp(Object a, Object b) {
+int tm_cmp(Object a, Object b) {
     if (TM_TYPE(a) == TM_TYPE(b)) {
         switch (TM_TYPE(a)) {
             case TYPE_NUM: {
@@ -205,7 +205,7 @@ int tmCmp(Object a, Object b) {
             case TYPE_STR: return strcmp(GET_STR(a), GET_STR(b));
         }
     }
-    tmRaise("tmCmp: can not compare %o and %o", a, b);
+    tmRaise("tm_cmp: can not compare %o and %o", a, b);
     return 0;
 }
 /*
@@ -259,7 +259,7 @@ Object tmDiv(Object a, Object b) {
 
 Object tmMod(Object a, Object b) {
 	if (a.type == b.type && a.type == TYPE_NUM) {
-		return newNumber((long) GET_NUM(a) % (long) GET_NUM(b));
+		return tm_number((long) GET_NUM(a) % (long) GET_NUM(b));
 	} else if (a.type == TYPE_STR) {
 		Object *__mod__ = getBuiltin("__mod__");
 		if (__mod__ == NULL) {
@@ -325,13 +325,13 @@ Object tm_neg(Object o) {
 }
 
 
-Object iterNew(Object collections) {
+Object iter_new(Object collections) {
 	switch(TM_TYPE(collections)) {
         case TYPE_LIST: return listIterNew(GET_LIST(collections));
         case TYPE_DICT: return dictIterNew(GET_DICT(collections));
         case TYPE_STR: return stringIterNew(GET_STR_OBJ(collections));
         case TYPE_DATA: return collections;
-        default: tmRaise("iterNew(): can not iterate %o", collections);
+        default: tmRaise("iter_new(): can not iterate %o", collections);
 	}
 	return NONE_OBJECT;
 }

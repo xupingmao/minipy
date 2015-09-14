@@ -59,24 +59,16 @@ typedef struct TmModule
 
 typedef struct TmFunction{
   int marked;
-  int fncType;
+  int resolved;
   int maxlocals;
   int maxstack;
   unsigned char* code;
-  unsigned char* cur_code;
+  unsigned char* end;
   Object self;
   Object mod; /* module, includes global, constants, etc. */
   Object name;
   Object (*native)();
 }TmFunction;
-
-
-typedef struct CodeCheckResult{
-  int len;
-  int maxlocals;
-  int maxstack;
-  unsigned char* code;
-}CodeCheckResult;
 
 typedef struct TmFrame {
   Object *locals;

@@ -195,9 +195,9 @@ def encode_def(tk, in_class = 0):
     # emit(TM_DEF, 0)
     # regs = []
     # emit(0, 0) # filename
-    regs = emit(0, 0) # regs
-    func_end  = newtag()
-    jump(func_end)
+    #regs = emit(0, 0) # regs
+    #func_end  = newtag()
+    #jump(func_end)
     # emit(0, regs) # regs
     # loc_num_ins = emit(LOC_NUM, 0)
     push_scope()
@@ -221,8 +221,8 @@ def encode_def(tk, in_class = 0):
         emit(LOAD_PARAMS, parg*256 + varg)
     encode_item(tk.third)
     emit(TM_EOF)
-    regs[1] = asm_get_regs()
-    emit_tag(func_end)
+    #regs[1] = asm_get_regs()
+    #emit_tag(func_end)
     #loc_num_ins[1] = get_loc_num()
     pop_scope()
     if not in_class:

@@ -17,7 +17,7 @@ typedef struct _FunctionDefine {
 Object  callUnsafe(Object fnc);
 Object callFunction(Object func);
 Object callFunction2(Object func);
-Object  tmEval(TmFrame*);
+Object  tm_eval(TmFrame*);
 
 TmFrame* pushFrame(Object fnc);
 void popFrame();

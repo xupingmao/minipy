@@ -56,7 +56,7 @@ Object tmStr(Object a) {
 		for (i = 0; i < l; i++) {
 			Object obj = GET_LIST(a)->nodes[i];
 			/* reference to self in list */
-			if (tmEquals(a, obj)) {
+			if (tm_equals(a, obj)) {
 				StringBuilderAppendChars(sb, "[...]");
 			} else if (obj.type == TYPE_STR) {
 				StringBuilderAppend(sb, '"');
@@ -240,9 +240,9 @@ Object bfInput() {
 Object bfInt() {
 	Object v = getObjArg("int");
 	if (v.type == TYPE_NUM) {
-		return newNumber((int) GET_NUM(v));
+		return tm_number((int) GET_NUM(v));
 	} else if (v.type == TYPE_STR) {
-		return newNumber((int) atof(GET_STR(v)));
+		return tm_number((int) atof(GET_STR(v)));
 	}
 	tmRaise("int: %o can not be parsed to int ", v);
 	return NONE_OBJECT;
@@ -253,7 +253,7 @@ Object bfFloat() {
 	if (v.type == TYPE_NUM) {
 		return v;
 	} else if (v.type == TYPE_STR) {
-		return newNumber(atof(GET_STR(v)));
+		return tm_number(atof(GET_STR(v)));
 	}
 	tmRaise("float: %o can not be parsed to float", v);
 	return NONE_OBJECT;
@@ -272,7 +272,7 @@ Object bfLoadModule() {
 	} else {
 		mod = moduleNew(file, file, code);
 	}
-	Object fnc = newFunction(mod, NONE_OBJECT, NULL);
+	Object fnc = func_new(mod, NONE_OBJECT, NULL);
 	GET_FUNCTION(fnc)->code = (unsigned char*) GET_STR(code);
 	GET_FUNCTION(fnc)->name = string_new("#main");
 	callFunction(fnc);
@@ -315,7 +315,7 @@ Object bfChr() {
 Object bfOrd() {
 	Object c = getStrArg("ord");
 	TM_ASSERT(GET_STR_LEN(c) == 1, "ord() expected a character");
-	return newNumber((unsigned char) GET_STR(c)[0]);
+	return tm_number((unsigned char) GET_STR(c)[0]);
 }
 
 Object bfCode8() {
@@ -353,7 +353,7 @@ Object bfRaise() {
 Object bfSystem() {
 	Object m = getStrArg("system");
 	int rs = system(GET_STR(m));
-	return newNumber(rs);
+	return tm_number(rs);
 }
 
 Object bfStr() {
@@ -375,7 +375,7 @@ Object bfLen() {
     if (len < 0) {
         tmRaise("tmLen: %o has no attribute len", o);
     }
-	return newNumber(len);
+	return tm_number(len);
 }
 
 Object bfPrint() {
@@ -403,9 +403,9 @@ Object bfRemove(){
     Object fname = getStrArg("remove");
     int flag = remove(GET_STR(fname));
     if(flag) {
-    	return newNumber(0);
+    	return tm_number(0);
     } else {
-    	return newNumber(1);
+    	return tm_number(1);
     }
 }
 
@@ -443,7 +443,7 @@ Object bfWrite() {
 Object bfPow() {
     double base = getNumArg("pow");
     double y = getNumArg("pow");
-    return newNumber(pow(base, y));
+    return tm_number(pow(base, y));
 }
 
 typedef struct RangeIter {
@@ -458,11 +458,11 @@ Object* rangeNext(RangeIter* data) {
     long cur = data->cur;
     if (data->inc > 0 && cur < data->stop) {
         data->cur += data->inc;
-        data->cur_obj = newNumber(cur);
+        data->cur_obj = tm_number(cur);
         return &data->cur_obj;
     } else if (data->inc < 0 && cur > data->stop) {
         data->cur += data->inc;
-        data->cur_obj = newNumber(cur);
+        data->cur_obj = tm_number(cur);
         return &data->cur_obj;
     }
     return NULL;

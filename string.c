@@ -105,7 +105,7 @@ Object bm_string_find() {
     static const char* szFunc = "find";
 	Object self = getStrArg(szFunc);
 	Object str = getStrArg(szFunc);
-	return newNumber(string_index(self.value.str, str.value.str, 0));
+	return tm_number(string_index(self.value.str, str.value.str, 0));
 }
 
 Object bmSubString() {
@@ -219,7 +219,7 @@ Object bmStringJoin() {
 
 
 void regStringMethods() {
-	CLASS_STRING = newDict();
+	CLASS_STRING = dict_new();
 	regConst(CLASS_STRING);
 	regModFunc(CLASS_STRING, "replace", bmStringReplace);
 	regModFunc(CLASS_STRING, "find", bm_string_find);

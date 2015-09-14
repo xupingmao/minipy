@@ -23,7 +23,7 @@ void regConst(Object constant) {
 }
 
 void regModFunc(Object mod, char* name, Object (*native)()) {
-	Object func = newFunction(NONE_OBJECT, NONE_OBJECT, native);
+	Object func = func_new(NONE_OBJECT, NONE_OBJECT, native);
 	GET_FUNCTION(func)->name = string_alloc(name, -1);
 	tmSet(mod,GET_FUNCTION(func)->name, func);
 }
@@ -34,12 +34,12 @@ void regBuiltinFunc(char* name, Object (*native)()) {
 
 void builtinsInit() {
     /* set module boot */
-    Object boot = newDict();
+    Object boot = dict_new();
 	dictSetByStr(tm->modules, "boot", boot);
     dictSetByStr(boot, "__name__", string_static("boot"));
-	dictSetByStr(tm->builtins, "tm", newNumber(1));
-	dictSetByStr(tm->builtins, "True", newNumber(1));
-	dictSetByStr(tm->builtins, "False", newNumber(0));
+	dictSetByStr(tm->builtins, "tm", tm_number(1));
+	dictSetByStr(tm->builtins, "True", tm_number(1));
+	dictSetByStr(tm->builtins, "False", tm_number(0));
 	dictSetByStr(tm->builtins, "__builtins__", tm->builtins);
 	dictSetByStr(tm->builtins, "__modules__", tm->modules);
     
@@ -52,7 +52,7 @@ void builtinsInit() {
 
 void loadModule(Object name, Object code) {
 	Object mod = moduleNew(name, name, code);
-	Object fnc = newFunction(mod, NONE_OBJECT, NULL);
+	Object fnc = func_new(mod, NONE_OBJECT, NULL);
 	GET_FUNCTION(fnc)->code = (unsigned char*) GET_STR(code);
 	GET_FUNCTION(fnc)->name = string_static("#main");
 	callFunction(fnc);

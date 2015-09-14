@@ -1,6 +1,6 @@
 #include "include/tm.h"
 
-Object newNumber(double v){
+Object tm_number(double v){
   Object o;
   TM_TYPE(o) = TYPE_NUM;
   GET_NUM(o) = v;

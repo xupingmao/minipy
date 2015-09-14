@@ -33,8 +33,8 @@ void gcInit() {
     int i;
     
     /* initialize constants */
-    NUMBER_TRUE = newNumber(1);
-	NUMBER_FALSE = newNumber(0);
+    NUMBER_TRUE = tm_number(1);
+	NUMBER_FALSE = tm_number(0);
 	NONE_OBJECT.type = TYPE_NONE;
     UNDEF.type = -1;
     
@@ -46,15 +46,15 @@ void gcInit() {
 	tm->all = list_alloc_untracked(init_size);
     
     tm->root = list_new(100);
-	tm->builtins = newDict();
+	tm->builtins = dict_new();
 	APPEND(tm->root, tm->builtins);
-	tm->modules = newDict();
+	tm->modules = dict_new();
 	APPEND(tm->root, tm->modules);
 
 	tm->exList = list_new(10);
 	APPEND(tm->root, tm->exList);
 	
-	tm->constants = newDict();
+	tm->constants = dict_new();
 	APPEND(tm->root, tm->constants);
 
     /* initialize chars */
