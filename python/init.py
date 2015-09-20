@@ -163,7 +163,11 @@ def _import(fname, des_glo, tar = None):
                 fname = des_glo["PATH"] + FILE_SEP + fname
             # still can not be found? find in LIB_PATH
             if not exists(fname + '.py'):
-                fname = LIB_PATH + FILE_SEP + fname
+                libname = LIB_PATH + FILE_SEP + fname
+            if not exists(libname + ".py"):
+                raise(sformat("import error, can not open file \"%s.py\"", fname))
+            else:
+                fname = libname
         try:
             #__modules__[fname] = {}
             _code = compilefile(fname + '.py')
@@ -284,12 +288,23 @@ def resolvepath(path):
     chdir(parent)
     return fname
     
-def _execute_file(path):
+def exec_file(path):
     from encode import compilefile
     fname = resolvepath(path)
     _code = compilefile(fname)
     # printf("run file %s ...\n", fname)
     load_module(fname, _code, '__main__')
+    
+def _time():
+    return clock() / 1000
+    
+def init_py_libs():
+    sys = {}
+    time = {}
+    __modules__['sys'] = sys
+    __modules__['time'] = time
+    sys.argv = ARGV
+    time.time = _time
     
 LIB_PATH = ''
 def boot(loadlibs=True):
@@ -301,7 +316,8 @@ def boot(loadlibs=True):
     pathes = split_path(getcwd())
     pathes.append("libs")
     LIB_PATH = join_path(pathes)
+    init_py_libs()
     if argc == 0:
         repl()
     else:
-        _execute_file(ARGV[0])
+        exec_file(ARGV[0])

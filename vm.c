@@ -24,7 +24,7 @@ void regConst(Object constant) {
 
 void regModFunc(Object mod, char* name, Object (*native)()) {
 	Object func = func_new(NONE_OBJECT, NONE_OBJECT, native);
-	GET_FUNCTION(func)->name = string_alloc(name, -1);
+	GET_FUNCTION(func)->name = string_static(name);
 	tmSet(mod,GET_FUNCTION(func)->name, func);
 }
 
@@ -85,7 +85,7 @@ int tmRun(int argc, char* argv[]) {
 	Object p = list_new(argc);
 	int i;
 	for (i = 1; i < argc; i++) {
-		Object arg = string_alloc(argv[i], strlen(argv[i]));
+		Object arg = string_new(argv[i]);
 		APPEND(p, arg);
 	}
 	builtinsInit();

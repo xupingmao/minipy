@@ -31,7 +31,7 @@ def build(cc="tcc", libs=None):
         code = compilefile(obj.path)
         destCode += code_str(obj.name)+code_str(code)
     code = modLen + code_str("constants") + code_str(build_const_code()) + destCode
-    save("../bin.c", "unsigned char bin[] = {" + ','.join(str_to_chars(code))+'};\n')
+    save("../bin.c", "unsigned char bin[] = {\n" + str_to_chars(code)+'\n};\n')
     export_clang_define("../include/instruction.h", "tmcode.py")
     if cc != None:
         if str(1.0) != '1.0':
@@ -44,10 +44,14 @@ def build(cc="tcc", libs=None):
         #remove("../bin.c")
     
 def str_to_chars(code):
-    chararray = []
-    for c in code:
-        chararray.append(str(ord(c)))
-    return chararray
+    dest = ''
+    for i in range(len(code)):
+        if i != 0:
+            dest += ','
+        if (i+1) % 9 == 0:
+            dest += '\n'
+        dest += str(ord(code[i]))
+    return dest
 
 def build_const_code():
     b = ''

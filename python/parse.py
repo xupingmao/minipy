@@ -6,9 +6,11 @@ _stm_end_list = ['nl', 'dedent']
 _skip_op = ['nl', ';']
 
 
-def AstNode(type=None):
+def AstNode(type=None, first=None, second=None):
     o = newobj()
     o.type = type
+    o.first = first
+    o.second = second
     return o
     
 class ParserCtx:
@@ -198,8 +200,7 @@ def call_or_get_exp(p):
     if p.token.type == '-':
         p.next()
         call_or_get_exp(p)
-        node = AstNode('neg')
-        node.first = p.pop()
+        node = AstNode('neg', p.pop())
         p.add(node)
     else:
         factor(p)
@@ -211,8 +212,7 @@ def call_or_get_exp(p):
                 expect(p, ']')
                 add_op(p, 'get')
             elif t == '(':
-                node = AstNode('call')
-                node.first = p.pop()
+                node = AstNode('call', p.pop())
                 if p.token.type == ')':
                     p.next()
                     node.second = None
@@ -310,9 +310,7 @@ def parse_raise(p):
 def parse_del(p):
     p.next()
     expr(p)
-    tar = p.pop()
-    x = AstNode('del')
-    x.first = tar
+    x = AstNode('del', p.pop())
     p.add(x)
 
 def parse_global(p):
@@ -333,9 +331,7 @@ def parse_try(p):
     pos = p.token.pos # save position
     p.next()
     expect(p, ':')
-    node = AstNode("try")
-    node.pos = pos # for encode to locate error pos.
-    node.first = p.visit_block()
+    node = AstNode("try", p.visit_block())
     expect(p, 'except')
     if p.token.type == 'name':
         p.next()
@@ -398,9 +394,8 @@ def parse_arg(p):
         if p.token.type == '*':
             p.next()
             assert_type(p, 'name', 'Invalid arguments')
-            arg = AstNode("narg")
+            arg = AstNode("narg", p.token)
             arg.second = None
-            arg.first = p.token
             args.append(arg)
             p.next()
         expect(p, ')')

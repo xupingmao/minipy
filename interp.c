@@ -10,18 +10,6 @@
 
 #define INTERP_DB 0
 
-typedef struct _code {
-    int op;
-    int val;
-} Code;
-
-Code parseCode(char* s) {
-    Code code;
-    code.op = s[0];
-    code.val = (s[1] << 8) | (s[2] &0xff);
-    return code;
-}
-
 Object callFunction2(Object func) {
     if (NOT_FUNC(func) || IS_NATIVE(func)) {
         return UNDEF;

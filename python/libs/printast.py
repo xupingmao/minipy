@@ -19,7 +19,7 @@ def f(n, v, pre = ""):
     rs = ''
     if v == None:
         rs = 'None'
-    elif istype(v, "list"):
+    elif gettype(v) == "list":
         s = ''
         for i in v:
             s += '\n' + f(n+2, i)
