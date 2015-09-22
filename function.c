@@ -15,6 +15,8 @@ unsigned char* resolve_func(TmFunction* fnc, unsigned char* pc) {
             s += val;
         } else if (op == LOAD_LOCAL || op == STORE_LOCAL) {
 			maxlocals = max(val, maxlocals);
+        } else if (op == SETJUMP) {
+            fnc->modifier = 1;
 		} else if(op == TM_EOF){
 			defs--;
             if (defs == 0) break;
@@ -146,16 +148,6 @@ Object getFunctionGlobals(TmFunction* fnc) {
 int getFunctionMaxLocals(TmFunction* fnc){
 	//resolveModule(GET_MODULE(fnc->mod), fnc);
 	return fnc->maxlocals;
-}
-
-Object getModuleCreateIfNotExist(char* modName) {
-	Object mod = string_alloc(modName, -1);
-	if(tm_has(tm->modules, mod)) {
-		return tmGet(tm->modules, mod);
-	}else {
-		tmSet(tm->modules, mod, dict_new());
-		return tmGet(tm->modules, mod);
-	}
 }
 
 char* getFuncNameSz(Object func) {

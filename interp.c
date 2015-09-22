@@ -44,6 +44,9 @@ Object callFunction(Object func) {
             return GET_FUNCTION(func)->native();
         } else {
             TmFrame* f = pushFrame(func);
+            if (GET_FUNCTION(func)->modifier == 0) {
+                return tm_eval(f);
+            }
             L_recall:
             if (setjmp(f->buf)==0) {
                 return tm_eval(f);

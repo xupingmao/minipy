@@ -60,6 +60,7 @@ typedef struct TmModule
 typedef struct TmFunction{
   int marked;
   int resolved;
+  int modifier;
   int maxlocals;
   int maxstack;
   unsigned char* code;

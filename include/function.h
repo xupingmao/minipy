@@ -20,7 +20,6 @@ Object           moduleNew(Object file, Object name, Object code);
 void             moduleFree(TmModule*);
 // CodeCheckResult  resolveCode(TmModule *mod,  unsigned char*s , int isFuncDef);
 unsigned char*   getFunctionCode(TmFunction*);
-Object           getModuleCreateIfNotExist(char* modName);
 void             _functionFormat(char* des, TmFunction* func);
 #define          functionFormat(des, func) _functionFormat(des, GET_FUNCTION(func))
 TmModule*        getFuncMod(TmFunction* func);
