@@ -25,8 +25,6 @@
 #define TM_NT 1
 #endif
 
-int enable_debug = 0;
-
 #define RET_NONE return NONE_OBJECT;
 #include <stdio.h>
 #include <string.h>

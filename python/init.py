@@ -28,8 +28,8 @@ def endswith(self, end):
     return idx + len(end) == len(self)
 def sformat0(args):
     fmt = args[0]
+    if len(args) == 1: return fmt
     fmt_len = len(fmt)
-    if fmt_len == 1: return fmt
     i = 0
     args_cnt = 0
     is_char = 1

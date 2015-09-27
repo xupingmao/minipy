@@ -37,7 +37,7 @@ def compile_error(ctx, s, token, eMsg = ""):
 
 ISYMBOLS = '-=[];,./!%*()+{}:<>@^$'
 KEYWORDS = [
-    'as','def','class','yield','return','pass','and','or','not','in','import',
+    'as','def','class', 'return','pass','and','or','not','in','import',
     'is','while','break','for','continue','if','else','elif','try',
     'except','raise','global','del','from','None']
 SYMBOLS = [
@@ -75,10 +75,7 @@ def clean(s):
 def tokenize(s):
     global T
     s = clean(s)
-    try:
-        return dotokenize(s)
-    except Exception as e:
-        compile_error("tokenize", s, T.f)
+    return dotokenize(s)
         
 def dotokenize(s):
     global T
@@ -98,7 +95,7 @@ def dotokenize(s):
         elif c == '\\' and s[i+1] == '\n':
             i += 2; T.y+=1; T.yi = i
         elif c == ' ' or c == '\t': i += 1
-        else: compile_error('dotokenize',s, T.f)
+        else: compile_error('dotokenize',s, Token('', '', T.f), "unknown token")
     indent(0)
     r = T.res; T = None
     return r
@@ -139,10 +136,6 @@ def do_symbol(s,i,l):
     # v,f,i = s[i],i,i+1
     v=s[i];f=i;i+=1
     if v in SYMBOLS: symbols.append(v)
-    else:
-        # will never happen; debug.
-        print("do_symbol error")
-        print(s,v)
     while i<l:
         c = s[i]
         if c not in ISYMBOLS: break

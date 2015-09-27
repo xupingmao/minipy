@@ -75,7 +75,7 @@ def assert_type(p, type, msg):
     #p.next()
 
 
-def factor(p):
+def baseitem(p):
     t = p.token.type
     token = p.token
     if t in ('number', 'string', 'name', 'None'):
@@ -100,25 +100,20 @@ def factor(p):
     elif t == '{':
         p.next()
         node = AstNode('dict')
-        if p.token.type == '}':
-            p.next()
-            node.first = None
-            p.add(node)
-        else:
-            items = []
-            while p.token.type != '}':
-                or_exp(p)
-                expect(p, ':')
-                or_exp(p)
-                v = p.pop()
-                k = p.pop()
-                items.append([k,v])
-                if p.token.type == '}':
-                    break
-                expect(p, ',')
-            expect(p, '}')
-            node.first = items
-            p.add(node)
+        items = []
+        while p.token.type != '}':
+            or_exp(p)
+            expect(p, ':')
+            or_exp(p)
+            v = p.pop()
+            k = p.pop()
+            items.append([k,v])
+            if p.token.type == '}':
+                break
+            expect(p, ',')
+        expect(p, '}')
+        node.first = items
+        p.add(node)
             
 def assign_exp(p):
     fnc = comma_exp
@@ -203,7 +198,7 @@ def call_or_get_exp(p):
         node = AstNode('neg', p.pop())
         p.add(node)
     else:
-        factor(p)
+        baseitem(p)
         while p.token.type in ('.','(','['):
             t = p.token.type
             p.next()
@@ -222,7 +217,7 @@ def call_or_get_exp(p):
                     node.second = p.pop()
                 p.add(node)
             else:
-                factor(p)
+                baseitem(p)
                 b = p.pop()
                 a = p.pop()
                 node = AstNode('attr')
@@ -332,6 +327,7 @@ def parse_try(p):
     p.next()
     expect(p, ':')
     node = AstNode("try", p.visit_block())
+    node.pos = pos
     expect(p, 'except')
     if p.token.type == 'name':
         p.next()
@@ -381,11 +377,11 @@ def parse_arg(p):
             p.next()
             if varg == 1:
                 expect(p, '=')
-                factor(p)
+                baseitem(p)
                 arg.second = p.pop()
             elif p.token.type == '=':
                 p.next()
-                factor(p) # problem
+                baseitem(p) # problem
                 arg.second = p.pop()
                 varg = 1
             args.append(arg)

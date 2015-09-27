@@ -59,8 +59,8 @@ typedef struct TmModule
 
 typedef struct TmFunction{
   int marked;
-  int resolved;
-  int modifier;
+  char resolved;
+  char modifier;
   int maxlocals;
   int maxstack;
   unsigned char* code;
@@ -83,7 +83,6 @@ typedef struct TmFrame {
   int stacksize;
   int maxlocals;
   int maxstack;
-  // Object line; /* current line */
   int lineno;
   Object fnc;
   jmp_buf buf;
