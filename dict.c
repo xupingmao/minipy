@@ -101,14 +101,43 @@ int findfreepos(TmDict* dict) {
     return -1;
 }
 
+int dict_set_attr2(TmDict* dict, Object key, Object val) {
+    int i = 0;
+    DictNode* nodes = dict->nodes;
+    for (i = 0; i < dict->cap; i++) {
+        if (nodes[i].used && nodes[i].key.idx == key.idx) {
+            nodes[i].val = val;
+            return i;
+        }
+    }
+    return -1;
+}
+
+int dict_get_attr2(TmDict* dict, Object key) {
+    int i = 0;
+    DictNode* nodes = dict->nodes;
+    for (i = 0; i < dict->cap; i++) {
+        if (nodes[i].used && nodes[i].key.idx == key.idx) {
+            return i;
+        }
+    }
+    return -1;
+}
+
 int DictSet(TmDict* dict, Object key, Object val){
+    int i;
+    if (key.idx > 0) {
+        // tmPrintf("idx=%d, obj=%o\n", key.idx, key);
+        i = dict_set_attr2(dict, key, val);
+        if (i > 0) return i;
+    }
 	DictNode* node = DictGetNode(dict, key);
 	if (node != NULL) {
 		node->val = val;
 		return (node - dict->nodes);
 	}
     DictCheck(dict);
-	int i = findfreepos(dict);
+	i = findfreepos(dict);
     dict->len++;
     dict->nodes[i].used = 1;
     dict->nodes[i].key = key;
@@ -119,7 +148,7 @@ int DictSet(TmDict* dict, Object key, Object val){
 int setAttr(TmDict* dict, int constId, Object val) {
     int i;
 	DictNode* nodes = dict->nodes;
-    constId += 2; /* prevent first const to be 0, and normal dict node to be 1. */
+    constId += 2; /* start from 2, as 0,1 are used by normal node. */
 	for (i = 0; i < dict->cap; i++) {
         if (nodes[i].used == constId) {
             nodes[i].val = val;
@@ -153,6 +182,12 @@ DictNode* DictGetNode(TmDict* dict, Object key){
     //int hash = DictHash(key);
     //int idx = hash % dict->cap;
     int i;
+    if (key.idx > 0) {
+        i = dict_get_attr2(dict, key);
+        if (i > 0) {
+            return dict->nodes + i;
+        }
+    }
 	DictNode* nodes = dict->nodes;
 	for (i = 0; i < dict->cap; i++) {
         if (nodes[i].used && tm_equals(nodes[i].key, key)) {

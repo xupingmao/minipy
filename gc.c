@@ -154,6 +154,7 @@ Object gcTrack(Object v) {
 		tmRaise("gcTrack(), not supported type %d", v.type);
 		return v;
 	}
+    v.idx = 0;
 	_listAppend(tm->all, v);
 	return v;
 }

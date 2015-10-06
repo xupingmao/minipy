@@ -44,9 +44,10 @@ Object callFunction(Object func) {
             return GET_FUNCTION(func)->native();
         } else {
             TmFrame* f = pushFrame(func);
+            /*
             if (GET_FUNCTION(func)->modifier == 0) {
                 return tm_eval(f);
-            }
+            }*/
             L_recall:
             if (setjmp(f->buf)==0) {
                 return tm_eval(f);
@@ -170,6 +171,7 @@ Object tm_eval(TmFrame* f) {
 			pc += i;
 			v = tm_number(d);
 			/* APPEND(tm->constants,v);*/
+            v.idx = 0;
             dictSet(tm->constants, v, NONE_OBJECT);
 			break;
 		}
@@ -178,6 +180,7 @@ Object tm_eval(TmFrame* f) {
 			v = string_alloc((char*)pc + 3, i);
 			pc += i;
 			/* APPEND(tm->constants,v); */
+            v.idx = 0;
             dictSet(tm->constants, v, NONE_OBJECT);
 			break;
 		}
@@ -233,9 +236,7 @@ Object tm_eval(TmFrame* f) {
 		}
 		case STORE_GLOBAL: {
 			x = TM_POP();
-            /* tmPrintf("store global %o\n", GET_CONST(i)); */
             int idx = setAttr(GET_DICT(globals), i, x);
-			/* tmSet(globals, GET_CONST(i), x); */
             pc[0] = FAST_ST_GLO;
             code16(pc+1, idx);
 			break;

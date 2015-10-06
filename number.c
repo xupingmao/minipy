@@ -3,6 +3,7 @@
 Object tm_number(double v){
   Object o;
   TM_TYPE(o) = TYPE_NUM;
+  o.idx = 0;
   GET_NUM(o) = v;
   return o;
 }

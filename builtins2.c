@@ -154,7 +154,9 @@ Object bfSetVMState() {
 
 Object bfGetConstIdx() {
     Object key = getObjArg("getConstIdx");
+    key.idx = 0;
     int i = dictSet(tm->constants, key, NONE_OBJECT);
+    GET_DICT(tm->constants)->nodes[i].key.idx = i;
     /*
     int i = listIndex(tm->constants, value);
     if (i < 0) {

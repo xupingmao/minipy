@@ -98,7 +98,6 @@ def store_glo(glo):
     idx = getConstIdx(glo.val)
     emit(STORE_GLOBAL, idx)
 
-
 def def_global(v):
     names.scope.globals.append(v.val)
 # opcode : op

@@ -18,6 +18,7 @@
 #define TYPE_DATA 10
 #define TM_TYPE(o) (o).type
 #define MAX_FILE_SIZE 1024 * 1024 * 5 /* max file size loaded into memery */
+#include <stdint.h>
 
 typedef union TmValue {
   double dv;
@@ -37,7 +38,8 @@ typedef union TmValue {
 #define GET_LIST(obj) GET_VAL(obj).list
 
 typedef struct Object{
-  int type; /*marked, type, others*/
+  int type;
+  int idx;
   TmValue value;
 }Object;
 
