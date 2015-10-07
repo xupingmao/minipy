@@ -17,7 +17,7 @@ Object list_new(int cap) {
 	Object v;
 	v.type = TYPE_LIST;
 	v.value.list = list_alloc_untracked(cap);
-	return gcTrack(v);
+	return gc_track(v);
 }
 
 /* build list of length n from object list */

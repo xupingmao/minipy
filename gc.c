@@ -127,7 +127,7 @@ void tm_free(void* o, size_t size) {
 	tm->allocated -= size;
 }
 
-Object gcTrack(Object v) {
+Object gc_track(Object v) {
 	switch (v.type) {
 	case TYPE_NUM:
 	case TYPE_NONE:
@@ -151,10 +151,10 @@ Object gcTrack(Object v) {
 		GET_DATA(v)->marked = GC_REACHED_SIGN;
 		break;
 	default:
-		tmRaise("gcTrack(), not supported type %d", v.type);
+		tmRaise("gc_track(), not supported type %d", v.type);
 		return v;
 	}
-    v.idx = 0;
+    SET_IDX(v, 0);
 	_listAppend(tm->all, v);
 	return v;
 }
@@ -335,4 +335,145 @@ void gcFree() {
 		printf("\n***memory leak happens***\ntm->allocated=%d\n", tm->allocated);
 	}
 #endif
+}
+
+
+Object newObj(int type, void * value) {
+	Object o;
+	TM_TYPE(o) = type;
+	switch (type) {
+	case TYPE_NUM:
+		o.value.num = *(double*) value;
+		break;
+	case TYPE_STR:
+		o.value.str = value;
+		break;
+	case TYPE_LIST:
+		GET_LIST(o) = value;
+		break;
+	case TYPE_DICT:
+		GET_DICT(o) = value;
+		break;
+	case TYPE_MODULE:
+		GET_MODULE(o) = value;
+		break;
+	case TYPE_FUNCTION:
+		GET_FUNCTION(o) = value;
+		break;
+	case TYPE_NONE:
+		break;
+	default:
+		tmRaise("obj_new: not supported type %d", type);
+	}
+	return o;
+}
+
+
+void objectFree(Object o) {
+	switch (TM_TYPE(o)) {
+	case TYPE_STR:
+		string_free(GET_STR_OBJ(o));
+		break;
+	case TYPE_LIST:
+		list_free(GET_LIST(o));
+		break;
+	case TYPE_DICT:
+		freeDict(GET_DICT(o));
+		break;
+	case TYPE_FUNCTION:
+		functionFree(GET_FUNCTION(o));
+		break;
+	case TYPE_MODULE:
+		moduleFree(o.value.mod);
+		break;
+	case TYPE_DATA:
+		GET_DATA_PROTO(o)->free(GET_DATA(o));
+		break;
+	}
+}
+
+Object* baseNext(TmBaseIterator* iterator) {
+    iterator->ret = callFunction2(iterator->func);
+    if (iterator->ret.type != -1) {
+        return &iterator->ret;
+    } else {
+        return NULL;
+    }
+}
+
+void baseMark(DataObject* data) {
+    gcMark(((TmBaseIterator*)data)->func);
+}
+
+DataProto* getBaseIterProto() {
+	if(!baseIterProto.init) {
+		initDataProto(&baseIterProto);
+		baseIterProto.dataSize = sizeof(TmBaseIterator);
+		baseIterProto.next = baseNext;
+        baseIterProto.mark = baseMark;
+	}
+	return &baseIterProto;
+}
+
+Object* dataNext(DataObject* data) {
+    tmRaise("next is not defined!");
+    return NULL;
+}
+
+DataProto* getDefaultDataProto() {
+	if(!defaultDataProto.init) {
+		defaultDataProto.init = 1;
+		defaultDataProto.mark = dataMark;
+		defaultDataProto.free = dataFree;
+		defaultDataProto.next = dataNext;
+		defaultDataProto.get = dataGet;
+		defaultDataProto.set = dataSet;
+		defaultDataProto.str = dataStr;
+		defaultDataProto.dataSize = sizeof(DataProto);
+	}
+	return &defaultDataProto;
+}
+
+void initDataProto(DataProto* proto) {
+	proto->mark = dataMark;
+	proto->free = dataFree;
+	proto->get = dataGet;
+	proto->set = dataSet;
+	proto->next = dataNext;
+	proto->str = dataStr;
+	proto->init = 1;
+	proto->dataSize = sizeof(TmData);
+}
+
+Object dataNew(size_t dataSize) {
+	Object data;
+	data.type = TYPE_DATA;
+	GET_DATA(data) = tm_malloc(dataSize);
+/*	GET_DATA_PROTO(data)->next = dataNext;
+	GET_DATA_PROTO(data)->mark = dataMark;
+	GET_DATA_PROTO(data)->free = dataFree;
+	GET_DATA_PROTO(data)->get = dataGet;
+	GET_DATA_PROTO(data)->set = dataSet;*/
+	GET_DATA_PROTO(data) = getDefaultDataProto();
+	return gc_track(data);
+}
+
+void dataMark(DataObject* data) {
+    /* */
+}
+
+void dataFree(TmData* data) {
+	tm_free(data, data->proto->dataSize);
+}
+
+Object dataGet(Object self, Object key) {
+	return NONE_OBJECT;
+}
+
+void dataSet(Object self, Object key, Object value) {
+
+}
+
+Object dataStr(Object self) {
+	return string_alloc("data", -1);
 }

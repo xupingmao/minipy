@@ -11,7 +11,7 @@ Object newChar(int c) {
 	str->value[1] = '\0';
 	TM_TYPE(obj) = TYPE_STR;
 	GET_STR_OBJ(obj) = str;
-	return gcTrack(obj);
+	return gc_track(obj);
 }
 
 Object string_alloc(char *s, int size) {
@@ -43,7 +43,7 @@ Object string_alloc(char *s, int size) {
 	}
 	v.type = TYPE_STR;
 	v.value.str = str;
-	return gcTrack(v);
+	return gc_track(v);
 }
 
 Object string_chr(int n) {
@@ -154,15 +154,15 @@ Object bmStringReplace() {
 	int lastpos = 0;
 	while (pos != -1 && pos < GET_STR_LEN(self)) {
 		if (pos != 0){
-			nstr = tmAdd(nstr,
+			nstr = tm_add(nstr,
 					string_substring(self.value.str, lastpos, pos));
 		}
-		nstr = tmAdd(nstr, des);
+		nstr = tm_add(nstr, des);
 		lastpos = pos + GET_STR_LEN(src);
 		pos = string_index(self.value.str, src.value.str, lastpos);
 		// printf("lastpos = %d\n", lastpos);
 	}
-	nstr = tmAdd(nstr, string_substring(self.value.str, lastpos, GET_STR_LEN(self)));
+	nstr = tm_add(nstr, string_substring(self.value.str, lastpos, GET_STR_LEN(self)));
 	return nstr;
 }
 
@@ -203,8 +203,8 @@ Object StringJoin(Object self, Object list) {
 		Object s = LIST_NODES(list)[i];
 		tmAssertType(s, TYPE_STR, "string.join");
 		if (i != 0)
-			str = tmAdd(str, self);
-		str = tmAdd(str, s);
+			str = tm_add(str, self);
+		str = tm_add(str, s);
 	}
 	return str;
 }

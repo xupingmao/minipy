@@ -15,8 +15,6 @@
 *   better not similar to computer binary size ( as to say 2 ), 
 *   such as 2, 10 etc.
 */
-
-
 int hashSz(unsigned char* s, int len) {
 	int hash = 1315423911;
 	int i = 0;
@@ -53,7 +51,7 @@ Object dict_new(){
 	Object o;
 	o.type = TYPE_DICT;
 	GET_DICT(o) = DictInit();
-	return gcTrack(o);
+	return gc_track(o);
 }
 
 
@@ -100,7 +98,7 @@ int findfreepos(TmDict* dict) {
     }
     return -1;
 }
-
+#if USE_IDX
 int dict_set_attr2(TmDict* dict, Object key, Object val) {
     int i = 0;
     DictNode* nodes = dict->nodes;
@@ -123,14 +121,17 @@ int dict_get_attr2(TmDict* dict, Object key) {
     }
     return -1;
 }
+#endif
 
 int DictSet(TmDict* dict, Object key, Object val){
     int i;
+    #if USE_IDX
     if (key.idx > 0) {
         // tmPrintf("idx=%d, obj=%o\n", key.idx, key);
         i = dict_set_attr2(dict, key, val);
         if (i > 0) return i;
     }
+    #endif
 	DictNode* node = DictGetNode(dict, key);
 	if (node != NULL) {
 		node->val = val;
@@ -182,12 +183,14 @@ DictNode* DictGetNode(TmDict* dict, Object key){
     //int hash = DictHash(key);
     //int idx = hash % dict->cap;
     int i;
+    #if USE_IDX
     if (key.idx > 0) {
         i = dict_get_attr2(dict, key);
         if (i > 0) {
             return dict->nodes + i;
         }
     }
+    #endif
 	DictNode* nodes = dict->nodes;
 	for (i = 0; i < dict->cap; i++) {
         if (nodes[i].used && tm_equals(nodes[i].key, key)) {

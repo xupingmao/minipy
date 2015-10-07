@@ -103,7 +103,7 @@ void testRun(int argc, char* argv[]) {
             Object temp = tm_number(GET_NUM(i) * GET_NUM(n34));
             j = temp;
         }
-        i = tmAdd(i, n1);
+        i = tm_add(i, n1);
     }
     t2 = test_clock();
     printf("t1: time=%ld\n", t2-t1);

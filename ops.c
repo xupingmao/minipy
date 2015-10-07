@@ -94,7 +94,7 @@ Object tmSub(Object a, Object b) {
 	if (a.type == b.type) {
 		if (a.type == TYPE_NUM) {
             GET_NUM(a) -= GET_NUM(b);
-            a.idx = 0;
+            SET_IDX(a, 0);
             return a;
 		}
 	}
@@ -102,12 +102,12 @@ Object tmSub(Object a, Object b) {
 	return NONE_OBJECT;
 }
 
-Object tmAdd(Object a, Object b) {
+Object tm_add(Object a, Object b) {
 	if (TM_TYPE(a) == TM_TYPE(b)) {
 		switch (TM_TYPE(a)) {
 		case TYPE_NUM:
 			GET_NUM(a) += GET_NUM(b);
-            a.idx = 0;
+            SET_IDX(a, 0);
 			return a;
 		case TYPE_STR: {
 			char* sa = GET_STR(a);
@@ -128,7 +128,7 @@ Object tmAdd(Object a, Object b) {
 		}
 		}
 	}
-	tmRaise("tmAdd: can not add %o and %o", (a), (b));
+	tmRaise("tm_add: can not add %o and %o", (a), (b));
 	return NONE_OBJECT;
 }
 
@@ -220,7 +220,7 @@ DEF_CMP_FUNC_2(tm_bool_gteq, >=);
 Object tmMul(Object a, Object b) {
 	if (a.type == b.type && a.type == TYPE_NUM) {
 		GET_NUM(a) *= GET_NUM(b);
-        a.idx = 0;
+        SET_IDX(a, 0);
         return a;
 	}
 	if (a.type == TYPE_NUM && b.type == TYPE_STR) {
@@ -254,14 +254,14 @@ Object tmMul(Object a, Object b) {
 Object tmDiv(Object a, Object b) {
 	if (a.type == b.type && a.type == TYPE_NUM) {
 		GET_NUM(a) /= GET_NUM(b);
-        a.idx = 0;
+        SET_IDX(a, 0);
         return a;
 	}
 	tmRaise("tmDiv: can not divide %o and %o", a, b);
 	return NONE_OBJECT;
 }
 
-Object tmMod(Object a, Object b) {
+Object tm_mod(Object a, Object b) {
 	if (a.type == b.type && a.type == TYPE_NUM) {
 		return tm_number((long) GET_NUM(a) % (long) GET_NUM(b));
 	} else if (a.type == TYPE_STR) {
@@ -275,7 +275,7 @@ Object tmMod(Object a, Object b) {
 			return callFunction(*__mod__);
 		}		
 	}
-	tmRaise("tmMod: can not module %o and %o", a, b);
+	tmRaise("tm_mod: can not module %o and %o", a, b);
 	return NONE_OBJECT;
 }
 

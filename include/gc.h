@@ -11,7 +11,7 @@ void initMemory();
 void freeMemory();
 
 void        gcInit();
-Object      gcTrack(Object obj);
+Object      gc_track(Object obj);
 void        gcFree();
 void        gcFull();
 Object bfGetMallocInfo();

@@ -171,7 +171,6 @@ Object tm_eval(TmFrame* f) {
 			pc += i;
 			v = tm_number(d);
 			/* APPEND(tm->constants,v);*/
-            v.idx = 0;
             dictSet(tm->constants, v, NONE_OBJECT);
 			break;
 		}
@@ -180,7 +179,6 @@ Object tm_eval(TmFrame* f) {
 			v = string_alloc((char*)pc + 3, i);
 			pc += i;
 			/* APPEND(tm->constants,v); */
-            v.idx = 0;
             dictSet(tm->constants, v, NONE_OBJECT);
 			break;
 		}
@@ -272,11 +270,11 @@ Object tm_eval(TmFrame* f) {
 			FRAME_CHECK_GC();
 			break;
 		}
-		TM_OP(ADD, tmAdd)
+		TM_OP(ADD, tm_add)
 		TM_OP(SUB, tmSub)
 		TM_OP(MUL, tmMul)
 		TM_OP(DIV, tmDiv)
-		TM_OP(MOD, tmMod)
+		TM_OP(MOD, tm_mod)
 		TM_OP(GET, tmGet)
 		case EQEQ: {
             *(top-1) = tm_number(tm_equals(*(top-1), *top));

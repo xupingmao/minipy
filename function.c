@@ -45,7 +45,7 @@ Object func_new(Object mod,
   f->maxlocals = 0;
   f->self = self;
   f->name = NONE_OBJECT;
-  return gcTrack(newObj(TYPE_FUNCTION, f));
+  return gc_track(newObj(TYPE_FUNCTION, f));
 }
 
 Object methodNew(Object _fnc, Object self){
@@ -95,7 +95,7 @@ Object moduleNew(Object file , Object name, Object code){
   /*mod->constants = list_new(20);*/
   /*_listAppend(GET_LIST(mod->constants), NONE_OBJECT);*/
   mod->globals = dict_new();
-  Object m = gcTrack(newObj(TYPE_MODULE, mod));
+  Object m = gc_track(newObj(TYPE_MODULE, mod));
   /* set module */
   tmSet(tm->modules, file, mod->globals);
   dictSetByStr(mod->globals, "__name__", name);

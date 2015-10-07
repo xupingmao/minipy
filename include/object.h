@@ -37,9 +37,19 @@ typedef union TmValue {
 
 #define GET_LIST(obj) GET_VAL(obj).list
 
+#define USE_IDX 0
+
+#if USE_IDX
+    #define SET_IDX(obj, v) (obj).idx = (v)
+#else
+    #define SET_IDX(obj, v) /**/
+#endif
+
 typedef struct Object{
-  int type;
-  int idx;
+  char type;
+  #if USE_IDX
+  char idx;
+  #endif
   TmValue value;
 }Object;
 

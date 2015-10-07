@@ -12,11 +12,11 @@
 
 void      tmSet(Object self, Object key, Object value);
 Object    tmGet(Object self, Object key);
-Object    tmAdd(Object a, Object b);
+Object    tm_add(Object a, Object b);
 Object    tmSub(Object a, Object b);
 Object    tmMul(Object a, Object b);
 Object    tmDiv(Object a, Object b);
-Object    tmMod(Object a, Object b);
+Object    tm_mod(Object a, Object b);
 Object    tm_neg(Object o) ;
 int tm_equals(Object a, Object b);
 
