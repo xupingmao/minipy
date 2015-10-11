@@ -2,6 +2,7 @@ from encode import compile
 from encode import compilefile
 from boot import *
 from tmcode import *
+import sys
 
 global_mod_list = [LOAD_GLOBAL, STORE_GLOBAL, LOAD_CONSTANT, TM_DEF]
 def dis(fname ,constants = ['None']):
@@ -26,8 +27,6 @@ def dis_func(func):
         print("native function")
         return
     dis_code(code)
-
-
 
 def dissimple0(code, limit = None):
     s = code
@@ -64,7 +63,7 @@ def dis_txt(s):
 def dissimple(argv):
     argc = len(argv)
     s = argv[0]
-    if len(s) < 20 and s.endswith(".py"):
+    if s.endswith(".py"):
         s = compilefile(s)
         showconst = True
     else:
@@ -79,7 +78,6 @@ def dissimple(argv):
         count = int(argv[2])
         end = start + count
     dis_code(s, start, end)
-        
 
 def main():
     argc = len(ARGV)
@@ -99,5 +97,6 @@ def main():
             dissimple0(load(fname))
 test = None
 if __name__ == "__main__":
-    del ARGV[0]
-    dissimple(ARGV)
+    argv = sys.argv.copy()
+    del argv[0]
+    dissimple(argv)

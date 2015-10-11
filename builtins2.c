@@ -24,12 +24,34 @@ Object bfGetCurrentFrame() {
 	return frameInfo;
 }
 
-Object bfVmOpt() {
+Object bf_vmopt() {
     char* opt = getSzArg("vminfo");
     if (strcmp(opt, "gc") == 0) {
         gcFull();
     } else if (strcmp(opt, "help") == 0) {
         return string_static("gc, help");
+    } else if (strcmp(opt, "frame.local") == 0) {
+        int fidx = getIntArg("vminfo");
+        int lidx = getIntArg("vminfo");
+        return tm_getlocal(fidx, lidx);
+    } else if (strcmp(opt, "frame.stack") == 0) {
+        int fidx = getIntArg("vminfo");
+        int sidx = getIntArg("vminfo");
+        return tm_getstack(fidx, sidx);
+    } else if (strcmp(opt, "frame.index") == 0) {
+        return tm_number(tm->frame-tm->frames);
+    } else if (strcmp(opt, "frame.info") == 0) {
+        int fidx = getIntArg("vminfo");
+        TmFrame *f = tm_getframe(fidx);
+        Object info = dict_new();
+        tm_setattr(info, "maxlocals", tm_number(f->maxlocals));
+        tm_setattr(info, "stacksize", tm_number(f->top - f->stack));
+        tm_setattr(info, "func", f->fnc);
+        tm_setattr(info, "fname", tm_getfname(f->fnc));
+        tm_setattr(info, "lineno", tm_number(f->lineno));
+        return info;
+    } else {
+        tmRaise("invalid opt %s", opt);
     }
 	return NONE_OBJECT;
 }
@@ -79,11 +101,11 @@ Object bfAddObjMethod() {
 	Object fnc = getFuncArg(szFunc);
 	char*s = GET_STR(type);
 	if (strcmp(s, "str") == 0) {
-		tmSet(CLASS_STRING, fname, fnc);
+		tmSet(tm->str_proto, fname, fnc);
 	} else if (strcmp(s, "list") == 0) {
-		tmSet(CLASS_LIST, fname, fnc);
+		tmSet(tm->list_proto, fname, fnc);
 	} else if (strcmp(s, "dict") == 0) {
-		tmSet(CLASS_DICT, fname, fnc);
+		tmSet(tm->dict_proto, fname, fnc);
 	} else {
 		tmRaise("add_obj_method: not valid object type, expect str, list, dict");
 	}
@@ -268,6 +290,33 @@ Object bfGetOsName() {
 #endif
 }
 
+Object bf_listdir() {
+    Object list = list_new(10);
+    Object path = getStrArg("listdir");
+#ifdef _WINDOWS_H
+    WIN32_FIND_DATA FindFileData;
+    Object _path = tm_add(path, string_new("\\*.*"));
+    HANDLE hFind = FindFirstFile(GET_STR(_path), &FindFileData);
+    if (hFind == INVALID_HANDLE_VALUE) {
+        tmRaise("%s is not a directory", path);
+    }
+    do {
+        if (strcmp(FindFileData.cFileName, "..")==0 || strcmp(FindFileData.cFileName, ".") == 0) {
+            continue;
+        }
+        if (FindFileData.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) {
+            // do nothing.
+        }
+        Object file = string_new(FindFileData.cFileName);
+        tm_append(list, file);
+    } while (FindNextFile(hFind, &FindFileData));
+    FindClose(hFind);
+#else
+    tmRaise("listdir not implemented in posix.");
+#endif
+    return list;
+}
+
 void regBuiltinsFunc2() {
     /* functions which has impact on vm follow camel case */
     regBuiltinFunc("getConstIdx", bfGetConstIdx);
@@ -277,7 +326,7 @@ void regBuiltinsFunc2() {
     regBuiltinFunc("setVMState", bfSetVMState);
     regBuiltinFunc("inspectPtr", bfInspectPtr);
 	regBuiltinFunc("getCurrentFrame", bfGetCurrentFrame);
-	regBuiltinFunc("vmopt", bfVmOpt);
+	regBuiltinFunc("vmopt", bf_vmopt);
     regBuiltinFunc("getVmInfo", bfGetVmInfo);
 
     regBuiltinFunc("clock", bfClock);
@@ -293,5 +342,6 @@ void regBuiltinsFunc2() {
     regBuiltinFunc("getcwd", bfGetcwd);
     regBuiltinFunc("chdir", bfChdir);
     regBuiltinFunc("getosname", bfGetOsName);
+    regBuiltinFunc("listdir", bf_listdir);
 }
 

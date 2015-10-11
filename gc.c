@@ -44,23 +44,23 @@ void gcInit() {
 	tm->gcThreshold = 1024 * 8; // set 8k to see gc process
 
 	tm->all = list_alloc_untracked(init_size);
+    tm->list_proto.type = TYPE_NONE;
+    tm->dict_proto.type = TYPE_NONE;
+    tm->str_proto.type = TYPE_NONE;
     
     tm->root = list_new(100);
 	tm->builtins = dict_new();
-	APPEND(tm->root, tm->builtins);
 	tm->modules = dict_new();
-	APPEND(tm->root, tm->modules);
+	tm->constants = dict_new();
 
 	tm->exList = list_new(10);
-	APPEND(tm->root, tm->exList);
+	tm_append(tm->root, tm->exList);
 	
-	tm->constants = dict_new();
-	APPEND(tm->root, tm->constants);
 
     /* initialize chars */
 	ARRAY_CHARS = list_new(256);
 	for (i = 0; i < 256; i++) {
-		APPEND(ARRAY_CHARS, newChar(i));
+		tm_append(ARRAY_CHARS, newChar(i));
 	}
 	APPEND(tm->root, ARRAY_CHARS);
     
@@ -304,10 +304,20 @@ void gcFull() {
 #if GC_DEBUG
 	int old = tm->allocated;
 #endif
+    
     /* mark all objects to be unused */
 	for (i = 0; i < tm->all->len; i++) {
 		GC_MARKED(tm->all->nodes[i]) = 0;
 	}
+    
+    /* mark protoes */
+    gcMark(tm->list_proto);
+    gcMark(tm->dict_proto);
+    gcMark(tm->str_proto);
+    gcMark(tm->builtins);
+    gcMark(tm->modules);
+    gcMark(tm->constants);
+    
 	gcMark(tm->root);
 	gcMarkLocalsAndStack();
 
@@ -393,7 +403,7 @@ void objectFree(Object o) {
 }
 
 Object* baseNext(TmBaseIterator* iterator) {
-    iterator->ret = callFunction2(iterator->func);
+    iterator->ret = callFunction(iterator->func);
     if (iterator->ret.type != -1) {
         return &iterator->ret;
     } else {

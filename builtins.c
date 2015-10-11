@@ -516,6 +516,14 @@ Object bfRange() {
     return data;
 }
 
+Object bf_mmatch() {
+    char* str = getSzArg("mmatch");
+    int start = getIntArg("mmatch");
+    Object o_dst = getStrArg("mmatch");
+    char* dst = GET_STR(o_dst);
+    int size = GET_STR_LEN(o_dst);
+    return tm_number(strncmp(str+start, dst, size) == 0);
+}
 
 void regBuiltinsFunc() {
 	regBuiltinFunc("load", bfLoad);
@@ -542,5 +550,6 @@ void regBuiltinsFunc() {
 	regBuiltinFunc("apply", bfApply);
     regBuiltinFunc("pow", bfPow);
     regBuiltinFunc("range", bfRange);
+    regBuiltinFunc("mmatch", bf_mmatch);
 }
 

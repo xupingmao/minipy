@@ -291,14 +291,14 @@ def call_node(fnc, args):
     node.second = args
     return node
     
-def parse_raise(p):
+def parse_inner_func(p):
     fnc = p.token
     fnc.type = 'name'
     p.next()
     if p.token.type == 'nl':
         args = None
     else:
-        expr(p)
+        comma_exp(p)
         args = p.pop()
     p.add(call_node(fnc, args))
 
@@ -467,6 +467,12 @@ def parse_if(p):
 def parse_return(p):
     parse_stm1(p, 'return')
 
+def parse_annotation(p):
+    p.next()
+    token = p.token
+    expect(p, "name")
+    p.add(AstNode("@", token))
+    
 stmt_map = {
     "from": parse_from,
     "import": parse_import,
@@ -476,7 +482,8 @@ stmt_map = {
     "while": parse_while,
     "if": parse_if,
     "return": parse_return,
-    "raise":parse_raise,
+    "raise":parse_inner_func,
+    "assert": parse_inner_func,
     "break": parse_pass,
     "continue": parse_pass,
     "pass": parse_pass,
@@ -485,7 +492,8 @@ stmt_map = {
     "string": expr,
     "try": parse_try,
     "global": parse_global,
-    "del": parse_del
+    "del": parse_del,
+    "@":parse_annotation,
 }
 
 

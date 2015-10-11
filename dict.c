@@ -258,11 +258,10 @@ Object bmDictValues() {
 }
 
 void regDictMethods() {
-	CLASS_DICT = dict_new();
+	tm->dict_proto = dict_new();
 	/* build dict class */
-	regConst(CLASS_DICT);
-	regModFunc(CLASS_DICT, "keys", bmDictKeys);
-    regModFunc(CLASS_DICT, "values", bmDictValues);
+	regModFunc(tm->dict_proto, "keys", bmDictKeys);
+    regModFunc(tm->dict_proto, "values", bmDictValues);
 }
 
 void dictIterMark(DataObject* data) {

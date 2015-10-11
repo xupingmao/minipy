@@ -8,6 +8,8 @@ ARGV = sys.argv
 argv = sys.argv
 system = os.system
 
+def mmatch(s, i, v):
+    return s[i:i+len(v)] == v
 # import loadlib
 '''
 bootstrap for standard python to go.

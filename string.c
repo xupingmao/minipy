@@ -219,14 +219,13 @@ Object bmStringJoin() {
 
 
 void regStringMethods() {
-	CLASS_STRING = dict_new();
-	regConst(CLASS_STRING);
-	regModFunc(CLASS_STRING, "replace", bmStringReplace);
-	regModFunc(CLASS_STRING, "find", bm_string_find);
-	regModFunc(CLASS_STRING, "substring", bmSubString);
-	regModFunc(CLASS_STRING, "upper", bmStringUpper);
-	regModFunc(CLASS_STRING, "lower", bmStringLower);
-	regModFunc(CLASS_STRING, "split", bmStringSplit);
+	tm->str_proto = dict_new();
+	regModFunc(tm->str_proto, "replace", bmStringReplace);
+	regModFunc(tm->str_proto, "find", bm_string_find);
+	regModFunc(tm->str_proto, "substring", bmSubString);
+	regModFunc(tm->str_proto, "upper", bmStringUpper);
+	regModFunc(tm->str_proto, "lower", bmStringLower);
+	regModFunc(tm->str_proto, "split", bmStringSplit);
 }
 
 DataProto* getStringProto() {

@@ -10,31 +10,6 @@
 
 #define INTERP_DB 0
 
-Object callFunction2(Object func) {
-    if (NOT_FUNC(func) || IS_NATIVE(func)) {
-        return UNDEF;
-    }
-    resolveMethodSelf(func);
-    TmFrame* f = pushFrame(func);
-    L_recall:
-    if (setjmp(f->buf)==0) {
-        return tm_eval(f);
-    } else {
-        f = tm->frame;
-        /* handle exception in this frame */
-        if (f->jmp != NULL) {
-            f->pc = f->jmp;
-            f->jmp = NULL;
-            goto L_recall;
-        /* there is no handler, throw to last frame */
-        } else {
-            pushException(f);
-            tm->frame--;
-            return UNDEF;
-        }
-    }
-}
-
 Object callFunction(Object func) {
     Object ret;
     if (IS_FUNC(func)) {
@@ -276,16 +251,8 @@ Object tm_eval(TmFrame* f) {
 		TM_OP(DIV, tmDiv)
 		TM_OP(MOD, tm_mod)
 		TM_OP(GET, tmGet)
-		case EQEQ: {
-            *(top-1) = tm_number(tm_equals(*(top-1), *top));
-            top--;
-            break;
-        }
-        case NOTEQ: {
-            *(top-1) = tm_number(!tm_equals(*(top-1), *top));
-            top--;
-            break;
-        }
+		case EQEQ: { *(top-1) = tm_number(tm_equals(*(top-1), *top)); top--; break; }
+        case NOTEQ: { *(top-1) = tm_number(!tm_equals(*(top-1), *top)); top--; break; }
         case OP_LT: {
             *(top-1) = tm_number(tm_cmp(*(top-1), *top)<0);
             top--;
@@ -478,52 +445,17 @@ Object tm_eval(TmFrame* f) {
            goto end;
 		}
 
-		case LOAD_EX: {
-			TM_PUSH(tm->ex);
-			break;
-		}
-
-		case SETJUMP: {
-            f->jmp = pc + i * 3;
-            /*
-            buf.prev = tm->buf;
-            tm->buf = &buf;
-            if (setjmp(tm->buf->b) == 0) {
-            } else {
-                f = tm->frame;
-                if (tm->frame->jmp != NULL) {
-                    f = tm->frame;
-                    f->pc = f->jmp;
-                    f->jmp = NULL;
-                    UPDATE_ENV();
-                    continue;
-                } else {
-                    pushException(f);
-                    ret = UNDEF;
-                    goto end;
-                }
-            }*/
-			break;
-		}
-        
-        case TM_LINE: {
-            f->lineno = i;
-            break;
-        }
+		case LOAD_EX: { TM_PUSH(tm->ex); break; }
+		case SETJUMP: { f->jmp = pc + i * 3; break; }
+        case CLRJUMP: { f->jmp = NULL; break;}
+        case TM_LINE: { f->lineno = i; break;}
 
 		case TM_DEBUG: {
-			Object *debugFunc = getBuiltin("__debug__");
-			if (debugFunc == NULL) {
-				tmRaise("__debug__ is not defined");
-			} else {
-				//argStart();
-				//pushArg(tm_number((long long)pc));
-                //pushArg(globals);
-                /* how to pass locals? */
-                /* make a list in frame ? store arguments as well as locals*/
-				//callFunction(*debugFunc);
-                continue;
-			}			
+            Object fdebug = tm_getglobal(globals, string_static("__debug__"));
+            f->top = top;
+            argStart();
+            pushArg(tm_number(tm->frame - tm->frames));
+            callFunction(fdebug);			
 			break;
 		}
 

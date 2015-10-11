@@ -41,10 +41,6 @@ typedef char instruction;
 #include "object.h"
 #define OBJ_SIZE sizeof(Object)
 
-Object CLASS_STRING;
-Object CLASS_LIST;
-Object CLASS_DICT;
-
 Object NUMBER_TRUE;
 Object NUMBER_FALSE;
 Object NONE_OBJECT;
@@ -62,6 +58,24 @@ Object ARRAY_CHARS;
 #include "builtins.h"
 #include "code.h"
 #include "tmassert.h"
+
+// list functions
+void list_clear(TmList* list);
+
+// ops functions
+Object tm_call(Object func, int args, ...);
+Object tm_append(Object a, Object b);
+Object tm_getglobal(Object globals, Object key);
+Object tm_getarg();
+Object tm_getlocal(int fidx, int lidx);
+Object tm_getstack(int fidx, int sidx);
+Object tm_string(char* str);
+TmFrame* tm_getframe(int fidx);
+Object tm_getfname(Object func);
+void tm_setattr(Object a, char* key, Object value);
+void tm_define(Object globals, Object a, Object(*func)());
+#define tm_mul tmMul
+#define tm_sub tmSub
 
 #endif
 

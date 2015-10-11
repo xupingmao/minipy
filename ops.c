@@ -56,7 +56,7 @@ Object tmGet(Object self, Object k) {
 				tmRaise("StringGet: index overflow ,len=%d,index=%d, str=%o",
 						GET_STR_LEN(self), n, self);
 			return string_chr(0xff & GET_STR(self)[n]);
-		} else if ((node = DictGetNode(GET_DICT(CLASS_STRING), k)) != NULL) {
+		} else if ((node = DictGetNode(GET_DICT(tm->str_proto), k)) != NULL) {
 			return methodNew(node->val, self);
 		}
 		break;
@@ -65,7 +65,7 @@ Object tmGet(Object self, Object k) {
 		DictNode* node;
 		if (TM_TYPE(k) == TYPE_NUM) {
 			return list_get(GET_LIST(self), GET_NUM(k));
-		} else if ((node = DictGetNode(GET_DICT(CLASS_LIST), k))!=NULL) {
+		} else if ((node = DictGetNode(GET_DICT(tm->list_proto), k))!=NULL) {
 			return methodNew(node->val, self);
 		}
 		break;
@@ -75,7 +75,7 @@ Object tmGet(Object self, Object k) {
 		node = DictGetNode(GET_DICT(self), k);
 		if (node != NULL) {
 			return node->val;
-		} else if ((node = DictGetNode(GET_DICT(CLASS_DICT), k))!=NULL) {
+		} else if ((node = DictGetNode(GET_DICT(tm->dict_proto), k))!=NULL) {
 			return methodNew(node->val, self);
 		}
 		break;
@@ -359,4 +359,81 @@ void tm_del(Object self, Object k) {
 	}
 }
 
+Object tm_append(Object a, Object item) {
+    if (IS_LIST(a)) {
+        _listAppend(GET_LIST(a), item);
+    }
+    return a;
+}
 
+TmFrame* tm_getframe(int fidx) {
+    if (fidx < 1 || fidx > FRAMES_COUNT) {
+        tmRaise("tm_getframe:invalid fidx %d", fidx);
+    }
+    return tm->frames + fidx;
+}
+
+Object tm_getlocal(int fidx, int lidx) {
+    TmFrame* f = tm_getframe(fidx);
+    if (lidx < 0 || lidx >= f->maxlocals) {
+        tmRaise("tm_getlocal:invalid lidx %d, maxlocals=%d", lidx, f->maxlocals);
+    }
+    return f->locals[lidx];
+}
+
+Object tm_getstack(int fidx, int sidx) {
+    TmFrame* f = tm_getframe(fidx);
+    int stacksize = f->top - f->stack;
+    if (sidx < 0 || sidx >= stacksize) {
+        tmRaise("tm_getstack:invalid sidx %d, stacksize=%d", sidx, stacksize);
+    }
+    return f->stack[sidx];
+}
+
+Object tm_getglobal(Object globals, Object okey) {
+    DictNode* node = DictGetNode(GET_DICT(globals), okey);
+    if (node == NULL) {
+        node = DictGetNode(GET_DICT(tm->builtins), okey);
+        if (node == NULL) {
+            tmRaise("NameError: name %o is not defined", okey);
+        }
+    }
+    return node->val;
+}
+
+Object tm_getfname(Object fnc) {
+    if (!IS_FUNC(fnc)) {
+        tmRaise("tm_getfname expect function");
+    }
+    return GET_MODULE(GET_FUNCTION(fnc)->mod)->file;
+}
+
+void tm_setattr(Object dict, char* attr, Object value) {
+    DictSet(GET_DICT(dict), string_static(attr), value);
+}
+
+Object tm_call(Object func, int args, ...) {
+    int i = 0;
+    va_list ap;
+    va_start(ap, args);
+    argStart();
+    for (i = 0; i < args; i++) {
+        pushArg(va_arg(ap, Object));
+    }
+    va_end(ap);
+    return callFunction(func);
+}
+
+Object tm_string(char* str) {
+    return string_static(str);
+}
+
+void tm_define(Object globals, Object name, Object (*native)()) {
+    Object func = func_new(NONE_OBJECT, NONE_OBJECT, native);
+	GET_FUNCTION(func)->name = name;
+	tmSet(globals,name, func);
+}
+
+Object tm_getarg() {
+    return getObjArg("getarg");
+}

@@ -131,6 +131,11 @@ typedef struct TmVM {
   Object internalArgStack[MAX_ARG_COUNT];
   /* Object *top; */
   Object *arguments;
+  
+  // prototypes
+  Object list_proto;
+  Object dict_proto;
+  Object str_proto;
 
   
   int arg_cnt;

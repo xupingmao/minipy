@@ -373,6 +373,7 @@ def encode_try(tk):
     if not asm_try(exception):
         encode_error(tk, "do not support cursive try")
     encode_item(tk.first)
+    emit(CLRJUMP)
     jump(end)
     emit_tag(exception)
     if tk.second != None:
@@ -398,8 +399,10 @@ def encode_del(tk):
         encode_item(item.second)
     emit(TM_DEL)
     
-def encode_debug():
-    emit(TM_DEBUG)
+def encode_annotation(tk):
+    token = tk.first
+    if token.val == "debugger":
+        emit(TM_DEBUG)
     
 def encode_attr(tk):
     tk.second.type = 'string'
@@ -414,8 +417,7 @@ def encode_in(tk):
         emit_load(g)
     else:
         encode_item(tk.second)
-    emit(OP_IN)
-        
+    emit(OP_IN)    
     
 encode_map = {
     'if': encode_if,
@@ -450,7 +452,7 @@ encode_map = {
     'notin':encode_notin,
     'attr':encode_attr,
     'in': encode_in,
-    '@':encode_debug,
+    '@':encode_annotation,
 }
 
 for k in op_map:

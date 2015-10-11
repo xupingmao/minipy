@@ -23,7 +23,7 @@ void traceback() {
 void tmRaise(char* fmt, ...) {
     va_list a;
 	va_start(a, fmt);
-    LIST_LEN(tm->exList) = 0;
+    list_clear(GET_LIST(tm->exList));
 	tm->ex = tmFormatVaList(fmt, a, 0);
 	va_end(a);
     longjmp(tm->frame->buf, 1);

@@ -39,12 +39,14 @@ ISYMBOLS = '-=[];,./!%*()+{}:<>@^$'
 KEYWORDS = [
     'as','def','class', 'return','pass','and','or','not','in','import',
     'is','while','break','for','continue','if','else','elif','try',
-    'except','raise','global','del','from','None']
+    'except','raise','global','del','from','None', "assert"]
 SYMBOLS = [
-    '-','+','*','**','/','%','<<','>>',
-    '-=','+=','*=','/=','=','==','!=','<','>',
-    '<=','>=','[',']','{','}','(',')','.',':',',',';','&',
-    '|','!','@','^','$'
+    '-=','+=','*=','/=','==','!=','<=','>=',
+    '=','-','+','*', '/', '%', #'**','/','%','<<','>>',
+    '<','>',
+    '[',']','{','}','(',')','.',':',',',';',
+    "@",
+    #,'&', '|','!','@','^','$'
     ]
 B_BEGIN = ['[','(','{']
 B_END = [']',')','}']
@@ -132,17 +134,25 @@ def indent(v):
 
 
 def do_symbol(s,i,l):
-    symbols = []
+    # symbols = []
     # v,f,i = s[i],i,i+1
-    v=s[i];f=i;i+=1
-    if v in SYMBOLS: symbols.append(v)
-    while i<l:
-        c = s[i]
-        if c not in ISYMBOLS: break
-        # v,i = v+c,i+1
-        v+=c;i+=1
-        if v in SYMBOLS: symbols.append(v)
-    v = symbols.pop(); n = len(v); i = f+n
+    # v=s[i];f=i;i+=1
+    v = None
+    for sb in SYMBOLS:
+        if mmatch(s, i, sb):
+            i += len(sb)
+            v = sb
+            break
+    if v == None:
+        raise "invalid symbol"
+    #if v in SYMBOLS: symbols.append(v)
+    #while i<l:
+    #    c = s[i]
+    #    if c not in ISYMBOLS: break
+    #    # v,i = v+c,i+1
+    #    v+=c;i+=1
+    #    if v in SYMBOLS: symbols.append(v)
+    #v = symbols.pop(); n = len(v); i = f+n
     T.add(v,v)
     if v in B_BEGIN: T.braces += 1
     if v in B_END: T.braces -= 1

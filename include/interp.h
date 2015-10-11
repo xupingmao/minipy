@@ -16,7 +16,6 @@ typedef struct _FunctionDefine {
 #define GET_CONST(i) GET_DICT(tm->constants)->nodes[i].key
 Object  callUnsafe(Object fnc);
 Object callFunction(Object func);
-Object callFunction2(Object func);
 Object  tm_eval(TmFrame*);
 
 TmFrame* pushFrame(Object fnc);

@@ -21,6 +21,7 @@ _opcode_names = [
     #TAGSIZE
     'TM_UNARRAY', 'TM_ROT', 'TM_DEL', 'TM_FOR', 'TM_NEXT', 'ITER_NEW', 'LOAD_EX',
     'SETJUMP', 'CALL', 'TM_DEF', 'RETURN', 'LOAD_PARAMS', 'TM_NARG', 'TM_EOF',
+    "CLRJUMP",
     'TM_EOP',
     # mulity assignment, eg. x,y = 1,2
     'TM_DEBUG',

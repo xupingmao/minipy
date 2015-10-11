@@ -103,8 +103,21 @@ def _dict_update(self, dict):
         #self[key] = dict[key]
     return self
 
+def _dict_copy(self):
+    d = {}
+    for key in self:
+        d[key] = self[key]
+    return d
+    
+add_obj_method("dict", "copy", _dict_copy)
 add_obj_method('dict', 'update', _dict_update)
 
+def _list_copy(self):
+    l = []
+    for item in self:
+        l.append(item)
+    return l
+add_obj_method("list", "copy", _list_copy)
   
 def printf(*args):
     write(sformat0(args))
@@ -288,12 +301,30 @@ def resolvepath(path):
     chdir(parent)
     return fname
     
-def exec_file(path):
+def execfile(path):
     from encode import compilefile
     fname = resolvepath(path)
     _code = compilefile(fname)
     # printf("run file %s ...\n", fname)
     load_module(fname, _code, '__main__')
+    
+def _assert(exp):
+    fidx = vmopt("frame.index")
+    info = vmopt("frame.info", fidx-1)
+    if not exp: raise "AssertionError, " + info.fname + ":" + str(info.lineno)
+    
+def __debug__(fidx):
+    info = vmopt("frame.info", fidx)
+    lcnt = info.maxlocals
+    print(info.fname, info.lineno)
+    for i in range(lcnt):
+        printf("#"+str(i))
+        replPrint(vmopt("frame.local", fidx, i))
+    input("continue")
+    
+add_builtin("execfile", execfile)
+add_builtin("assert", _assert)
+add_builtin("__debug__", __debug__)
     
 def _time():
     return clock() / 1000
@@ -310,7 +341,7 @@ LIB_PATH = ''
 def boot(loadlibs=True):
     from tokenize import *
     from encode import compilefile
-    from repl import repl
+    from repl import repl, replPrint
     global LIB_PATH
     argc = len(ARGV)
     pathes = split_path(getcwd())
@@ -320,4 +351,4 @@ def boot(loadlibs=True):
     if argc == 0:
         repl()
     else:
-        exec_file(ARGV[0])
+        execfile(ARGV[0])
