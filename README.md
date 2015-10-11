@@ -48,8 +48,10 @@ run `python setup.py gcc` in console(or you may use other c compiler)
 3. libs/tm2c.py 转换TMPython的源代码到C语言源代码，部分完成。
 
 ### tm2c.py
+
 位于`subpy/python/libs/tm2c.py`, 例子在`subpy/python/test/tm2c/`目录下面,目前完成的部分比较少，有了大体思路
 使用方法
+
 1. 进入`subpy/python`目录,编译`python setup.py gcc`
 2. 运行例子`tm.exe libs/tm2c.py testspeed.py`,结果会输出到控制台，可以重定向到文件`tm libs/tm2c.py testspeed.py > ../testspeed.c`
 3. 运行`gcc ../testspeed.c -o testspeed.exe`
