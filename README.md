@@ -1,7 +1,7 @@
 # subpy
-a subset of python, vm implemented with ANSI C and compiler implemented with Python.
+a subset of python, vm implemented with ANSI C and compiler implemented with Python 3.
 # subpy
-Python子集，虚拟机部分使用C语言实现，编译器使用Python实现。
+Python子集，虚拟机部分使用C语言实现，编译器使用Python3实现(开始是用Python2写的，应该还能兼容，没有测试)。
 
 ## How to start
 run `python setup.py gcc` in console(or you may use other c compiler)
