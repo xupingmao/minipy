@@ -28,7 +28,7 @@ void log_debug(char* fmt, ...) {
 #endif
 
 
-void gcInit() {
+void gc_init() {
     int init_size = 100;
     int i;
     
@@ -60,9 +60,9 @@ void gcInit() {
     /* initialize chars */
 	ARRAY_CHARS = list_new(256);
 	for (i = 0; i < 256; i++) {
-		tm_append(ARRAY_CHARS, newChar(i));
+		tm_append(ARRAY_CHARS, string_char(i));
 	}
-	APPEND(tm->root, ARRAY_CHARS);
+	tm_append(tm->root, ARRAY_CHARS);
     
     tm->ex = NONE_OBJECT;
     
@@ -155,47 +155,47 @@ Object gc_track(Object v) {
 		return v;
 	}
     SET_IDX(v, 0);
-	_listAppend(tm->all, v);
+	list_append(tm->all, v);
 	return v;
 }
 
-void gcMarkList(TmList* list) {
+void gc_markList(TmList* list) {
 	if (list->marked)
 		return;
 	list->marked = GC_REACHED_SIGN;
 	int i;
 	for (i = 0; i < list->len; i++) {
-		gcMark(list->nodes[i]);
+		gc_mark(list->nodes[i]);
 	}
 }
 /*
-void gcMarkDict(TmDict* dict) {
+void gc_markDict(TmDict* dict) {
 	if (dict->marked)
 		return;
 	dict->marked = GC_REACHED_SIGN;
 	DictNode* node = dict->head;
 	while (node != NULL) {
-		gcMark(node->key);
-		gcMark(node->val);
+		gc_mark(node->key);
+		gc_mark(node->val);
 		node = node->next;
 	}
 }
  */
  
- void gcMarkDict(TmDict* dict) {
+ void gc_markDict(TmDict* dict) {
 	if (dict->marked)
 		return;
 	dict->marked = GC_REACHED_SIGN;
 	int i;
     for(i = 0; i < dict->cap; i++) {
         if (dict->nodes[i].used) {
-            gcMark(dict->nodes[i].key);
-            gcMark(dict->nodes[i].val);
+            gc_mark(dict->nodes[i].key);
+            gc_mark(dict->nodes[i].val);
         }
     }
 }
 
-void gcMark(Object o) {
+void gc_mark(Object o) {
 	if (o.type == TYPE_NUM || o.type == TYPE_NONE)
 		return;
 	switch (o.type) {
@@ -206,27 +206,27 @@ void gcMark(Object o) {
 		break;
 	}
 	case TYPE_LIST:
-		gcMarkList(GET_LIST(o));
+		gc_markList(GET_LIST(o));
 		break;
 	case TYPE_DICT:
-		gcMarkDict(GET_DICT(o));
+		gc_markDict(GET_DICT(o));
 		break;
 	case TYPE_FUNCTION:
 		if (GET_FUNCTION(o)->marked)
 			return;
 		GET_FUNCTION(o)->marked = GC_REACHED_SIGN;
-		gcMark(GET_FUNCTION(o)->mod);
-		gcMark(GET_FUNCTION(o)->self);
-		gcMark(GET_FUNCTION(o)->name);
+		gc_mark(GET_FUNCTION(o)->mod);
+		gc_mark(GET_FUNCTION(o)->self);
+		gc_mark(GET_FUNCTION(o)->name);
 		break;
 	case TYPE_MODULE:
 		if (GET_MODULE(o)->marked)
 			return;
 		GET_MODULE(o)->marked = GC_REACHED_SIGN;
-		gcMark(GET_MODULE(o)->code);
-		gcMark(GET_MODULE(o)->file);
-		/*gcMark(GET_MODULE(o)->constants);*/
-		gcMark(GET_MODULE(o)->globals);
+		gc_mark(GET_MODULE(o)->code);
+		gc_mark(GET_MODULE(o)->file);
+		/*gc_mark(GET_MODULE(o)->constants);*/
+		gc_mark(GET_MODULE(o)->globals);
 		break;
 	case TYPE_DATA:
 		if (GET_DATA(o)->marked)
@@ -235,37 +235,37 @@ void gcMark(Object o) {
 		GET_DATA(o)->proto->mark(GET_DATA(o));
 		break;
 	default:
-		tmRaise("gcMark(), unknown object type %d", o.type);
+		tmRaise("gc_mark(), unknown object type %d", o.type);
 	}
 }
 
-void gcMarkLocalsAndStack() {
+void gc_markLocalsAndStack() {
     TmFrame* f;
 	for(f = tm->frames + 1; f <= tm->frame; f++) {
-		gcMark(f->fnc);
+		gc_mark(f->fnc);
 		int j;
 		/* mark locals */
 		for(j = 0; j < f->maxlocals; j++) {
-			gcMark(f->locals[j]);
+			gc_mark(f->locals[j]);
 		}
 		/* mark operand stack */
 		Object* temp;
 		for(temp = f->stack; temp <= f->top; temp++) {
-			gcMark(*temp);
+			gc_mark(*temp);
 		}
 	}
 }
 
-void gcWipe() {
+void gc_wipe() {
 	int n, i;
 
 	TmList* temp = list_alloc_untracked(200);
 	TmList* all = tm->all;
 	for (i = 0; i < all->len; i++) {
 		if (GC_MARKED(tm->all->nodes[i])) {
-			_listAppend(temp, all->nodes[i]);
+			list_append(temp, all->nodes[i]);
 		} else {
-			objectFree(all->nodes[i]);
+			obj_free(all->nodes[i]);
 		}
 	}
 	list_free(tm->all);
@@ -297,7 +297,7 @@ void gcWipe() {
  * TODO maybe we can mark the object with different value to
  * recognize the GC type of the object.
  */
-void gcFull() {
+void gc_full() {
 	int i;
 	long t1, t2;
 	t1 = clock();
@@ -311,18 +311,18 @@ void gcFull() {
 	}
     
     /* mark protoes */
-    gcMark(tm->list_proto);
-    gcMark(tm->dict_proto);
-    gcMark(tm->str_proto);
-    gcMark(tm->builtins);
-    gcMark(tm->modules);
-    gcMark(tm->constants);
+    gc_mark(tm->list_proto);
+    gc_mark(tm->dict_proto);
+    gc_mark(tm->str_proto);
+    gc_mark(tm->builtins);
+    gc_mark(tm->modules);
+    gc_mark(tm->constants);
     
-	gcMark(tm->root);
-	gcMarkLocalsAndStack();
+	gc_mark(tm->root);
+	gc_markLocalsAndStack();
 
 	/* wipe garbage */
-	gcWipe();
+	gc_wipe();
 	tm->gcThreshold = tm->allocated * 2;
 	t2 = clock();
 #if GC_DEBUG
@@ -331,11 +331,11 @@ void gcFull() {
 #endif
 }
 
-void gcFree() {
+void gc_free() {
 	TmList* all = tm->all;
 	int i;
 	for (i = 0; i < all->len; i++) {
-		objectFree(all->nodes[i]);
+		obj_free(all->nodes[i]);
 	}
 
 	list_free(tm->all);
@@ -348,7 +348,7 @@ void gcFree() {
 }
 
 
-Object newObj(int type, void * value) {
+Object obj_new(int type, void * value) {
 	Object o;
 	TM_TYPE(o) = type;
 	switch (type) {
@@ -379,7 +379,7 @@ Object newObj(int type, void * value) {
 }
 
 
-void objectFree(Object o) {
+void obj_free(Object o) {
 	switch (TM_TYPE(o)) {
 	case TYPE_STR:
 		string_free(GET_STR_OBJ(o));
@@ -388,13 +388,13 @@ void objectFree(Object o) {
 		list_free(GET_LIST(o));
 		break;
 	case TYPE_DICT:
-		freeDict(GET_DICT(o));
+		dict_free(GET_DICT(o));
 		break;
 	case TYPE_FUNCTION:
-		functionFree(GET_FUNCTION(o));
+		func_free(GET_FUNCTION(o));
 		break;
 	case TYPE_MODULE:
-		moduleFree(o.value.mod);
+		module_free(o.value.mod);
 		break;
 	case TYPE_DATA:
 		GET_DATA_PROTO(o)->free(GET_DATA(o));
@@ -412,7 +412,7 @@ Object* baseNext(TmBaseIterator* iterator) {
 }
 
 void baseMark(DataObject* data) {
-    gcMark(((TmBaseIterator*)data)->func);
+    gc_mark(((TmBaseIterator*)data)->func);
 }
 
 DataProto* getBaseIterProto() {
@@ -436,9 +436,9 @@ DataProto* getDefaultDataProto() {
 		defaultDataProto.mark = dataMark;
 		defaultDataProto.free = dataFree;
 		defaultDataProto.next = dataNext;
-		defaultDataProto.get = dataGet;
-		defaultDataProto.set = dataSet;
-		defaultDataProto.str = dataStr;
+		defaultDataProto.get = data_get;
+		defaultDataProto.set = data_set;
+		defaultDataProto.str = data_str;
 		defaultDataProto.dataSize = sizeof(DataProto);
 	}
 	return &defaultDataProto;
@@ -447,10 +447,10 @@ DataProto* getDefaultDataProto() {
 void initDataProto(DataProto* proto) {
 	proto->mark = dataMark;
 	proto->free = dataFree;
-	proto->get = dataGet;
-	proto->set = dataSet;
+	proto->get = data_get;
+	proto->set = data_set;
 	proto->next = dataNext;
-	proto->str = dataStr;
+	proto->str = data_str;
 	proto->init = 1;
 	proto->dataSize = sizeof(TmData);
 }
@@ -462,8 +462,8 @@ Object dataNew(size_t dataSize) {
 /*	GET_DATA_PROTO(data)->next = dataNext;
 	GET_DATA_PROTO(data)->mark = dataMark;
 	GET_DATA_PROTO(data)->free = dataFree;
-	GET_DATA_PROTO(data)->get = dataGet;
-	GET_DATA_PROTO(data)->set = dataSet;*/
+	GET_DATA_PROTO(data)->get = data_get;
+	GET_DATA_PROTO(data)->set = data_set;*/
 	GET_DATA_PROTO(data) = getDefaultDataProto();
 	return gc_track(data);
 }
@@ -476,14 +476,14 @@ void dataFree(TmData* data) {
 	tm_free(data, data->proto->dataSize);
 }
 
-Object dataGet(Object self, Object key) {
+Object data_get(Object self, Object key) {
 	return NONE_OBJECT;
 }
 
-void dataSet(Object self, Object key, Object value) {
+void data_set(Object self, Object key, Object value) {
 
 }
 
-Object dataStr(Object self) {
+Object data_str(Object self) {
 	return string_alloc("data", -1);
 }

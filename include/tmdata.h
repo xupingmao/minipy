@@ -39,12 +39,12 @@ static DataProto baseIterProto;
 Object dataNew(size_t size);
 void dataMark();
 void dataFree();
-void dataSet(Object, Object, Object);
-Object dataGet(Object, Object);
-Object dataStr(Object self);
+void data_set(Object, Object, Object);
+Object data_get(Object, Object);
+Object data_str(Object self);
 
-void objectFree(Object o);
-Object newObj(int type, void* value);
+void obj_free(Object o);
+Object obj_new(int type, void* value);
 DataProto defaultDataProto;
 DataProto* getDefaultDataProto();
 void initDataProto(DataProto* proto);

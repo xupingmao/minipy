@@ -1,6 +1,6 @@
 #include "include/tm.h"
 
-unsigned char* resolve_func(TmFunction* fnc, unsigned char* pc) {
+unsigned char* func_resolve(TmFunction* fnc, unsigned char* pc) {
     int maxlocals = -1;
     int maxstack = 0;
     int defs = 0;
@@ -45,10 +45,10 @@ Object func_new(Object mod,
   f->maxlocals = 0;
   f->self = self;
   f->name = NONE_OBJECT;
-  return gc_track(newObj(TYPE_FUNCTION, f));
+  return gc_track(obj_new(TYPE_FUNCTION, f));
 }
 
-Object methodNew(Object _fnc, Object self){
+Object method_new(Object _fnc, Object self){
   TmFunction* fnc = GET_FUNCTION(_fnc);
   Object nfnc = func_new(fnc->mod, self, fnc->native);
   GET_FUNCTION(nfnc)->name = GET_FUNCTION(_fnc)->name;
@@ -57,7 +57,7 @@ Object methodNew(Object _fnc, Object self){
   return nfnc;
 }
 
-Object classNew(Object clazz){
+Object class_new(Object clazz){
   TmDict* cl = GET_DICT(clazz);
   Object k,v;
   Object instance = dict_new();
@@ -67,14 +67,14 @@ Object classNew(Object clazz){
       k = nodes[i].key;
       v = nodes[i].val;
       if(nodes[i].used && IS_FUNC(v)){
-        Object method = methodNew(v, instance);
-        tmSet(instance, k, method);
+        Object method = method_new(v, instance);
+        tm_set(instance, k, method);
       }
   }
   return instance;
 }
 
-void functionFree(TmFunction* func){
+void func_free(TmFunction* func){
   // the references will be tracked by gc collecter
 #if DEBUG_GC
  printf("free function %p...\n", func);
@@ -87,27 +87,27 @@ int _new = tm->allocated_mem;
 #endif
 }
 
-Object moduleNew(Object file , Object name, Object code){
+Object module_new(Object file , Object name, Object code){
   TmModule *mod = tm_malloc(sizeof(TmModule));
   mod->file = file;
   mod->code = code;
   mod->resolved = 0;
   /*mod->constants = list_new(20);*/
-  /*_listAppend(GET_LIST(mod->constants), NONE_OBJECT);*/
+  /*list_append(GET_LIST(mod->constants), NONE_OBJECT);*/
   mod->globals = dict_new();
-  Object m = gc_track(newObj(TYPE_MODULE, mod));
+  Object m = gc_track(obj_new(TYPE_MODULE, mod));
   /* set module */
-  tmSet(tm->modules, file, mod->globals);
+  tm_set(tm->modules, file, mod->globals);
   dictSetByStr(mod->globals, "__name__", name);
   return m;
 }
 
-void moduleFree(TmModule* mod){
+void module_free(TmModule* mod){
   tm_free(mod, sizeof(TmModule));
 }
 
 
-void _functionFormat(char* des, TmFunction* func){
+void func_format(char* des, TmFunction* func){
 	char szBuf[20];
     char* szFnc = GET_STR(func->name);
     strncpy(szBuf, szFnc, 19);

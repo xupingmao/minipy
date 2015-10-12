@@ -1,7 +1,7 @@
 #include "include/tm.h"
 #include "include/vm.h"
 
-Object newChar(int c) {
+Object string_char(int c) {
 	String* str = tm_malloc(sizeof(String));
     struct Object obj;
 	str->stype = 1;
@@ -101,14 +101,14 @@ Object string_substring(String* str, int start, int end) {
 	return new_str;
 }
 
-Object bm_string_find() {
+Object string_m_find() {
     static const char* szFunc = "find";
 	Object self = getStrArg(szFunc);
 	Object str = getStrArg(szFunc);
 	return tm_number(string_index(self.value.str, str.value.str, 0));
 }
 
-Object bmSubString() {
+Object string_m_substring() {
     static const char* szFunc = "substring";
 	Object self = getStrArg(szFunc);
 	int start = getIntArg(szFunc);
@@ -116,7 +116,7 @@ Object bmSubString() {
 	return string_substring(self.value.str, start, end);
 }
 
-Object bmStringUpper() {
+Object string_m_upper() {
 	Object self = getStrArg("upper");
 	int i;
 	char*s = GET_STR(self);
@@ -129,7 +129,7 @@ Object bmStringUpper() {
 	return nstr;
 }
 
-Object bmStringLower() {
+Object string_m_lower() {
 	Object self = getStrArg("lower");
 	int i;
 	char*s = GET_STR(self);
@@ -143,7 +143,7 @@ Object bmStringLower() {
 }
 
 
-Object bmStringReplace() {
+Object string_m_replace() {
     static const char* szFunc;
 	Object self = getStrArg(szFunc);
 	Object src = getStrArg(szFunc);
@@ -166,7 +166,7 @@ Object bmStringReplace() {
 	return nstr;
 }
 
-Object bmStringSplit() {
+Object string_m_split() {
 	const char* szFunc = "split";
 	Object self = getStrArg(szFunc);
 	Object pattern = getStrArg(szFunc);
@@ -182,15 +182,15 @@ Object bmStringSplit() {
 	list = list_new(10);
 	while (pos != -1 && pos < GET_STR_LEN(self)) {
 		if (pos == 0) {
-			_listAppend(GET_LIST(list), string_alloc("", -1));
+			list_append(GET_LIST(list), string_alloc("", -1));
 		} else {
 			Object str = string_substring(self.value.str, lastpos, pos);
-			_listAppend(GET_LIST(list), str);
+			list_append(GET_LIST(list), str);
 		}
 		lastpos = pos + GET_STR_LEN(pattern);
 		pos = string_index(self.value.str, pattern.value.str, lastpos);
 	}
-	_listAppend(GET_LIST(list), string_substring(self.value.str, lastpos, GET_STR_LEN(self)));
+	list_append(GET_LIST(list), string_substring(self.value.str, lastpos, GET_STR_LEN(self)));
 	return list;
 }
 
@@ -218,14 +218,14 @@ Object bmStringJoin() {
 */
 
 
-void regStringMethods() {
+void string_methods_init() {
 	tm->str_proto = dict_new();
-	regModFunc(tm->str_proto, "replace", bmStringReplace);
-	regModFunc(tm->str_proto, "find", bm_string_find);
-	regModFunc(tm->str_proto, "substring", bmSubString);
-	regModFunc(tm->str_proto, "upper", bmStringUpper);
-	regModFunc(tm->str_proto, "lower", bmStringLower);
-	regModFunc(tm->str_proto, "split", bmStringSplit);
+	regModFunc(tm->str_proto, "replace", string_m_replace);
+	regModFunc(tm->str_proto, "find", string_m_find);
+	regModFunc(tm->str_proto, "substring", string_m_substring);
+	regModFunc(tm->str_proto, "upper", string_m_upper);
+	regModFunc(tm->str_proto, "lower", string_m_lower);
+	regModFunc(tm->str_proto, "split", string_m_split);
 }
 
 DataProto* getStringProto() {

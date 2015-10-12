@@ -3,7 +3,6 @@
 
 #include "tm.h"
 Object callModuleFunction(char* mod, char* fnc);
-void regConst(Object obj);
 void registerBuiltin(char* name, Object value);
 void regModFunc(Object mod, char* name, Object(*native)());
 void regBuiltinFunc(char* name, Object (*native)());

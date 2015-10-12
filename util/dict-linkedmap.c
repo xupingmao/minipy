@@ -55,7 +55,7 @@ Object newDict(){
 	Object o;
 	o.type = TYPE_DICT;
 	GET_DICT(o) = DictInit();
-	return gcTrack(o);
+	return gc_track(o);
 }
 
 // reset hashdict, do not need to allocate new block.

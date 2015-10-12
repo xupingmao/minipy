@@ -10,15 +10,15 @@ void             tm_free(void* o, size_t size);
 void initMemory();
 void freeMemory();
 
-void        gcInit();
+void        gc_init();
 Object      gc_track(Object obj);
-void        gcFree();
-void        gcFull();
+void        gc_free();
+void        gc_full();
 Object bfGetMallocInfo();
 
-void gcMark(Object);
-void gcMarkList(TmList*);
-void gcMarkDict(TmDict*);
+void gc_mark(Object);
+void gc_markList(TmList*);
+void gc_markDict(TmDict*);
 
 #if 0
 #define PRINT_OBJ_GC_INFO_START() int _gc_old = tm->allocated;

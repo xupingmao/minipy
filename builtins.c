@@ -17,7 +17,7 @@ Object* getBuiltin(char* key) {
 	return dictGetByStr(tm->builtins, key);
 }
 
-void tmPutchar(int c){
+void tm_putchar(int c){
 	static char hex[] = {
 		'0','1','2','3','4','5','6','7',
 		'8','9','A','B','C','D','E','F'
@@ -91,7 +91,7 @@ void tmPrint(Object o) {
 	Object str = tmStr(o);
 	int i;
 	for(i = 0; i < GET_STR_LEN(str); i++) {
-		tmPutchar(GET_STR(str)[i]);
+		tm_putchar(GET_STR(str)[i]);
 	}
 }
 
@@ -268,9 +268,9 @@ Object bfLoadModule() {
 	Object code = getStrArg(szFnc);
 	Object mod;
 	if (getArgsCount() == 3) {
-		mod = moduleNew(file, getStrArg(szFnc), code);
+		mod = module_new(file, getStrArg(szFnc), code);
 	} else {
-		mod = moduleNew(file, file, code);
+		mod = module_new(file, file, code);
 	}
 	Object fnc = func_new(mod, NONE_OBJECT, NULL);
 	GET_FUNCTION(fnc)->code = (unsigned char*) GET_STR(code);
@@ -435,7 +435,7 @@ Object bfWrite() {
     int len = GET_STR_LEN(str);
     int i;
     for(i = 0; i < len; i++) {
-        tmPutchar(s[i]);
+        tm_putchar(s[i]);
     }
     return NONE_OBJECT;
 }

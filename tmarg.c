@@ -17,7 +17,7 @@ void pushArg(Object obj) {
 	}
 }
 
-void tmSetArguments(Object* first, int len) {
+void tm_setArguments(Object* first, int len) {
 	tm->arguments = first;
 	tm->arg_cnt = len;
 	tm->arg_loaded = 0;

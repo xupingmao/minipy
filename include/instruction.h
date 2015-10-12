@@ -37,7 +37,7 @@
 #define DICT_SET 30
 #define LIST 31
 #define DICT 32
-#define LIST_APPEND 33
+#define LIST_tm_append 33
 #define JUMP 34
 #define UP_JUMP 35
 #define POP_JUMP_ON_FALSE 36

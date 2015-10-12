@@ -27,7 +27,7 @@ Object bfGetCurrentFrame() {
 Object bf_vmopt() {
     char* opt = getSzArg("vminfo");
     if (strcmp(opt, "gc") == 0) {
-        gcFull();
+        gc_full();
     } else if (strcmp(opt, "help") == 0) {
         return string_static("gc, help");
     } else if (strcmp(opt, "frame.local") == 0) {
@@ -101,11 +101,11 @@ Object bfAddObjMethod() {
 	Object fnc = getFuncArg(szFunc);
 	char*s = GET_STR(type);
 	if (strcmp(s, "str") == 0) {
-		tmSet(tm->str_proto, fname, fnc);
+		tm_set(tm->str_proto, fname, fnc);
 	} else if (strcmp(s, "list") == 0) {
-		tmSet(tm->list_proto, fname, fnc);
+		tm_set(tm->list_proto, fname, fnc);
 	} else if (strcmp(s, "dict") == 0) {
-		tmSet(tm->dict_proto, fname, fnc);
+		tm_set(tm->dict_proto, fname, fnc);
 	} else {
 		tmRaise("add_obj_method: not valid object type, expect str, list, dict");
 	}
@@ -179,14 +179,6 @@ Object bfGetConstIdx() {
     SET_IDX(key, 0);
     int i = dictSet(tm->constants, key, NONE_OBJECT);
     SET_IDX(GET_CONST(i), i);
-    /*
-    int i = listIndex(tm->constants, value);
-    if (i < 0) {
-        APPEND(tm->constants, value);
-        i = listIndex(tm->constants, value);
-    }*/
-    /*DEBUG tmPrintf("LoadConst %d:%o\n", i, LIST_GET(tm->constants,i)); */
-    /* here can check again in case of memory leak */
     return tm_number(i);
 }
 

@@ -28,26 +28,26 @@ typedef struct _TmDictIterator {
 
 
 Object           dict_new();
-TmDict*          DictInit();
-void             freeDict(TmDict* dict);
-void             DictSet(TmDict* dict, Object key, Object val);
-DictNode*        DictGetNode(TmDict* dict, Object key);
-Object*          DictGetByStr(TmDict* dict, char* key);
-Object           DictKeys(TmDict* );
-#define dictKeys(obj) DictKeys(GET_DICT(obj))
-void             _dictDel(TmDict* dict, Object k);
-#define dictDel(dict, k) _dictDel(GET_DICT(dict), k)
-void             regDictMethods();
+TmDict*          dict_init();
+void             dict_free(TmDict* dict);
+void             dict_set(TmDict* dict, Object key, Object val);
+DictNode*        dict_get_node(TmDict* dict, Object key);
+Object*          dict_get_by_str(TmDict* dict, char* key);
+Object           dict_keys(TmDict* );
+#define dictKeys(obj) dict_keys(GET_DICT(obj))
+void             dict_del(TmDict* dict, Object k);
+#define dictDel(dict, k) dict_del(GET_DICT(dict), k)
+void             dict_methods_init();
 void             DictPrint(TmDict*);
 
-void _dictSetByStr(TmDict* dict, char* key, Object val);
-#define dictSetByStr(dict, key, val) _dictSetByStr(GET_DICT(dict), key, val)
-#define dictGetByStr(dict, key) DictGetByStr(GET_DICT(dict), key)
+void dict_set_by_str(TmDict* dict, char* key, Object val);
+#define dictSetByStr(dict, key, val) dict_set_by_str(GET_DICT(dict), key, val)
+#define dictGetByStr(dict, key) dict_get_by_str(GET_DICT(dict), key)
 
 static DataProto dictIterProto;
 
 DataProto* getDictIterProto();
-Object dictIterNew(TmDict* dict);
-Object* dictNext(TmDictIterator* iterator);
+Object dict_iter_new(TmDict* dict);
+Object* dict_next(TmDictIterator* iterator);
 
 #endif

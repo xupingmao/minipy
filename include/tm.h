@@ -74,8 +74,6 @@ TmFrame* tm_getframe(int fidx);
 Object tm_getfname(Object func);
 void tm_setattr(Object a, char* key, Object value);
 void tm_define(Object globals, Object a, Object(*func)());
-#define tm_mul tmMul
-#define tm_sub tmSub
 
 #endif
 

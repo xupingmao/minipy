@@ -191,7 +191,10 @@ def do_op(item, env, func):
     return func + "(" + do_item(item.first, env) + "," + do_item(item.second, env) + ")";
 
 def do_or(item, env):
-    return do_item(item.first, env) + "||" + do_item(item.second, env)
+    return "(" + do_item(item.first, env) + "||" + do_item(item.second, env) + ")"
+    
+def do_and(item, env):
+    return "(" + do_item(item.first, env) + "&&" + do_item(item.second, env) + ")"
     
 def do_mul(item, env):
     return do_op(item, env, func_mul)
@@ -226,15 +229,26 @@ def do_ne(item, env):
 def do_eq(item, env):
     return do_op(item, env, "tm_equals")
     
-def do_inplace_add(item, env):
-    item2 = AstNode("+", item.first, item.second)
+def do_inplace_op(item, env, op):
+    item2 = AstNode(op, item.first, item.second)
     tk = AstNode("=", item.first, item2)
     return do_assign(tk, env)
     
+def do_inplace_add(item, env):
+    return do_inplace_op(item, env, "+")
+    
 def do_inplace_sub(item, env):
-    item2 = AstNode("-", item.first, item.second)
-    tk = AstNode("=", item.first, item2)
-    return do_assign(tk, env)
+    return do_inplace_op(item, env, "-")
+    
+def do_inplace_mul(item, env):
+    return do_inplace_op(item, env, "*")
+    
+def do_inplace_div(item, env):
+    return do_inplace_op(item, env, "/")
+    
+def do_inplace_mod(item, env):
+    return do_inplace_op(item, env, '%')
+
     
 _handlers = {
     "=" : do_assign,
@@ -252,6 +266,7 @@ _handlers2 = {
     "-": do_sub,
     "*": do_mul,
     "/": do_div,
+    "%": do_mod,
     "<": do_lt,
     ">": do_gt,
     ">=": do_ge,
@@ -260,7 +275,11 @@ _handlers2 = {
     "==": do_eq,
     "+=": do_inplace_add,
     "-=": do_inplace_sub,
+    "*=": do_inplace_mul,
+    "/=": do_inplace_div,
+    "%=": do_inplace_mod,
     "or": do_or,
+    "and": do_and,
     "call": do_call,
 }
 
@@ -275,10 +294,6 @@ def do_item(item, env, indent = 0):
     if func != None:
         if indent > 0: code = " " * indent + code
         return code
-    #if item.type == "def":
-        #name = item.first
-        #do_args(name, item.second)
-        #do_body(name, item.third)
 
 # env
 # consts, globals, scopes.

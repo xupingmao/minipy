@@ -6,7 +6,7 @@ void pushException(TmFrame* f){
 	Object fncName = GET_FUNCTION_NAME(f->fnc);
 	Object ex = tmFormat("  File %o: in %o , at line %d", file, fncName,
 			f->lineno);
-	_listAppend(GET_LIST(tm->exList), ex);
+	list_append(GET_LIST(tm->exList), ex);
 }
 
 void traceback() {

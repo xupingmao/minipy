@@ -33,7 +33,7 @@ int DictHash(Object key) {
 }
 
 
-TmDict* DictInit(){
+TmDict* dict_init(){
     int i;
 	TmDict * dict = tm_malloc(sizeof(TmDict));
     dict->cap = 3;
@@ -50,12 +50,12 @@ TmDict* DictInit(){
 Object dict_new(){
 	Object o;
 	o.type = TYPE_DICT;
-	GET_DICT(o) = DictInit();
+	GET_DICT(o) = dict_init();
 	return gc_track(o);
 }
 
 
-void DictCheck(TmDict* dict){
+void dict_check(TmDict* dict){
 	if(dict->len < dict->cap)
 		return;
 	int osize = dict->cap;
@@ -82,7 +82,7 @@ void DictCheck(TmDict* dict){
     tm_free(temp, osize * sizeof(DictNode));
 }
 
-void freeDict(TmDict* dict){
+void dict_free(TmDict* dict){
 	PRINT_OBJ_GC_INFO_START();
 	tm_free(dict->nodes, (dict->cap) * sizeof(DictNode));
 	tm_free(dict, sizeof(TmDict));
@@ -123,7 +123,7 @@ int dict_get_attr2(TmDict* dict, Object key) {
 }
 #endif
 
-int DictSet(TmDict* dict, Object key, Object val){
+int dict_set(TmDict* dict, Object key, Object val){
     int i;
     #if USE_IDX
     if (key.idx > 0) {
@@ -132,12 +132,12 @@ int DictSet(TmDict* dict, Object key, Object val){
         if (i > 0) return i;
     }
     #endif
-	DictNode* node = DictGetNode(dict, key);
+	DictNode* node = dict_get_node(dict, key);
 	if (node != NULL) {
 		node->val = val;
 		return (node - dict->nodes);
 	}
-    DictCheck(dict);
+    dict_check(dict);
 	i = findfreepos(dict);
     dict->len++;
     dict->nodes[i].used = 1;
@@ -146,7 +146,7 @@ int DictSet(TmDict* dict, Object key, Object val){
     return i;
 }
 
-int setAttr(TmDict* dict, int constId, Object val) {
+int dict_set_attr(TmDict* dict, int constId, Object val) {
     int i;
 	DictNode* nodes = dict->nodes;
     constId += 2; /* start from 2, as 0,1 are used by normal node. */
@@ -157,12 +157,12 @@ int setAttr(TmDict* dict, int constId, Object val) {
         }
     }
     Object key = GET_CONST(constId-2);
-    i = DictSet(dict, key, val);
+    i = dict_set(dict, key, val);
     dict->nodes[i].used = constId;
     return i;
 }
 
-int getAttr(TmDict* dict, int constId) {
+int dict_get_attr(TmDict* dict, int constId) {
     int i;
 	DictNode* nodes = dict->nodes;
     constId += 2; /* prevent first const to be 0, and normal dict node to be 1. */
@@ -171,7 +171,7 @@ int getAttr(TmDict* dict, int constId) {
             return i;
         }
     }
-    DictNode* node = DictGetNode(dict, GET_CONST(constId-2));
+    DictNode* node = dict_get_node(dict, GET_CONST(constId-2));
     if (node != NULL) {
         node->used = constId;
         return node - nodes;
@@ -179,7 +179,7 @@ int getAttr(TmDict* dict, int constId) {
     return -1;
 }
 
-DictNode* DictGetNode(TmDict* dict, Object key){
+DictNode* dict_get_node(TmDict* dict, Object key){
     //int hash = DictHash(key);
     //int idx = hash % dict->cap;
     int i;
@@ -200,7 +200,7 @@ DictNode* DictGetNode(TmDict* dict, Object key){
 	return NULL;
 }
 
-Object* DictGetByStr(TmDict* dict, char* key) {
+Object* dict_get_by_str(TmDict* dict, char* key) {
     //int hash = hashSz((unsigned char*) key, strlen(key));
     //int idx = hash % dict->cap;
     int i;
@@ -214,12 +214,12 @@ Object* DictGetByStr(TmDict* dict, char* key) {
     return NULL;
 }
 
-void _dictSetByStr(TmDict* dict, char* key, Object value) {
-	DictSet(dict, string_static(key), value);
+void dict_set_by_str(TmDict* dict, char* key, Object value) {
+	dict_set(dict, string_static(key), value);
 }
 
-void _dictDel(TmDict* dict, Object key) {
-	DictNode* node = DictGetNode(dict, key);
+void dict_del(TmDict* dict, Object key) {
+	DictNode* node = dict_get_node(dict, key);
     if (node == NULL) {
         tmRaise("tm_del: keyError %o", key);
     }
@@ -228,63 +228,63 @@ void _dictDel(TmDict* dict, Object key) {
     return;
 }
 
-Object DictKeys(TmDict* dict){
+Object dict_keys(TmDict* dict){
     Object list = list_new(dict->len);
     int i;
     for(i = 0; i < dict->cap; i++) {
         if (dict->nodes[i].used) {
-            APPEND(list, dict->nodes[i].key);
+            tm_append(list, dict->nodes[i].key);
         }
     }
 	return list;
 }
 
-Object bmDictKeys(){
+Object dict_m_keys(){
 	Object dict = getDictArg("dict.keys");
-	return DictKeys(GET_DICT(dict));
+	return dict_keys(GET_DICT(dict));
 }
 
-Object bmDictValues() {
+Object dict_m_values() {
     Object _d = getDictArg("dict.values");
     TmDict* dict = GET_DICT(_d);
     Object list = list_new(dict->len);
     int i;
     for(i = 0; i < dict->cap; i++) {
         if (dict->nodes[i].used) {
-            APPEND(list, dict->nodes[i].val);
+            tm_append(list, dict->nodes[i].val);
         }
     }
 	return list;
 }
 
-void regDictMethods() {
+void dict_methods_init() {
 	tm->dict_proto = dict_new();
 	/* build dict class */
-	regModFunc(tm->dict_proto, "keys", bmDictKeys);
-    regModFunc(tm->dict_proto, "values", bmDictValues);
+	regModFunc(tm->dict_proto, "keys", dict_m_keys);
+    regModFunc(tm->dict_proto, "values", dict_m_values);
 }
 
-void dictIterMark(DataObject* data) {
+void dict_iter_mark(DataObject* data) {
     TmDictIterator* iter = (TmDictIterator*) data;
-    gcMarkDict(iter->dict);
+    gc_markDict(iter->dict);
 }
 
 DataProto* getDictIterProto() {
 	if(!dictIterProto.init) {
 		initDataProto(&dictIterProto);
 		dictIterProto.dataSize = sizeof(TmDictIterator);
-		dictIterProto.next = dictNext;
-        dictIterProto.mark = dictIterMark;
+		dictIterProto.next = dict_next;
+        dictIterProto.mark = dict_iter_mark;
 	}
 	return &dictIterProto;
 }
 
 
-Object dictIterNew(TmDict* dict) {
+Object dict_iter_new(TmDict* dict) {
     /*
-    Object *__iter__ = DictGetByStr(dict, "__iter__");
+    Object *__iter__ = dict_get_by_str(dict, "__iter__");
     if (__iter__ != NULL) {
-        Object *next = DictGetByStr(dict, "next");
+        Object *next = dict_get_by_str(dict, "next");
         Object data = dataNew(sizeof(TmBaseIterator));
         TmBaseIterator* baseIterator = (TmBaseIterator*)GET_DATA(data);
         baseIterator->func = *next;
@@ -299,7 +299,7 @@ Object dictIterNew(TmDict* dict) {
 	return data;
 }
 
-Object* dictNext(TmDictIterator* iterator) {
+Object* dict_next(TmDictIterator* iterator) {
 	if (iterator->idx < iterator->dict->cap) {
 		int i;
         for(i = iterator->idx; i < iterator->dict->cap; i++) {

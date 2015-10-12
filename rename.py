@@ -22,7 +22,7 @@ def rename(dirname, changes, file_exts = (".h", ".c"), bakdir = "bak"):
     for fname in os.listdir(dirname):
         abspath = os.path.join(dirname, fname)
         if os.path.isfile(abspath) and fname.endswith(file_exts):
-            print("load file %s" % abspath)
+            # print("load file %s" % abspath)
             text = open(abspath).read()
             if oldname not in text:
                 continue

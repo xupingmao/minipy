@@ -42,7 +42,7 @@ Object callFunction(Object func) {
             }
         }
     } else if (IS_DICT(func)) {
-        ret = classNew(func);
+        ret = class_new(func);
         Object *_fnc = dictGetByStr(ret, "__init__");
         if (_fnc != NULL) {
             callFunction(*_fnc);
@@ -65,7 +65,7 @@ void popFrame() {
 #define FRAME_CHECK_GC()  \
 f->top = top; \
 if (tm->allocated > tm->gcThreshold) {   \
-	gcFull();                            \
+	gc_full();                            \
 }
 
 TmFrame* pushFrame(Object fnc) {
@@ -145,7 +145,7 @@ Object tm_eval(TmFrame* f) {
 			double d = atof((char*)pc + 3);
 			pc += i;
 			v = tm_number(d);
-			/* APPEND(tm->constants,v);*/
+			/* tm_append(tm->constants,v);*/
             dictSet(tm->constants, v, NONE_OBJECT);
 			break;
 		}
@@ -153,7 +153,7 @@ Object tm_eval(TmFrame* f) {
 		case NEW_STRING: {
 			v = string_alloc((char*)pc + 3, i);
 			pc += i;
-			/* APPEND(tm->constants,v); */
+			/* tm_append(tm->constants,v); */
             dictSet(tm->constants, v, NONE_OBJECT);
 			break;
 		}
@@ -193,9 +193,9 @@ Object tm_eval(TmFrame* f) {
 
 		case LOAD_GLOBAL: {
             /* tmPrintf("load global %o\n", GET_CONST(i)); */
-			int idx = getAttr(GET_DICT(globals), i);
+			int idx = dict_get_attr(GET_DICT(globals), i);
 			if (idx == -1) {
-				idx = getAttr(GET_DICT(tm->builtins), i);
+				idx = dict_get_attr(GET_DICT(tm->builtins), i);
 				if (idx == -1) {
 					tmRaise("NameError: name %o is not defined", GET_CONST(i));
 				}
@@ -209,7 +209,7 @@ Object tm_eval(TmFrame* f) {
 		}
 		case STORE_GLOBAL: {
 			x = TM_POP();
-            int idx = setAttr(GET_DICT(globals), i, x);
+            int idx = dict_set_attr(GET_DICT(globals), i, x);
             pc[0] = FAST_ST_GLO;
             code16(pc+1, idx);
 			break;
@@ -227,18 +227,18 @@ Object tm_eval(TmFrame* f) {
 			FRAME_CHECK_GC();
 			break;
 		}
-		case LIST_APPEND:
+		case LIST_tm_append:
 			v = TM_POP();
 			x = TM_TOP();
-			tmAssertType(x, TYPE_LIST, "tm_eval: LIST_APPEND");
-			_listAppend(GET_LIST(x), v);
+			tmAssertType(x, TYPE_LIST, "tm_eval: LIST_tm_append");
+			list_append(GET_LIST(x), v);
 			break;
 		case DICT_SET:
 			v = TM_POP();
 			k = TM_POP();
 			x = TM_TOP();
 			tmAssertType(x, TYPE_DICT, "tm_eval: DICT_SET");
-			tmSet(x, k, v);
+			tm_set(x, k, v);
 			break;
 		case DICT: {
 			TM_PUSH(dict_new());
@@ -246,11 +246,11 @@ Object tm_eval(TmFrame* f) {
 			break;
 		}
 		TM_OP(ADD, tm_add)
-		TM_OP(SUB, tmSub)
-		TM_OP(MUL, tmMul)
-		TM_OP(DIV, tmDiv)
+		TM_OP(SUB, tm_sub)
+		TM_OP(MUL, tm_mul)
+		TM_OP(DIV, tm_div)
 		TM_OP(MOD, tm_mod)
-		TM_OP(GET, tmGet)
+		TM_OP(GET, tm_get)
 		case EQEQ: { *(top-1) = tm_number(tm_equals(*(top-1), *top)); top--; break; }
         case NOTEQ: { *(top-1) = tm_number(!tm_equals(*(top-1), *top)); top--; break; }
         case OP_LT: {
@@ -303,7 +303,7 @@ Object tm_eval(TmFrame* f) {
             #if INTERP_DB
                 tmPrintf("Self %o, Key %o, Val %o\n", x, k, v);
             #endif
-			tmSet(x, k, v);
+			tm_set(x, k, v);
 			break;
 		case POP: {
 			top--;
@@ -315,7 +315,7 @@ Object tm_eval(TmFrame* f) {
 		case CALL: {
             f->top = top;
 			top -= i;
-			tmSetArguments(top + 1, i);
+			tm_setArguments(top + 1, i);
 			Object func = TM_POP();
             #if INTERP_DB
                 printf("call %s\n", getFuncNameSz(func));
@@ -340,7 +340,7 @@ Object tm_eval(TmFrame* f) {
         case TM_NARG: {
             Object list = list_new(tm->arg_cnt);
             for(i = 0; i < tm->arg_cnt; i++) {
-                APPEND(list, tm->arguments[i]);
+                tm_append(list, tm->arguments[i]);
             }
             locals[0] = list;
             break;
@@ -367,7 +367,7 @@ Object tm_eval(TmFrame* f) {
             //pc += 3;
             //Code jmp_code = parseCode(pc);
             Object fnc = func_new(mod, NONE_OBJECT, NULL);
-            pc = resolve_func(GET_FUNCTION(fnc), pc);
+            pc = func_resolve(GET_FUNCTION(fnc), pc);
             // GET_FUNCTION(fnc)->code = pc + 3;
             // GET_FUNCTION(fnc)->maxlocals = reg_code.val;
             // GET_FUNCTION(fnc)->maxstack = reg_code.val;

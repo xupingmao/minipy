@@ -27,8 +27,7 @@ TmList*         list_alloc_untracked(int cap);
 void             list_set(TmList* list, int n, Object v);
 Object list_get(TmList* list, int n);
 void list_free(TmList* );
-Object list_newFromVaList(int n, ...);
-void regListMethods();
+void list_methods_init();
 
 
 
@@ -37,18 +36,12 @@ Object listIterNew(TmList* list);
 Object* listNext(TmListIterator* iterator);
 
 /* private functions */
-Object _listAdd(TmList*, TmList*);
-void _listDel(TmList*list, Object key);
-int _listIndex(TmList*, Object val);
-void _listAppend(TmList* list, Object v);
-
-/* public functions */
-#define listDel(list, key) _listDel(GET_LIST(list), key)
-#define listIndex(list, val) _listIndex(GET_LIST(list), val)
-#define listAdd(a, b) _listAdd(GET_LIST(a), GET_LIST(b))
+Object list_add(TmList*, TmList*);
+void list_del(TmList*list, Object key);
+int list_index(TmList*, Object val);
+void list_append(TmList* list, Object v);
 
 /* macros */
-#define APPEND(list, v) _listAppend(GET_LIST(list), v)
 #define LIST_GET(obj, i) list_get(GET_LIST(obj), i)
 #define LIST_NODES(obj) (GET_LIST(obj))->nodes
 #define LIST_LEN(obj) GET_LIST(obj)->len

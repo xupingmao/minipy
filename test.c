@@ -20,13 +20,13 @@
 #include "bin.c"
 #include <time.h>
 void regConst(Object constant) {
-	APPEND(tm->root, constant);
+	tm_append(tm->root, constant);
 }
 
 void regModFunc(Object mod, char* name, Object (*native)()) {
 	Object func = func_new(NONE_OBJECT, NONE_OBJECT, native);
 	GET_FUNCTION(func)->name = string_alloc(name, -1);
-	tmSet(mod,GET_FUNCTION(func)->name, func);
+	tm_set(mod,GET_FUNCTION(func)->name, func);
 }
 
 void regBuiltinFunc(char* name, Object (*native)()) {
@@ -46,9 +46,9 @@ void builtinsInit() {
 	STRING_NAME = string_alloc("__name__", -1);
 	regConst(STRING_NAME);
 
-	regListMethods();
-	regStringMethods();
-	regDictMethods();
+	list_methods_init();
+	string_methods_init();
+	dict_methods_init();
 	regBuiltinsFunc();
     regBuiltinsFunc2();
 }
@@ -57,7 +57,7 @@ void builtinsInit() {
 void loadModule(char* fname, unsigned char* s) {
 	Object modName = string_alloc(fname, strlen(fname));
 	Object code = string_alloc((char*) s, -1);
-	Object mod = moduleNew(modName, modName, code);
+	Object mod = module_new(modName, modName, code);
 	Object fnc = func_new(mod, NONE_OBJECT, NULL);
 	GET_FUNCTION(fnc)->code = (unsigned char*) GET_STR(code);
 	GET_FUNCTION(fnc)->name = STRING_MAIN;
@@ -65,7 +65,7 @@ void loadModule(char* fname, unsigned char* s) {
 }
 
 void loadModule2(Object name, Object code) {
-	Object mod = moduleNew(name, name, code);
+	Object mod = module_new(name, name, code);
 	Object fnc = func_new(mod, NONE_OBJECT, NULL);
 	GET_FUNCTION(fnc)->code = (unsigned char*) GET_STR(code);
 	GET_FUNCTION(fnc)->name = STRING_MAIN;
@@ -73,8 +73,8 @@ void loadModule2(Object name, Object code) {
 }
 
 int callModFunc(char* mod, char* szFnc) {
-    Object m = tmGet(tm->modules, string_alloc(mod, strlen(mod)));
-    Object fnc = tmGet(m, string_alloc(szFnc, strlen(szFnc)));
+    Object m = tm_get(tm->modules, string_alloc(mod, strlen(mod)));
+    Object fnc = tm_get(m, string_alloc(szFnc, strlen(szFnc)));
     argStart();
     callFunction(fnc);
 	return 0;
@@ -98,7 +98,7 @@ void testRun(int argc, char* argv[]) {
     n34 = tm_number(34);
     n1 = tm_number(1);
     while (tm_bool(tmLessThan(i, max))) {
-        // j = tmMul(i, n34);
+        // j = tm_mul(i, n34);
         if (IS_NUM(i) && IS_NUM(n34)) {
             Object temp = tm_number(GET_NUM(i) * GET_NUM(n34));
             j = temp;
@@ -129,7 +129,7 @@ void testString() {
     pushArg(s0);
     pushArg(s1);
     pushArg(s2);
-    Object s4 = bmStringReplace();
+    Object s4 = string_m_replace();
     tmPrintf("'abcdefg'.substring(0,2)=%o\n", s3);
     tmPrintf("'abcdefg'.replace('cd','==')=%o\n", s4);
 }
@@ -142,11 +142,11 @@ void testDict() {
 	Object k3 = string_alloc("age",-1);
 	Object k4 = string_alloc("just", -1);
 	Object k5 = string_alloc("just2", -1);
-	tmSet(d,k,v);
-	tmSet(d,k2,v);
-	tmSet(d,k3,v);
-	tmSet(d,k4,v);
-	DictNode* node = DictGetNode(GET_DICT(d), k5);
+	tm_set(d,k,v);
+	tm_set(d,k2,v);
+	tm_set(d,k3,v);
+	tm_set(d,k4,v);
+	DictNode* node = dict_get_node(GET_DICT(d), k5);
 	// printf("node = %s\n", node);
 	DictPrint(GET_DICT(d));
 	tmPrintln(d);
@@ -161,7 +161,7 @@ int testInit(int argc, char* argv[]) {
     /* use first frame */
     int code = setjmp(tm->frames->buf);
     if (code == 0) {
-        gcInit();
+        gc_init();
         // testRun(argc, argv);
         testString();
     } else if (code == 1){
@@ -169,7 +169,7 @@ int testInit(int argc, char* argv[]) {
     } else if (code == 2){
         
     }
-    gcFree();
+    gc_free();
     free(tm);
 	return 0;
 }
