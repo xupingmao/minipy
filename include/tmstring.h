@@ -35,7 +35,7 @@ void string_free(String*);
 int StringEquals(String*s0, String*s1);
 
 Object string_substring(String* str, int start, int end) ;
-Object bfStringFormat();
+Object bf_stringFormat();
 Object tmStr(Object obj);
 Object string_chr(int n);
 Object StringJoin(Object self, Object list);

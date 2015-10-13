@@ -3,24 +3,24 @@
 
 #include "tm.h"
 #include "interp.h"
-void      tmPrint(Object v);
-void      tmPrintln(Object v);
+void      tm_print(Object v);
+void      tm_println(Object v);
 Object    tmFormatVaList(char* fmt, va_list ap, int appendln);
 Object    tmFormat(char*fmt, ...);
 Object    tmType(Object o);
-void      tmPrintf(char* fmt, ...);
+void      tm_printf(char* fmt, ...);
 /* avoid '\0' in char array, which will be regarded as end by c lang */
 /* Chars     ObjectInfo(char*,Object,int); */
-Object    tmLoad(char* fname);
+Object    tm_load(char* fname);
 
 
 Object    blt_Load();
 Object    blt_Save();
-Object    bfInt();
-Object    bfFloat();
-Object    bfSystem();
+Object    bf_int();
+Object    bf_float();
+Object    bf_system();
 Object    blt_Print();
 Object    blt_AddTypeMethod();
-void      regBuiltinsFunc();
+void      builtin_funcs_init();
 Object*   getBuiltin(char* key);
 #endif

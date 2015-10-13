@@ -49,7 +49,7 @@ Object callFunction(Object func) {
         }
         return ret;
     }
-    tmRaise("callFunction:invalid object %o", (func));
+    tm_raise("callFunction:invalid object %o", (func));
     return NONE_OBJECT;
 }
 
@@ -77,13 +77,13 @@ TmFrame* pushFrame(Object fnc) {
     /* check oprand stack */
 	if (top >= tm->stack + STACK_SIZE) {
 		popFrame();
-		tmRaise("tm_eval: stack overflow");
+		tm_raise("tm_eval: stack overflow");
 	}
     
 	/* check frame stack*/
 	if (tm->frame >= tm->frames + FRAMES_COUNT-1) {
 		popFrame();
-		tmRaise("tm_eval: frame overflow");
+		tm_raise("tm_eval: frame overflow");
 	}
 
 	f->pc = GET_FUNCTION(fnc)->code;
@@ -192,12 +192,12 @@ Object tm_eval(TmFrame* f) {
 			break;
 
 		case LOAD_GLOBAL: {
-            /* tmPrintf("load global %o\n", GET_CONST(i)); */
+            /* tm_printf("load global %o\n", GET_CONST(i)); */
 			int idx = dict_get_attr(GET_DICT(globals), i);
 			if (idx == -1) {
 				idx = dict_get_attr(GET_DICT(tm->builtins), i);
 				if (idx == -1) {
-					tmRaise("NameError: name %o is not defined", GET_CONST(i));
+					tm_raise("NameError: name %o is not defined", GET_CONST(i));
 				}
 				TM_PUSH(GET_DICT(tm->builtins)->nodes[idx].val);
 			} else {
@@ -301,7 +301,7 @@ Object tm_eval(TmFrame* f) {
 			x = TM_POP();
 			v = TM_POP();
             #if INTERP_DB
-                tmPrintf("Self %o, Key %o, Val %o\n", x, k, v);
+                tm_printf("Self %o, Key %o, Val %o\n", x, k, v);
             #endif
 			tm_set(x, k, v);
 			break;
@@ -329,7 +329,7 @@ Object tm_eval(TmFrame* f) {
             int parg = pc[1];
             int varg = pc[2];
             if (tm->arg_cnt < parg || tm->arg_cnt > parg + varg) {
-                tmRaise("arguments do not match, define parg %d, varg %d,but given %d", 
+                tm_raise("arguments do not match, define parg %d, varg %d,but given %d", 
                     parg, varg, tm->arg_cnt);
             }
 			for(i = 0; i < tm->arg_cnt; i++){
@@ -460,7 +460,7 @@ Object tm_eval(TmFrame* f) {
 		}
 
 		default:
-			tmRaise("BAD INSTRUCTION, %d\n  globals() = \n%o", pc[0],
+			tm_raise("BAD INSTRUCTION, %d\n  globals() = \n%o", pc[0],
 					GET_FUNCTION_GLOBALS(f->fnc));
 			goto end;
 		}
@@ -471,7 +471,7 @@ Object tm_eval(TmFrame* f) {
 	end:
     /*
 	if (top != f->stack) {
-        tmRaise("tm_eval: operand stack overflow");
+        tm_raise("tm_eval: operand stack overflow");
 	}*/
     popFrame();
 	return ret;

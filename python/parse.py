@@ -83,8 +83,8 @@ def baseitem(p):
         p.add(token)
     elif t == '[':
         p.next()
-        node = AstNode()
-        node.type = 'list'
+        node = AstNode("list")
+        node.pos = token.pos
         if p.token.type == ']':
             p.next()
             node.first = None
@@ -317,9 +317,10 @@ def parse_global(p):
     p.next()
 
 def parse_pass(p):
-    t = p.token.type
+    tk = p.token
     p.next()
-    node = AstNode(t)
+    node = AstNode(tk.type)
+    node.pos = tk.pos
     p.add(node)
 
 def parse_try(p):

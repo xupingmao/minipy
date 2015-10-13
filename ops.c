@@ -8,14 +8,14 @@
 
 void tmAssertType(Object o, int type, char* msg) {
     if (TM_TYPE(o) != type) {
-        tmRaise("%s, expect %s but see %s", msg, 
+        tm_raise("%s, expect %s but see %s", msg, 
             getTypeByInt(type), getTypeByObj(o));
     }
 }
 
 void tmAssertInt(double value, char* msg) {
     if (value != (int) value) {
-        tmRaise("%s require int", msg);
+        tm_raise("%s require int", msg);
     }
 }
 
@@ -37,7 +37,7 @@ void tm_set(Object self, Object k, Object v) {
 		dict_set(GET_DICT(self), k, v);
 		return;
 	}
-	tmRaise("tm_set: Self %o, Key %o, Val %o", self, k, v);
+	tm_raise("tm_set: Self %o, Key %o, Val %o", self, k, v);
 }
 
 Object tm_get(Object self, Object k) {
@@ -53,7 +53,7 @@ Object tm_get(Object self, Object k) {
 				n += GET_STR_LEN(self);
 			}
 			if (n >= GET_STR_LEN(self) || n < 0)
-				tmRaise("StringGet: index overflow ,len=%d,index=%d, str=%o",
+				tm_raise("StringGet: index overflow ,len=%d,index=%d, str=%o",
 						GET_STR_LEN(self), n, self);
 			return string_chr(0xff & GET_STR(self)[n]);
 		} else if ((node = dict_get_node(GET_DICT(tm->str_proto), k)) != NULL) {
@@ -86,7 +86,7 @@ Object tm_get(Object self, Object k) {
 	case TYPE_DATA:
 		return GET_DATA_PROTO(self)->get(GET_DATA(self), k);
 	}
-	tmRaise("keyError %o", k);
+	tm_raise("keyError %o", k);
 	return NONE_OBJECT;
 }
 
@@ -98,7 +98,7 @@ Object tm_sub(Object a, Object b) {
             return a;
 		}
 	}
-	tmRaise("tm_sub: can not substract %o and %o", a, b);
+	tm_raise("tm_sub: can not substract %o and %o", a, b);
 	return NONE_OBJECT;
 }
 
@@ -128,7 +128,7 @@ Object tm_add(Object a, Object b) {
 		}
 		}
 	}
-	tmRaise("tm_add: can not add %o and %o", (a), (b));
+	tm_raise("tm_add: can not add %o and %o", (a), (b));
 	return NONE_OBJECT;
 }
 
@@ -158,7 +158,7 @@ int tm_equals(Object a, Object b){
 		case TYPE_NONE:return 1;
 		case TYPE_DICT:return GET_DICT(a) == GET_DICT(b);
 		case TYPE_FUNCTION: return GET_FUNCTION(a) == GET_FUNCTION(b);
-		default: tmRaise("equals(): not supported type %d", a.type);
+		default: tm_raise("equals(): not supported type %d", a.type);
 	}
 	return 0;
 }
@@ -166,22 +166,22 @@ int tm_equals(Object a, Object b){
 /*
 #define DEF_CMP_FUNC(fnc_name, op) Object fnc_name(Object a, Object b) {      \
 	if(TM_TYPE(a) != TM_TYPE(b))                             \
-		tmRaise(#fnc_name"(): can not compare [%o] and [%o]", (a), (b));                 \
+		tm_raise(#fnc_name"(): can not compare [%o] and [%o]", (a), (b));                 \
 	switch(a.type){                      \
 		case TYPE_NUM: { RET_NUM(GET_NUM(a) op GET_NUM(b) );} \
 		case TYPE_STR: { RET_NUM(strcmp(GET_STR(a), GET_STR(b)) op 0); } \
-		default : tmRaise(#fnc_name"() not support yet"); \
+		default : tm_raise(#fnc_name"() not support yet"); \
 	}                           \
 	return NONE_OBJECT;\
 }
 
 #define DEF_CMP_FUNC_2(fnc_name, op) int fnc_name(Object a, Object b) {      \
 	if(TM_TYPE(a) != TM_TYPE(b))                             \
-		tmRaise(#fnc_name"(): can not compare [%o] and [%o]", (a), (b));                 \
+		tm_raise(#fnc_name"(): can not compare [%o] and [%o]", (a), (b));                 \
 	switch(a.type){                      \
 		case TYPE_NUM: return  GET_NUM(a) op GET_NUM(b); \
 		case TYPE_STR: return  strcmp(GET_STR(a) , GET_STR(b)) op 0; \
-		default : tmRaise(#fnc_name"() not support yet"); \
+		default : tm_raise(#fnc_name"() not support yet"); \
 	}                           \
     return 0;\
 }
@@ -207,7 +207,7 @@ int tm_cmp(Object a, Object b) {
             case TYPE_STR: return strcmp(GET_STR(a), GET_STR(b));
         }
     }
-    tmRaise("tm_cmp: can not compare %o and %o", a, b);
+    tm_raise("tm_cmp: can not compare %o and %o", a, b);
     return 0;
 }
 /*
@@ -247,7 +247,7 @@ Object tm_mul(Object a, Object b) {
 		}
 		return des;
 	}
-	tmRaise("tm_mul: can not multiply %o and %o", a, b);
+	tm_raise("tm_mul: can not multiply %o and %o", a, b);
 	return NONE_OBJECT;
 }
 
@@ -257,7 +257,7 @@ Object tm_div(Object a, Object b) {
         SET_IDX(a, 0);
         return a;
 	}
-	tmRaise("tm_div: can not divide %o and %o", a, b);
+	tm_raise("tm_div: can not divide %o and %o", a, b);
 	return NONE_OBJECT;
 }
 
@@ -267,7 +267,7 @@ Object tm_mod(Object a, Object b) {
 	} else if (a.type == TYPE_STR) {
 		Object *__mod__ = getBuiltin("__mod__");
 		if (__mod__ == NULL) {
-			tmRaise("__mod__ is not defined");
+			tm_raise("__mod__ is not defined");
 		} else {
 			argStart();
 			pushArg(a);
@@ -275,7 +275,7 @@ Object tm_mod(Object a, Object b) {
 			return callFunction(*__mod__);
 		}		
 	}
-	tmRaise("tm_mod: can not module %o and %o", a, b);
+	tm_raise("tm_mod: can not module %o and %o", a, b);
 	return NONE_OBJECT;
 }
 
@@ -324,7 +324,7 @@ Object tm_neg(Object o) {
 		GET_NUM(o) = -GET_NUM(o);
 		return o;
 	}
-	tmRaise("tm_neg: can not handle %o", o);
+	tm_raise("tm_neg: can not handle %o", o);
 	return NONE_OBJECT;
 }
 
@@ -335,7 +335,7 @@ Object iter_new(Object collections) {
         case TYPE_DICT: return dict_iter_new(GET_DICT(collections));
         case TYPE_STR: return stringIterNew(GET_STR_OBJ(collections));
         case TYPE_DATA: return collections;
-        default: tmRaise("iter_new(): can not iterate %o", collections);
+        default: tm_raise("iter_new(): can not iterate %o", collections);
 	}
 	return NONE_OBJECT;
 }
@@ -355,7 +355,7 @@ void tm_del(Object self, Object k) {
 			break;
 		}
         default:
-            tmRaise("tm_del: not supported type %s", getTypeByObj(self));
+            tm_raise("tm_del: not supported type %s", getTypeByObj(self));
 	}
 }
 
@@ -368,7 +368,7 @@ Object tm_append(Object a, Object item) {
 
 TmFrame* tm_getframe(int fidx) {
     if (fidx < 1 || fidx > FRAMES_COUNT) {
-        tmRaise("tm_getframe:invalid fidx %d", fidx);
+        tm_raise("tm_getframe:invalid fidx %d", fidx);
     }
     return tm->frames + fidx;
 }
@@ -376,7 +376,7 @@ TmFrame* tm_getframe(int fidx) {
 Object tm_getlocal(int fidx, int lidx) {
     TmFrame* f = tm_getframe(fidx);
     if (lidx < 0 || lidx >= f->maxlocals) {
-        tmRaise("tm_getlocal:invalid lidx %d, maxlocals=%d", lidx, f->maxlocals);
+        tm_raise("tm_getlocal:invalid lidx %d, maxlocals=%d", lidx, f->maxlocals);
     }
     return f->locals[lidx];
 }
@@ -385,7 +385,7 @@ Object tm_getstack(int fidx, int sidx) {
     TmFrame* f = tm_getframe(fidx);
     int stacksize = f->top - f->stack;
     if (sidx < 0 || sidx >= stacksize) {
-        tmRaise("tm_getstack:invalid sidx %d, stacksize=%d", sidx, stacksize);
+        tm_raise("tm_getstack:invalid sidx %d, stacksize=%d", sidx, stacksize);
     }
     return f->stack[sidx];
 }
@@ -395,7 +395,7 @@ Object tm_getglobal(Object globals, Object okey) {
     if (node == NULL) {
         node = dict_get_node(GET_DICT(tm->builtins), okey);
         if (node == NULL) {
-            tmRaise("NameError: name %o is not defined", okey);
+            tm_raise("NameError: name %o is not defined", okey);
         }
     }
     return node->val;
@@ -403,7 +403,7 @@ Object tm_getglobal(Object globals, Object okey) {
 
 Object tm_getfname(Object fnc) {
     if (!IS_FUNC(fnc)) {
-        tmRaise("tm_getfname expect function");
+        tm_raise("tm_getfname expect function");
     }
     return GET_MODULE(GET_FUNCTION(fnc)->mod)->file;
 }

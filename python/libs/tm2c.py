@@ -1,6 +1,7 @@
 from parse import *
 import sys
 from repl import *
+from tokenize import *
 
 tm_obj = "Object "
 tm_const = "Object const_"
@@ -20,6 +21,11 @@ func_mul = "tm_mul"
 func_div = "tm_div"
 func_mod = "tm_mod"
 func_cmp = "tm_cmp"
+func_not = "tm_not"
+func_get = "tm_get"
+func_set = "tm_set"
+func_list = "tm_list"
+func_method = "tm_method"
 
 op_bool = [">", ">=", "<", "<+", "==", "!=", "and", "or", "in", "not"]
 
@@ -91,7 +97,7 @@ class Env:
         else:
             self.scope.vars.append(name)
 
-def do_assign(item, env, indent = 0, right = None):
+def do_assign(item, env, right = None):
     left = item.first
     if right == None:
         right = do_item(item.second, env)
@@ -102,6 +108,12 @@ def do_assign(item, env, indent = 0, right = None):
         return env.getname(name) + "=" + right + ";"
     elif left.type == ",":
         return "// not implemented"
+    elif left.type == "get":
+        print("assign get")
+        return sformat("%s(%s,%s,%s);", func_set, do_item(left.first, env), do_item(left.second, env), right)
+    elif left.type == "attr":
+        lfirst = Token("string", left.first.val)
+        return sformat("%s(%s,%s,%s);", func_set, do_item(lfirst,env), do_item(left.second,env), right)
 
 def do_const(item, env):
     val = item.val
@@ -115,6 +127,28 @@ def do_name(item, env):
     item = Token("string", item.val)
     return tm_get_glo + env.getglobals() + "," + do_const(item, env) + ")"
 
+def do_none(item, env):
+    return "NONE_OBJECT"
+    
+def do_list(item, env):
+    v = item.first
+    cnt = 0
+    if v == None:
+        cnt = 0
+        return sformat("%s(0)", func_list)
+    newlist = []
+    while v.type == ',':
+        code = do_item(v.second, env)
+        newlist.append(code)
+        v = v.first
+        cnt += 1
+    newlist.append(v)
+    newlist.reverse()
+    if cnt == 0:
+        return sformat("%s(0)", func_list)
+    else:
+        return sformat("%s(%s,%s)", func_list, cnt, ",".join(newlist)) 
+    
 def do_bool(item, env):
     if item.type in op_bool:
         return do_item(item, env)
@@ -123,6 +157,7 @@ def do_bool(item, env):
 def do_block(list, env, indent):
     lines = []
     for exp in list:
+        if exp.type == "string": continue
         line = do_item(exp, env, indent + 2)
         if exp.type == "call": line += ";"
         lines.append(line)
@@ -131,7 +166,16 @@ def do_block(list, env, indent):
 def do_if(item, env, indent):
     cond = do_bool(item.first, env)
     lines = do_block(item.second, env, indent)
-    return sformat("if(%s) %s" , cond, format_block(lines, indent))
+    third = item.third
+    head = sformat("if(%s) %s", cond, format_block(lines, indent))
+    if third == None:
+        pass
+    elif gettype(third) == "list":
+        return head + "  else" + format_block(do_block(third, env, 2),indent)
+    else:
+        # lines.append(do_item(third, env, indent))
+        return head + "  else " + do_item(third, env, 2)
+    return head
     
 def do_while(item, env, indent):
     cond = do_bool(item.first, env)
@@ -164,18 +208,20 @@ def do_getargs(list, env, indent):
     for item in list:
         if item.type == "varg":
             node = AstNode("=", item.first, item.second)
-            code = " " * indent + do_assign(node, env, indent)
+            code = " " * indent + do_assign(node, env)
             r.append(code)
-        line = " " * indent + do_assign(item, env, indent, "tm_getarg()")
+        line = " " * indent + do_assign(item, env, "tm_getarg()")
         r.append(line)
     return r
     
-def do_def(item, env, indent=0):
+def do_def(item, env, indent=0, obj=None):
     env.new_scope()
     name = item.first.val
     args = do_getargs(item.second, env, 2)
     lines = args + do_block(item.third, env, 0)
     cname = env.get_cname()
+    if obj!=None:
+        obj.name = cname
     locs = env.locals()
     vars = []
     for var in locs:
@@ -186,6 +232,22 @@ def do_def(item, env, indent=0):
     
 def do_return(item, env, indent=0):
     return "return " + do_item(item.first, env, 0) + ";"
+    
+def do_class(item, env, indent=0):
+    class_define = do_assign(item, env, "dict_new()")
+    class_name = do_name(item.first, env)
+    obj = newobj()
+    lines = []
+    for class_item in item.second:
+        type = class_item.type
+        if type == "pass": continue
+        assert type == "def"
+        do_def(class_item, env, indent+2, obj)
+        lines.append(sformat("%s(%s,%s);", func_method, class_name, obj.name))
+    text = class_define + "\n"
+    for line in lines:
+        text += (indent) * " " + line + "\n"
+    return text
     
 def do_op(item, env, func):
     return func + "(" + do_item(item.first, env) + "," + do_item(item.second, env) + ")";
@@ -229,6 +291,18 @@ def do_ne(item, env):
 def do_eq(item, env):
     return do_op(item, env, "tm_equals")
     
+def do_not(item, env):
+    return sformat("%s(%s)", func_not, do_item(item, env))
+    
+def do_get(item, env):
+    return do_op(item, env, func_get)
+    
+def do_attr(item, env):
+    second = item.second
+    item.second = Token("string", second.val)
+    item.second.pos = second.pos
+    return do_op(item, env, func_get)
+    
 def do_inplace_op(item, env, op):
     item2 = AstNode(op, item.first, item.second)
     tk = AstNode("=", item.first, item2)
@@ -251,17 +325,20 @@ def do_inplace_mod(item, env):
 
     
 _handlers = {
-    "=" : do_assign,
     "if": do_if,
     "while": do_while,
     "def": do_def,
     "return": do_return,
+    "class": do_class,
 }
 
 _handlers2 = {
     "number": do_const,
     "string": do_const,
     "name": do_name,
+    "None": do_none,
+    "list": do_list,
+    "=": do_assign,
     "+": do_add,
     "-": do_sub,
     "*": do_mul,
@@ -280,11 +357,15 @@ _handlers2 = {
     "%=": do_inplace_mod,
     "or": do_or,
     "and": do_and,
+    "not": do_not,
     "call": do_call,
+    "get": do_get,
+    "attr": do_attr,
 }
 
 def do_item(item, env, indent = 0):
     func = None
+    env.token = item
     if item.type in _handlers:
         func = _handlers[item.type]
         code = func(item, env, indent)
@@ -298,15 +379,20 @@ def do_item(item, env, indent = 0):
 # env
 # consts, globals, scopes.
 
+def do_program(tree, env, indent):
+    try:
+        return do_block(tree, env, 0)
+    except Exception as e:
+        compile_error(env.fname, env.src, env.token, e)
         
 def tm2c(fname, src, prefix=None):
     tree = parse(src)
     #env = {"vars": [], "consts": [], "funcs": [], "globals":[]}
     fname = fname.replace(".", "_")
     env = Env(fname, prefix)
-    
+    env.src = src
 
-    lines = do_block(tree, env, 0)
+    lines = do_program(tree, env, 0)
     _lines = []
     # assign constants
     _lines.append("  " + env.getglobals() + "=dict_new();");
@@ -315,7 +401,7 @@ def tm2c(fname, src, prefix=None):
         if gettype(const) == "number":
             body = tm_num + str(const) + ");"
         elif gettype(const) == "string":
-            body = tm_str + '"' + str(const) + '");'
+            body = tm_str + '"' + escape(str(const)) + '");'
         _lines.append("  " + h + body)
         
     lines = _lines + lines

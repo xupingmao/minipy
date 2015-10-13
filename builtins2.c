@@ -51,7 +51,7 @@ Object bf_vmopt() {
         tm_setattr(info, "lineno", tm_number(f->lineno));
         return info;
     } else {
-        tmRaise("invalid opt %s", opt);
+        tm_raise("invalid opt %s", opt);
     }
 	return NONE_OBJECT;
 }
@@ -107,7 +107,7 @@ Object bfAddObjMethod() {
 	} else if (strcmp(s, "dict") == 0) {
 		tm_set(tm->dict_proto, fname, fnc);
 	} else {
-		tmRaise("add_obj_method: not valid object type, expect str, list, dict");
+		tm_raise("add_obj_method: not valid object type, expect str, list, dict");
 	}
 	return NONE_OBJECT;
 }
@@ -122,12 +122,12 @@ Object bfReadFile() {
     int end = 0;
     Object func;
     if (nsize < 0 || nsize > 1024) {
-        tmRaise("%s: can not set bufsize beyond [1, 1024]",  szFunc);
+        tm_raise("%s: can not set bufsize beyond [1, 1024]",  szFunc);
     }
     func = getFuncArg(szFunc);
     FILE* fp = fopen(fname, "rb");
     if (fp == NULL) {
-        tmRaise("%s: can not open file %s", szFunc, fname);
+        tm_raise("%s: can not open file %s", szFunc, fname);
     }
     while (1) {
         argStart();
@@ -158,7 +158,7 @@ Object bfNext() {
     Object iter = getDataArg("next");
     Object *ret = tm_next(iter);
     if (ret == NULL) {
-        tmRaise("");
+        tm_raise("");
         return NONE_OBJECT;
     } else {
         return *ret;
@@ -189,7 +189,7 @@ Object bfGetConst() {
         idx += DICT_LEN(tm->constants);
     }
     if (idx < 0 || idx >= DICT_LEN(tm->constants)) {
-        tmRaise("getConst(idx): out of range [%d]", num);
+        tm_raise("getConst(idx): out of range [%d]", num);
     }
     return GET_CONST(idx);
 }
@@ -228,7 +228,7 @@ Object bfStat(){
         dictSetByStr(st, "st_gid",   tm_number(stbuf.st_gid));
         return st;
     }
-    tmRaise("stat(%s), file not exists or accessable.",s);
+    tm_raise("stat(%s), file not exists or accessable.",s);
     return NONE_OBJECT;
 }
 
@@ -258,7 +258,7 @@ Object bfGetcwd() {
             case EACCES: msg = "Read or search permission was denied for a component of the pathname.";break;
             case ENOMEM: msg = "Insufficient storage space is available.";break;
         }
-        tmRaise("%s: error -- %s", szFunc, msg);
+        tm_raise("%s: error -- %s", szFunc, msg);
     }
     return string_new(buf);
 }
@@ -268,7 +268,7 @@ Object bfChdir() {
     char *path = getSzArg(szFunc);
     int r = chdir(path);
     if (r != 0) {
-        tmRaise("%s: -- fatal error, can not chdir(\"%s\")", szFunc, path);
+        tm_raise("%s: -- fatal error, can not chdir(\"%s\")", szFunc, path);
     } 
     return NONE_OBJECT;
 }
@@ -290,7 +290,7 @@ Object bf_listdir() {
     Object _path = tm_add(path, string_new("\\*.*"));
     HANDLE hFind = FindFirstFile(GET_STR(_path), &FindFileData);
     if (hFind == INVALID_HANDLE_VALUE) {
-        tmRaise("%s is not a directory", path);
+        tm_raise("%s is not a directory", path);
     }
     do {
         if (strcmp(FindFileData.cFileName, "..")==0 || strcmp(FindFileData.cFileName, ".") == 0) {
@@ -304,12 +304,12 @@ Object bf_listdir() {
     } while (FindNextFile(hFind, &FindFileData));
     FindClose(hFind);
 #else
-    tmRaise("listdir not implemented in posix.");
+    tm_raise("listdir not implemented in posix.");
 #endif
     return list;
 }
 
-void regBuiltinsFunc2() {
+void builtin_funcs_init2() {
     /* functions which has impact on vm follow camel case */
     regBuiltinFunc("getConstIdx", bfGetConstIdx);
     regBuiltinFunc("getConst", bfGetConst);

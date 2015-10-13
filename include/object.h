@@ -161,7 +161,7 @@ TmVM* tm;
 Object* tm_stack_end;
 
 int              objEqSz(Object str, const char* value);
-void             tmRaise(char*fmt , ...);
+void             tm_raise(char*fmt , ...);
 #include "tmdata.h"
 #include "tmdict.h"
 #include "tmlist.h"

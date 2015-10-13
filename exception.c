@@ -14,13 +14,13 @@ void traceback() {
 	Object exlist = tm->exList;
 	printf("Traceback (most recent call last):\n");
 	for (i = LIST_LEN(exlist) - 1; i >= 0; i--) {
-		tmPrintln(LIST_NODES(exlist)[i]);
+		tm_println(LIST_NODES(exlist)[i]);
 	}
 	printf("Exception:\n  ");
-    tmPrintln(tm->ex);
+    tm_println(tm->ex);
 }
 
-void tmRaise(char* fmt, ...) {
+void tm_raise(char* fmt, ...) {
     va_list a;
 	va_start(a, fmt);
     list_clear(GET_LIST(tm->exList));

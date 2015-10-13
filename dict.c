@@ -127,7 +127,7 @@ int dict_set(TmDict* dict, Object key, Object val){
     int i;
     #if USE_IDX
     if (key.idx > 0) {
-        // tmPrintf("idx=%d, obj=%o\n", key.idx, key);
+        // tm_printf("idx=%d, obj=%o\n", key.idx, key);
         i = dict_set_attr2(dict, key, val);
         if (i > 0) return i;
     }
@@ -221,7 +221,7 @@ void dict_set_by_str(TmDict* dict, char* key, Object value) {
 void dict_del(TmDict* dict, Object key) {
 	DictNode* node = dict_get_node(dict, key);
     if (node == NULL) {
-        tmRaise("tm_del: keyError %o", key);
+        tm_raise("tm_del: keyError %o", key);
     }
     node->used = 0;
     dict->len--;

@@ -26,8 +26,15 @@ def find_error_line(s, pos):
     r += "     "+" "*x+"^" +'\n'
     return r
 
+def print_token(token):
+    for key in token:
+        print(key, token[key])
+        if gettype(token[key]) == "dict":
+            print_token(token[key])
+    
 def compile_error(ctx, s, token, eMsg = ""):
     if token != None:
+        print_token(token)
         pos = findpos(token)
         r = find_error_line(s, pos)
         raise Exception('Error at '+ctx+':\n'+r + eMsg)

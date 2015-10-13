@@ -91,7 +91,7 @@ void* tm_malloc(size_t size) {
     Object* func;
 
 	if (size <= 0) {
-		tmRaise("tm_malloc, attempts to allocate a memory block of size %d!", size);
+		tm_raise("tm_malloc, attempts to allocate a memory block of size %d!", size);
 		return NULL;
 	}
 	block = malloc(size);
@@ -100,7 +100,7 @@ void* tm_malloc(size_t size) {
         log_debug("%d -> %d , +%d\n", tm->allocated, tm->allocated + size, size);
 #endif
 	if (block == NULL) {
-		tmRaise("tm_malloc: fail to malloc memory block of size %d", size);
+		tm_raise("tm_malloc: fail to malloc memory block of size %d", size);
 	}
 	tm->allocated += size;
 	return block;
@@ -120,7 +120,7 @@ void tm_free(void* o, size_t size) {
     if (size > 100)
 	log_debug("Free %p, %d -> %d , -%d\n",o, tm->allocated, tm->allocated - size, size);
 	if(size<=0) {
-		tmRaise("tm_free: you are free a block of size %d", size);
+		tm_raise("tm_free: you are free a block of size %d", size);
 	}
 #endif
 	free(o);
@@ -151,7 +151,7 @@ Object gc_track(Object v) {
 		GET_DATA(v)->marked = GC_REACHED_SIGN;
 		break;
 	default:
-		tmRaise("gc_track(), not supported type %d", v.type);
+		tm_raise("gc_track(), not supported type %d", v.type);
 		return v;
 	}
     SET_IDX(v, 0);
@@ -235,7 +235,7 @@ void gc_mark(Object o) {
 		GET_DATA(o)->proto->mark(GET_DATA(o));
 		break;
 	default:
-		tmRaise("gc_mark(), unknown object type %d", o.type);
+		tm_raise("gc_mark(), unknown object type %d", o.type);
 	}
 }
 
@@ -373,7 +373,7 @@ Object obj_new(int type, void * value) {
 	case TYPE_NONE:
 		break;
 	default:
-		tmRaise("obj_new: not supported type %d", type);
+		tm_raise("obj_new: not supported type %d", type);
 	}
 	return o;
 }
@@ -426,7 +426,7 @@ DataProto* getBaseIterProto() {
 }
 
 Object* dataNext(DataObject* data) {
-    tmRaise("next is not defined!");
+    tm_raise("next is not defined!");
     return NULL;
 }
 

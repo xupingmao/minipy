@@ -41,8 +41,8 @@ void builtinsInit() {
 	list_methods_init();
 	string_methods_init();
 	dict_methods_init();
-	regBuiltinsFunc();
-    regBuiltinsFunc2();
+	builtin_funcs_init();
+    builtin_funcs_init2();
 }
 
 void loadModule(Object name, Object code) {

@@ -82,12 +82,12 @@ Object tmStr(Object a) {
 	case TYPE_DATA:
 		return GET_DATA_PROTO(a)->str(GET_DATA(a));
 	default:
-		tmRaise("str: not supported type %d", a.type);
+		tm_raise("str: not supported type %d", a.type);
 	}
 	return string_alloc("", 0);
 }
 
-void tmPrint(Object o) {
+void tm_print(Object o) {
 	Object str = tmStr(o);
 	int i;
 	for(i = 0; i < GET_STR_LEN(str); i++) {
@@ -95,8 +95,8 @@ void tmPrint(Object o) {
 	}
 }
 
-void tmPrintln(Object o) {
-	tmPrint(o);
+void tm_println(Object o) {
+	tm_print(o);
 	puts("");
 }
 
@@ -152,7 +152,7 @@ Object tmFormatVaList(char* fmt, va_list ap, int acquireNewLine) {
 				break;
 			}
 			default:
-				tmRaise("format, unknown pattern %c", fmt[i]);
+				tm_raise("format, unknown pattern %c", fmt[i]);
 				break;
 			}
 		} else {
@@ -172,15 +172,15 @@ Object tmFormat(char* fmt, ...) {
 	return v;
 }
 
-void tmPrintf(char* fmt, ...) {
+void tm_printf(char* fmt, ...) {
 	va_list a;
 	va_start(a, fmt);
-	tmPrint(tmFormatVaList(fmt, a, 0));
+	tm_print(tmFormatVaList(fmt, a, 0));
 	va_end(a);
 }
 
 
-long getRestSize(FILE* fp){
+long get_rest_size(FILE* fp){
 	long cur, end;
 	cur = ftell(fp);
 	fseek(fp, 0, SEEK_END);
@@ -190,15 +190,15 @@ long getRestSize(FILE* fp){
 }
 
 
-Object tmLoad(char* fname){
+Object tm_load(char* fname){
 	FILE* fp = fopen(fname, "rb");
 	if(fp == NULL){
-		tmRaise("load: can not open file \"%s\"",fname);
+		tm_raise("load: can not open file \"%s\"",fname);
 		return NONE_OBJECT;
 	}
-	long len = getRestSize(fp);
+	long len = get_rest_size(fp);
 	if(len > MAX_FILE_SIZE){
-		tmRaise("load: file too big to load, size = %d", (len));
+		tm_raise("load: file too big to load, size = %d", (len));
 		return NONE_OBJECT;
 	}
 	Object text = string_alloc(NULL, len);
@@ -208,10 +208,10 @@ Object tmLoad(char* fname){
 	return text;
 }
 
-Object tmSave(char*fname, Object content) {
+Object tm_save(char*fname, Object content) {
 	FILE* fp = fopen(fname, "wb");
 	if (fp == NULL) {
-		tmRaise("tmSave : can not save to file \"%s\"", fname);
+		tm_raise("tm_save : can not save to file \"%s\"", fname);
 	}
 	char* txt = GET_STR(content);
 	int len = GET_STR_LEN(content);
@@ -221,10 +221,10 @@ Object tmSave(char*fname, Object content) {
 }
 
 
-Object bfInput() {
+Object bf_input() {
 	int i = 0;
 	if (hasArg()) {
-		tmPrint(getObjArg("input"));
+		tm_print(getObjArg("input"));
 	}
 	char buf[2048];
 	memset(buf, '\0', sizeof(buf));
@@ -237,32 +237,32 @@ Object bfInput() {
 	return string_new(buf);
 }
 
-Object bfInt() {
+Object bf_int() {
 	Object v = getObjArg("int");
 	if (v.type == TYPE_NUM) {
 		return tm_number((int) GET_NUM(v));
 	} else if (v.type == TYPE_STR) {
 		return tm_number((int) atof(GET_STR(v)));
 	}
-	tmRaise("int: %o can not be parsed to int ", v);
+	tm_raise("int: %o can not be parsed to int ", v);
 	return NONE_OBJECT;
 }
 
-Object bfFloat() {
+Object bf_float() {
 	Object v = getObjArg("float");
 	if (v.type == TYPE_NUM) {
 		return v;
 	} else if (v.type == TYPE_STR) {
 		return tm_number(atof(GET_STR(v)));
 	}
-	tmRaise("float: %o can not be parsed to float", v);
+	tm_raise("float: %o can not be parsed to float", v);
 	return NONE_OBJECT;
 }
 
 /**
  *   load_module( name, code, mod_name = None )
  */
-Object bfLoadModule() {
+Object bf_load_module() {
 	const char* szFnc = "load_module";
 	Object file = getStrArg(szFnc);
 	Object code = getStrArg(szFnc);
@@ -281,18 +281,18 @@ Object bfLoadModule() {
 
 
 /* get globals */
-Object bfGlobals() {
+Object bf_globals() {
 	return GET_FUNCTION_GLOBALS(tm->frame->fnc);
 }
 
 /* get object type */
 
-Object bfExit() {
+Object bf_exit() {
 	longjmp(tm->frames->buf, 2);
 	return NONE_OBJECT;
 }
 
-Object bfGetType() {
+Object bf_gettype() {
 	Object obj = getObjArg("gettype");
 	switch(TM_TYPE(obj)) {
 		case TYPE_STR: return string_static("string");
@@ -302,66 +302,66 @@ Object bfGetType() {
 		case TYPE_FUNCTION: return string_static("function");
 		case TYPE_DATA: return string_static("data");
 		case TYPE_NONE: return string_static("None");
-		default: tmRaise("gettype(%o)", obj);
+		default: tm_raise("gettype(%o)", obj);
     }
 	return NONE_OBJECT;
 }
 
-Object bfChr() {
+Object bf_chr() {
 	int n = getIntArg("chr");
 	return string_chr(n);
 }
 
-Object bfOrd() {
+Object bf_ord() {
 	Object c = getStrArg("ord");
 	TM_ASSERT(GET_STR_LEN(c) == 1, "ord() expected a character");
 	return tm_number((unsigned char) GET_STR(c)[0]);
 }
 
-Object bfCode8() {
+Object bf_code8() {
 	int n = getIntArg("code8");
 	if (n < 0 || n > 255)
-		tmRaise("code8(): expect number 0-255, but see %d", n);
+		tm_raise("code8(): expect number 0-255, but see %d", n);
 	return string_chr(n);
 }
 
-Object bfCode16() {
+Object bf_code16() {
 	int n = getIntArg("code16");
 	if (n < 0 || n > 0xffff)
-		tmRaise("code16(): expect number 0-0xffff, but see %x", n);
+		tm_raise("code16(): expect number 0-0xffff, but see %x", n);
 	Object nchar = string_alloc(NULL, 2);
 	code16((unsigned char*) GET_STR(nchar), n);
 	return nchar;
 }
 
-Object bfCode32() {
+Object bf_code32() {
 	int n = getIntArg("code32");
 	Object c = string_alloc(NULL, 4);
 	code32((unsigned char*) GET_STR(c), n);
 	return c;
 }
 
-Object bfRaise() {
+Object bf_raise() {
 	if (getArgsCount() == 0) {
-		tmRaise("raise");
+		tm_raise("raise");
 	} else {
-		tmRaise("%s", getSzArg("raise"));
+		tm_raise("%s", getSzArg("raise"));
 	}
 	return NONE_OBJECT;
 }
 
-Object bfSystem() {
+Object bf_system() {
 	Object m = getStrArg("system");
 	int rs = system(GET_STR(m));
 	return tm_number(rs);
 }
 
-Object bfStr() {
+Object bf_str() {
 	Object a = getObjArg("str");
 	return tmStr(a);
 }
 
-Object bfLen() {
+Object bf_len() {
 	Object o = getObjArg("len");
     int len = -1;
     switch (TM_TYPE(o)) {
@@ -373,15 +373,15 @@ Object bfLen() {
 		len = DICT_LEN(o);
 	}
     if (len < 0) {
-        tmRaise("tmLen: %o has no attribute len", o);
+        tm_raise("tmLen: %o has no attribute len", o);
     }
 	return tm_number(len);
 }
 
-Object bfPrint() {
+Object bf_print() {
 	int i = 0;
 	while (hasArg()) {
-		tmPrint(getObjArg("print"));
+		tm_print(getObjArg("print"));
 		if (hasArg()) {
 			putchar(' ');
 		}
@@ -392,11 +392,11 @@ Object bfPrint() {
 
 Object bfLoad(Object p){
 	Object fname = getStrArg("load");
-	return tmLoad(GET_STR(fname));
+	return tm_load(GET_STR(fname));
 }
 Object bfSave(){
 	Object fname = getStrArg("<save name>");
-	return tmSave(GET_STR(fname), getStrArg("<save content>"));
+	return tm_save(GET_STR(fname), getStrArg("<save content>"));
 }
 
 Object bfRemove(){
@@ -409,10 +409,10 @@ Object bfRemove(){
     }
 }
 
-Object bfApply() {
+Object bf_apply() {
 	Object func = getObjArg("apply");
     if (NOT_FUNC(func) && NOT_DICT(func)) {
-        tmRaise("apply: expect function or dict");
+        tm_raise("apply: expect function or dict");
     }
 	Object args = getObjArg("apply");
 	argStart();
@@ -422,7 +422,7 @@ Object bfApply() {
 			pushArg(LIST_NODES(args)[i]);
 		}
 	} else {
-		tmRaise("apply: expect list arguments or None, but see %o", args);
+		tm_raise("apply: expect list arguments or None, but see %o", args);
         return NONE_OBJECT;
 	}
     return callFunction(func);
@@ -500,13 +500,13 @@ Object bfRange() {
 		inc = (long)getNumArg(szFunc);
 		break;
 	default:
-		tmRaise("range([n, [ n, [n]]]), but see %d arguments",
+		tm_raise("range([n, [ n, [n]]]), but see %d arguments",
 				tm->arg_cnt);
 	}
 	if (inc == 0)
-		tmRaise("range(): increment can not be 0!");
+		tm_raise("range(): increment can not be 0!");
 	if (inc * (end - start) < 0)
-		tmRaise("range(%d, %d, %d): not valid range!", start, end, inc);
+		tm_raise("range(%d, %d, %d): not valid range!", start, end, inc);
     Object data = dataNew(sizeof(RangeIter));
     RangeIter *iterator = (RangeIter*) GET_DATA(data);
 	iterator->cur = start;
@@ -525,29 +525,29 @@ Object bf_mmatch() {
     return tm_number(strncmp(str+start, dst, size) == 0);
 }
 
-void regBuiltinsFunc() {
+void builtin_funcs_init() {
 	regBuiltinFunc("load", bfLoad);
 	regBuiltinFunc("save", bfSave);
     regBuiltinFunc("remove", bfRemove);
-	regBuiltinFunc("print", bfPrint);
+	regBuiltinFunc("print", bf_print);
 	regBuiltinFunc("write", bfWrite);
-	regBuiltinFunc("input", bfInput);
-	regBuiltinFunc("str", bfStr);
-	regBuiltinFunc("int", bfInt);
-	regBuiltinFunc("float", bfFloat);
-	regBuiltinFunc("load_module", bfLoadModule);
-	regBuiltinFunc("globals", bfGlobals);
-	regBuiltinFunc("len", bfLen);
-	regBuiltinFunc("exit", bfExit);
-	regBuiltinFunc("gettype", bfGetType);
-	regBuiltinFunc("chr", bfChr);
-	regBuiltinFunc("ord", bfOrd);
-	regBuiltinFunc("code8", bfCode8);
-	regBuiltinFunc("code16", bfCode16);
-	regBuiltinFunc("code32", bfCode32);
-	regBuiltinFunc("raise", bfRaise);
-	regBuiltinFunc("system", bfSystem);
-	regBuiltinFunc("apply", bfApply);
+	regBuiltinFunc("input", bf_input);
+	regBuiltinFunc("str", bf_str);
+	regBuiltinFunc("int", bf_int);
+	regBuiltinFunc("float", bf_float);
+	regBuiltinFunc("load_module", bf_load_module);
+	regBuiltinFunc("globals", bf_globals);
+	regBuiltinFunc("len", bf_len);
+	regBuiltinFunc("exit", bf_exit);
+	regBuiltinFunc("gettype", bf_gettype);
+	regBuiltinFunc("chr", bf_chr);
+	regBuiltinFunc("ord", bf_ord);
+	regBuiltinFunc("code8", bf_code8);
+	regBuiltinFunc("code16", bf_code16);
+	regBuiltinFunc("code32", bf_code32);
+	regBuiltinFunc("raise", bf_raise);
+	regBuiltinFunc("system", bf_system);
+	regBuiltinFunc("apply", bf_apply);
     regBuiltinFunc("pow", bfPow);
     regBuiltinFunc("range", bfRange);
     regBuiltinFunc("mmatch", bf_mmatch);

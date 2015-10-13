@@ -234,7 +234,8 @@ def encode_class(tk):
     emit(DICT, 0)
     store(tk.first)
     for func in tk.second:
-        if func.type != 'def':
+        if func.type == "pass": continue
+        if func.type != "def":
             encode_error(func, "non-func expression in class is invalid")
         encode_def(func, 1)
         emit_load(tk.first)

@@ -32,7 +32,7 @@ Object list_get(TmList* list, int n) {
 		n += list->len;
 	}
 	if (n >= list->len || n < 0) {
-		tmRaise("list out of range");
+		tm_raise("list out of range");
 	}
 	return list->nodes[n];
 }
@@ -42,7 +42,7 @@ void list_set(TmList* list, int n, Object val) {
 		n += list->len;
 	}
 	if (n >= list->len || n < 0) {
-		tmRaise("list out of range");
+		tm_raise("list out of range");
 	}
 	list->nodes[n] = val;
 }
@@ -116,7 +116,7 @@ Object list_remove(TmList* list, int index) {
 		index += list->len;
 	}
 	if (index < 0 || index >= list->len) {
-		tmRaise("list_remove(): index out of range, length=%d, index=%d",
+		tm_raise("list_remove(): index out of range, length=%d, index=%d",
 				list->len, index);
 	}
 	Object obj = list->nodes[index];

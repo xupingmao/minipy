@@ -98,7 +98,7 @@ char* StringBuilderToChars(StringBuilder* sb) {
 Object StringBuilderGet(StringBuilder* sb, Object key){
   if(objEqSz(key,"len")) return tm_number(sb->len);
   else if(objEqSz(key, "cap"))return tm_number(sb->cap);
-  tmRaise("StringBuilderGet():no attribute %o", key);
+  tm_raise("StringBuilderGet():no attribute %o", key);
   return NONE_OBJECT;
 }
 

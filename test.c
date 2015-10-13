@@ -49,8 +49,8 @@ void builtinsInit() {
 	list_methods_init();
 	string_methods_init();
 	dict_methods_init();
-	regBuiltinsFunc();
-    regBuiltinsFunc2();
+	builtin_funcs_init();
+    builtin_funcs_init2();
 }
 
 
@@ -130,8 +130,8 @@ void testString() {
     pushArg(s1);
     pushArg(s2);
     Object s4 = string_m_replace();
-    tmPrintf("'abcdefg'.substring(0,2)=%o\n", s3);
-    tmPrintf("'abcdefg'.replace('cd','==')=%o\n", s4);
+    tm_printf("'abcdefg'.substring(0,2)=%o\n", s3);
+    tm_printf("'abcdefg'.replace('cd','==')=%o\n", s4);
 }
 
 void testDict() {
@@ -149,7 +149,7 @@ void testDict() {
 	DictNode* node = dict_get_node(GET_DICT(d), k5);
 	// printf("node = %s\n", node);
 	DictPrint(GET_DICT(d));
-	tmPrintln(d);
+	tm_println(d);
 }
 
 int testInit(int argc, char* argv[]) {
