@@ -87,7 +87,7 @@ typedef struct TmFrame {
   Object *locals;
   Object *stack;
   Object *top; /* current stack top; */
-  Object *last_pc;
+  Object *last_top;
   char* last_code;
   
   unsigned char* pc;

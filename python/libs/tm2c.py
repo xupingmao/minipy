@@ -222,6 +222,7 @@ def do_def(item, env, indent=0, obj=None):
     cname = env.get_cname()
     if obj!=None:
         obj.name = cname
+        obj.constname = env.getconst(name)
     locs = env.locals()
     vars = []
     for var in locs:
@@ -243,7 +244,7 @@ def do_class(item, env, indent=0):
         if type == "pass": continue
         assert type == "def"
         do_def(class_item, env, indent+2, obj)
-        lines.append(sformat("%s(%s,%s);", func_method, class_name, obj.name))
+        lines.append(sformat("%s(%s,%s,%s);", func_method, class_name, obj.constname, obj.name))
     text = class_define + "\n"
     for line in lines:
         text += (indent) * " " + line + "\n"

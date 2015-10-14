@@ -469,9 +469,8 @@ def parse_return(p):
     parse_stm1(p, 'return')
 
 def parse_annotation(p):
-    p.next()
     token = p.token
-    expect(p, "name")
+    p.next()
     p.add(AstNode("@", token))
     
 stmt_map = {

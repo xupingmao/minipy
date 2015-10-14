@@ -428,10 +428,29 @@ Object tm_string(char* str) {
     return string_static(str);
 }
 
+Object tm_list(int n, ...) {
+    va_list ap;
+    int i = 0;
+    Object list = list_new(n);
+    va_start(ap, n);
+    for (i = 0; i < n; i++) {
+        Object item = va_arg(ap, Object);
+        tm_append(list, item);
+    }
+    va_end(ap);
+    return list;
+}
+
 void tm_define(Object globals, Object name, Object (*native)()) {
     Object func = func_new(NONE_OBJECT, NONE_OBJECT, native);
 	GET_FUNCTION(func)->name = name;
 	tm_set(globals,name, func);
+}
+
+void tm_method(Object dict, Object name, Object (*native)()) {
+    Object func = func_new(NONE_OBJECT, NONE_OBJECT, native);
+    Object method = method_new(func, dict);
+    tm_set(dict, name, method);
 }
 
 Object tm_getarg() {

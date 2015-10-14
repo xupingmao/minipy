@@ -52,7 +52,7 @@ SYMBOLS = [
     '=','-','+','*', '/', '%', #'**','/','%','<<','>>',
     '<','>',
     '[',']','{','}','(',')','.',':',',',';',
-    "@",
+    # "@",
     #,'&', '|','!','@','^','$'
     ]
 B_BEGIN = ['[','(','{']
@@ -224,8 +224,11 @@ def do_string(s,i,l):
 
 def do_comment(s,i,l):
     i += 1
+    value = ""
     while i<l:
-        c = s[i]
-        if c == '\n': break
+        if s[i] == '\n': break
+        value += s[i]
         i += 1
+    if value.startswith(".debugger"):
+        T.add("@", "debugger")
     return i

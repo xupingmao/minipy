@@ -70,10 +70,12 @@ Object tm_getarg();
 Object tm_getlocal(int fidx, int lidx);
 Object tm_getstack(int fidx, int sidx);
 Object tm_string(char* str);
+Object tm_list(int n, ...);
 TmFrame* tm_getframe(int fidx);
 Object tm_getfname(Object func);
 void tm_setattr(Object a, char* key, Object value);
 void tm_define(Object globals, Object a, Object(*func)());
+void tm_method(Object dict, Object name, Object(*func)());
 
 #endif
 

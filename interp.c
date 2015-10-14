@@ -329,7 +329,7 @@ Object tm_eval(TmFrame* f) {
             int parg = pc[1];
             int varg = pc[2];
             if (tm->arg_cnt < parg || tm->arg_cnt > parg + varg) {
-                tm_raise("arguments do not match, define parg %d, varg %d,but given %d", 
+                tm_raise("ArgError,parg=%d,varg=%d,given=%d", 
                     parg, varg, tm->arg_cnt);
             }
 			for(i = 0; i < tm->arg_cnt; i++){
@@ -445,17 +445,15 @@ Object tm_eval(TmFrame* f) {
            goto end;
 		}
 
-		case LOAD_EX: { TM_PUSH(tm->ex); break; }
-		case SETJUMP: { f->jmp = pc + i * 3; break; }
+		case LOAD_EX: { top = f->last_top; TM_PUSH(tm->ex); break; }
+		case SETJUMP: { f->last_top = top; f->jmp = pc + i * 3; break; }
         case CLRJUMP: { f->jmp = NULL; break;}
         case TM_LINE: { f->lineno = i; break;}
 
 		case TM_DEBUG: {
             Object fdebug = tm_getglobal(globals, string_static("__debug__"));
             f->top = top;
-            argStart();
-            pushArg(tm_number(tm->frame - tm->frames));
-            callFunction(fdebug);			
+            tm_call(fdebug, 1, tm_number(tm->frame - tm->frames));		
 			break;
 		}
 
