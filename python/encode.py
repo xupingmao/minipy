@@ -281,13 +281,11 @@ def encode_break(tk):
     jump(end_tag_list[-1])
 
 def encode_import_one(mod, item):
-    encode_item(Token("name", "_import"))
+    # encode_item(Token("name", "_import"))
     encode_item(mod)
     item.type = 'string'
-    emit(LOAD_GLOBALS)
     encode_item(item)
-    emit(CALL,3)
-    emit(POP)
+    emit(OP_IMPORT, 2)
 
 def _import_name2str(mod):
     if mod.type == 'attr':
@@ -312,12 +310,9 @@ def encode_from(tk):
     encode_import_many(tk.first, tk.second)
 
 def _encode_import(item):
-    encode_item(Token('name','_import'))
     item.type = 'string'
     encode_item(item)
-    emit(LOAD_GLOBALS)
-    emit(CALL,2)
-    emit(POP)
+    emit(OP_IMPORT, 1)
 
 def encode_import(tk):
     if tk.first.type == ',':

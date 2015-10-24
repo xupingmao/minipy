@@ -269,9 +269,9 @@ Object tm_mod(Object a, Object b) {
 		if (__mod__ == NULL) {
 			tm_raise("__mod__ is not defined");
 		} else {
-			argStart();
-			pushArg(a);
-			pushArg(b);
+			arg_start();
+			arg_push(a);
+			arg_push(b);
 			return callFunction(*__mod__);
 		}		
 	}
@@ -416,9 +416,9 @@ Object tm_call(Object func, int args, ...) {
     int i = 0;
     va_list ap;
     va_start(ap, args);
-    argStart();
+    arg_start();
     for (i = 0; i < args; i++) {
-        pushArg(va_arg(ap, Object));
+        arg_push(va_arg(ap, Object));
     }
     va_end(ap);
     return callFunction(func);
@@ -454,5 +454,5 @@ void tm_method(Object dict, Object name, Object (*native)()) {
 }
 
 Object tm_getarg() {
-    return getObjArg("getarg");
+    return arg_get_obj("getarg");
 }

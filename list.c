@@ -159,33 +159,33 @@ int ListComputeSize(TmList* list){
 
 Object list_m_append() {
 	const char* szFunc = "list.append";
-	Object self = getListArg(szFunc);
-	Object v = getObjArg(szFunc);
+	Object self = arg_get_list(szFunc);
+	Object v = arg_get_obj(szFunc);
 	tm_append(self, v);
 	return NONE_OBJECT;
 }
 
 Object bmlist_pop() {
-	Object self = getListArg("list.pop");
+	Object self = arg_get_list("list.pop");
 	return list_pop(GET_LIST(self));
 }
 Object bmlist_insert() {
 	const char* szFunc = "list.insert";
-	Object self = getListArg(szFunc);
-	int n = getIntArg(szFunc);
-	Object v = getObjArg(szFunc);
+	Object self = arg_get_list(szFunc);
+	int n = arg_get_int(szFunc);
+	Object v = arg_get_obj(szFunc);
 	list_insert(GET_LIST(self), n, v);
 	return self;
 }
 
 Object bmlist_index() {
-	TmList* self = getListPtrArg("list.index");
-	Object v = getObjArg("list.index");
+	TmList* self = arg_get_list_p("list.index");
+	Object v = arg_get_obj("list.index");
 	return tm_number(list_index(self, v));
 }
 
 Object bmListReverse() {
-	TmList* self = getListPtrArg("list.reverse");
+	TmList* self = arg_get_list_p("list.reverse");
 	int start = 0, end = self->len - 1;
 	while (end > start) {
 		Object temp = self->nodes[start];
@@ -198,14 +198,14 @@ Object bmListReverse() {
 }
 
 Object bmlist_remove() {
-	TmList* list = getListPtrArg("list.remove");
-	int idx = getIntArg("list.remove");
+	TmList* list = arg_get_list_p("list.remove");
+	int idx = arg_get_int("list.remove");
 	list_remove(list, idx);
 	return NONE_OBJECT;
 }
 
 Object bmListClone() {
-	Object self = getObjArg("listClone");
+	Object self = arg_get_obj("listClone");
 	TmList* list = GET_LIST(self);
 	Object _newlist = list_new(list->cap);
 	TmList* newlist = GET_LIST(_newlist);

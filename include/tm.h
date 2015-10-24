@@ -62,6 +62,10 @@ Object ARRAY_CHARS;
 // list functions
 void list_clear(TmList* list);
 
+
+// arg functions
+void arg_insert(Object arg);
+
 // ops functions
 Object tm_call(Object func, int args, ...);
 Object tm_append(Object a, Object b);

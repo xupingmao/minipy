@@ -56,7 +56,7 @@ void loadModule(Object name, Object code) {
 int callModFunc(char* mod, char* szFnc) {
     Object m = tm_get(tm->modules, string_new(mod));
     Object fnc = tm_get(m, string_new(szFnc));
-    argStart();
+    arg_start();
     callFunction(fnc);
 	return 0;
 }

@@ -6,24 +6,24 @@
 #include "tmlist.h"
 #include "function.h"
 
-void argStart();
-void pushArg(Object obj) ;
+void arg_start();
+void arg_push(Object obj) ;
 void tm_setArguments(Object* first, int len);
 #define setArgs  tm_setArguments
 void _resolveMethodSelf(TmFunction *fnc);
 #define resolveMethodSelf(fnc) _resolveMethodSelf(GET_FUNCTION((fnc)))
 void printArguments();
 int hasArg();
-Object getStrArg(const char* fnc);
-char*  getSzArg(const char* fnc);
-Object getFuncArg(const char* fnc);
-int getIntArg(const char* fnc);
-double getNumArg(const char* fnc);
-TmList* getListPtrArg(const char* fnc);
-Object getListArg(const char* fnc);
-Object getDictArg(const char* fnc);
-Object getObjArg(const char* fnc);
-Object getDataArg(const char* fnc);
+Object arg_get_str(const char* fnc);
+char*  arg_get_sz(const char* fnc);
+Object arg_get_func(const char* fnc);
+int arg_get_int(const char* fnc);
+double arg_get_double(const char* fnc);
+TmList* arg_get_list_p(const char* fnc);
+Object arg_get_list(const char* fnc);
+Object arg_get_dict(const char* fnc);
+Object arg_get_obj(const char* fnc);
+Object arg_get_data(const char* fnc);
 int getArgsCount() ;
 void tmUngetArg();
 

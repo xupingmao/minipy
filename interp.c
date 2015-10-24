@@ -158,6 +158,21 @@ Object tm_eval(TmFrame* f) {
 			break;
 		}
 
+        case OP_IMPORT: {
+            Object import_func = tm_getglobal(globals, string_static("_import"));
+            arg_start();
+            arg_push(globals);
+            if (i == 1) {
+                arg_push(TM_POP());
+            } else {
+                Object b = TM_POP();
+                Object a = TM_POP();
+                arg_push(a);
+                arg_push(b);
+            }
+            callFunction(import_func);
+            break;
+        }
 		case LOAD_CONSTANT: {
 			TM_PUSH(GET_CONST(i));
             /* predict , eg. SET, GET etc. */
@@ -175,11 +190,6 @@ Object tm_eval(TmFrame* f) {
         case LOAD_NONE: {
             TM_PUSH(NONE_OBJECT);
             break;
-        }
-
-        case LOAD_GLOBALS: {
-        	TM_PUSH(globals);
-        	break;
         }
 
 		case LOAD_LOCAL: {
@@ -227,10 +237,10 @@ Object tm_eval(TmFrame* f) {
 			FRAME_CHECK_GC();
 			break;
 		}
-		case LIST_tm_append:
+		case LIST_APPEND:
 			v = TM_POP();
 			x = TM_TOP();
-			tmAssertType(x, TYPE_LIST, "tm_eval: LIST_tm_append");
+			tmAssertType(x, TYPE_LIST, "tm_eval: LIST_APPEND");
 			list_append(GET_LIST(x), v);
 			break;
 		case DICT_SET:

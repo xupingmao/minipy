@@ -11,11 +11,13 @@ ctail = "\n#endif\n\n"
 
 _opcode_names = [
     'NEW_STRING', 'NEW_NUMBER',
+    "OP_IMPORT",
     'ADD', 'SUB', 'MUL', 'DIV', 'MOD', 'NEG',
     'NOT', 'OP_GT', 'OP_LT', 'GTEQ', 'LTEQ', 'EQEQ', 'NOTEQ', 'OP_IN', 'NOTIN',
     'AND', 'OR', 'SET', 'GET',
     'LOAD_NONE', 'STORE_LOCAL', 'STORE_GLOBAL', 'LOAD_LOCAL', 'LOAD_GLOBAL', 'LOAD_CONSTANT',
-    'LOAD_GLOBALS', 'POP', 
+    #'LOAD_GLOBALS', 
+    'POP', 
     'DICT_SET', 'LIST', 'DICT', 'LIST_APPEND',
     'JUMP', 'UP_JUMP', 'POP_JUMP_ON_FALSE', 'JUMP_ON_FALSE', 'JUMP_ON_TRUE',
     #TAGSIZE

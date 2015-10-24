@@ -240,12 +240,12 @@ Object dict_keys(TmDict* dict){
 }
 
 Object dict_m_keys(){
-	Object dict = getDictArg("dict.keys");
+	Object dict = arg_get_dict("dict.keys");
 	return dict_keys(GET_DICT(dict));
 }
 
 Object dict_m_values() {
-    Object _d = getDictArg("dict.values");
+    Object _d = arg_get_dict("dict.values");
     TmDict* dict = GET_DICT(_d);
     Object list = list_new(dict->len);
     int i;

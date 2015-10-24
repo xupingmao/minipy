@@ -10,8 +10,8 @@
 ***********************************/
 
 Object bfInspectPtr() {
-	double _ptr = getNumArg("inspectPtr");
-	int idx = getIntArg("inspectPtr");
+	double _ptr = arg_get_double("inspectPtr");
+	int idx = arg_get_int("inspectPtr");
     char* ptr = (char*)(long long)_ptr;
 	return string_chr(ptr[idx]);
 }
@@ -25,23 +25,23 @@ Object bfGetCurrentFrame() {
 }
 
 Object bf_vmopt() {
-    char* opt = getSzArg("vminfo");
+    char* opt = arg_get_sz("vminfo");
     if (strcmp(opt, "gc") == 0) {
         gc_full();
     } else if (strcmp(opt, "help") == 0) {
         return string_static("gc, help");
     } else if (strcmp(opt, "frame.local") == 0) {
-        int fidx = getIntArg("vminfo");
-        int lidx = getIntArg("vminfo");
+        int fidx = arg_get_int("vminfo");
+        int lidx = arg_get_int("vminfo");
         return tm_getlocal(fidx, lidx);
     } else if (strcmp(opt, "frame.stack") == 0) {
-        int fidx = getIntArg("vminfo");
-        int sidx = getIntArg("vminfo");
+        int fidx = arg_get_int("vminfo");
+        int sidx = arg_get_int("vminfo");
         return tm_getstack(fidx, sidx);
     } else if (strcmp(opt, "frame.index") == 0) {
         return tm_number(tm->frame-tm->frames);
     } else if (strcmp(opt, "frame.info") == 0) {
-        int fidx = getIntArg("vminfo");
+        int fidx = arg_get_int("vminfo");
         TmFrame *f = tm_getframe(fidx);
         Object info = dict_new();
         tm_setattr(info, "maxlocals", tm_number(f->maxlocals));
@@ -85,7 +85,7 @@ Object bfClock() {
 
 Object bfSleep() {
     int i = 0;
-    int t = getIntArg("sleep");
+    int t = arg_get_int("sleep");
 #ifdef _WINDOWS_H
     Sleep(t);
 #else
@@ -96,9 +96,9 @@ Object bfSleep() {
 
 Object bfAddObjMethod() {
     static const char* szFunc = "add_obj_method";
-	Object type = getStrArg(szFunc);
-	Object fname = getStrArg(szFunc);
-	Object fnc = getFuncArg(szFunc);
+	Object type = arg_get_str(szFunc);
+	Object fname = arg_get_str(szFunc);
+	Object fnc = arg_get_func(szFunc);
 	char*s = GET_STR(type);
 	if (strcmp(s, "str") == 0) {
 		tm_set(tm->str_proto, fname, fnc);
@@ -115,8 +115,8 @@ Object bfAddObjMethod() {
 Object bfReadFile() {
     static const char* szFunc = "readFile";
     char c;
-    char* fname = getSzArg(szFunc);
-    int nsize = getIntArg(szFunc);
+    char* fname = arg_get_sz(szFunc);
+    int nsize = arg_get_int(szFunc);
     char buf[1024];
     int i;
     int end = 0;
@@ -124,13 +124,13 @@ Object bfReadFile() {
     if (nsize < 0 || nsize > 1024) {
         tm_raise("%s: can not set bufsize beyond [1, 1024]",  szFunc);
     }
-    func = getFuncArg(szFunc);
+    func = arg_get_func(szFunc);
     FILE* fp = fopen(fname, "rb");
     if (fp == NULL) {
         tm_raise("%s: can not open file %s", szFunc, fname);
     }
     while (1) {
-        argStart();
+        arg_start();
         for (i = 0; i < nsize; i++) {
             if ((c = fgetc(fp)) != EOF) {
                 buf[i] = c;
@@ -139,7 +139,7 @@ Object bfReadFile() {
                 break;
             }
         }
-        pushArg(string_alloc(buf, i));
+        arg_push(string_alloc(buf, i));
         callFunction(func);
         if (end) {
             break;
@@ -150,12 +150,12 @@ Object bfReadFile() {
 }
 
 Object bfIter() {
-    Object func = getObjArg("iter");
+    Object func = arg_get_obj("iter");
     return iter_new(func);
 }
 
 Object bfNext() {
-    Object iter = getDataArg("next");
+    Object iter = arg_get_data("next");
     Object *ret = tm_next(iter);
     if (ret == NULL) {
         tm_raise("");
@@ -166,7 +166,7 @@ Object bfNext() {
 }
 
 Object bfSetVMState() {
-    int state = getIntArg("setVMState");
+    int state = arg_get_int("setVMState");
     switch(state) {
         case 0:tm->debug = 0;break;
         case 1:tm->debug = 1;break;
@@ -175,7 +175,7 @@ Object bfSetVMState() {
 }
 
 Object bfGetConstIdx() {
-    Object key = getObjArg("getConstIdx");
+    Object key = arg_get_obj("getConstIdx");
     SET_IDX(key, 0);
     int i = dictSet(tm->constants, key, NONE_OBJECT);
     SET_IDX(GET_CONST(i), i);
@@ -183,7 +183,7 @@ Object bfGetConstIdx() {
 }
 
 Object bfGetConst() {
-    int num = getIntArg("getConst");
+    int num = arg_get_int("getConst");
     int idx = num;
     if (num < 0) {
         idx += DICT_LEN(tm->constants);
@@ -203,7 +203,7 @@ Object bfGetExList() {
 }
 
 Object bfExists(){
-    Object _fname = getStrArg("exists");
+    Object _fname = arg_get_str("exists");
     char* fname = GET_STR(_fname);
     FILE*fp = fopen(fname, "rb");
     if(fp == NULL) return NUMBER_FALSE;
@@ -212,7 +212,7 @@ Object bfExists(){
 }
 
 Object bfStat(){
-    const char *s = getSzArg("stat");
+    const char *s = arg_get_sz("stat");
     struct stat stbuf;
     if (!stat(s,&stbuf)) { 
         Object st = dict_new();
@@ -233,7 +233,7 @@ Object bfStat(){
 }
 
 Object bfGetFuncCode() {
-    Object func = getFuncArg("get_func_code");
+    Object func = arg_get_func("get_func_code");
     if (IS_NATIVE(func)) {
         return NONE_OBJECT;
     }
@@ -265,7 +265,7 @@ Object bfGetcwd() {
 
 Object bfChdir() {
     const char* szFunc = "chdir";
-    char *path = getSzArg(szFunc);
+    char *path = arg_get_sz(szFunc);
     int r = chdir(path);
     if (r != 0) {
         tm_raise("%s: -- fatal error, can not chdir(\"%s\")", szFunc, path);
@@ -284,7 +284,7 @@ Object bfGetOsName() {
 
 Object bf_listdir() {
     Object list = list_new(10);
-    Object path = getStrArg("listdir");
+    Object path = arg_get_str("listdir");
 #ifdef _WINDOWS_H
     WIN32_FIND_DATA FindFileData;
     Object _path = tm_add(path, string_new("\\*.*"));

@@ -162,7 +162,7 @@ def mtime(fname):
 tools for tinyvm to bootstrap
 '''
 
-def _import(fname, des_glo, tar = None):
+def _import(des_glo, fname, tar = None):
     'this _import function can not prevent import circle'
     if fname in __modules__:
         pass

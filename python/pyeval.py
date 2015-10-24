@@ -102,6 +102,14 @@ def pyeval(src, glo_vars = None, debug = False):
                 print(' '* 30, '==>' + name)
             r = stack.pop()
             glo_vars[name] = r
+        elif op == OP_IMPORT:
+            if v == 1:
+                a = stack.pop()
+                r = _import(glo_vars, a)
+            else:
+                b = stack.pop()
+                a = stack.pop()
+                r = _import(glo_vars, a, b)
         elif op in op_dict:
             y = stack.pop()
             x = stack.pop()
@@ -138,9 +146,6 @@ def pyeval(src, glo_vars = None, debug = False):
             k = stack.pop()
             r = stack[-1]
             r[k] = v
-        elif op == LOAD_GLOBALS:
-            r = glo_vars
-            stack.append(r)
         elif op == TM_EOP:
             pass
         elif op == LOAD_NONE:

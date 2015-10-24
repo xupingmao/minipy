@@ -30,7 +30,7 @@ Object string_alloc(char *s, int size) {
 		str->value[size] = '\0';
 	} else if(size == 1){
 		return string_chr(s[0]);
-	/* use string ptr in C stack */
+	/* use string ptr in C data section */
 	} else {
 		str->stype = 0;
 		if (size == 0) {
@@ -103,21 +103,21 @@ Object string_substring(String* str, int start, int end) {
 
 Object string_m_find() {
     static const char* szFunc = "find";
-	Object self = getStrArg(szFunc);
-	Object str = getStrArg(szFunc);
+	Object self = arg_get_str(szFunc);
+	Object str = arg_get_str(szFunc);
 	return tm_number(string_index(self.value.str, str.value.str, 0));
 }
 
 Object string_m_substring() {
     static const char* szFunc = "substring";
-	Object self = getStrArg(szFunc);
-	int start = getIntArg(szFunc);
-	int end = getIntArg(szFunc);
+	Object self = arg_get_str(szFunc);
+	int start = arg_get_int(szFunc);
+	int end = arg_get_int(szFunc);
 	return string_substring(self.value.str, start, end);
 }
 
 Object string_m_upper() {
-	Object self = getStrArg("upper");
+	Object self = arg_get_str("upper");
 	int i;
 	char*s = GET_STR(self);
 	int len = GET_STR_LEN(self);
@@ -130,7 +130,7 @@ Object string_m_upper() {
 }
 
 Object string_m_lower() {
-	Object self = getStrArg("lower");
+	Object self = arg_get_str("lower");
 	int i;
 	char*s = GET_STR(self);
 	int len = GET_STR_LEN(self);
@@ -145,9 +145,9 @@ Object string_m_lower() {
 
 Object string_m_replace() {
     static const char* szFunc;
-	Object self = getStrArg(szFunc);
-	Object src = getStrArg(szFunc);
-	Object des = getStrArg(szFunc);
+	Object self = arg_get_str(szFunc);
+	Object src = arg_get_str(szFunc);
+	Object des = arg_get_str(szFunc);
 
 	Object nstr = string_alloc("", 0);
 	int pos = string_index(self.value.str, src.value.str, 0);
@@ -168,8 +168,8 @@ Object string_m_replace() {
 
 Object string_m_split() {
 	const char* szFunc = "split";
-	Object self = getStrArg(szFunc);
-	Object pattern = getStrArg(szFunc);
+	Object self = arg_get_str(szFunc);
+	Object pattern = arg_get_str(szFunc);
     int pos, lastpos;
     Object nstr, list;
 	if (GET_STR_LEN(pattern) == 0) {
@@ -182,41 +182,37 @@ Object string_m_split() {
 	list = list_new(10);
 	while (pos != -1 && pos < GET_STR_LEN(self)) {
 		if (pos == 0) {
-			list_append(GET_LIST(list), string_alloc("", -1));
+			tm_append(list, string_alloc("", -1));
 		} else {
 			Object str = string_substring(self.value.str, lastpos, pos);
-			list_append(GET_LIST(list), str);
+			tm_append(list, str);
 		}
 		lastpos = pos + GET_STR_LEN(pattern);
 		pos = string_index(self.value.str, pattern.value.str, lastpos);
 	}
-	list_append(GET_LIST(list), string_substring(self.value.str, lastpos, GET_STR_LEN(self)));
+	tm_append(list, string_substring(self.value.str, lastpos, GET_STR_LEN(self)));
 	return list;
 }
 
-/* 
-this may cause GC trash.
-Object StringJoin(Object self, Object list) {
-	Object str = string_alloc("", 0);
-	int i = 0;
-	for (i = 0; i < LIST_LEN(list); i++) {
-		Object s = LIST_NODES(list)[i];
-		tmAssertType(s, TYPE_STR, "string.join");
-		if (i != 0)
-			str = tm_add(str, self);
-		str = tm_add(str, s);
-	}
-	return str;
+Object string_append_char(Object string, char c) {
+    String* str = GET_STR_OBJ(string);
+    str->value = tm_realloc(str->value, str->len+1, str->len+2);
+    str->value[str->len] = c;
+    str->value[str->len+1] = '\0';
+    str->len++;
+    str->stype = 1;
+    return string;
 }
 
-Object bmStringJoin() {
-    static const char* szFunc = "join";
-	Object self = getStrArg(szFunc);
-	Object list = getListArg(szFunc);
-	return StringJoin(self, list);
+Object string_append_str(Object string, char* sz) {
+    String* str = GET_STR_OBJ(string);
+    int sz_len = strlen(sz);
+    str->value = tm_realloc(str->value, str->len+1, str->len+1+sz_len);
+    strcat(str->value+str->len, sz);
+    str->len += sz_len;
+    str->stype = 1;
+    return string;
 }
-*/
-
 
 void string_methods_init() {
 	tm->str_proto = dict_new();

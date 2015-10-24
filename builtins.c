@@ -224,7 +224,7 @@ Object tm_save(char*fname, Object content) {
 Object bf_input() {
 	int i = 0;
 	if (hasArg()) {
-		tm_print(getObjArg("input"));
+		tm_print(arg_get_obj("input"));
 	}
 	char buf[2048];
 	memset(buf, '\0', sizeof(buf));
@@ -238,7 +238,7 @@ Object bf_input() {
 }
 
 Object bf_int() {
-	Object v = getObjArg("int");
+	Object v = arg_get_obj("int");
 	if (v.type == TYPE_NUM) {
 		return tm_number((int) GET_NUM(v));
 	} else if (v.type == TYPE_STR) {
@@ -249,7 +249,7 @@ Object bf_int() {
 }
 
 Object bf_float() {
-	Object v = getObjArg("float");
+	Object v = arg_get_obj("float");
 	if (v.type == TYPE_NUM) {
 		return v;
 	} else if (v.type == TYPE_STR) {
@@ -264,11 +264,11 @@ Object bf_float() {
  */
 Object bf_load_module() {
 	const char* szFnc = "load_module";
-	Object file = getStrArg(szFnc);
-	Object code = getStrArg(szFnc);
+	Object file = arg_get_str(szFnc);
+	Object code = arg_get_str(szFnc);
 	Object mod;
 	if (getArgsCount() == 3) {
-		mod = module_new(file, getStrArg(szFnc), code);
+		mod = module_new(file, arg_get_str(szFnc), code);
 	} else {
 		mod = module_new(file, file, code);
 	}
@@ -293,7 +293,7 @@ Object bf_exit() {
 }
 
 Object bf_gettype() {
-	Object obj = getObjArg("gettype");
+	Object obj = arg_get_obj("gettype");
 	switch(TM_TYPE(obj)) {
 		case TYPE_STR: return string_static("string");
 		case TYPE_NUM: return string_static("number");
@@ -308,25 +308,25 @@ Object bf_gettype() {
 }
 
 Object bf_chr() {
-	int n = getIntArg("chr");
+	int n = arg_get_int("chr");
 	return string_chr(n);
 }
 
 Object bf_ord() {
-	Object c = getStrArg("ord");
+	Object c = arg_get_str("ord");
 	TM_ASSERT(GET_STR_LEN(c) == 1, "ord() expected a character");
 	return tm_number((unsigned char) GET_STR(c)[0]);
 }
 
 Object bf_code8() {
-	int n = getIntArg("code8");
+	int n = arg_get_int("code8");
 	if (n < 0 || n > 255)
 		tm_raise("code8(): expect number 0-255, but see %d", n);
 	return string_chr(n);
 }
 
 Object bf_code16() {
-	int n = getIntArg("code16");
+	int n = arg_get_int("code16");
 	if (n < 0 || n > 0xffff)
 		tm_raise("code16(): expect number 0-0xffff, but see %x", n);
 	Object nchar = string_alloc(NULL, 2);
@@ -335,7 +335,7 @@ Object bf_code16() {
 }
 
 Object bf_code32() {
-	int n = getIntArg("code32");
+	int n = arg_get_int("code32");
 	Object c = string_alloc(NULL, 4);
 	code32((unsigned char*) GET_STR(c), n);
 	return c;
@@ -345,24 +345,24 @@ Object bf_raise() {
 	if (getArgsCount() == 0) {
 		tm_raise("raise");
 	} else {
-		tm_raise("%s", getSzArg("raise"));
+		tm_raise("%s", arg_get_sz("raise"));
 	}
 	return NONE_OBJECT;
 }
 
 Object bf_system() {
-	Object m = getStrArg("system");
+	Object m = arg_get_str("system");
 	int rs = system(GET_STR(m));
 	return tm_number(rs);
 }
 
 Object bf_str() {
-	Object a = getObjArg("str");
+	Object a = arg_get_obj("str");
 	return tmStr(a);
 }
 
 Object bf_len() {
-	Object o = getObjArg("len");
+	Object o = arg_get_obj("len");
     int len = -1;
     switch (TM_TYPE(o)) {
 	case TYPE_STR:
@@ -381,7 +381,7 @@ Object bf_len() {
 Object bf_print() {
 	int i = 0;
 	while (hasArg()) {
-		tm_print(getObjArg("print"));
+		tm_print(arg_get_obj("print"));
 		if (hasArg()) {
 			putchar(' ');
 		}
@@ -391,16 +391,16 @@ Object bf_print() {
 }
 
 Object bfLoad(Object p){
-	Object fname = getStrArg("load");
+	Object fname = arg_get_str("load");
 	return tm_load(GET_STR(fname));
 }
 Object bfSave(){
-	Object fname = getStrArg("<save name>");
-	return tm_save(GET_STR(fname), getStrArg("<save content>"));
+	Object fname = arg_get_str("<save name>");
+	return tm_save(GET_STR(fname), arg_get_str("<save content>"));
 }
 
 Object bfRemove(){
-    Object fname = getStrArg("remove");
+    Object fname = arg_get_str("remove");
     int flag = remove(GET_STR(fname));
     if(flag) {
     	return tm_number(0);
@@ -410,16 +410,16 @@ Object bfRemove(){
 }
 
 Object bf_apply() {
-	Object func = getObjArg("apply");
+	Object func = arg_get_obj("apply");
     if (NOT_FUNC(func) && NOT_DICT(func)) {
         tm_raise("apply: expect function or dict");
     }
-	Object args = getObjArg("apply");
-	argStart();
+	Object args = arg_get_obj("apply");
+	arg_start();
 	if (IS_NONE(args)) {
 	} else if(IS_LIST(args)) {
 		int i;for(i = 0; i < LIST_LEN(args); i++) {
-			pushArg(LIST_NODES(args)[i]);
+			arg_push(LIST_NODES(args)[i]);
 		}
 	} else {
 		tm_raise("apply: expect list arguments or None, but see %o", args);
@@ -429,7 +429,7 @@ Object bf_apply() {
 }
 
 Object bfWrite() {
-	Object fmt = getObjArg("puts");
+	Object fmt = arg_get_obj("puts");
 	Object str = tmStr(fmt);
     char* s = GET_STR(str);
     int len = GET_STR_LEN(str);
@@ -441,8 +441,8 @@ Object bfWrite() {
 }
 
 Object bfPow() {
-    double base = getNumArg("pow");
-    double y = getNumArg("pow");
+    double base = arg_get_double("pow");
+    double y = arg_get_double("pow");
     return tm_number(pow(base, y));
 }
 
@@ -486,18 +486,18 @@ Object bfRange() {
 	switch (tm->arg_cnt) {
 	case 1:
 		start = 0;
-		end = (long)getNumArg(szFunc);
+		end = (long)arg_get_double(szFunc);
 		inc = 1;
 		break;
 	case 2:
-		start = (long)getNumArg(szFunc);
-		end = (long)getNumArg(szFunc);
+		start = (long)arg_get_double(szFunc);
+		end = (long)arg_get_double(szFunc);
 		inc = 1;
 		break;
 	case 3:
-		start = (long)getNumArg(szFunc);
-		end = (long)getNumArg(szFunc);
-		inc = (long)getNumArg(szFunc);
+		start = (long)arg_get_double(szFunc);
+		end = (long)arg_get_double(szFunc);
+		inc = (long)arg_get_double(szFunc);
 		break;
 	default:
 		tm_raise("range([n, [ n, [n]]]), but see %d arguments",
@@ -517,9 +517,9 @@ Object bfRange() {
 }
 
 Object bf_mmatch() {
-    char* str = getSzArg("mmatch");
-    int start = getIntArg("mmatch");
-    Object o_dst = getStrArg("mmatch");
+    char* str = arg_get_sz("mmatch");
+    int start = arg_get_int("mmatch");
+    Object o_dst = arg_get_str("mmatch");
     char* dst = GET_STR(o_dst);
     int size = GET_STR_LEN(o_dst);
     return tm_number(strncmp(str+start, dst, size) == 0);

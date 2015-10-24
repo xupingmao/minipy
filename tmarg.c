@@ -1,19 +1,19 @@
 #include "include/tmarg.h"
 #include "include/function.h"
 
-void argStart() {
+void arg_start() {
 	tm->arguments = tm->internalArgStack;
 	tm->arg_loaded = 0;
 	tm->arg_cnt = 0;
 }
 
-void pushArg(Object obj) {
+void arg_push(Object obj) {
 	tm->arguments = tm->internalArgStack;
 	tm->arg_loaded = 0;
 	tm->arguments[tm->arg_cnt] = obj;
 	tm->arg_cnt += 1;
 	if(tm->arg_cnt > MAX_ARG_COUNT) {
-		tm_raise("pushArg(): too many arguments! over %d", MAX_ARG_COUNT);
+		tm_raise("arg_push(): too many arguments! over %d", MAX_ARG_COUNT);
 	}
 }
 
@@ -23,19 +23,23 @@ void tm_setArguments(Object* first, int len) {
 	tm->arg_loaded = 0;
 }
 
+void arg_insert(Object first) {
+    int i;
+    for (i = tm->arg_cnt; i > 0; i--) {
+        tm->arguments[i] = tm->arguments[i-1];
+    }
+    #if 0
+        tm_printf("Self = %o\n", first);
+    #endif
+    tm->arguments[0] = first;
+    tm->arg_cnt += 1;
+}
+
 void _resolveMethodSelf(TmFunction *fnc) {
 	if(IS_NONE(fnc->self)) {
 		return;
 	}
-	int i;
-	for (i = tm->arg_cnt; i > 0; i--) {
-		tm->arguments[i] = tm->arguments[i - 1];
-	}
-    #if 0
-        tm_printf("Self = %o\n", fnc->self);
-    #endif
-	tm->arguments[0] = fnc->self;
-	tm->arg_cnt += 1;
+	arg_insert(fnc->self);
 }
 
 Object getArgFromVM0(const char* fnc) {
@@ -62,7 +66,7 @@ Object getArgFromVM2(int type, const char* fnc) {
 }
 
 
-Object getStrArg(const char* fnc) {
+Object arg_get_str(const char* fnc) {
 	Object value = getArgFromVM0(fnc);
 	if (NOT_STR(value)) {
 		tm_raise("%s: expect string but see %s", fnc, getTypeByObj(value));
@@ -70,7 +74,7 @@ Object getStrArg(const char* fnc) {
 	return value;
 }
 
-char* getSzArg(const char* fnc) {
+char* arg_get_sz(const char* fnc) {
     Object value = getArgFromVM0(fnc);
 	if (NOT_STR(value)) {
 		tm_raise("%s: expect string but see %s", fnc, getTypeByObj(value));
@@ -78,7 +82,7 @@ char* getSzArg(const char* fnc) {
 	return GET_STR(value);
 }
 
-Object getFuncArg(const char* fnc) {
+Object arg_get_func(const char* fnc) {
     Object value = getArgFromVM0(fnc);
     if (NOT_FUNC(value)) {
         tm_raise("%s: expect function but see %s", fnc, getTypeByObj(value));
@@ -86,7 +90,7 @@ Object getFuncArg(const char* fnc) {
     return value;
 }
 
-Object getListArg(const char* fnc) {
+Object arg_get_list(const char* fnc) {
 	Object v = getArgFromVM0(fnc);
 	if (NOT_LIST(v)) {
 		tm_raise("%s: expect list but see %s", fnc, getTypeByObj(v));
@@ -94,7 +98,7 @@ Object getListArg(const char* fnc) {
 	return v;
 }
 
-Object getDictArg(const char* fnc) {
+Object arg_get_dict(const char* fnc) {
 	Object v = getArgFromVM0(fnc);
 	if (NOT_DICT(v)) {
 		tm_raise("%s: expect dict but see %s", fnc, getTypeByObj(v));
@@ -102,7 +106,7 @@ Object getDictArg(const char* fnc) {
 	return v;
 }
 
-TmList* getListPtrArg(const char* fnc) {
+TmList* arg_get_list_p(const char* fnc) {
     Object v = getArgFromVM0(fnc);
 	if (NOT_LIST(v)) {
 		tm_raise("%s: expect list but see %s", fnc, getTypeByObj(v));
@@ -110,7 +114,7 @@ TmList* getListPtrArg(const char* fnc) {
 	return GET_LIST(v);
 }
 
-int getIntArg(const char* fnc) {
+int arg_get_int(const char* fnc) {
 	Object v = getArgFromVM0(fnc);
 	if (TM_TYPE(v) != TYPE_NUM) {
 		tm_raise("%s: expect number but see %s", fnc, getTypeByObj(v));
@@ -118,7 +122,7 @@ int getIntArg(const char* fnc) {
 	return (int) GET_NUM(v);
 }
 
-double getNumArg(const char* fnc) {
+double arg_get_double(const char* fnc) {
 	Object v = getArgFromVM0(fnc);
 	if (TM_TYPE(v) != TYPE_NUM) {
 		tm_raise("%s: expect number but see %s", fnc, getTypeByObj(v));
@@ -126,11 +130,11 @@ double getNumArg(const char* fnc) {
 	return GET_NUM(v);
 }
 
-Object getObjArg(const char* fnc) {
+Object arg_get_obj(const char* fnc) {
 	return getArgFromVM0(fnc);
 }
 
-Object getDataArg(const char* fnc) {
+Object arg_get_data(const char* fnc) {
 	Object v = getArgFromVM0(fnc);
 	if (TM_TYPE(v) != TYPE_DATA) {
 		tm_raise("%s: expect data but see %s", fnc, getTypeByObj(v));
