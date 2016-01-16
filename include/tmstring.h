@@ -10,21 +10,21 @@
 #include "tmdata.h"
 
 typedef struct {
-	char *value;
-	int len;
+    char *value;
+    int len;
 }Chars;
 
 typedef struct String {
-	int marked;
-	int len;
-	int stype; /* string type, static or not */
-	char *value;
+    int marked;
+    int len;
+    int stype; /* string type, static or not */
+    char *value;
 } String;
 
 typedef struct StringIterator {
-	DATA_HEAD
-	int cur;
-	String* string;
+    DATA_HEAD
+    int cur;
+    String* string;
 }StringIterator;
 
 Object string_char(int c);
@@ -43,8 +43,8 @@ void string_methods_init();
 
 static DataProto stringProto;
 DataProto*  getStringProto();
-Object 		stringIterNew(String* s);
-Object* 	stringNext(StringIterator* iterator);
+Object         stringIterNew(String* s);
+Object*     stringNext(StringIterator* iterator);
 
 /* macros */
 #define GET_STR(obj) (obj).value.str->value

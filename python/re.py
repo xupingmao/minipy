@@ -81,11 +81,9 @@ def match(text, pattern):
 def findall(text, pattern):
     return compile(pattern).parse(text)
         
-code = compile("abc?+test[123].*")
-i = 0
-while i < len(code):
-    c = code[i]
-    print(c.state, c.value, c.i, c.pre)
-    i += 1
+if __name__ == "__main__":
+    code = compile("abc?+test[123].*")
+    for i in code:
+        print(i.state, i.value, i.i, i.pre)
         
         

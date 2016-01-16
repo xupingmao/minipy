@@ -9,23 +9,23 @@ unsigned char* func_resolve(TmFunction* fnc, unsigned char* pc) {
         return fnc->end;
     }
     while (1) {
-		int op = next_byte(s);
-		int val = next_short(s);
+        int op = next_byte(s);
+        int val = next_short(s);
         if (op == NEW_STRING || op == NEW_NUMBER) {
             s += val;
         } else if (op == LOAD_LOCAL || op == STORE_LOCAL) {
-			maxlocals = max(val, maxlocals);
+            maxlocals = max(val, maxlocals);
         } else if (op == SETJUMP) {
             fnc->modifier = 1;
-		} else if(op == TM_EOF){
-			defs--;
+        } else if(op == TM_EOF){
+            defs--;
             if (defs == 0) break;
-		} else if(op == TM_EOP) {
-			break;
-		} else if(op == TM_DEF) {
-			defs++;
-		}
-	}
+        } else if(op == TM_EOP) {
+            break;
+        } else if(op == TM_DEF) {
+            defs++;
+        }
+    }
     fnc->resolved = 1;
     fnc->maxlocals = maxlocals + 1;
     fnc->code = pc + 3;
@@ -34,8 +34,8 @@ unsigned char* func_resolve(TmFunction* fnc, unsigned char* pc) {
 }
 
 Object func_new(Object mod,
-		Object self,
-		Object (*native_func)()){
+        Object self,
+        Object (*native_func)()){
   TmFunction* f= tm_malloc(sizeof(TmFunction));
   f->resolved = 0;
   f->mod = mod;
@@ -108,46 +108,46 @@ void module_free(TmModule* mod){
 
 
 void func_format(char* des, TmFunction* func){
-	char szBuf[20];
+    char szBuf[20];
     char* szFnc = GET_STR(func->name);
     strncpy(szBuf, szFnc, 19);
-	if (func->self.type != TYPE_NONE) {
-		sprintf(des, "<method %p %s>", func, szBuf);
-	} else {
-		sprintf(des, "<function %p %s>", func, szBuf);
-	}
+    if (func->self.type != TYPE_NONE) {
+        sprintf(des, "<method %p %s>", func, szBuf);
+    } else {
+        sprintf(des, "<function %p %s>", func, szBuf);
+    }
 }
 
 Object getFuncAttr(TmFunction* fnc, Object key) {
-	if(objEqSz(key, "func_name")) {
-		return fnc->name;
-	}else if(objEqSz(key, "__self__")) {
-		return fnc->self;
-	}
-	return NONE_OBJECT;
+    if(objEqSz(key, "func_name")) {
+        return fnc->name;
+    }else if(objEqSz(key, "__self__")) {
+        return fnc->self;
+    }
+    return NONE_OBJECT;
 }
 /*
 void resolveModule(TmModule* mod, TmFunction* fnc){
-	if (! mod->resolved) {
-		CodeCheckResult st = resolveCode(mod, (unsigned char*) GET_STR(mod->code), 0);
-		fnc->code = st.code;
-		fnc->maxlocals = st.maxlocals;
-		fnc->maxstack = st.maxstack;
-	}
+    if (! mod->resolved) {
+        CodeCheckResult st = resolveCode(mod, (unsigned char*) GET_STR(mod->code), 0);
+        fnc->code = st.code;
+        fnc->maxlocals = st.maxlocals;
+        fnc->maxstack = st.maxstack;
+    }
 }*/
 
 unsigned char* getFunctionCode(TmFunction *fnc){
-	//resolveModule(GET_MODULE(fnc->mod), fnc);
-	return fnc->code;
+    //resolveModule(GET_MODULE(fnc->mod), fnc);
+    return fnc->code;
 }
 
 Object getFunctionGlobals(TmFunction* fnc) {
-	return GET_MODULE(fnc->mod)->globals;
+    return GET_MODULE(fnc->mod)->globals;
 }
 
 int getFunctionMaxLocals(TmFunction* fnc){
-	//resolveModule(GET_MODULE(fnc->mod), fnc);
-	return fnc->maxlocals;
+    //resolveModule(GET_MODULE(fnc->mod), fnc);
+    return fnc->maxlocals;
 }
 
 char* getFuncNameSz(Object func) {
@@ -171,7 +171,7 @@ char* getFuncFileSz(Object func) {
 }
 
 TmModule* getFuncMod(TmFunction* fnc) {
-	// resolveModule(GET_MODULE(fnc->mod), fnc);
-	return GET_MODULE(fnc->mod);
+    // resolveModule(GET_MODULE(fnc->mod), fnc);
+    return GET_MODULE(fnc->mod);
 }
 #endif

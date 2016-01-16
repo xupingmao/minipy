@@ -13,55 +13,61 @@ class Matrix:
     # m  [x  , y] 
     #    row, col
     # just like array in c lang
-    def __init__(self, width, height, init = 0):
-        self.width = width
-        self.height = height
-        self.consoleWidth = 80
-        self.values = make_list(width * height)
+    def __init__(self, cols, rows, init = 0):
+        self.cols = cols
+        self.rows = rows
+        self.consolecols = 80
+        self.values = make_list(cols * rows)
         for i in range(len(self.values)):
             self.values[i] = init
     
     def checkSize(self, other, msg):
-        if self.width != other.width or self.height != other.height:
+        if self.cols != other.cols or self.rows != other.rows:
             raise msg + ":not the same size"
     def checkMul(self, other, msg):
-        if self.width != other.height or self.height != other.width:
+        if self.cols != other.rows or self.rows != other.cols:
             raise msg + ":wrong size"
     def add(self, other):
         self.checkSize(other, "Matrix.add")
-        n = Matrix(self.width, self.height)
+        n = Matrix(self.cols, self.rows)
         for i in range(len(self.values)):
             n.values[i] = self.values[i]+other.values[i]
         return n
     
     def sub(self, other):
         self.checkSize(other, "Matrix.sub")
-        n = Matrix(self.width, self.height)
+        n = Matrix(self.cols, self.rows)
         for i in range(len(self.values)):
             n.values[i] = self.values[i]-other.values[i]
         return n
+        
     def mulRow(self, other, row, col):
         sum=0
-        for i in range(self.width):
+        for i in range(self.cols):
             sum+=self.get(row, i)*other.get(i, col)
         return sum
+        
     def mul(self, other):
         self.checkMul(other, "Matrix.mul")
-        n = Matrix(other.width, self.height)
-        for row in range(n.height):
-            for col in range(n.width):
+        n = Matrix(other.cols, self.rows)
+        for row in range(n.rows):
+            for col in range(n.cols):
                 n.set(row, col, self.mulRow(other, row, col))
         return n
+        
     def set(self, row, col, v):
-        self.values[row*self.width+col] = v
+        self.values[row*self.cols+col] = v
+        
     def get(self, row, col):
-        return self.values[row*self.width+col]
+        return self.values[row*self.cols+col]
+        
     def display(self, printLine = 0):
-        for row in range(self.height):
-            for col in range(self.width):
-                puts(self.get(row,col))
-            if self.width != self.consoleWidth:print("")
+        for row in range(self.rows):
+            for col in range(self.cols):
+                printf(self.get(row,col))
+            if self.cols != self.consolecols:print("")
         if printLine:print("")
+        
 if __name__ == '__main__':
     x = Matrix(10,10)
     y = Matrix(10,10)

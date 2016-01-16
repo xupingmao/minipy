@@ -16,9 +16,9 @@
 #define IS_DICT(o) TM_TYPE(o)==TYPE_DICT
 
 #define ASSERT_TYPE_WITH_INFO(obj, type, info) \
-	if(TM_TYPE(obj)!=type){                    \
-		tm_raise(info, obj);                    \
-	}
+    if(TM_TYPE(obj)!=type){                    \
+        tm_raise(info, obj);                    \
+    }
 /* for instruction read */
 #define next_char(s) *s++
 #define next_byte(s) *s++

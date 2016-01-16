@@ -10,18 +10,18 @@
 ***********************************/
 
 Object bfInspectPtr() {
-	double _ptr = arg_get_double("inspectPtr");
-	int idx = arg_get_int("inspectPtr");
+    double _ptr = arg_get_double("inspectPtr");
+    int idx = arg_get_int("inspectPtr");
     char* ptr = (char*)(long long)_ptr;
-	return string_chr(ptr[idx]);
+    return string_chr(ptr[idx]);
 }
 
 Object bfGetCurrentFrame() {
-	Object frameInfo = dict_new();
-	dictSetByStr(frameInfo, "function", tm->frame->fnc);
-	// dictSetByStr(frameInfo, "pc", tm_number((long long)tm->frame->pc));
+    Object frameInfo = dict_new();
+    dictSetByStr(frameInfo, "function", tm->frame->fnc);
+    // dictSetByStr(frameInfo, "pc", tm_number((long long)tm->frame->pc));
     dictSetByStr(frameInfo, "index", tm_number((long long) (tm->frame - tm->frames)));
-	return frameInfo;
+    return frameInfo;
 }
 
 Object bf_vmopt() {
@@ -53,7 +53,7 @@ Object bf_vmopt() {
     } else {
         tm_raise("invalid opt %s", opt);
     }
-	return NONE_OBJECT;
+    return NONE_OBJECT;
 }
 
 Object bfGetVmInfo() {
@@ -77,9 +77,9 @@ Object bfGetVmInfo() {
 
 Object bfClock() {
 #ifdef TM_NT
-	return tm_number(clock());
+    return tm_number(clock());
 #else
-	return tm_number((double)clock()/1000);
+    return tm_number((double)clock()/1000);
 #endif
 }
 
@@ -96,20 +96,20 @@ Object bfSleep() {
 
 Object bfAddObjMethod() {
     static const char* szFunc = "add_obj_method";
-	Object type = arg_get_str(szFunc);
-	Object fname = arg_get_str(szFunc);
-	Object fnc = arg_get_func(szFunc);
-	char*s = GET_STR(type);
-	if (strcmp(s, "str") == 0) {
-		tm_set(tm->str_proto, fname, fnc);
-	} else if (strcmp(s, "list") == 0) {
-		tm_set(tm->list_proto, fname, fnc);
-	} else if (strcmp(s, "dict") == 0) {
-		tm_set(tm->dict_proto, fname, fnc);
-	} else {
-		tm_raise("add_obj_method: not valid object type, expect str, list, dict");
-	}
-	return NONE_OBJECT;
+    Object type = arg_get_str(szFunc);
+    Object fname = arg_get_str(szFunc);
+    Object fnc = arg_get_func(szFunc);
+    char*s = GET_STR(type);
+    if (strcmp(s, "str") == 0) {
+        tm_set(tm->str_proto, fname, fnc);
+    } else if (strcmp(s, "list") == 0) {
+        tm_set(tm->list_proto, fname, fnc);
+    } else if (strcmp(s, "dict") == 0) {
+        tm_set(tm->dict_proto, fname, fnc);
+    } else {
+        tm_raise("add_obj_method: not valid object type, expect str, list, dict");
+    }
+    return NONE_OBJECT;
 }
 
 Object bfReadFile() {
@@ -317,8 +317,8 @@ void builtin_funcs_init2() {
     regBuiltinFunc("getExList", bfGetExList);
     regBuiltinFunc("setVMState", bfSetVMState);
     regBuiltinFunc("inspectPtr", bfInspectPtr);
-	regBuiltinFunc("getCurrentFrame", bfGetCurrentFrame);
-	regBuiltinFunc("vmopt", bf_vmopt);
+    regBuiltinFunc("getCurrentFrame", bfGetCurrentFrame);
+    regBuiltinFunc("vmopt", bf_vmopt);
     regBuiltinFunc("getVmInfo", bfGetVmInfo);
 
     regBuiltinFunc("clock", bfClock);
@@ -330,7 +330,7 @@ void builtin_funcs_init2() {
     regBuiltinFunc("sleep", bfSleep);
     
     regBuiltinFunc("exists", bfExists);
-	regBuiltinFunc("stat", bfStat);
+    regBuiltinFunc("stat", bfStat);
     regBuiltinFunc("getcwd", bfGetcwd);
     regBuiltinFunc("chdir", bfChdir);
     regBuiltinFunc("getosname", bfGetOsName);

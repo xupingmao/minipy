@@ -1,4 +1,11 @@
 *.pyc
+*.exe
+*.out
 bin.c
 .DS_Store
-*.exe
+tm.exe
+tm0.exe
+tinypy.exe
+__pycache__
+*.tpc
+tinypy-1.1/

@@ -1,29 +1,29 @@
 #include "include/StringBuilder.h"
 
 DataProto* getStringBuilderProto() {
-	if(!stringBuilderProto.init) {
-		initDataProto(&stringBuilderProto);
-		stringBuilderProto.get = StringBuilderGet;
-		stringBuilderProto.str = StringBuilderToStr;
-		stringBuilderProto.dataSize = sizeof(StringBuilder);
+    if(!stringBuilderProto.init) {
+        initDataProto(&stringBuilderProto);
+        stringBuilderProto.get = StringBuilderGet;
+        stringBuilderProto.str = StringBuilderToStr;
+        stringBuilderProto.dataSize = sizeof(StringBuilder);
                 stringBuilderProto.free = sb_free;
-	}
-	return &stringBuilderProto;
+    }
+    return &stringBuilderProto;
 }
 
 StringBuilder* StringBuilderNew(){
-	Object sb = StringBuilderObjNew();
-	return (StringBuilder*)GET_DATA(sb);
+    Object sb = StringBuilderObjNew();
+    return (StringBuilder*)GET_DATA(sb);
 }
 
 Object StringBuilderObjNew() {
-	Object data = dataNew(sizeof(StringBuilder));
-	StringBuilder* sb = (StringBuilder*)GET_DATA(data);
-	sb->len = 0;
-	sb->cap = 10;
-	sb->value = tm_malloc(sb->cap);
-	sb->proto = getStringBuilderProto();
-	return data;
+    Object data = dataNew(sizeof(StringBuilder));
+    StringBuilder* sb = (StringBuilder*)GET_DATA(data);
+    sb->len = 0;
+    sb->cap = 10;
+    sb->value = tm_malloc(sb->cap);
+    sb->proto = getStringBuilderProto();
+    return data;
 }
 
 void sb_free(StringBuilder* sb){
@@ -91,8 +91,8 @@ Object StringBuilderToStr(StringBuilder*sb){
 }
 
 char* StringBuilderToChars(StringBuilder* sb) {
-	sb->value[sb->len] = '\0';
-	return sb->value;
+    sb->value[sb->len] = '\0';
+    return sb->value;
 }
 
 Object StringBuilderGet(StringBuilder* sb, Object key){

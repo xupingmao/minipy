@@ -18,9 +18,9 @@ typedef struct Dictonary {
 }TmDict;
 
 typedef struct _TmDictIterator {
-	DATA_HEAD
-	TmDict* dict;
-	int idx;
+    DATA_HEAD
+    TmDict* dict;
+    int idx;
 } TmDictIterator;
 
 

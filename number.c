@@ -11,10 +11,10 @@ Object tm_number(double v){
 
 
 void numberFormat(char* des, Object num){
-	double v = GET_NUM(num);
-	if (fabs(v) - fabs((double)(long) v) < 0.000000001) {
-		sprintf(des, "%ld", (long) v);
-	} else {
-		sprintf(des, "%g", v);
-	}
+    double v = GET_NUM(num);
+    if (fabs(v) - fabs((double)(long) v) < 0.000000001) {
+        sprintf(des, "%ld", (long) v);
+    } else {
+        sprintf(des, "%g", v);
+    }
 }

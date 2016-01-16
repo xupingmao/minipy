@@ -4,7 +4,7 @@
 #include "object.h"
 
 typedef struct StringBuilder{
-	DATA_HEAD
+    DATA_HEAD
     char* value;
     int len;
     int cap;

@@ -6,8 +6,8 @@
 
 
 typedef struct _FunctionDefine {
-	Object fnc;
-	int len;
+    Object fnc;
+    int len;
 } FunctionDefine;
 
 #define TM_PUSH(x) *(++top) = (x); if(top > tm_stack_end) tm_raise("stack overflow");

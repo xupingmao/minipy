@@ -2,8 +2,8 @@
 
 
 typedef struct RangeIter {
-	DATA_HEAD
-	long cur;
+    DATA_HEAD
+    long cur;
     long inc;
     long stop;
     Object cur_obj;
@@ -25,48 +25,48 @@ Object* rangeNext(RangeIter* data) {
 
 static DataProto rangeIter;
 DataProto* getRangeIterProto() {
-	if(!rangeIter.init) {
-		initDataProto(&rangeIter);
-		rangeIter.next = rangeNext;
-		rangeIter.dataSize = sizeof(RangeIter);
-	}
-	return &rangeIter;
+    if(!rangeIter.init) {
+        initDataProto(&rangeIter);
+        rangeIter.next = rangeNext;
+        rangeIter.dataSize = sizeof(RangeIter);
+    }
+    return &rangeIter;
 }
 
 Object blt_Range() {
-	long start = 0;
-	long end = 0;
-	int inc;
+    long start = 0;
+    long end = 0;
+    int inc;
     static const char* szFunc = "range";
-	switch (tm->argumentsCount) {
-	case 1:
-		start = 0;
-		end = getIntArg(szFunc);
-		inc = 1;
-		break;
-	case 2:
-		start = getIntArg(szFunc);
-		end = getIntArg(szFunc);
-		inc = 1;
-		break;
-	case 3:
-		start = getIntArg(szFunc);
-		end = getIntArg(szFunc);
-		inc = getIntArg(szFunc);
-		break;
-	default:
-		tmRaise("range([n, [ n, [n]]]), but see %d arguments",
-				tm->argumentsCount);
-	}
-	if (inc == 0)
-		tmRaise("range(): increment can not be 0!");
-	if (inc * (end - start) < 0)
-		tmRaise("range(%d, %d, %d): not valid range!", start, end, inc);
+    switch (tm->argumentsCount) {
+    case 1:
+        start = 0;
+        end = getIntArg(szFunc);
+        inc = 1;
+        break;
+    case 2:
+        start = getIntArg(szFunc);
+        end = getIntArg(szFunc);
+        inc = 1;
+        break;
+    case 3:
+        start = getIntArg(szFunc);
+        end = getIntArg(szFunc);
+        inc = getIntArg(szFunc);
+        break;
+    default:
+        tmRaise("range([n, [ n, [n]]]), but see %d arguments",
+                tm->argumentsCount);
+    }
+    if (inc == 0)
+        tmRaise("range(): increment can not be 0!");
+    if (inc * (end - start) < 0)
+        tmRaise("range(%d, %d, %d): not valid range!", start, end, inc);
     Object data = dataNew(sizeof(RangeIter));
     RangeIter *iterator = (RangeIter*) GET_DATA(data);
-	iterator->cur = start;
-	iterator->stop = end;
+    iterator->cur = start;
+    iterator->stop = end;
     iterator->inc = inc;
-	iterator->proto = getRangeIterProto();
+    iterator->proto = getRangeIterProto();
     return data;
 }

@@ -5,24 +5,24 @@
 
 #define DATA_OBJECT_HEAD     \
     int marked;              \
-	size_t dataSize;         \
-	int init;                \
-	void (*mark)();          \
-	void (*free)();          \
-	Object (*str)();         \
-	Object (*get)();         \
-	void (*set)();           \
+    size_t dataSize;         \
+    int init;                \
+    void (*mark)();          \
+    void (*free)();          \
+    Object (*str)();         \
+    Object (*get)();         \
+    void (*set)();           \
     Object* (*next)();
 
 typedef struct DataProto {
-	DATA_OBJECT_HEAD
+    DATA_OBJECT_HEAD
 }DataProto;
 
 #define DATA_HEAD    int marked;      \
-	DataProto* proto;
+    DataProto* proto;
 
 typedef struct TmData {
-	DATA_HEAD
+    DATA_HEAD
 }TmData;
 
 typedef struct DataObject {
@@ -30,8 +30,8 @@ typedef struct DataObject {
 }DataObject;
 
 typedef struct _TmBaseIterator {
-	DATA_HEAD
-	Object func;
+    DATA_HEAD
+    Object func;
   Object ret;
 }TmBaseIterator;
 static DataProto baseIterProto;

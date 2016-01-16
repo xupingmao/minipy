@@ -23,7 +23,7 @@ def store(t):
         load_attr(t.second)
         emit(SET)
     elif t.type == ',':
-		# remains unsure.
+        # remains unsure.
         store(t.first)
         store(t.second)
 
