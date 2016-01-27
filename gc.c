@@ -195,6 +195,15 @@ void gc_markDict(TmDict* dict) {
     }
 }
 
+void gc_markFunc(TmFunction* func) {
+    if (func->marked)
+        return;
+    func->marked = GC_REACHED_SIGN;
+    gc_mark(func->mod);
+    gc_mark(func->self);
+    gc_mark(func->name);
+}
+
 void gc_mark(Object o) {
     if (o.type == TYPE_NUM || o.type == TYPE_NONE)
         return;
@@ -212,12 +221,7 @@ void gc_mark(Object o) {
         gc_markDict(GET_DICT(o));
         break;
     case TYPE_FUNCTION:
-        if (GET_FUNCTION(o)->marked)
-            return;
-        GET_FUNCTION(o)->marked = GC_REACHED_SIGN;
-        gc_mark(GET_FUNCTION(o)->mod);
-        gc_mark(GET_FUNCTION(o)->self);
-        gc_mark(GET_FUNCTION(o)->name);
+        gc_markFunc(GET_FUNCTION(o));
         break;
     case TYPE_MODULE:
         if (GET_MODULE(o)->marked)

@@ -94,6 +94,7 @@ TmFrame* pushFrame(Object fnc) {
     f->top = f->stack;
     f->fnc = fnc;
  
+    // clear local variables
     int i;for(i = 0; i < f->maxlocals; i++) {
         f->locals[i] = NONE_OBJECT;
     }

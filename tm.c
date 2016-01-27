@@ -7,7 +7,6 @@
 #include "number.c"
 #include "gc.c"
 #include "builtins.c"
-#include "builtins2.c"
 #include "ops.c"
 #include "dict.c"
 #include "function.c"
@@ -41,7 +40,6 @@ void builtinsInit() {
     string_methods_init();
     dict_methods_init();
     builtin_funcs_init();
-    builtin_funcs_init2();
 }
 
 void loadModule(Object name, Object code) {
