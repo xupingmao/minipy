@@ -1,6 +1,5 @@
 _PRINT_STR_LEN = 40
-from encode import compile
-from encode import compilefile
+from encode import *
 
 def replPrint(p, n = 0, depth = 2):
     if depth <= 0:
@@ -60,9 +59,9 @@ def run(path, args = None):
     ARGV = bak_argv
     
 def repl():
-    from parse import parse
-    from tokenize import tokenize
-    from pyeval import pyeval
+    from parse import *
+    from tokenize import *
+    from pyeval import *
     print("Welcome To TinyMatrix!!!")
     
     global debug

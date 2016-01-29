@@ -117,20 +117,35 @@ def encode_list0(v):
         
 def encode_list(v):
     emit(LIST, 0)
-    encode_list0(v.first)
+    # encode_list0(v.first)
+    if v.first == None:
+        return 0
+    if gettype(v.first) == "list":
+        for item in v.first:
+            encode_item(item)
+            emit(LIST_APPEND)
+    else:
+        encode_item(v.first)
+        emit(LIST_APPEND)
+    return 1
+
     #emit(LIST, tk_list_len(v.first))
 
-def isconst(token):
-    if token.type == ',':
-        return isconst(token.first) and isconst(token.second)
-    elif token.type in ('string', 'number', 'None'):
-        return True
+def isConstList(list):
+    for item in list:
+        if not hasattr(item, "type"):
+            return False
+        if item.type not in ("string", "number", "None"):
+            return False
+    return True
 
-def getconst(const):
+def getConstList(list):
     asm_switch_out()
     g = newglo()
     emit(LIST)
-    encode_list0(const)
+    for item in list:
+        encode_item(item)
+        emit(LIST_APPEND)
     store_glo(g)
     asm_switch_out()
     return g
@@ -152,11 +167,22 @@ def encode_if(tk):
     
     
 def encode_assign(tk):
-    n = encode_item(tk.second)
-    if tk.first.type == ',':
-        if n == 1:emit(TM_UNARRAY,tk_list_len(tk.first))
-        else:emit(TM_ROT, n)
-    store(tk.first)
+    if gettype(tk.second) == "list":
+        for item in tk.second:
+            encode_item(item)
+        n = len(tk.second)
+    else:
+        encode_item(tk.second)
+        n = 1
+    if gettype(tk.first) == "list":
+        if n == 1:
+            emit(TM_UNARRAY, len(tk.first))
+        else:
+            emit(TM_ROT, n)
+        for item in tk.first:
+            store(item)
+    else:
+        store(tk.first)
     
 def encode_tuple(tk):
     return encode_item(tk.first) + encode_item(tk.second)
@@ -186,7 +212,12 @@ def encode_not(tk):
     
 def encode_call(tk):
     encode_item(tk.first)
-    n = encode_item(tk.second)
+    if gettype(tk.second) == "list":
+        for item in tk.second:
+            encode_item(item)
+        n = len(tk.second)
+    else:
+        n = encode_item(tk.second)
     emit(CALL, n)
 
     
@@ -244,10 +275,11 @@ def encode_class(tk):
 
 def encode_return(tk):
     if tk.first:
-        if tk.first.type == ',':
+        if gettype(tk.first) == "list":
             emit(LIST)
-            encode_list0(tk.first)
-            #emit(LIST, tk_list_len(tk.first))
+            for item in tk.first:
+                encode_item(item)
+                emit(LIST_APPEND)
         else:
             encode_item(tk.first)
     else:
@@ -340,6 +372,17 @@ def encode_or(tk):
     emit(OR)
     emit_tag(end)
     
+def encode_raw_list(list):
+    if gettype(list) == "list":
+        emit(LIST)
+        for item in list:
+            encode_item(item)
+            emit(LIST_APPEND)
+        return len(list)
+    else:
+        encode_item(list)
+        return 1
+
 def encode_for(tk):
     start_tag = newtag()
     end_tag = newtag()
@@ -347,7 +390,7 @@ def encode_for(tk):
     begin_tag_list.append(start_tag)
     end_tag_list.append(end_tag)
     ### load index and iterator
-    encode_item(tk.first.second)
+    encode_raw_list(tk.first.second)
     emit(ITER_NEW) # create a iterator
     emit_tag(start_tag)
     jump(end_tag, TM_NEXT)
@@ -408,8 +451,8 @@ def encode_attr(tk):
     
 def encode_in(tk):
     encode_item(tk.first)
-    if tk.second.type == ',' and isconst(tk.second):
-        g = getconst(tk.second)
+    if gettype(tk.second) == 'list' and isConstList(tk.second):
+        g = getConstList(tk.second)
         emit_load(g)
     else:
         encode_item(tk.second)
@@ -477,7 +520,7 @@ def encode_item(tk):
             if i.type == 'call': emit(POP)
         return
     r = encode_map[tk.type](tk)
-    if r:return r
+    if r != None:return r
     return 1
 
 load_type_list = ['number', 'name', "string", 'None']
@@ -522,11 +565,18 @@ def split_instr(instr):
 def main():
     if len(ARGV) < 2:pass
     elif len(ARGV) == 2:
-        from tools import repl
+        import repl
+        import tmcode
+        tmcodes = tmcode.tmcodes
+        # from tools import *
         replPrint = repl.replPrint
         code = compilefile(ARGV[1])
-        replPrint(code, 0, 3)
+        list = split_instr(code)
+        for item in list:
+            print(tmcodes[item[0]], item[1])
+        # replPrint(code, 0, 3)
     elif len(ARGV) == 3:
         compile(ARGV[1], ARGV[2])
+
 if __name__ == "__main__":
     main()

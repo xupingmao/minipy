@@ -9,7 +9,10 @@ def Token(type='symbol',val=None,pos=None):
 
 def findpos(token):
     if not hasattr(token, 'pos'):
-        return findpos(token.first)
+        if hasattr(token, "first"):
+            return findpos(token.first)
+        print(token)
+        return [0,0]
     return token.pos
 # @param s, src
 # @param pos, position
@@ -34,7 +37,7 @@ def print_token(token):
     
 def compile_error(ctx, s, token, eMsg = ""):
     if token != None:
-        print_token(token)
+        # print_token(token)
         pos = findpos(token)
         r = find_error_line(s, pos)
         raise Exception('Error at '+ctx+':\n'+r + eMsg)

@@ -1,7 +1,6 @@
 #include "include/tm.h"
 #include "include/vm.h"
 #include "include/exception.h"
-#include "StringBuilder.c"
 #include "string.c"
 #include "list.c"
 #include "number.c"

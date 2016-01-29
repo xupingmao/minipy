@@ -1,7 +1,6 @@
 /**
- date : 2014-9-2
- 
- 2015-6-16: interpreter for tinyvm bytecode.
+  * date : 2014-9-2
+  * 2015-6-16: interpreter for tinyvm bytecode.
  **/
 
 #include "include/interp.h"
@@ -49,7 +48,8 @@ Object callFunction(Object func) {
         }
         return ret;
     }
-    tm_raise("callFunction:invalid object %o", (func));
+    tm_raise("File %o, line=%d: callFunction:invalid object %o", GET_FUNCTION_FILE(tm->frame->fnc), 
+        tm->frame->lineno, func);
     return NONE_OBJECT;
 }
 

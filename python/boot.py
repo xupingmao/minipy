@@ -110,6 +110,8 @@ def istype(val,  type):
         return isinstance(val, list) or isinstance(val, tuple)
     elif type == 'dict':
         return isinstance(val, dict)
+    elif type == "object":
+        return isinstance(val, dict)
 
 def gettype(val):
     '''to be different with python builtin function type'''

@@ -97,6 +97,6 @@ def main():
             dissimple0(load(fname))
 test = None
 if __name__ == "__main__":
-    argv = sys.argv.copy()
+    argv = sys.argv[:]
     del argv[0]
     dissimple(argv)

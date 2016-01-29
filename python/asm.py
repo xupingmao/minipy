@@ -231,6 +231,7 @@ def optimize(x, optimize_jmp = False):
 def gen_code(lst = False):
     global out
     global out_ext
+
     emit(TM_EOP)
     #x = gen_constants(tagsize) + out
     x = out_ext + out
@@ -239,6 +240,9 @@ def gen_code(lst = False):
     out_ext = []
     x = optimize(x)
     if lst:return x
+    for i in x:
+        if i[1] == None:
+            print(i)
     return asm_save_bin(x)
 
 

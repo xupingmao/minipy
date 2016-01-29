@@ -180,23 +180,42 @@ Object string_m_split() {
 }
 
 Object string_append_char(Object string, char c) {
-    String* str = GET_STR_OBJ(string);
-    str->value = tm_realloc(str->value, str->len+1, str->len+2);
-    str->value[str->len] = c;
-    str->value[str->len+1] = '\0';
-    str->len++;
-    str->stype = 1;
-    return string;
+    return tm_add(string, string_chr(c));
+    // String* str = GET_STR_OBJ(string);
+    // if (str->len == 1) {
+    //     char oldChar = str->value[0];
+    //     char newChar[3];
+    //     newChar[0] = oldChar;
+    //     newChar[1] = c;
+    //     newChar[2] = '\0';
+    //     return string_new(newChar);
+    // }
+    // str->value = tm_realloc(str->value, str->len+1, str->len+2);
+    // str->value[str->len] = c;
+    // str->value[str->len+1] = '\0';
+    // str->len++;
+    // str->stype = 1;
+    // return string;
 }
 
+/**
+ * must be assigned
+ */
 Object string_append_str(Object string, char* sz) {
-    String* str = GET_STR_OBJ(string);
-    int sz_len = strlen(sz);
-    str->value = tm_realloc(str->value, str->len+1, str->len+1+sz_len);
-    strcat(str->value+str->len, sz);
-    str->len += sz_len;
-    str->stype = 1;
-    return string;
+    return tm_add(string, string_new(sz));
+    // String* str = GET_STR_OBJ(string);
+    // int sz_len = strlen(sz);
+    // str->value = tm_realloc(str->value, str->len+1, str->len+1+sz_len);
+    // strcpy(str->value+str->len, sz);
+    // str->len += sz_len;
+    // str->stype = 1;
+    // return string;
+}
+
+Object string_append_obj(Object string, Object obj) {
+    Object objStr = tmStr(obj);
+    char* sz = GET_STR(objStr);
+    return string_append_str(string, sz);
 }
 
 void string_methods_init() {

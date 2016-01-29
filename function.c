@@ -76,15 +76,9 @@ Object class_new(Object clazz){
 
 void func_free(TmFunction* func){
   // the references will be tracked by gc collecter
-#if DEBUG_GC
- printf("free function %p...\n", func);
- int old = tm->allocated_mem;
-#endif
+  GC_LOG_START(func, "function");
   tm_free(func, sizeof(TmFunction));
-#if DEBUG_GC
-int _new = tm->allocated_mem;
-  printf("free function ,%d => %d , free %d B\n", old, _new, old - _new );
-#endif
+  GC_LOG_END(func, "function");
 }
 
 Object module_new(Object file , Object name, Object code){

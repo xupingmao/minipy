@@ -2,7 +2,6 @@
 #include "include/tmstring.h"
 #include "include/gc.h"
 #include "include/object.h"
-#include "include/StringBuilder.h"
 #include <ctype.h>
 #include <unistd.h>
 #include <sys/stat.h>
@@ -55,26 +54,28 @@ Object tmStr(Object a) {
         return string_new(s);
     }
     case TYPE_LIST: {
-        StringBuilder* sb = StringBuilderNew();
-        StringBuilderAppend(sb, '[');
+        Object str = string_new("");
+
+        str = string_append_char(str, '[');
         int i, l = LIST_LEN(a);
         for (i = 0; i < l; i++) {
             Object obj = GET_LIST(a)->nodes[i];
             /* reference to self in list */
             if (tm_equals(a, obj)) {
-                StringBuilderAppendChars(sb, "[...]");
+                str = string_append_str(str, "[...]");
             } else if (obj.type == TYPE_STR) {
-                StringBuilderAppend(sb, '"');
-                StringBuilderAppendObj(sb, obj);
-                StringBuilderAppend(sb, '"');
+                str = string_append_char(str, '"');
+                str = string_append_obj(str, obj);
+                str = string_append_char(str, '"');
             } else {
-                StringBuilderAppendObj(sb, obj);
+                str = string_append_obj(str, obj);
             }
-            if (i != l - 1)
-                StringBuilderAppend(sb, ',');
+            if (i != l - 1) {
+                str = string_append_char(str, ',');
+            }
         }
-        StringBuilderAppend(sb, ']');
-        return StringBuilderToStr(sb);
+        str = string_append_char(str, ']');
+        return str;
     }
     case TYPE_DICT:
         sprintf(buf, "<dict at %p>", GET_DICT(a));
@@ -116,43 +117,46 @@ void tm_println(Object o) {
 Object tmFormatVaList(char* fmt, va_list ap, int acquireNewLine) {
     int i;
     int len = strlen(fmt);
-    Object nstr = string_static("");
+    Object str = string_new("");
     int templ = 0;
     char* start = fmt;
     int istrans = 1;
-    StringBuilder* sb = StringBuilderNew();
+    char buf[20];
     for (i = 0; i < len; i++) {
         if (fmt[i] == '%') {
             i++;
             switch (fmt[i]) {
             case 'd':
-                StringBuilderAppendInt(sb, va_arg(ap, int));
+                sprintf(buf, "%d", va_arg(ap, int));
+                str = string_append_str(str, buf);
                 break;
             case 'f':
                 /* ... will pass float as double */
-                StringBuilderAppendDouble(sb, va_arg(ap, double));
+                sprintf(buf, "%lf", va_arg(ap, double));
+                str = string_append_str(str, buf);
                 break;
                 /* ... will pass char  as int */
             case 'c':
-                StringBuilderAppend(sb, va_arg(ap, int));
+                str = string_append_char(str, va_arg(ap, int));
                 break;
             case 's': {
-                StringBuilderAppendChars(sb, va_arg(ap, char*));
+                str = string_append_str(str, va_arg(ap, char*));
                 break;
             }
             case 'P':
             case 'p': {
-                StringBuilderAppendPointer(sb, va_arg(ap, void*));
+                sprintf(buf, "%p", va_arg(ap, void*));
+                str = string_append_str(str, buf);
                 break;
             }
             case 'o': {
                 Object v = va_arg(ap, Object);
                 if (IS_STR(v)) {
-                    StringBuilderAppend(sb, '"');
+                    str = string_append_char(str, '"');
                 }
-                StringBuilderAppendObj(sb, v);
+                str = string_append_obj(str, v);
                 if (IS_STR(v)) {
-                    StringBuilderAppend(sb, '"');
+                    str = string_append_char(str, '"');
                 }
                 break;
             }
@@ -161,12 +165,13 @@ Object tmFormatVaList(char* fmt, va_list ap, int acquireNewLine) {
                 break;
             }
         } else {
-            StringBuilderAppend(sb, fmt[i]);
+            str = string_append_char(str, fmt[i]);
         }
     }
-    if (acquireNewLine)
-        StringBuilderAppend(sb, '\n');
-    return StringBuilderToStr(sb);
+    if (acquireNewLine) {
+        str = string_append_char(str, '\n');
+    }
+    return str;
 }
 
 Object tmFormat(char* fmt, ...) {
@@ -310,6 +315,29 @@ Object bf_gettype() {
         default: tm_raise("gettype(%o)", obj);
     }
     return NONE_OBJECT;
+}
+
+/**
+ * bool istype(obj, strType);
+ * this function is better than `gettype(obj) == 'string'`;
+ * think that you want to check a `basetype` which contains both `number` and `string`;
+ * so, a check function with less result is better.
+ */
+Object bf_istype() {
+    Object obj = arg_get_obj("istype");
+    char* type = arg_get_sz("istype");
+    int isType = 0;
+    switch(TM_TYPE(obj)) {
+        case TYPE_STR: isType = strcmp(type, "string") == 0 ; break;
+        case TYPE_NUM: isType = strcmp(type, "number") == 0 ; break;
+        case TYPE_LIST: isType = strcmp(type, "list") == 0; break;
+        case TYPE_DICT: isType = strcmp(type, "dict") == 0; break;
+        case TYPE_FUNCTION: isType = strcmp(type, "function") == 0;break;
+        case TYPE_DATA: isType = strcmp(type, "data") == 0; break;
+        case TYPE_NONE: isType = strcmp(type, "None") == 0; break;
+        default: tm_raise("gettype(%o)", obj);
+    }
+    return tm_number(isType);
 }
 
 Object bf_chr() {
@@ -850,6 +878,7 @@ void builtin_funcs_init() {
     regBuiltinFunc("len", bf_len);
     regBuiltinFunc("exit", bf_exit);
     regBuiltinFunc("gettype", bf_gettype);
+    regBuiltinFunc("istype", bf_istype);
     regBuiltinFunc("chr", bf_chr);
     regBuiltinFunc("ord", bf_ord);
     regBuiltinFunc("code8", bf_code8);

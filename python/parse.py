@@ -24,6 +24,7 @@ class ParserCtx:
         self.l = len(r)
         self.tree = []
         self.src = txt
+        self.lastToken = None
 
     def next(self):
         if self.i < self.l:
@@ -37,6 +38,7 @@ class ParserCtx:
 
     def add(self, v):
         self.tree.append(v)
+        self.lastToken = v
 
     def visit_block(self):
         self.tree.append('block')
@@ -60,7 +62,7 @@ def add_op(p, v):
     node = AstNode(v)
     node.first = l
     node.second = r
-    p.tree.append(node)
+    p.add(node)
 
 
 def parse_error(p, token=None, msg="Unknown"):
@@ -73,7 +75,6 @@ def assert_type(p, type, msg):
     if p.token.type != type:
         parse_error(p, p.token, msg)
     #p.next()
-
 
 def baseitem(p):
     t = p.token.type
@@ -133,7 +134,14 @@ def comma_exp(p):
         if p.token.type == ']':
             break # for list
         fnc(p)
-        add_op(p, ',')
+        # add_op(p, ',')
+        b = p.pop()
+        a = p.pop()
+        if gettype(a)=="list":
+            a.append(b)
+            p.add(a)
+        else:
+            p.add([a,b])
         
 def or_exp(p):
     fnc = and_exp
@@ -263,14 +271,12 @@ def parse_from(p):
     node = AstNode("from")
     node.first = p.pop()
     _path_check(p, node.first)
-    if p.token.type == "*":
-        p.token.type = 'string'
-        node.second = p.token
-        p.next()
-    else:
-        expr(p)
-        node.second = p.pop()
-        _name_check(p, node.second)
+    if p.token.type != "*":
+        raise Exception("expect * at from statement")
+    p.token.type = 'string'
+    node.second = p.token
+    p.next()
+    # _name_check(p, node.second)
     p.add(node)
 
 def parse_import(p):
@@ -522,17 +528,49 @@ def parse_block(p):
         skip_nl(p)
             
     
-def parse(v):
-    r = tokenize(v)
-    p = ParserCtx(r, v)
-    p.next()
-    while p.token.type != 'eof':
-        parse_block(p)
-    x = p.tree
-    # except:
-    if x == None:
-        p.error()
-    return x
+def parse(content):
+    try:
+        r = tokenize(content)
+        p = ParserCtx(r, content)
+        p.next()
+        while p.token.type != 'eof':
+            parse_block(p)
+        x = p.tree
+        # except:
+        if x == None:
+            p.error()
+        return x
+    except Exception as e:
+        # print(e, v)
+        compile_error("parse", content, p.token, str(e))
+        raise(e)
+
+def printAstObj(tree, n=0):
+    if tree == None:
+        return
+    if tree.type in ("number", "string", "None"):
+        print(" " * n, tree.val)
+        return
+    if tree.type == "name":
+        print(" " * n, tree.type , tree.val)
+    else:
+        print(" " * n, tree.type)
+    if hasattr(tree, "first"):
+        printAst(tree.first, n+2)
+    if hasattr(tree, "second"):
+        printAst(tree.second, n+2)
+    if hasattr(tree, "third"):
+        printAst(tree.third, n+2)
+
+def printAstList(tree, n=0):
+    print(" " * n, "[]")
+    for item in tree:
+        printAstObj(item, n+2)
+
+def printAst(tree, n=0):
+    if gettype(tree) == "list":
+        return printAstList(tree, n)
+    return printAstObj(tree, n)
 
 def parsefile(fname):
     try:
@@ -544,3 +582,8 @@ def tk_list_len(tk):
     if tk == None: return 0
     if tk.type == ',':return tk_list_len(tk.first) + tk_list_len(tk.second)
     return 1
+
+if __name__ == "__main__":
+    import sys
+    tree = parsefile(sys.argv[1])
+    printAst(tree)

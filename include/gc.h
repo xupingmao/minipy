@@ -27,5 +27,8 @@ void gc_markDict(TmDict*);
 #else
 #define PRINT_OBJ_GC_INFO_START()
 #define PRINT_OBJ_GC_INFO_END(str, addr)
+
+#define GC_LOG_START(ptr, desc)
+#define GC_LOG_END(ptr, desc)
 #endif
 #endif

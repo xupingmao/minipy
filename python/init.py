@@ -168,7 +168,7 @@ def _import(des_glo, fname, tar = None):
         pass
     else:
         # printf("try to load module %s\n", fname)
-        from encode import compilefile
+        from encode import *
         # can not find file in current dir.
         if not exists(fname + '.py'):
             # try to find in PATH defined in file.
@@ -302,7 +302,7 @@ def resolvepath(path):
     return fname
     
 def execfile(path):
-    from encode import compilefile
+    from encode import *
     fname = resolvepath(path)
     _code = compilefile(fname)
     # printf("run file %s ...\n", fname)
@@ -340,8 +340,8 @@ def init_py_libs():
 LIB_PATH = ''
 def boot(loadlibs=True):
     from tokenize import *
-    from encode import compilefile
-    from repl import repl, replPrint
+    from encode import *
+    from repl import *
     global LIB_PATH
     argc = len(ARGV)
     pathes = split_path(getcwd())

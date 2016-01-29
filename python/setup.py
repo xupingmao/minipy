@@ -28,7 +28,11 @@ def build(cc="tcc", libs=None):
         #Lib("pyeval", "pyeval.py")]
     modLen = code32(len(libs)+1) # constants
     for obj in libs:
-        code = compilefile(obj.path)
+        try:
+            code = compilefile(obj.path)
+        except Exception as e:
+            print("parse file", obj.path, "failed")
+            raise
         destCode += code_str(obj.name)+code_str(code)
     code = modLen + code_str("constants") + code_str(build_const_code()) + destCode
     save("../bin.c", "unsigned char bin[] = {\n" + str_to_chars(code)+'\n};\n')
