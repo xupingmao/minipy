@@ -110,9 +110,13 @@ void tm_println(Object o) {
 
 /**
  * based on C language standard.
- * t，Object
- * i，Object infomation, mainly for String
- * l, information of list.
+ * d  -> int
+ * f  -> double
+ * c  -> char
+ * s  -> char*
+ * p  -> pointer
+ * o  -> repl(object)
+ * os -> object
  */
 Object tmFormatVaList(char* fmt, va_list ap, int acquireNewLine) {
     int i;
@@ -150,13 +154,17 @@ Object tmFormatVaList(char* fmt, va_list ap, int acquireNewLine) {
                 break;
             }
             case 'o': {
+                int next = fmt[i+1];
                 Object v = va_arg(ap, Object);
-                if (IS_STR(v)) {
+                if (IS_STR(v) && next != 's') {
                     str = string_append_char(str, '"');
                 }
                 str = string_append_obj(str, v);
-                if (IS_STR(v)) {
+                if (IS_STR(v) && next != 's') {
                     str = string_append_char(str, '"');
+                }
+                if (next == 's') {
+                    i++;
                 }
                 break;
             }
@@ -374,7 +382,7 @@ Object bf_code32() {
     return c;
 }
 
-Object bf_raise() {
+Object bfRaise() {
     if (getArgsCount() == 0) {
         tm_raise("raise");
     } else {
@@ -383,7 +391,7 @@ Object bf_raise() {
     return NONE_OBJECT;
 }
 
-Object bf_system() {
+Object bfSystem() {
     Object m = arg_get_str("system");
     int rs = system(GET_STR(m));
     return tm_number(rs);
@@ -442,7 +450,7 @@ Object bfRemove(){
     }
 }
 
-Object bf_apply() {
+Object bfApply() {
     Object func = arg_get_obj("apply");
     if (NOT_FUNC(func) && NOT_DICT(func)) {
         tm_raise("apply: expect function or dict");
@@ -549,7 +557,7 @@ Object bfRange() {
     return data;
 }
 
-Object bf_mmatch() {
+Object bfMmatch() {
     char* str = arg_get_sz("mmatch");
     int start = arg_get_int("mmatch");
     Object o_dst = arg_get_str("mmatch");
@@ -578,7 +586,7 @@ Object bfGetCurrentFrame() {
     return frameInfo;
 }
 
-Object bf_vmopt() {
+Object bfVmopt() {
     char* opt = arg_get_sz("vminfo");
     if (strcmp(opt, "gc") == 0) {
         gc_full();
@@ -836,7 +844,7 @@ Object bfGetOsName() {
 #endif
 }
 
-Object bf_listdir() {
+Object bfListdir() {
     Object list = list_new(10);
     Object path = arg_get_str("listdir");
 #ifdef _WINDOWS_H
@@ -884,12 +892,12 @@ void builtin_funcs_init() {
     regBuiltinFunc("code8", bf_code8);
     regBuiltinFunc("code16", bf_code16);
     regBuiltinFunc("code32", bf_code32);
-    regBuiltinFunc("raise", bf_raise);
-    regBuiltinFunc("system", bf_system);
-    regBuiltinFunc("apply", bf_apply);
+    regBuiltinFunc("raise", bfRaise);
+    regBuiltinFunc("system", bfSystem);
+    regBuiltinFunc("apply", bfApply);
     regBuiltinFunc("pow", bfPow);
     regBuiltinFunc("range", bfRange);
-    regBuiltinFunc("mmatch", bf_mmatch);
+    regBuiltinFunc("mmatch", bfMmatch);
 
     /* functions which has impact on vm follow camel case */
     regBuiltinFunc("getConstIdx", bfGetConstIdx);
@@ -899,7 +907,7 @@ void builtin_funcs_init() {
     regBuiltinFunc("setVMState", bfSetVMState);
     regBuiltinFunc("inspectPtr", bfInspectPtr);
     regBuiltinFunc("getCurrentFrame", bfGetCurrentFrame);
-    regBuiltinFunc("vmopt", bf_vmopt);
+    regBuiltinFunc("vmopt", bfVmopt);
     regBuiltinFunc("getVmInfo", bfGetVmInfo);
 
     regBuiltinFunc("clock", bfClock);
@@ -915,6 +923,6 @@ void builtin_funcs_init() {
     regBuiltinFunc("getcwd", bfGetcwd);
     regBuiltinFunc("chdir", bfChdir);
     regBuiltinFunc("getosname", bfGetOsName);
-    regBuiltinFunc("listdir", bf_listdir);
+    regBuiltinFunc("listdir", bfListdir);
 }
 

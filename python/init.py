@@ -301,9 +301,12 @@ def resolvepath(path):
     chdir(parent)
     return fname
     
-def execfile(path):
+def execfile(path, chdir = True):
     from encode import *
-    fname = resolvepath(path)
+    if chdir:
+        fname = resolvepath(path)
+    else:
+        fname = path
     _code = compilefile(fname)
     # printf("run file %s ...\n", fname)
     load_module(fname, _code, '__main__')
@@ -351,4 +354,8 @@ def boot(loadlibs=True):
     if argc == 0:
         repl()
     else:
-        execfile(ARGV[0])
+        if exists(ARGV[0]):
+            execfile(ARGV[0])
+        else:
+            filename = "libs/" + ARGV[0]
+            execfile(filename, False)

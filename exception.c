@@ -25,6 +25,10 @@ void tm_raise(char* fmt, ...) {
     va_start(a, fmt);
     list_clear(GET_LIST(tm->exList));
     tm->ex = tmFormatVaList(fmt, a, 0);
+    Object file = GET_FUNCTION_FILE(tm->frame->fnc);
+    Object fncName = GET_FUNCTION_NAME(tm->frame->fnc);
+    tm->ex = tmFormat("File %o: in %o at line %d\n  %os", 
+        file, fncName, tm->frame->lineno, tm->ex);
     va_end(a);
     longjmp(tm->frame->buf, 1);
 }

@@ -1,5 +1,8 @@
-from encode import compile
-from encode import compilefile
+import encode
+
+compilefile = encode.compilefile
+compile = encode.compile
+
 from boot import *
 from tmcode import *
 import sys
@@ -30,7 +33,8 @@ def dis_func(func):
 
 def dissimple0(code, limit = None):
     s = code
-    i = 0; l = len(s)
+    i = 0
+    l = len(s)
     count = 0
     while i < l:
         ins = s[i]
@@ -44,7 +48,8 @@ def dissimple0(code, limit = None):
             break
 
 def dis_code(s, start = 0, end = 0):
-    i, l =0,len(s)
+    i =0
+    l = len(s)
     lineno = 0
     while i < l:
         op = ord(s[i])
@@ -68,7 +73,9 @@ def dissimple(argv):
         showconst = True
     else:
         s = load(s)
-    start, count, end = 0, None, None
+    start = 0
+    count = None
+    end = None
     if argc == 2: 
         start = 0
         count = int(argv[1])
@@ -97,6 +104,6 @@ def main():
             dissimple0(load(fname))
 test = None
 if __name__ == "__main__":
-    argv = sys.argv[:]
+    argv = sys.argv.clone()
     del argv[0]
     dissimple(argv)

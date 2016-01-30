@@ -335,7 +335,7 @@ Object iter_new(Object collections) {
         case TYPE_DICT: return dict_iter_new(GET_DICT(collections));
         case TYPE_STR: return stringIterNew(GET_STR_OBJ(collections));
         case TYPE_DATA: return collections;
-        default: tm_raise("iter_new(): can not iterate %o", collections);
+        default: tm_raise("iter_new(): can not create a iterator of %o", collections);
     }
     return NONE_OBJECT;
 }

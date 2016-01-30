@@ -30,8 +30,6 @@ void list_free(TmList* );
 void list_methods_init();
 
 
-
-DataProto listIterProto;
 Object listIterNew(TmList* list);
 Object* listNext(TmListIterator* iterator);
 
@@ -40,6 +38,10 @@ Object list_add(TmList*, TmList*);
 void list_del(TmList*list, Object key);
 int list_index(TmList*, Object val);
 void list_append(TmList* list, Object v);
+
+
+
+DataProto listIterProto = { 0 };
 
 /* macros */
 #define LIST_GET(obj, i) list_get(GET_LIST(obj), i)
