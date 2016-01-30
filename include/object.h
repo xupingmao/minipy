@@ -112,7 +112,7 @@ typedef struct _tm_jmp_buf tm_jmp_buf;
 
 #define FRAMES_COUNT 128
 #define MAX_ARG_COUNT 10
-#define STACK_SIZE 1024
+#define STACK_SIZE 2048
 typedef struct TmVM {
   char* version;
   int debug;
