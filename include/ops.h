@@ -10,25 +10,25 @@
 
 #include "tm.h"
 
-void      tm_set(Object self, Object key, Object value);
-Object    tm_get(Object self, Object key);
-Object    tm_add(Object a, Object b);
-Object    tm_sub(Object a, Object b);
-Object    tm_mul(Object a, Object b);
-Object    tm_div(Object a, Object b);
-Object    tm_mod(Object a, Object b);
-Object    tm_neg(Object o) ;
-int tm_equals(Object a, Object b);
+void      objSet(Object self, Object key, Object value);
+Object    objGet(Object self, Object key);
+Object    objAdd(Object a, Object b);
+Object    objSub(Object a, Object b);
+Object    objMul(Object a, Object b);
+Object    objDiv(Object a, Object b);
+Object    objMod(Object a, Object b);
+Object    objNeg(Object o) ;
+int objEquals(Object a, Object b);
 
-int tm_cmp(Object a, Object b);
-Object* tm_next(Object iterator);
-Object iter_new(Object collections);
-Object tm_get(Object self, Object k);
-void tm_set(Object self, Object k, Object v);
+int objCmp(Object a, Object b);
+Object* nextPtr(Object iterator);
+Object iterNew(Object collections);
+Object objGet(Object self, Object k);
+void objSet(Object self, Object k, Object v);
 
 Object tmStr(Object obj);
-int tm_bool(Object v);
+int isTrueObj(Object v);
 int tmIter(Object self, Object *k);
-void tm_del(Object self, Object k);
+void objDel(Object self, Object k);
 
 #endif /* OPS_H_ */

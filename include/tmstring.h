@@ -27,10 +27,10 @@ typedef struct StringIterator {
     String* string;
 }StringIterator;
 
-Object string_char(int c);
-Object string_alloc(char* s, int size);
-#define string_static(s) string_alloc(s, -1)
-#define string_new(s) string_alloc(s, strlen(s))
+Object strinGET_CHAR(int c);
+Object stringAlloc(char* s, int size);
+#define szToString(s) stringAlloc(s, -1)
+#define stringNew(s) stringAlloc(s, strlen(s))
 void string_free(String*);
 int StringEquals(String*s0, String*s1);
 
@@ -39,7 +39,7 @@ Object bf_stringFormat();
 Object tmStr(Object obj);
 Object string_chr(int n);
 Object StringJoin(Object self, Object list);
-void string_methods_init();
+void stringMethodsInit();
 
 static DataProto stringProto;
 DataProto*  getStringProto();

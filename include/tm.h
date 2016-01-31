@@ -67,19 +67,26 @@ void list_clear(TmList* list);
 void arg_insert(Object arg);
 
 // ops functions
-Object tm_call(Object func, int args, ...);
-Object tm_append(Object a, Object b);
-Object tm_getglobal(Object globals, Object key);
-Object tm_getarg();
-Object tm_getlocal(int fidx, int lidx);
-Object tm_getstack(int fidx, int sidx);
+Object tmCall(Object func, int args, ...);
+Object objAppend(Object a, Object b);
+Object tmGetGlobal(Object globals, Object key);
+Object tmTakeArg();
+Object objGetlocal(int fidx, int lidx);
+Object objGetstack(int fidx, int sidx);
 Object tm_string(char* str);
-Object tm_list(int n, ...);
-TmFrame* tm_getframe(int fidx);
-Object tm_getfname(Object func);
-void tm_setattr(Object a, char* key, Object value);
-void tm_define(Object globals, Object a, Object(*func)());
-void tm_method(Object dict, Object name, Object(*func)());
+Object arrayToList(int n, ...);
+TmFrame* objGetframe(int fidx);
+Object tmGetfname(Object func);
+void tmSetattr(Object a, char* key, Object value);
+void defFunc(Object globals, Object a, Object(*func)());
+void defMethod(Object dict, Object name, Object(*func)());
 
+
+#define DEBUG(msg) \
+    printf("--DEBUG %s\n", msg);
+
+#define DEBUG2(msg1, msg2) \
+    printf("--DEBUG %s %s\n", msg1, msg2);
+    
 #endif
 

@@ -33,7 +33,7 @@ unsigned char* func_resolve(TmFunction* fnc, unsigned char* pc) {
     return fnc->end;
 }
 
-Object func_new(Object mod,
+Object funcNew(Object mod,
         Object self,
         Object (*native_func)()){
   TmFunction* f= tm_malloc(sizeof(TmFunction));
@@ -48,9 +48,9 @@ Object func_new(Object mod,
   return gc_track(obj_new(TYPE_FUNCTION, f));
 }
 
-Object method_new(Object _fnc, Object self){
+Object methodNew(Object _fnc, Object self){
   TmFunction* fnc = GET_FUNCTION(_fnc);
-  Object nfnc = func_new(fnc->mod, self, fnc->native);
+  Object nfnc = funcNew(fnc->mod, self, fnc->native);
   GET_FUNCTION(nfnc)->name = GET_FUNCTION(_fnc)->name;
   GET_FUNCTION(nfnc)->maxlocals = GET_FUNCTION(_fnc)->maxlocals;
   GET_FUNCTION(nfnc)->code = GET_FUNCTION(_fnc)->code;
@@ -60,15 +60,15 @@ Object method_new(Object _fnc, Object self){
 Object class_new(Object clazz){
   TmDict* cl = GET_DICT(clazz);
   Object k,v;
-  Object instance = dict_new();
+  Object instance = dictNew();
   DictNode* nodes = cl->nodes;
   int i;
   for(i = 0; i < cl->cap; i++) {
       k = nodes[i].key;
       v = nodes[i].val;
       if(nodes[i].used && IS_FUNC(v)){
-        Object method = method_new(v, instance);
-        tm_set(instance, k, method);
+        Object method = methodNew(v, instance);
+        objSet(instance, k, method);
       }
   }
   return instance;
@@ -81,17 +81,17 @@ void func_free(TmFunction* func){
   GC_LOG_END(func, "function");
 }
 
-Object module_new(Object file , Object name, Object code){
+Object moduleNew(Object file , Object name, Object code){
   TmModule *mod = tm_malloc(sizeof(TmModule));
   mod->file = file;
   mod->code = code;
   mod->resolved = 0;
-  /*mod->constants = list_new(20);*/
-  /*list_append(GET_LIST(mod->constants), NONE_OBJECT);*/
-  mod->globals = dict_new();
+  /*mod->constants = listNew(20);*/
+  /*listAppend(GET_LIST(mod->constants), NONE_OBJECT);*/
+  mod->globals = dictNew();
   Object m = gc_track(obj_new(TYPE_MODULE, mod));
   /* set module */
-  tm_set(tm->modules, file, mod->globals);
+  objSet(tm->modules, file, mod->globals);
   dictSetByStr(mod->globals, "__name__", name);
   return m;
 }

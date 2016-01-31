@@ -21,13 +21,13 @@ void listCheck(TmList*);
 
 /* private end */
 
-Object           list_new(int cap);
+Object           listNew(int cap);
 TmList*         list_alloc_untracked(int cap);
 
 void             list_set(TmList* list, int n, Object v);
 Object list_get(TmList* list, int n);
-void list_free(TmList* );
-void list_methods_init();
+void listFree(TmList* );
+void listMethodsInit();
 
 
 Object listIterNew(TmList* list);
@@ -37,7 +37,7 @@ Object* listNext(TmListIterator* iterator);
 Object list_add(TmList*, TmList*);
 void list_del(TmList*list, Object key);
 int list_index(TmList*, Object val);
-void list_append(TmList* list, Object v);
+void listAppend(TmList* list, Object v);
 
 
 

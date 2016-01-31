@@ -2,7 +2,7 @@
 #define _NUMBER_H
 
 #include "tm.h"
-Object tm_number(double v);
+Object tmNumber(double v);
 void numberFormat(char* des, Object num);
 
 

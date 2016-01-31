@@ -14,7 +14,7 @@
 #define GC_MARKED(o) (o).value.gc->marked
 
 #define GC_DEBUG 0
-#define get_char(n) ARRAY_CHARS[n]
+#define GET_CHAR(n) ARRAY_CHARS[n]
 
 #if GC_DEBUG
 void log_debug(char* fmt, ...) {
@@ -28,13 +28,13 @@ void log_debug(char* fmt, ...) {
 #endif
 
 
-void gc_init() {
+void gcInit() {
     int init_size = 100;
     int i;
     
     /* initialize constants */
-    NUMBER_TRUE = tm_number(1);
-    NUMBER_FALSE = tm_number(0);
+    NUMBER_TRUE = tmNumber(1);
+    NUMBER_FALSE = tmNumber(0);
     NONE_OBJECT.type = TYPE_NONE;
     UNDEF.type = -1;
     
@@ -48,21 +48,21 @@ void gc_init() {
     tm->dict_proto.type = TYPE_NONE;
     tm->str_proto.type = TYPE_NONE;
     
-    tm->root = list_new(100);
-    tm->builtins = dict_new();
-    tm->modules = dict_new();
-    tm->constants = dict_new();
+    tm->root = listNew(100);
+    tm->builtins = dictNew();
+    tm->modules = dictNew();
+    tm->constants = dictNew();
 
-    tm->exList = list_new(10);
-    tm_append(tm->root, tm->exList);
+    tm->exList = listNew(10);
+    objAppend(tm->root, tm->exList);
     
 
     /* initialize chars */
-    ARRAY_CHARS = list_new(256);
+    ARRAY_CHARS = listNew(256);
     for (i = 0; i < 256; i++) {
-        tm_append(ARRAY_CHARS, string_char(i));
+        objAppend(ARRAY_CHARS, strinGET_CHAR(i));
     }
-    tm_append(tm->root, ARRAY_CHARS);
+    objAppend(tm->root, ARRAY_CHARS);
     
     tm->ex = NONE_OBJECT;
     
@@ -155,7 +155,7 @@ Object gc_track(Object v) {
         return v;
     }
     SET_IDX(v, 0);
-    list_append(tm->all, v);
+    listAppend(tm->all, v);
     return v;
 }
 
@@ -267,12 +267,12 @@ void gc_wipe() {
     TmList* all = tm->all;
     for (i = 0; i < all->len; i++) {
         if (GC_MARKED(tm->all->nodes[i])) {
-            list_append(temp, all->nodes[i]);
+            listAppend(temp, all->nodes[i]);
         } else {
             obj_free(all->nodes[i]);
         }
     }
-    list_free(tm->all);
+    listFree(tm->all);
     tm->all = temp;
 }
 
@@ -335,14 +335,14 @@ void gc_full() {
 #endif
 }
 
-void gc_free() {
+void gcDeinit() {
     TmList* all = tm->all;
     int i;
     for (i = 0; i < all->len; i++) {
         obj_free(all->nodes[i]);
     }
 
-    list_free(tm->all);
+    listFree(tm->all);
 
 #if !PRODUCT
     if (tm->allocated != 0) {
@@ -389,7 +389,7 @@ void obj_free(Object o) {
         string_free(GET_STR_OBJ(o));
         break;
     case TYPE_LIST:
-        list_free(GET_LIST(o));
+        listFree(GET_LIST(o));
         break;
     case TYPE_DICT:
         dict_free(GET_DICT(o));
@@ -489,5 +489,5 @@ void data_set(Object self, Object key, Object value) {
 }
 
 Object data_str(Object self) {
-    return string_alloc("data", -1);
+    return stringAlloc("data", -1);
 }

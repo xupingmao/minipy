@@ -6,7 +6,7 @@ void pushException(TmFrame* f){
     Object fncName = GET_FUNCTION_NAME(f->fnc);
     Object ex = tmFormat("  File %o: in %o , at line %d", file, fncName,
             f->lineno);
-    list_append(GET_LIST(tm->exList), ex);
+    listAppend(GET_LIST(tm->exList), ex);
 }
 
 void traceback() {
@@ -21,6 +21,7 @@ void traceback() {
 }
 
 void tm_raise(char* fmt, ...) {
+    DEBUG2("enter raise", fmt)
     va_list a;
     va_start(a, fmt);
     list_clear(GET_LIST(tm->exList));

@@ -1,6 +1,6 @@
 #include "include/tm.h"
 
-Object tm_number(double v){
+Object tmNumber(double v){
   Object o;
   TM_TYPE(o) = TYPE_NUM;
   SET_IDX(o, 0);

@@ -19,7 +19,8 @@ def findpos(token):
 def find_error_line(s, pos):
     #print("****************")
     #print(pos, pos.type, pos.val, pos.pos)
-    y, x = pos
+    y = pos[0]
+    x = pos[1]
     s = s.replace('\t', ' ')
     line = s.split('\n')[y-1]
     p = ''
@@ -91,9 +92,12 @@ def tokenize(s):
         
 def dotokenize(s):
     global T
-    T = TData(); i = 0; l = len(s)
+    T = TData()
+    i = 0
+    l = len(s)
     while i < l:
-        c = s[i]; T.f = [T.y,i-T.yi+1]
+        c = s[i]
+        T.f = [T.y,i-T.yi+1]
         if T.nl: 
             T.nl = False
             i = do_indent(s,i,l)
@@ -109,22 +113,27 @@ def dotokenize(s):
         elif c == ' ' or c == '\t': i += 1
         else: compile_error('dotokenize',s, Token('', '', T.f), "unknown token")
     indent(0)
-    r = T.res; T = None
+    r = T.res
+    T = None
     return r
 
 def do_nl(s,i,l):
     if not T.braces:
         T.add('nl','nl')
-    i+=1; T.nl=True
-    T.y+=1; T.yi=i
+    i+=1
+    T.nl=True
+    T.y+=1
+    T.yi=i
     return i
 
 def do_indent(s,i,l):
     v = 0
     while i<l:
         c = s[i]
-        if c != ' ' and c != '\t': break
-        i+=1;v+=1
+        if c != ' ' and c != '\t': 
+            break
+        i+=1
+        v+=1
     # skip blank line or comment line.
     # i >= l means reaching EOF, which do not need to indent or dedent
     if not T.braces and c != '\n' and c != '#' and i < l:
@@ -235,3 +244,17 @@ def do_comment(s,i,l):
     if value.startswith(".debugger"):
         T.add("@", "debugger")
     return i
+
+def _main():
+    if len(ARGV) != 2:
+        print("error arguments, arguments = ", ARGV)
+        return
+    fname = ARGV[1]
+    print("try to tokenize file ", fname)
+    content = load(fname)
+    list = dotokenize(content)
+    for i in list:
+        print(i.pos, i.type, i.val)
+
+if __name__ == "__main__":
+    _main()

@@ -21,6 +21,6 @@ Object    bf_float();
 Object    bf_system();
 Object    blt_Print();
 Object    blt_AddTypeMethod();
-void      builtin_funcs_init();
+void      builtinsInit();
 Object*   getBuiltin(char* key);
 #endif

@@ -47,7 +47,7 @@ TmDict* dict_init(){
     return dict;
 }
 
-Object dict_new(){
+Object dictNew(){
     Object o;
     o.type = TYPE_DICT;
     GET_DICT(o) = dict_init();
@@ -132,7 +132,7 @@ int dict_set(TmDict* dict, Object key, Object val){
         if (i > 0) return i;
     }
     #endif
-    DictNode* node = dict_get_node(dict, key);
+    DictNode* node = dictGetNode(dict, key);
     if (node != NULL) {
         node->val = val;
         return (node - dict->nodes);
@@ -171,7 +171,7 @@ int dict_get_attr(TmDict* dict, int constId) {
             return i;
         }
     }
-    DictNode* node = dict_get_node(dict, GET_CONST(constId-2));
+    DictNode* node = dictGetNode(dict, GET_CONST(constId-2));
     if (node != NULL) {
         node->used = constId;
         return node - nodes;
@@ -179,7 +179,7 @@ int dict_get_attr(TmDict* dict, int constId) {
     return -1;
 }
 
-DictNode* dict_get_node(TmDict* dict, Object key){
+DictNode* dictGetNode(TmDict* dict, Object key){
     //int hash = DictHash(key);
     //int idx = hash % dict->cap;
     int i;
@@ -193,7 +193,7 @@ DictNode* dict_get_node(TmDict* dict, Object key){
     #endif
     DictNode* nodes = dict->nodes;
     for (i = 0; i < dict->cap; i++) {
-        if (nodes[i].used && tm_equals(nodes[i].key, key)) {
+        if (nodes[i].used && objEquals(nodes[i].key, key)) {
             return nodes + i;
         }
     }
@@ -215,13 +215,13 @@ Object* dict_get_by_str(TmDict* dict, char* key) {
 }
 
 void dict_set_by_str(TmDict* dict, char* key, Object value) {
-    dict_set(dict, string_static(key), value);
+    dict_set(dict, szToString(key), value);
 }
 
 void dict_del(TmDict* dict, Object key) {
-    DictNode* node = dict_get_node(dict, key);
+    DictNode* node = dictGetNode(dict, key);
     if (node == NULL) {
-        tm_raise("tm_del: keyError %o", key);
+        tm_raise("objDel: keyError %o", key);
     }
     node->used = 0;
     dict->len--;
@@ -229,11 +229,11 @@ void dict_del(TmDict* dict, Object key) {
 }
 
 Object dict_keys(TmDict* dict){
-    Object list = list_new(dict->len);
+    Object list = listNew(dict->len);
     int i;
     for(i = 0; i < dict->cap; i++) {
         if (dict->nodes[i].used) {
-            tm_append(list, dict->nodes[i].key);
+            objAppend(list, dict->nodes[i].key);
         }
     }
     return list;
@@ -247,18 +247,18 @@ Object dict_m_keys(){
 Object dict_m_values() {
     Object _d = arg_get_dict("dict.values");
     TmDict* dict = GET_DICT(_d);
-    Object list = list_new(dict->len);
+    Object list = listNew(dict->len);
     int i;
     for(i = 0; i < dict->cap; i++) {
         if (dict->nodes[i].used) {
-            tm_append(list, dict->nodes[i].val);
+            objAppend(list, dict->nodes[i].val);
         }
     }
     return list;
 }
 
-void dict_methods_init() {
-    tm->dict_proto = dict_new();
+void dictMethodsInit() {
+    tm->dict_proto = dictNew();
     /* build dict class */
     regModFunc(tm->dict_proto, "keys", dict_m_keys);
     regModFunc(tm->dict_proto, "values", dict_m_values);
@@ -280,7 +280,7 @@ DataProto* getDictIterProto() {
 }
 
 
-Object dict_iter_new(TmDict* dict) {
+Object dict_iterNew(TmDict* dict) {
     /*
     Object *__iter__ = dict_get_by_str(dict, "__iter__");
     if (__iter__ != NULL) {

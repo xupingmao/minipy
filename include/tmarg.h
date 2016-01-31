@@ -8,8 +8,8 @@
 
 void arg_start();
 void arg_push(Object obj) ;
-void tm_setArguments(Object* first, int len);
-#define setArgs  tm_setArguments
+void objSetArguments(Object* first, int len);
+#define setArgs  objSetArguments
 void _resolveMethodSelf(TmFunction *fnc);
 #define resolveMethodSelf(fnc) _resolveMethodSelf(GET_FUNCTION((fnc)))
 void printArguments();

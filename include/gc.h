@@ -10,9 +10,9 @@ void             tm_free(void* o, size_t size);
 void initMemory();
 void freeMemory();
 
-void        gc_init();
+void        gcInit();
 Object      gc_track(Object obj);
-void        gc_free();
+void        gcDeinit();
 void        gc_full();
 Object bfGetMallocInfo();
 

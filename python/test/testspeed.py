@@ -1,7 +1,6 @@
 if str(1.0) == '1.0':
     from boot import *
 
-a, b, c, d, e, f  = 1,2,3,4,5,6
 
 i = 0
 j = 0
@@ -12,7 +11,8 @@ while i < 1000000:
 t2 = clock()
 print("global scope: used time = " + str(t2-t1))
 def test():
-    i = 0;j = 0
+    i = 0
+    j = 0
     t1 = clock()
     while i < 1000000:
         j = i * 34
@@ -31,9 +31,12 @@ print("fib(30)", t2-t1)
 
 def fib2(n):
     i = 0
-    a, b = 1, 1
+    a = 1
+    b = 1
     while i < n:
-        a, b = b, a + b
+        tmp = a
+        a = b
+        b = tmp + b
         i += 1
     return a
 

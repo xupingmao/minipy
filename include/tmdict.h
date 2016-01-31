@@ -24,17 +24,17 @@ typedef struct _TmDictIterator {
 } TmDictIterator;
 
 
-Object           dict_new();
+Object           dictNew();
 TmDict*          dict_init();
 void             dict_free(TmDict* dict);
 int             dict_set(TmDict* dict, Object key, Object val);
 #define dictSet(d, k, v) dict_set(GET_DICT(d), k, v)
-DictNode*        dict_get_node(TmDict* dict, Object key);
+DictNode*        dictGetNode(TmDict* dict, Object key);
 Object*          dict_get_by_str(TmDict* dict, char* key);
 Object           dict_keys(TmDict* );
 void             dict_del(TmDict* dict, Object k);
 #define dictDel(dict, k) dict_del(GET_DICT(dict), k)
-void             dict_methods_init();
+void             dictMethodsInit();
 
 void dict_set_by_str(TmDict* dict, char* key, Object val);
 #define dictSetByStr(dict, key, val) dict_set_by_str(GET_DICT(dict), key, val)
@@ -43,7 +43,7 @@ void dict_set_by_str(TmDict* dict, char* key, Object val);
 static DataProto dictIterProto;
 
 DataProto* getDictIterProto();
-Object dict_iter_new(TmDict* dict);
+Object dict_iterNew(TmDict* dict);
 Object* dict_next(TmDictIterator* iterator);
 
 int dict_set_attr(TmDict* dict, int constId, Object val);

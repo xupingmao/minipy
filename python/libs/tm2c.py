@@ -7,25 +7,26 @@ tm_obj = "Object "
 tm_const = "Object const_"
 
 tm_pusharg = "tm_pusharg("
-tm_call = "tm_call("
+tm_call = "tmCall("
 
-tm_num = "tm_number("
-tm_str = "tm_string("
-tm_get_glo = "tm_getglobal("
-tm_define = "tm_define"
+tm_num = "tmNumber("
+tm_str = "stringNew("
+tm_get_glo = "tmGetGlobal("
+tm_define = "defFunc"
 
-func_bool = "tm_bool"
-func_add = "tm_add"
-func_sub = "tm_sub"
-func_mul = "tm_mul"
-func_div = "tm_div"
-func_mod = "tm_mod"
-func_cmp = "tm_cmp"
-func_not = "tm_not"
-func_get = "tm_get"
-func_set = "tm_set"
-func_list = "tm_list"
-func_method = "tm_method"
+func_bool = "isTrueObj"
+func_add = "objAdd"
+func_sub = "objSub"
+func_mul = "objMul"
+func_div = "objDiv"
+func_mod = "objMod"
+func_cmp = "objCmp"
+func_not = "objNot"
+func_neg = "objNeg"
+func_get = "objGet"
+func_set = "objSet"
+func_list = "arrayToList"
+func_method = "defMethod"
 
 op_bool = [">", ">=", "<", "<+", "==", "!=", "and", "or", "in", "not"]
 
@@ -45,6 +46,7 @@ class Env:
     def __init__(self, fname, prefix = None):
         self.consts = []
         self.scope = Scope(None)
+        self.globalScope = self.scope
         self.indent = 0
         self.fname = fname
         self.func_defines = []
@@ -91,7 +93,7 @@ class Env:
             return self.scope.vars
             
     def getGlobals(self):
-        return self.prefix + "_g";
+        return self.prefix + "0g";
             
     def hasVar(self, name):
         scope = self.scope
@@ -106,6 +108,9 @@ class Env:
             pass
         else:
             self.scope.vars.append(name)
+
+    def isAtGlobalScope(self):
+        return self.scope == self.globalScope
 
 def new_temp(env):
     c = env.scope.temp
@@ -124,7 +129,11 @@ def do_assign(item, env, right = None):
         name = left.val
         if not env.hasVar(name):
             env.defVar(name)
-        return env.getVarName(name) + "=" + right + ";"
+        code = env.getVarName(name) + "=" + right + ";"
+        if env.isAtGlobalScope():
+            code += "\n" + "objSet(%s, %s, %s);".format(env.getGlobals(), \
+                do_const(left, env), env.getVarName(name))
+        return code
     elif left.type == ",":
         return "// not implemented"
     elif left.type == "get":
@@ -162,7 +171,8 @@ def do_list(item, env):
             newlist.append(code)
         cnt = len(newlist)
     else:
-        raise
+        newlist.append(do_item(v, env))
+        cnt = 1
     if cnt == 0:
         return sformat("%s(0)", func_list)
     else:
@@ -190,10 +200,10 @@ def do_if(item, env, indent):
     if third == None:
         pass
     elif gettype(third) == "list":
-        return head + "  else" + format_block(do_block(third, env, 2),indent)
+        return head + "else" + format_block(do_block(third, env, 2),indent)
     else:
         # lines.append(do_item(third, env, indent))
-        return head + "  else " + do_item(third, env, 2)
+        return head + "else " + do_item(third, env, 2)
     return head
 
 def do_for(item, env, indent):
@@ -206,9 +216,9 @@ def do_for(item, env, indent):
     env.defVar(_keyname)
     keyname = env.getVarName(_keyname)
     key = do_name(expr.first, env);
-    init = sformat("%s = iter_new(%s);", temp, iterator)
+    init = sformat("%s = iterNew(%s);", temp, iterator)
     init += "\n" + "Object* " + tempPtr + ";";
-    getNext = "%s = tm_next(%s);".format(tempPtr, temp)
+    getNext = "%s = nextPtr(%s);".format(tempPtr, temp)
     head = "while (%s != NULL)".format(tempPtr)
     head = getNext + "\n" + head
     lines = do_block(block, env, indent)
@@ -259,7 +269,7 @@ def do_getargs(list, env, indent):
             node = AstNode("=", item.first, item.second)
             code = do_assign(node, env)
             r.append(code)
-        line = do_assign(item, env, "tm_getarg()")
+        line = do_assign(item, env, "tmTakeArg()")
         r.append(line)
     return r
     
@@ -281,10 +291,14 @@ def do_def(item, env, indent=0, obj=None):
     return sformat("%s(%s, %s, %s);", tm_define, env.getGlobals(), env.getConst(name), cname)
     
 def do_return(item, env, indent=0):
-    return "return " + do_item(item.first, env, 0) + ";"
+    ret = do_item(item.first, env, 0)
+    if ret == "":
+        return "return NONE_OBJECT;"
+    else:
+        return "return " + ret + ";"
     
 def do_class(item, env, indent=0):
-    class_define = do_assign(item, env, "dict_new()")
+    class_define = do_assign(item, env, "dictNew()")
     class_name = do_name(item.first, env)
     obj = newobj()
     lines = []
@@ -336,13 +350,19 @@ def do_ge(item, env):
     return do_op(item, env, func_cmp) + ">=0"
 
 def do_ne(item, env):
-    return "(" + do_op(item, env, "!tm_equals") + ")"
+    return "(" + do_op(item, env, "!objEquals") + ")"
     
 def do_eq(item, env):
-    return do_op(item, env, "tm_equals")
+    return do_op(item, env, "objEquals")
     
 def do_not(item, env):
-    return sformat("%s(%s)", func_not, do_item(item, env))
+    value = do_item(item.first, env)
+    if not value.startswith("isTrueObj"):
+        return "!isTrueObj(" + value + ")"
+    return sformat("!(%s)", value)
+
+def do_neg(item, env):
+    return sformat("%s(%s)", func_neg, do_item(item.first, env))
     
 def do_get(item, env):
     return do_op(item, env, func_get)
@@ -352,6 +372,9 @@ def do_attr(item, env):
     item.second = Token("string", second.val)
     item.second.pos = second.pos
     return do_op(item, env, func_get)
+
+def do_in(item, env):
+    return do_op(item, env, "objHas")
     
 def do_inplace_op(item, env, op):
     item2 = AstNode(op, item.first, item.second)
@@ -417,9 +440,11 @@ _handlers2 = {
     "or": do_or,
     "and": do_and,
     "not": do_not,
+    "neg": do_neg,
     "call": do_call,
     "get": do_get,
     "attr": do_attr,
+    "in": do_in,
     "import": do_import,
     "from": do_from
 }
@@ -457,25 +482,34 @@ def tm2c(fname, src, prefix=None):
     tree = parse(src)
     # replPrint(tree, 0, 5)
     #env = {"vars": [], "consts": [], "funcs": [], "globals":[]}
-    fname = fname.replace(".", "_")
-    env = Env(fname, prefix)
+    modName = fname.substring(0, len(fname)-3)
+    env = Env(fname.replace(".", "_"), prefix)
     env.src = src
 
     lines = do_program(tree, env, 0)
-    _lines = []
+    defineLines = []
     # assign constants
-    # _lines.append("  " + env.getGlobals() + "=dict_new();");
-    _lines.append(env.getGlobals() + "=dict_new();")
+    # defineLines.append("  " + env.getGlobals() + "=dict_new();");
+    defineLines.append(env.getGlobals() + "=dictNew();")
+    
+
     for const in env.consts:
         h = env.getConst(const) + "="
         if gettype(const) == "number":
             body = tm_num + str(const) + ");"
         elif gettype(const) == "string":
             body = tm_str + '"' + escape(str(const)) + '");'
-        # _lines.append("  " + h + body)
-        _lines.append(h+body)
+        # defineLines.append("  " + h + body)
+        defineLines.append(h+body)
+    defineLines.append("tmDefMod(\"%s\", %s);".format(modName, env.getGlobals()))
+
+    initMain = AstNode("=")
+    initMain.first = Token("name", "__name__")
+    initMain.second = Token("string", "__main__")
+    init__name__  = do_item(initMain, env)
+    defineLines.append(init__name__)
         
-    lines = _lines + lines
+    lines = defineLines + lines
         
     head = '''#include "include/tm.h"
 #include "tm.c"
@@ -497,7 +531,9 @@ def tm2c(fname, src, prefix=None):
     # global 
     head += "void " + env.prefix + "_main(){\n"
     code =  head + "\n".join(lines)+"\n}\n"
-    code += sformat("\nint main(int argc, char* argv[]) {\nrun_py_func(argc, argv, %s_main);\n}\n", env.prefix)
+
+
+    code += sformat("\nint main(int argc, char* argv[]) {\nrunPyFunc(argc, argv, \"%s\", %s_main);\n}\n", fname, env.prefix)
     return code
     
 if __name__ == "__main__":

@@ -24,10 +24,10 @@ int objEqSz(Object obj, const char* value) {
             && (GET_STR(obj) == value || strcmp(GET_STR(obj), value) == 0);
 }
 
-void tm_set(Object self, Object k, Object v) {
+void objSet(Object self, Object k, Object v) {
     switch (TM_TYPE(self)) {
     case TYPE_LIST: {
-        tmAssertType(k, TYPE_NUM, "tm_set");
+        tmAssertType(k, TYPE_NUM, "objSet");
         double d = GET_NUM(k);
         tmAssertInt(d, "listSet");
         list_set(GET_LIST(self), (int)d, v);
@@ -37,10 +37,10 @@ void tm_set(Object self, Object k, Object v) {
         dict_set(GET_DICT(self), k, v);
         return;
     }
-    tm_raise("tm_set: Self %o, Key %o, Val %o", self, k, v);
+    tm_raise("objSet: Self %o, Key %o, Val %o", self, k, v);
 }
 
-Object tm_get(Object self, Object k) {
+Object objGet(Object self, Object k) {
     Object v;
     switch (TM_TYPE(self)) {
     case TYPE_STR: {
@@ -56,8 +56,8 @@ Object tm_get(Object self, Object k) {
                 tm_raise("StringGet: index overflow ,len=%d,index=%d, str=%o",
                         GET_STR_LEN(self), n, self);
             return string_chr(0xff & GET_STR(self)[n]);
-        } else if ((node = dict_get_node(GET_DICT(tm->str_proto), k)) != NULL) {
-            return method_new(node->val, self);
+        } else if ((node = dictGetNode(GET_DICT(tm->str_proto), k)) != NULL) {
+            return methodNew(node->val, self);
         }
         break;
     }
@@ -65,18 +65,18 @@ Object tm_get(Object self, Object k) {
         DictNode* node;
         if (TM_TYPE(k) == TYPE_NUM) {
             return list_get(GET_LIST(self), GET_NUM(k));
-        } else if ((node = dict_get_node(GET_DICT(tm->list_proto), k))!=NULL) {
-            return method_new(node->val, self);
+        } else if ((node = dictGetNode(GET_DICT(tm->list_proto), k))!=NULL) {
+            return methodNew(node->val, self);
         }
         break;
     }
     case TYPE_DICT:{
         DictNode* node;
-        node = dict_get_node(GET_DICT(self), k);
+        node = dictGetNode(GET_DICT(self), k);
         if (node != NULL) {
             return node->val;
-        } else if ((node = dict_get_node(GET_DICT(tm->dict_proto), k))!=NULL) {
-            return method_new(node->val, self);
+        } else if ((node = dictGetNode(GET_DICT(tm->dict_proto), k))!=NULL) {
+            return methodNew(node->val, self);
         }
         break;
     }
@@ -90,7 +90,7 @@ Object tm_get(Object self, Object k) {
     return NONE_OBJECT;
 }
 
-Object tm_sub(Object a, Object b) {
+Object objSub(Object a, Object b) {
     if (a.type == b.type) {
         if (a.type == TYPE_NUM) {
             GET_NUM(a) -= GET_NUM(b);
@@ -98,11 +98,11 @@ Object tm_sub(Object a, Object b) {
             return a;
         }
     }
-    tm_raise("tm_sub: can not substract %o and %o", a, b);
+    tm_raise("objSub: can not substract %o and %o", a, b);
     return NONE_OBJECT;
 }
 
-Object tm_add(Object a, Object b) {
+Object objAdd(Object a, Object b) {
     if (TM_TYPE(a) == TM_TYPE(b)) {
         switch (TM_TYPE(a)) {
         case TYPE_NUM:
@@ -117,7 +117,7 @@ Object tm_add(Object a, Object b) {
             if (la == 0) {return b;    }
             if (lb == 0) {return a;    }
             int len = la + lb;
-            Object des = string_alloc(NULL, len);
+            Object des = stringAlloc(NULL, len);
             char*s = GET_STR(des);
             memcpy(s, sa, la);
             memcpy(s + la, sb, lb);
@@ -128,11 +128,11 @@ Object tm_add(Object a, Object b) {
         }
         }
     }
-    tm_raise("tm_add: can not add %o and %o", (a), (b));
+    tm_raise("objAdd: can not add %o and %o", (a), (b));
     return NONE_OBJECT;
 }
 
-int tm_equals(Object a, Object b){
+int objEquals(Object a, Object b){
     if(TM_TYPE(a) != TM_TYPE(b)) return 0;
     switch(TM_TYPE(a)){
         case TYPE_NUM:return GET_NUM(a) == GET_NUM(b);
@@ -149,7 +149,7 @@ int tm_equals(Object a, Object b){
             Object* nodes1 = GET_LIST(a)->nodes;
             Object* nodes2 = GET_LIST(b)->nodes;
             for(i = 0; i < len; i++){
-                if(!tm_equals(nodes1[i], nodes2[i]) ){
+                if(!objEquals(nodes1[i], nodes2[i]) ){
                     return 0;
                 }
             }
@@ -192,7 +192,7 @@ DEF_CMP_FUNC(tmLessEqual, <=);
 DEF_CMP_FUNC(tmGreaterEqual, >=);
 */
 
-int tm_cmp(Object a, Object b) {
+int objCmp(Object a, Object b) {
     if (TM_TYPE(a) == TM_TYPE(b)) {
         switch (TM_TYPE(a)) {
             case TYPE_NUM: {
@@ -207,17 +207,17 @@ int tm_cmp(Object a, Object b) {
             case TYPE_STR: return strcmp(GET_STR(a), GET_STR(b));
         }
     }
-    tm_raise("tm_cmp: can not compare %o and %o", a, b);
+    tm_raise("objCmp: can not compare %o and %o", a, b);
     return 0;
 }
 /*
-DEF_CMP_FUNC_2(tm_bool_lt, <);
-DEF_CMP_FUNC_2(tm_bool_gt, >);
-DEF_CMP_FUNC_2(tm_bool_lteq, <=);
-DEF_CMP_FUNC_2(tm_bool_gteq, >=);
+DEF_CMP_FUNC_2(isTrueObj_lt, <);
+DEF_CMP_FUNC_2(isTrueObj_gt, >);
+DEF_CMP_FUNC_2(isTrueObj_lteq, <=);
+DEF_CMP_FUNC_2(isTrueObj_gteq, >=);
 */
 
-Object tm_mul(Object a, Object b) {
+Object objMul(Object a, Object b) {
     if (a.type == b.type && a.type == TYPE_NUM) {
         GET_NUM(a) *= GET_NUM(b);
         SET_IDX(a, 0);
@@ -235,10 +235,10 @@ Object tm_mul(Object a, Object b) {
             return a;
         int times = (int) GET_NUM(b);
         if (times <= 0)
-            return string_static("");
+            return szToString("");
         if (times == 1)
             return a;
-        des = string_alloc(NULL, len * times);
+        des = stringAlloc(NULL, len * times);
         char* s = GET_STR(des);
         int i;
         for (i = 0; i < times; i++) {
@@ -247,23 +247,23 @@ Object tm_mul(Object a, Object b) {
         }
         return des;
     }
-    tm_raise("tm_mul: can not multiply %o and %o", a, b);
+    tm_raise("objMul: can not multiply %o and %o", a, b);
     return NONE_OBJECT;
 }
 
-Object tm_div(Object a, Object b) {
+Object objDiv(Object a, Object b) {
     if (a.type == b.type && a.type == TYPE_NUM) {
         GET_NUM(a) /= GET_NUM(b);
         SET_IDX(a, 0);
         return a;
     }
-    tm_raise("tm_div: can not divide %o and %o", a, b);
+    tm_raise("objDiv: can not divide %o and %o", a, b);
     return NONE_OBJECT;
 }
 
-Object tm_mod(Object a, Object b) {
+Object objMod(Object a, Object b) {
     if (a.type == b.type && a.type == TYPE_NUM) {
-        return tm_number((long) GET_NUM(a) % (long) GET_NUM(b));
+        return tmNumber((long) GET_NUM(a) % (long) GET_NUM(b));
     } else if (a.type == TYPE_STR) {
         Object *__mod__ = getBuiltin("__mod__");
         if (__mod__ == NULL) {
@@ -275,12 +275,12 @@ Object tm_mod(Object a, Object b) {
             return callFunction(*__mod__);
         }        
     }
-    tm_raise("tm_mod: can not module %o and %o", a, b);
+    tm_raise("objMod: can not module %o and %o", a, b);
     return NONE_OBJECT;
 }
 
 /* a has b */
-int tm_has(Object a, Object b) {
+int objHas(Object a, Object b) {
     switch (TM_TYPE(a)) {
     case TYPE_LIST: {
         return (list_index(GET_LIST(a), b) != -1);
@@ -291,7 +291,7 @@ int tm_has(Object a, Object b) {
         return string_index(GET_STR_OBJ(a), GET_STR_OBJ(b), 0) != -1;
     }
     case TYPE_DICT: {
-        DictNode* node = dict_get_node(GET_DICT(a), b);
+        DictNode* node = dictGetNode(GET_DICT(a), b);
         if (node == NULL) {
             return 0;
         }
@@ -300,7 +300,7 @@ int tm_has(Object a, Object b) {
     }
     return 0;
 }
-int tm_bool(Object v) {
+int isTrueObj(Object v) {
     switch (TM_TYPE(v)) {
     case TYPE_NUM:
         return GET_NUM(v) != 0;
@@ -319,32 +319,32 @@ int tm_bool(Object v) {
     return 0;
 }
 
-Object tm_neg(Object o) {
+Object objNeg(Object o) {
     if (o.type == TYPE_NUM) {
         GET_NUM(o) = -GET_NUM(o);
         return o;
     }
-    tm_raise("tm_neg: can not handle %o", o);
+    tm_raise("objNeg: can not handle %o", o);
     return NONE_OBJECT;
 }
 
 
-Object iter_new(Object collections) {
+Object iterNew(Object collections) {
     switch(TM_TYPE(collections)) {
         case TYPE_LIST: return listIterNew(GET_LIST(collections));
-        case TYPE_DICT: return dict_iter_new(GET_DICT(collections));
+        case TYPE_DICT: return dict_iterNew(GET_DICT(collections));
         case TYPE_STR: return stringIterNew(GET_STR_OBJ(collections));
         case TYPE_DATA: return collections;
-        default: tm_raise("iter_new(): can not create a iterator of %o", collections);
+        default: tm_raise("iterNew(): can not create a iterator of %o", collections);
     }
     return NONE_OBJECT;
 }
 
-Object* tm_next(Object iterator) {
+Object* nextPtr(Object iterator) {
     return GET_DATA_PROTO(iterator)->next(GET_DATA(iterator));
 }
 
-void tm_del(Object self, Object k) {
+void objDel(Object self, Object k) {
     switch(TM_TYPE(self)) {
         case TYPE_DICT:{
             dict_del(GET_DICT(self), k);
@@ -355,45 +355,45 @@ void tm_del(Object self, Object k) {
             break;
         }
         default:
-            tm_raise("tm_del: not supported type %s", getTypeByObj(self));
+            tm_raise("objDel: not supported type %s", getTypeByObj(self));
     }
 }
 
-Object tm_append(Object a, Object item) {
+Object objAppend(Object a, Object item) {
     if (IS_LIST(a)) {
-        list_append(GET_LIST(a), item);
+        listAppend(GET_LIST(a), item);
     }
     return a;
 }
 
-TmFrame* tm_getframe(int fidx) {
+TmFrame* objGetframe(int fidx) {
     if (fidx < 1 || fidx > FRAMES_COUNT) {
-        tm_raise("tm_getframe:invalid fidx %d", fidx);
+        tm_raise("objGetframe:invalid fidx %d", fidx);
     }
     return tm->frames + fidx;
 }
 
-Object tm_getlocal(int fidx, int lidx) {
-    TmFrame* f = tm_getframe(fidx);
+Object objGetlocal(int fidx, int lidx) {
+    TmFrame* f = objGetframe(fidx);
     if (lidx < 0 || lidx >= f->maxlocals) {
-        tm_raise("tm_getlocal:invalid lidx %d, maxlocals=%d", lidx, f->maxlocals);
+        tm_raise("objGetlocal:invalid lidx %d, maxlocals=%d", lidx, f->maxlocals);
     }
     return f->locals[lidx];
 }
 
-Object tm_getstack(int fidx, int sidx) {
-    TmFrame* f = tm_getframe(fidx);
+Object objGetstack(int fidx, int sidx) {
+    TmFrame* f = objGetframe(fidx);
     int stacksize = f->top - f->stack;
     if (sidx < 0 || sidx >= stacksize) {
-        tm_raise("tm_getstack:invalid sidx %d, stacksize=%d", sidx, stacksize);
+        tm_raise("objGetstack:invalid sidx %d, stacksize=%d", sidx, stacksize);
     }
     return f->stack[sidx];
 }
 
-Object tm_getglobal(Object globals, Object okey) {
-    DictNode* node = dict_get_node(GET_DICT(globals), okey);
+Object tmGetGlobal(Object globals, Object okey) {
+    DictNode* node = dictGetNode(GET_DICT(globals), okey);
     if (node == NULL) {
-        node = dict_get_node(GET_DICT(tm->builtins), okey);
+        node = dictGetNode(GET_DICT(tm->builtins), okey);
         if (node == NULL) {
             tm_raise("NameError: name %o is not defined", okey);
         }
@@ -401,18 +401,18 @@ Object tm_getglobal(Object globals, Object okey) {
     return node->val;
 }
 
-Object tm_getfname(Object fnc) {
+Object tmGetfname(Object fnc) {
     if (!IS_FUNC(fnc)) {
-        tm_raise("tm_getfname expect function");
+        tm_raise("tmGetfname expect function");
     }
     return GET_MODULE(GET_FUNCTION(fnc)->mod)->file;
 }
 
-void tm_setattr(Object dict, char* attr, Object value) {
-    dict_set(GET_DICT(dict), string_static(attr), value);
+void tmSetattr(Object dict, char* attr, Object value) {
+    dict_set(GET_DICT(dict), szToString(attr), value);
 }
 
-Object tm_call(Object func, int args, ...) {
+Object tmCall(Object func, int args, ...) {
     int i = 0;
     va_list ap;
     va_start(ap, args);
@@ -425,34 +425,48 @@ Object tm_call(Object func, int args, ...) {
 }
 
 Object tm_string(char* str) {
-    return string_static(str);
+    return szToString(str);
 }
 
-Object tm_list(int n, ...) {
+Object arrayToList(int n, ...) {
     va_list ap;
     int i = 0;
-    Object list = list_new(n);
+    Object list = listNew(n);
     va_start(ap, n);
     for (i = 0; i < n; i++) {
         Object item = va_arg(ap, Object);
-        tm_append(list, item);
+        objAppend(list, item);
     }
     va_end(ap);
     return list;
 }
 
-void tm_define(Object globals, Object name, Object (*native)()) {
-    Object func = func_new(NONE_OBJECT, NONE_OBJECT, native);
+void defFunc(Object globals, Object name, Object (*native)()) {
+    Object func = funcNew(NONE_OBJECT, NONE_OBJECT, native);
     GET_FUNCTION(func)->name = name;
-    tm_set(globals,name, func);
+    objSet(globals,name, func);
 }
 
-void tm_method(Object dict, Object name, Object (*native)()) {
-    Object func = func_new(NONE_OBJECT, NONE_OBJECT, native);
-    Object method = method_new(func, dict);
-    tm_set(dict, name, method);
+void defMethod(Object dict, Object name, Object (*native)()) {
+    Object func = funcNew(NONE_OBJECT, NONE_OBJECT, native);
+    Object method = methodNew(func, dict);
+    objSet(dict, name, method);
 }
 
-Object tm_getarg() {
+Object tmTakeArg() {
     return arg_get_obj("getarg");
 }
+
+void tmDefMod(char* fname, Object mod) {
+    Object oName = szToString(fname);
+    objSet(tm->modules, oName, mod);
+}
+
+void tmImportAll(Object globals, Object modName) {
+    int bHas = objHas(tm->modules, modName);
+    if (bHas) {
+        Object modValue = objGet(tm->modules, modName);
+        // do something here.
+    }
+}
+

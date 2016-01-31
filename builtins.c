@@ -51,17 +51,17 @@ Object tmStr(Object a) {
         char s[20];
         double v = GET_NUM(a);
         numberFormat(s, a);
-        return string_new(s);
+        return stringNew(s);
     }
     case TYPE_LIST: {
-        Object str = string_new("");
+        Object str = stringNew("");
 
         str = string_append_char(str, '[');
         int i, l = LIST_LEN(a);
         for (i = 0; i < l; i++) {
             Object obj = GET_LIST(a)->nodes[i];
             /* reference to self in list */
-            if (tm_equals(a, obj)) {
+            if (objEquals(a, obj)) {
                 str = string_append_str(str, "[...]");
             } else if (obj.type == TYPE_STR) {
                 str = string_append_char(str, '"');
@@ -79,18 +79,18 @@ Object tmStr(Object a) {
     }
     case TYPE_DICT:
         sprintf(buf, "<dict at %p>", GET_DICT(a));
-        return string_new(buf);
+        return stringNew(buf);
     case TYPE_FUNCTION:
         functionFormat(buf, a);
-        return string_new(buf);
+        return stringNew(buf);
     case TYPE_NONE:
-        return string_static("None");
+        return szToString("None");
     case TYPE_DATA:
         return GET_DATA_PROTO(a)->str(GET_DATA(a));
     default:
         tm_raise("str: not supported type %d", a.type);
     }
-    return string_alloc("", 0);
+    return stringAlloc("", 0);
 }
 
 void tm_print(Object o) {
@@ -121,7 +121,7 @@ void tm_println(Object o) {
 Object tmFormatVaList(char* fmt, va_list ap, int acquireNewLine) {
     int i;
     int len = strlen(fmt);
-    Object str = string_new("");
+    Object str = stringNew("");
     int templ = 0;
     char* start = fmt;
     int istrans = 1;
@@ -219,7 +219,7 @@ Object tm_load(char* fname){
         tm_raise("load: file too big to load, size = %d", (len));
         return NONE_OBJECT;
     }
-    Object text = string_alloc(NULL, len);
+    Object text = stringAlloc(NULL, len);
     char* s = GET_STR(text);
     fread(s, 1, len, fp);
     fclose(fp);
@@ -252,15 +252,15 @@ Object bf_input() {
     if(buf[len-1]=='\n'){
         buf[len-1] = '\0';
     }
-    return string_new(buf);
+    return stringNew(buf);
 }
 
 Object bf_int() {
     Object v = arg_get_obj("int");
     if (v.type == TYPE_NUM) {
-        return tm_number((int) GET_NUM(v));
+        return tmNumber((int) GET_NUM(v));
     } else if (v.type == TYPE_STR) {
-        return tm_number((int) atof(GET_STR(v)));
+        return tmNumber((int) atof(GET_STR(v)));
     }
     tm_raise("int: %o can not be parsed to int ", v);
     return NONE_OBJECT;
@@ -271,7 +271,7 @@ Object bf_float() {
     if (v.type == TYPE_NUM) {
         return v;
     } else if (v.type == TYPE_STR) {
-        return tm_number(atof(GET_STR(v)));
+        return tmNumber(atof(GET_STR(v)));
     }
     tm_raise("float: %o can not be parsed to float", v);
     return NONE_OBJECT;
@@ -286,13 +286,13 @@ Object bf_load_module() {
     Object code = arg_get_str(szFnc);
     Object mod;
     if (getArgsCount() == 3) {
-        mod = module_new(file, arg_get_str(szFnc), code);
+        mod = moduleNew(file, arg_get_str(szFnc), code);
     } else {
-        mod = module_new(file, file, code);
+        mod = moduleNew(file, file, code);
     }
-    Object fnc = func_new(mod, NONE_OBJECT, NULL);
+    Object fnc = funcNew(mod, NONE_OBJECT, NULL);
     GET_FUNCTION(fnc)->code = (unsigned char*) GET_STR(code);
-    GET_FUNCTION(fnc)->name = string_new("#main");
+    GET_FUNCTION(fnc)->name = stringNew("#main");
     callFunction(fnc);
     return GET_MODULE(mod)->globals;
 }
@@ -313,13 +313,13 @@ Object bf_exit() {
 Object bf_gettype() {
     Object obj = arg_get_obj("gettype");
     switch(TM_TYPE(obj)) {
-        case TYPE_STR: return string_static("string");
-        case TYPE_NUM: return string_static("number");
-        case TYPE_LIST: return string_static("list");
-        case TYPE_DICT: return string_static("dict");
-        case TYPE_FUNCTION: return string_static("function");
-        case TYPE_DATA: return string_static("data");
-        case TYPE_NONE: return string_static("None");
+        case TYPE_STR: return szToString("string");
+        case TYPE_NUM: return szToString("number");
+        case TYPE_LIST: return szToString("list");
+        case TYPE_DICT: return szToString("dict");
+        case TYPE_FUNCTION: return szToString("function");
+        case TYPE_DATA: return szToString("data");
+        case TYPE_NONE: return szToString("None");
         default: tm_raise("gettype(%o)", obj);
     }
     return NONE_OBJECT;
@@ -345,7 +345,7 @@ Object bf_istype() {
         case TYPE_NONE: isType = strcmp(type, "None") == 0; break;
         default: tm_raise("gettype(%o)", obj);
     }
-    return tm_number(isType);
+    return tmNumber(isType);
 }
 
 Object bf_chr() {
@@ -356,7 +356,7 @@ Object bf_chr() {
 Object bf_ord() {
     Object c = arg_get_str("ord");
     TM_ASSERT(GET_STR_LEN(c) == 1, "ord() expected a character");
-    return tm_number((unsigned char) GET_STR(c)[0]);
+    return tmNumber((unsigned char) GET_STR(c)[0]);
 }
 
 Object bf_code8() {
@@ -370,14 +370,14 @@ Object bf_code16() {
     int n = arg_get_int("code16");
     if (n < 0 || n > 0xffff)
         tm_raise("code16(): expect number 0-0xffff, but see %x", n);
-    Object nchar = string_alloc(NULL, 2);
+    Object nchar = stringAlloc(NULL, 2);
     code16((unsigned char*) GET_STR(nchar), n);
     return nchar;
 }
 
 Object bf_code32() {
     int n = arg_get_int("code32");
-    Object c = string_alloc(NULL, 4);
+    Object c = stringAlloc(NULL, 4);
     code32((unsigned char*) GET_STR(c), n);
     return c;
 }
@@ -394,7 +394,7 @@ Object bfRaise() {
 Object bfSystem() {
     Object m = arg_get_str("system");
     int rs = system(GET_STR(m));
-    return tm_number(rs);
+    return tmNumber(rs);
 }
 
 Object bf_str() {
@@ -416,7 +416,7 @@ Object bf_len() {
     if (len < 0) {
         tm_raise("tmLen: %o has no attribute len", o);
     }
-    return tm_number(len);
+    return tmNumber(len);
 }
 
 Object bf_print() {
@@ -444,9 +444,9 @@ Object bfRemove(){
     Object fname = arg_get_str("remove");
     int flag = remove(GET_STR(fname));
     if(flag) {
-        return tm_number(0);
+        return tmNumber(0);
     } else {
-        return tm_number(1);
+        return tmNumber(1);
     }
 }
 
@@ -484,7 +484,7 @@ Object bfWrite() {
 Object bfPow() {
     double base = arg_get_double("pow");
     double y = arg_get_double("pow");
-    return tm_number(pow(base, y));
+    return tmNumber(pow(base, y));
 }
 
 typedef struct RangeIter {
@@ -499,11 +499,11 @@ Object* rangeNext(RangeIter* data) {
     long cur = data->cur;
     if (data->inc > 0 && cur < data->stop) {
         data->cur += data->inc;
-        data->cur_obj = tm_number(cur);
+        data->cur_obj = tmNumber(cur);
         return &data->cur_obj;
     } else if (data->inc < 0 && cur > data->stop) {
         data->cur += data->inc;
-        data->cur_obj = tm_number(cur);
+        data->cur_obj = tmNumber(cur);
         return &data->cur_obj;
     }
     return NULL;
@@ -563,7 +563,7 @@ Object bfMmatch() {
     Object o_dst = arg_get_str("mmatch");
     char* dst = GET_STR(o_dst);
     int size = GET_STR_LEN(o_dst);
-    return tm_number(strncmp(str+start, dst, size) == 0);
+    return tmNumber(strncmp(str+start, dst, size) == 0);
 }
 
 
@@ -579,10 +579,10 @@ Object bfInspectPtr() {
 }
 
 Object bfGetCurrentFrame() {
-    Object frameInfo = dict_new();
+    Object frameInfo = dictNew();
     dictSetByStr(frameInfo, "function", tm->frame->fnc);
-    // dictSetByStr(frameInfo, "pc", tm_number((long long)tm->frame->pc));
-    dictSetByStr(frameInfo, "index", tm_number((long long) (tm->frame - tm->frames)));
+    // dictSetByStr(frameInfo, "pc", tmNumber((long long)tm->frame->pc));
+    dictSetByStr(frameInfo, "index", tmNumber((long long) (tm->frame - tm->frames)));
     return frameInfo;
 }
 
@@ -591,26 +591,26 @@ Object bfVmopt() {
     if (strcmp(opt, "gc") == 0) {
         gc_full();
     } else if (strcmp(opt, "help") == 0) {
-        return string_static("gc, help");
+        return szToString("gc, help");
     } else if (strcmp(opt, "frame.local") == 0) {
         int fidx = arg_get_int("vminfo");
         int lidx = arg_get_int("vminfo");
-        return tm_getlocal(fidx, lidx);
+        return objGetlocal(fidx, lidx);
     } else if (strcmp(opt, "frame.stack") == 0) {
         int fidx = arg_get_int("vminfo");
         int sidx = arg_get_int("vminfo");
-        return tm_getstack(fidx, sidx);
+        return objGetstack(fidx, sidx);
     } else if (strcmp(opt, "frame.index") == 0) {
-        return tm_number(tm->frame-tm->frames);
+        return tmNumber(tm->frame-tm->frames);
     } else if (strcmp(opt, "frame.info") == 0) {
         int fidx = arg_get_int("vminfo");
-        TmFrame *f = tm_getframe(fidx);
-        Object info = dict_new();
-        tm_setattr(info, "maxlocals", tm_number(f->maxlocals));
-        tm_setattr(info, "stacksize", tm_number(f->top - f->stack));
-        tm_setattr(info, "func", f->fnc);
-        tm_setattr(info, "fname", tm_getfname(f->fnc));
-        tm_setattr(info, "lineno", tm_number(f->lineno));
+        TmFrame *f = objGetframe(fidx);
+        Object info = dictNew();
+        tmSetattr(info, "maxlocals", tmNumber(f->maxlocals));
+        tmSetattr(info, "stacksize", tmNumber(f->top - f->stack));
+        tmSetattr(info, "func", f->fnc);
+        tmSetattr(info, "fname", tmGetfname(f->fnc));
+        tmSetattr(info, "lineno", tmNumber(f->lineno));
         return info;
     } else {
         tm_raise("invalid opt %s", opt);
@@ -619,29 +619,29 @@ Object bfVmopt() {
 }
 
 Object bfGetVmInfo() {
-    Object tmInfo = dict_new();
-    dictSetByStr(tmInfo, "name", string_new("tm"));
-    dictSetByStr(tmInfo, "vm_size", tm_number(sizeof(TmVM)));
-    dictSetByStr(tmInfo, "obj_size", tm_number(sizeof(Object)));
-    dictSetByStr(tmInfo, "int_size", tm_number(sizeof(int)));
-    dictSetByStr(tmInfo, "long_size", tm_number(sizeof(long)));
-    dictSetByStr(tmInfo, "long_long_size", tm_number(sizeof(long long)));
-    dictSetByStr(tmInfo, "float_size", tm_number(sizeof(float)));
-    dictSetByStr(tmInfo, "double_size", tm_number(sizeof(double)));
-    dictSetByStr(tmInfo, "jmp_buf_size", tm_number(sizeof(jmp_buf)));
-    dictSetByStr(tmInfo, "total_obj_len", tm_number(tm->all->len));
-    dictSetByStr(tmInfo, "alloc_mem", tm_number(tm->allocated));
-    dictSetByStr(tmInfo, "gc_threshold", tm_number(tm->gcThreshold));
-    dictSetByStr(tmInfo, "frame_index", tm_number(tm->frame - tm->frames));
-    dictSetByStr(tmInfo, "consts_len", tm_number(DICT_LEN(tm->constants)));
+    Object tmInfo = dictNew();
+    dictSetByStr(tmInfo, "name", stringNew("tm"));
+    dictSetByStr(tmInfo, "vm_size", tmNumber(sizeof(TmVM)));
+    dictSetByStr(tmInfo, "obj_size", tmNumber(sizeof(Object)));
+    dictSetByStr(tmInfo, "int_size", tmNumber(sizeof(int)));
+    dictSetByStr(tmInfo, "long_size", tmNumber(sizeof(long)));
+    dictSetByStr(tmInfo, "long_long_size", tmNumber(sizeof(long long)));
+    dictSetByStr(tmInfo, "float_size", tmNumber(sizeof(float)));
+    dictSetByStr(tmInfo, "double_size", tmNumber(sizeof(double)));
+    dictSetByStr(tmInfo, "jmp_buf_size", tmNumber(sizeof(jmp_buf)));
+    dictSetByStr(tmInfo, "total_obj_len", tmNumber(tm->all->len));
+    dictSetByStr(tmInfo, "alloc_mem", tmNumber(tm->allocated));
+    dictSetByStr(tmInfo, "gc_threshold", tmNumber(tm->gcThreshold));
+    dictSetByStr(tmInfo, "frame_index", tmNumber(tm->frame - tm->frames));
+    dictSetByStr(tmInfo, "consts_len", tmNumber(DICT_LEN(tm->constants)));
     return tmInfo;
 }
 
 Object bfClock() {
 #ifdef TM_NT
-    return tm_number(clock());
+    return tmNumber(clock());
 #else
-    return tm_number((double)clock()/1000);
+    return tmNumber((double)clock()/1000);
 #endif
 }
 
@@ -663,11 +663,11 @@ Object bfAddObjMethod() {
     Object fnc = arg_get_func(szFunc);
     char*s = GET_STR(type);
     if (strcmp(s, "str") == 0) {
-        tm_set(tm->str_proto, fname, fnc);
+        objSet(tm->str_proto, fname, fnc);
     } else if (strcmp(s, "list") == 0) {
-        tm_set(tm->list_proto, fname, fnc);
+        objSet(tm->list_proto, fname, fnc);
     } else if (strcmp(s, "dict") == 0) {
-        tm_set(tm->dict_proto, fname, fnc);
+        objSet(tm->dict_proto, fname, fnc);
     } else {
         tm_raise("add_obj_method: not valid object type, expect str, list, dict");
     }
@@ -701,7 +701,7 @@ Object bfReadFile() {
                 break;
             }
         }
-        arg_push(string_alloc(buf, i));
+        arg_push(stringAlloc(buf, i));
         callFunction(func);
         if (end) {
             break;
@@ -713,12 +713,12 @@ Object bfReadFile() {
 
 Object bfIter() {
     Object func = arg_get_obj("iter");
-    return iter_new(func);
+    return iterNew(func);
 }
 
 Object bfNext() {
     Object iter = arg_get_data("next");
-    Object *ret = tm_next(iter);
+    Object *ret = nextPtr(iter);
     if (ret == NULL) {
         tm_raise("");
         return NONE_OBJECT;
@@ -741,7 +741,7 @@ Object bfGetConstIdx() {
     SET_IDX(key, 0);
     int i = dictSet(tm->constants, key, NONE_OBJECT);
     SET_IDX(GET_CONST(i), i);
-    return tm_number(i);
+    return tmNumber(i);
 }
 
 Object bfGetConst() {
@@ -757,7 +757,7 @@ Object bfGetConst() {
 }
 /* for save */
 Object bfGetConstLen() {
-    return tm_number(DICT_LEN(tm->constants));
+    return tmNumber(DICT_LEN(tm->constants));
 }
 
 Object bfGetExList() {
@@ -777,17 +777,17 @@ Object bfStat(){
     const char *s = arg_get_sz("stat");
     struct stat stbuf;
     if (!stat(s,&stbuf)) { 
-        Object st = dict_new();
-        dictSetByStr(st, "st_mtime", tm_number(stbuf.st_mtime));
-        dictSetByStr(st, "st_atime", tm_number(stbuf.st_atime));
-        dictSetByStr(st, "st_ctime", tm_number(stbuf.st_ctime));
-        dictSetByStr(st, "st_size" , tm_number(stbuf.st_size));
-        dictSetByStr(st, "st_mode",  tm_number(stbuf.st_mode));
-        dictSetByStr(st, "st_nlink", tm_number(stbuf.st_nlink));
-        dictSetByStr(st, "st_dev",   tm_number(stbuf.st_dev));
-        dictSetByStr(st, "st_ino",   tm_number(stbuf.st_ino));
-        dictSetByStr(st, "st_uid",   tm_number(stbuf.st_uid));
-        dictSetByStr(st, "st_gid",   tm_number(stbuf.st_gid));
+        Object st = dictNew();
+        dictSetByStr(st, "st_mtime", tmNumber(stbuf.st_mtime));
+        dictSetByStr(st, "st_atime", tmNumber(stbuf.st_atime));
+        dictSetByStr(st, "st_ctime", tmNumber(stbuf.st_ctime));
+        dictSetByStr(st, "st_size" , tmNumber(stbuf.st_size));
+        dictSetByStr(st, "st_mode",  tmNumber(stbuf.st_mode));
+        dictSetByStr(st, "st_nlink", tmNumber(stbuf.st_nlink));
+        dictSetByStr(st, "st_dev",   tmNumber(stbuf.st_dev));
+        dictSetByStr(st, "st_ino",   tmNumber(stbuf.st_ino));
+        dictSetByStr(st, "st_uid",   tmNumber(stbuf.st_uid));
+        dictSetByStr(st, "st_gid",   tmNumber(stbuf.st_gid));
         return st;
     }
     tm_raise("stat(%s), file not exists or accessable.",s);
@@ -805,7 +805,7 @@ Object bfGetFuncCode() {
         len += 3;
     }
     len += 3; /* TM_EOF */
-    return string_alloc((char*)code, len);
+    return stringAlloc((char*)code, len);
 }
 
 Object bfGetcwd() {
@@ -822,7 +822,7 @@ Object bfGetcwd() {
         }
         tm_raise("%s: error -- %s", szFunc, msg);
     }
-    return string_new(buf);
+    return stringNew(buf);
 }
 
 Object bfChdir() {
@@ -838,18 +838,18 @@ Object bfChdir() {
 Object bfGetOsName() {
     const char* szFunc = "getosname";
 #ifdef _WINDOWS_H
-    return string_static("nt");
+    return szToString("nt");
 #else
-    return string_static("posix");
+    return szToString("posix");
 #endif
 }
 
 Object bfListdir() {
-    Object list = list_new(10);
+    Object list = listNew(10);
     Object path = arg_get_str("listdir");
 #ifdef _WINDOWS_H
     WIN32_FIND_DATA FindFileData;
-    Object _path = tm_add(path, string_new("\\*.*"));
+    Object _path = objAdd(path, stringNew("\\*.*"));
     HANDLE hFind = FindFirstFile(GET_STR(_path), &FindFileData);
     if (hFind == INVALID_HANDLE_VALUE) {
         tm_raise("%s is not a directory", path);
@@ -861,8 +861,8 @@ Object bfListdir() {
         if (FindFileData.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) {
             // do nothing.
         }
-        Object file = string_new(FindFileData.cFileName);
-        tm_append(list, file);
+        Object file = stringNew(FindFileData.cFileName);
+        objAppend(list, file);
     } while (FindNextFile(hFind, &FindFileData));
     FindClose(hFind);
 #else
@@ -871,7 +871,7 @@ Object bfListdir() {
     return list;
 }
 
-void builtin_funcs_init() {
+void builtinsInit() {
     regBuiltinFunc("load", bfLoad);
     regBuiltinFunc("save", bfSave);
     regBuiltinFunc("remove", bfRemove);

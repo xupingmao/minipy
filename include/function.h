@@ -12,11 +12,11 @@
 
 #define DB_FUNC 1
 
-Object           func_new(Object mod,Object self,Object (*native_func)());
+Object           funcNew(Object mod,Object self,Object (*native_func)());
 Object           getFuncAttr(TmFunction* fnc, Object key);
 void             func_free(TmFunction*);
-Object           method_new(Object _fnc, Object self);
-Object           module_new(Object file, Object name, Object code);
+Object           methodNew(Object _fnc, Object self);
+Object           moduleNew(Object file, Object name, Object code);
 void             module_free(TmModule*);
 // CodeCheckResult  resolveCode(TmModule *mod,  unsigned char*s , int isFuncDef);
 unsigned char*   getFunctionCode(TmFunction*);

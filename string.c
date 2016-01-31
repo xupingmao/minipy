@@ -1,7 +1,7 @@
 #include "include/tm.h"
 #include "include/vm.h"
 
-Object string_char(int c) {
+Object strinGET_CHAR(int c) {
     String* str = tm_malloc(sizeof(String));
     struct Object obj;
     str->stype = 1;
@@ -14,7 +14,7 @@ Object string_char(int c) {
     return gc_track(obj);
 }
 
-Object string_alloc(char *s, int size) {
+Object stringAlloc(char *s, int size) {
     String* str = tm_malloc(sizeof(String));
     Object v;
     /* malloc new memory */
@@ -77,8 +77,8 @@ Object string_substring(String* str, int start, int end) {
     end = max_end < end ? max_end : end;
     len = end - start;
     if (len <= 0)
-        return string_static("");
-    new_str = string_alloc(NULL, len);
+        return szToString("");
+    new_str = stringAlloc(NULL, len);
     s = GET_STR(new_str);
     for (i = start; i < end; i++) {
         *(s++) = str->value[i];
@@ -90,7 +90,7 @@ Object string_m_find() {
     static const char* szFunc = "find";
     Object self = arg_get_str(szFunc);
     Object str = arg_get_str(szFunc);
-    return tm_number(string_index(self.value.str, str.value.str, 0));
+    return tmNumber(string_index(self.value.str, str.value.str, 0));
 }
 
 Object string_m_substring() {
@@ -106,7 +106,7 @@ Object string_m_upper() {
     int i;
     char*s = GET_STR(self);
     int len = GET_STR_LEN(self);
-    Object nstr = string_alloc(NULL, len);
+    Object nstr = stringAlloc(NULL, len);
     char*news = GET_STR(nstr);
     for (i = 0; i < len; i++) {
         news[i] = toupper(s[i]);
@@ -119,7 +119,7 @@ Object string_m_lower() {
     int i;
     char*s = GET_STR(self);
     int len = GET_STR_LEN(self);
-    Object nstr = string_alloc(NULL, len);
+    Object nstr = stringAlloc(NULL, len);
     char*news = GET_STR(nstr);
     for (i = 0; i < len; i++) {
         news[i] = tolower(s[i]);
@@ -134,20 +134,20 @@ Object string_m_replace() {
     Object src = arg_get_str(szFunc);
     Object des = arg_get_str(szFunc);
 
-    Object nstr = string_alloc("", 0);
+    Object nstr = stringAlloc("", 0);
     int pos = string_index(self.value.str, src.value.str, 0);
     int lastpos = 0;
     while (pos != -1 && pos < GET_STR_LEN(self)) {
         if (pos != 0){
-            nstr = tm_add(nstr,
+            nstr = objAdd(nstr,
                     string_substring(self.value.str, lastpos, pos));
         }
-        nstr = tm_add(nstr, des);
+        nstr = objAdd(nstr, des);
         lastpos = pos + GET_STR_LEN(src);
         pos = string_index(self.value.str, src.value.str, lastpos);
         // printf("lastpos = %d\n", lastpos);
     }
-    nstr = tm_add(nstr, string_substring(self.value.str, lastpos, GET_STR_LEN(self)));
+    nstr = objAdd(nstr, string_substring(self.value.str, lastpos, GET_STR_LEN(self)));
     return nstr;
 }
 
@@ -163,29 +163,29 @@ Object string_m_split() {
     }
     pos = string_index(self.value.str, pattern.value.str, 0);
     lastpos = 0;
-    nstr = string_alloc("", 0);
-    list = list_new(10);
+    nstr = stringAlloc("", 0);
+    list = listNew(10);
     while (pos != -1 && pos < GET_STR_LEN(self)) {
         if (pos == 0) {
-            tm_append(list, string_alloc("", -1));
+            objAppend(list, stringAlloc("", -1));
         } else {
             Object str = string_substring(self.value.str, lastpos, pos);
-            tm_append(list, str);
+            objAppend(list, str);
         }
         lastpos = pos + GET_STR_LEN(pattern);
         pos = string_index(self.value.str, pattern.value.str, lastpos);
     }
-    tm_append(list, string_substring(self.value.str, lastpos, GET_STR_LEN(self)));
+    objAppend(list, string_substring(self.value.str, lastpos, GET_STR_LEN(self)));
     return list;
 }
 
 /**
- * the caller always starts with str = string_new("");
+ * the caller always starts with str = stringNew("");
  * which is not a string_chr();
  * so we can just change the str->value;
  */
 Object string_append_char(Object string, char c) {
-    // return tm_add(string, string_chr(c));
+    // return objAdd(string, string_chr(c));
     String* str = GET_STR_OBJ(string);
     if (str->stype) {
         str->value = tm_realloc(str->value, str->len+1, str->len+2);
@@ -204,7 +204,7 @@ Object string_append_char(Object string, char c) {
  * must be assigned
  */
 Object string_append_str(Object string, char* sz) {
-    // return tm_add(string, string_new(sz));
+    // return objAdd(string, stringNew(sz));
     String* str = GET_STR_OBJ(string);
     int sz_len = strlen(sz);
     if (str->stype) {
@@ -224,8 +224,8 @@ Object string_append_obj(Object string, Object obj) {
     return string_append_str(string, sz);
 }
 
-void string_methods_init() {
-    tm->str_proto = dict_new();
+void stringMethodsInit() {
+    tm->str_proto = dictNew();
     regModFunc(tm->str_proto, "replace", string_m_replace);
     regModFunc(tm->str_proto, "find", string_m_find);
     regModFunc(tm->str_proto, "substring", string_m_substring);

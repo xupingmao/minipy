@@ -112,7 +112,7 @@ TmFrame* pushFrame(Object fnc) {
         pc += i * 3; \
         continue;\
     } else { \
-        *top = tm_number(flag); \
+        *top = tmNumber(flag); \
     }
 
 /** 
@@ -145,22 +145,22 @@ Object tm_eval(TmFrame* f) {
         case NEW_NUMBER: {
             double d = atof((char*)pc + 3);
             pc += i;
-            v = tm_number(d);
-            /* tm_append(tm->constants,v);*/
+            v = tmNumber(d);
+            /* objAppend(tm->constants,v);*/
             dictSet(tm->constants, v, NONE_OBJECT);
             break;
         }
 
         case NEW_STRING: {
-            v = string_alloc((char*)pc + 3, i);
+            v = stringAlloc((char*)pc + 3, i);
             pc += i;
-            /* tm_append(tm->constants,v); */
+            /* objAppend(tm->constants,v); */
             dictSet(tm->constants, v, NONE_OBJECT);
             break;
         }
 
         case OP_IMPORT: {
-            Object import_func = tm_getglobal(globals, string_static("_import"));
+            Object import_func = tmGetGlobal(globals, szToString("_import"));
             arg_start();
             arg_push(globals);
             if (i == 1) {
@@ -234,7 +234,7 @@ Object tm_eval(TmFrame* f) {
             break;
         }
         case LIST: {
-            TM_PUSH(list_new(2));
+            TM_PUSH(listNew(2));
             FRAME_CHECK_GC();
             break;
         }
@@ -242,69 +242,69 @@ Object tm_eval(TmFrame* f) {
             v = TM_POP();
             x = TM_TOP();
             tmAssertType(x, TYPE_LIST, "tm_eval: LIST_APPEND");
-            list_append(GET_LIST(x), v);
+            listAppend(GET_LIST(x), v);
             break;
         case DICT_SET:
             v = TM_POP();
             k = TM_POP();
             x = TM_TOP();
             tmAssertType(x, TYPE_DICT, "tm_eval: DICT_SET");
-            tm_set(x, k, v);
+            objSet(x, k, v);
             break;
         case DICT: {
-            TM_PUSH(dict_new());
+            TM_PUSH(dictNew());
             FRAME_CHECK_GC();
             break;
         }
-        TM_OP(ADD, tm_add)
-        TM_OP(SUB, tm_sub)
-        TM_OP(MUL, tm_mul)
-        TM_OP(DIV, tm_div)
-        TM_OP(MOD, tm_mod)
-        TM_OP(GET, tm_get)
-        case EQEQ: { *(top-1) = tm_number(tm_equals(*(top-1), *top)); top--; break; }
-        case NOTEQ: { *(top-1) = tm_number(!tm_equals(*(top-1), *top)); top--; break; }
+        TM_OP(ADD, objAdd)
+        TM_OP(SUB, objSub)
+        TM_OP(MUL, objMul)
+        TM_OP(DIV, objDiv)
+        TM_OP(MOD, objMod)
+        TM_OP(GET, objGet)
+        case EQEQ: { *(top-1) = tmNumber(objEquals(*(top-1), *top)); top--; break; }
+        case NOTEQ: { *(top-1) = tmNumber(!objEquals(*(top-1), *top)); top--; break; }
         case OP_LT: {
-            *(top-1) = tm_number(tm_cmp(*(top-1), *top)<0);
+            *(top-1) = tmNumber(objCmp(*(top-1), *top)<0);
             top--;
-            // int flag = tm_cmp(*(top-1), *top) < 0;
+            // int flag = objCmp(*(top-1), *top) < 0;
             // top--;
             // predict
             // PREDICT_JMP(flag);
             break;
         }
         case LTEQ: {
-            *(top-1) = tm_number(tm_cmp(*(top-1), *top)<=0);
+            *(top-1) = tmNumber(objCmp(*(top-1), *top)<=0);
             top--;
             break;
         }
         case OP_GT: {
-            *(top-1) = tm_number(tm_cmp(*(top-1), *top)>0);
+            *(top-1) = tmNumber(objCmp(*(top-1), *top)>0);
             top--;
             break;
         }
         case GTEQ: {
-            *(top-1) = tm_number(tm_cmp(*(top-1), *top)>=0);
+            *(top-1) = tmNumber(objCmp(*(top-1), *top)>=0);
             top--;
             break;
         }
         case OP_IN: {
-            *(top-1) = tm_number(tm_has(*top, *(top-1)));
+            *(top-1) = tmNumber(objHas(*top, *(top-1)));
             top--;
             break;
         }
         case AND: {
-            *(top-1) = tm_number(tm_bool(*(top-1)) && tm_bool(*top));
+            *(top-1) = tmNumber(isTrueObj(*(top-1)) && isTrueObj(*top));
             top--;
             break;
         }
         case OR: {
-            *(top-1) = tm_number(tm_bool(*(top-1)) || tm_bool(*top));
+            *(top-1) = tmNumber(isTrueObj(*(top-1)) || isTrueObj(*top));
             top--;
             break;
         }
         case NOT:{
-            *top = tm_number(!tm_bool(*top));
+            *top = tmNumber(!isTrueObj(*top));
             break;
         }
         case SET:
@@ -314,19 +314,19 @@ Object tm_eval(TmFrame* f) {
             #if INTERP_DB
                 tm_printf("Self %o, Key %o, Val %o\n", x, k, v);
             #endif
-            tm_set(x, k, v);
+            objSet(x, k, v);
             break;
         case POP: {
             top--;
             break;
         }
         case NEG:
-            TM_TOP() = tm_neg(TM_TOP());
+            TM_TOP() = objNeg(TM_TOP());
             break;
         case CALL: {
             f->top = top;
             top -= i;
-            tm_setArguments(top + 1, i);
+            objSetArguments(top + 1, i);
             Object func = TM_POP();
             #if INTERP_DB
                 printf("call %s\n", getFuncNameSz(func));
@@ -349,19 +349,19 @@ Object tm_eval(TmFrame* f) {
             break;
         }
         case TM_NARG: {
-            Object list = list_new(tm->arg_cnt);
+            Object list = listNew(tm->arg_cnt);
             for(i = 0; i < tm->arg_cnt; i++) {
-                tm_append(list, tm->arguments[i]);
+                objAppend(list, tm->arguments[i]);
             }
             locals[0] = list;
             break;
         }
         case ITER_NEW: {
-            *top = iter_new(*top);
+            *top = iterNew(*top);
             break;
         }
         case TM_NEXT: {
-            Object *next = tm_next(*top);
+            Object *next = nextPtr(*top);
             if (next != NULL) {
                 TM_PUSH(*next);
                 break;
@@ -377,7 +377,7 @@ Object tm_eval(TmFrame* f) {
             //Code reg_code = parseCode(pc);
             //pc += 3;
             //Code jmp_code = parseCode(pc);
-            Object fnc = func_new(mod, NONE_OBJECT, NULL);
+            Object fnc = funcNew(mod, NONE_OBJECT, NULL);
             pc = func_resolve(GET_FUNCTION(fnc), pc);
             // GET_FUNCTION(fnc)->code = pc + 3;
             // GET_FUNCTION(fnc)->maxlocals = reg_code.val;
@@ -414,12 +414,12 @@ Object tm_eval(TmFrame* f) {
         case TM_DEL: {
             k = TM_POP();
             x = TM_POP();
-            tm_del(x, k);
+            objDel(x, k);
             break;
         }
 
         case POP_JUMP_ON_FALSE: {
-            if (!tm_bool(TM_POP())) {
+            if (!isTrueObj(TM_POP())) {
                 pc += i * 3;
                 continue;
             }
@@ -427,7 +427,7 @@ Object tm_eval(TmFrame* f) {
         }
 
         case JUMP_ON_TRUE: {
-            if (tm_bool(TM_TOP())) {
+            if (isTrueObj(TM_TOP())) {
                 pc += i * 3;
                 continue;
             }
@@ -435,7 +435,7 @@ Object tm_eval(TmFrame* f) {
         }
 
         case JUMP_ON_FALSE: {
-            if (!tm_bool(TM_TOP())) {
+            if (!isTrueObj(TM_TOP())) {
                 pc += i * 3;
                 continue;
             }
@@ -462,9 +462,9 @@ Object tm_eval(TmFrame* f) {
         case TM_LINE: { f->lineno = i; break;}
 
         case TM_DEBUG: {
-            Object fdebug = tm_getglobal(globals, string_static("__debug__"));
+            Object fdebug = tmGetGlobal(globals, szToString("__debug__"));
             f->top = top;
-            tm_call(fdebug, 1, tm_number(tm->frame - tm->frames));        
+            tmCall(fdebug, 1, tmNumber(tm->frame - tm->frames));        
             break;
         }
 

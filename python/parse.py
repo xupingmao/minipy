@@ -569,7 +569,15 @@ def printAstList(tree, n=0):
 
 def printAst(tree, n=0):
     if gettype(tree) == "list":
+        print("     ")
         return printAstList(tree, n)
+    if hasattr(tree, "pos"):
+        line = tree.pos[0]
+        lineStr = str(line)
+        space = 4 - len(lineStr)
+        printf(space*' ' + lineStr + ':')
+    else:
+        print("     ")
     return printAstObj(tree, n)
 
 def parsefile(fname):
