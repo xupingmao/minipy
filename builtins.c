@@ -93,7 +93,7 @@ Object tmStr(Object a) {
     return stringAlloc("", 0);
 }
 
-void tm_print(Object o) {
+void tmPrint(Object o) {
     Object str = tmStr(o);
     int i;
     for(i = 0; i < GET_STR_LEN(str); i++) {
@@ -101,8 +101,8 @@ void tm_print(Object o) {
     }
 }
 
-void tm_println(Object o) {
-    tm_print(o);
+void tmPrintln(Object o) {
+    tmPrint(o);
     puts("");
 }
 
@@ -190,10 +190,10 @@ Object tmFormat(char* fmt, ...) {
     return v;
 }
 
-void tm_printf(char* fmt, ...) {
+void tmPrintf(char* fmt, ...) {
     va_list a;
     va_start(a, fmt);
-    tm_print(tmFormatVaList(fmt, a, 0));
+    tmPrint(tmFormatVaList(fmt, a, 0));
     va_end(a);
 }
 
@@ -242,7 +242,7 @@ Object tm_save(char*fname, Object content) {
 Object bf_input() {
     int i = 0;
     if (hasArg()) {
-        tm_print(arg_get_obj("input"));
+        tmPrint(arg_get_obj("input"));
     }
     char buf[2048];
     memset(buf, '\0', sizeof(buf));
@@ -422,7 +422,7 @@ Object bf_len() {
 Object bf_print() {
     int i = 0;
     while (hasArg()) {
-        tm_print(arg_get_obj("print"));
+        tmPrint(arg_get_obj("print"));
         if (hasArg()) {
             putchar(' ');
         }

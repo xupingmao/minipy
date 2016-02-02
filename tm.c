@@ -64,7 +64,7 @@ int runPyFunc(int argc, char* argv[], char* modName, void(*func)(void)) {
         return -1;
     }
     /* use first frame */
-    int code = setjmp(tm->frame->buf);
+    int code = setjmp(tm->frames->buf);
     if (code == 0) {
         gcInit();
         Object p = listNew(argc);

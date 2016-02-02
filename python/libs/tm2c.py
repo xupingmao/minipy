@@ -39,8 +39,12 @@ class AstNode:
 class Scope:
     def __init__(self, prev):
         self.vars = []
+        self.gVars = []
         self.prev = prev
         self.temp = 0
+    def addGlobalVar(self, name):
+        if name not in self.gVars:
+            self.gVars.append(name)
         
 class Env:
     def __init__(self, fname, prefix = None):
@@ -109,8 +113,12 @@ class Env:
         else:
             self.scope.vars.append(name)
 
-    def isAtGlobalScope(self):
-        return self.scope == self.globalScope
+    def defGlobalVar(self, name):
+        self.scope.addGlobalVar(name)
+
+    def isGlobalVar(self, name):
+        return self.scope == self.globalScope or \
+            name in self.scope.gVars
 
 def new_temp(env):
     c = env.scope.temp
@@ -130,7 +138,7 @@ def do_assign(item, env, right = None):
         if not env.hasVar(name):
             env.defVar(name)
         code = env.getVarName(name) + "=" + right + ";"
-        if env.isAtGlobalScope():
+        if env.isGlobalVar(name):
             code += "\n" + "objSet(%s, %s, %s);".format(env.getGlobals(), \
                 do_const(left, env), env.getVarName(name))
         return code
@@ -138,10 +146,10 @@ def do_assign(item, env, right = None):
         return "// not implemented"
     elif left.type == "get":
         print("assign get")
-        return sformat("%s(%s,%s,%s);", func_set, do_item(left.first, env), do_item(left.second, env), right)
+        return sformat("%s(%s,%s,%s);", func_set, do_name(left.first, env), do_const(left.second, env), right)
     elif left.type == "attr":
         lfirst = Token("string", left.first.val)
-        return sformat("%s(%s,%s,%s);", func_set, do_item(lfirst,env), do_item(left.second,env), right)
+        return sformat("%s(%s,%s,%s);", func_set, do_name(lfirst,env), do_const(left.second,env), right)
 
 def do_const(item, env):
     val = item.val
@@ -283,9 +291,10 @@ def do_def(item, env, indent=0, obj=None):
         obj.name = cname
         obj.constname = env.getConst(name)
     locs = env.locals()
-    vars = []
+    vars = ["// " + name]
     for var in locs:
         vars.append("Object " + env.getVarName(var) + ";")
+    lines = ['puts("enter function %s");'.format(name)] + lines
     func_define = "Object " + cname + "() " + format_block(vars+lines, 0)
     env.exitScope(func_define)
     return sformat("%s(%s, %s, %s);", tm_define, env.getGlobals(), env.getConst(name), cname)
@@ -405,6 +414,14 @@ def do_from(item, env):
     mod = do_const(item.first, env)
     return "tmImportAll(%s, %s);".format(env.getGlobals(), mod)    
 
+def do_global(item, env):
+    gName = item.first.val
+    env.defGlobalVar(gName)
+    # name = do_const(item.first, env)
+    code = "// global " + gName
+    # code += "objSet(%s, %s, NONE_OBJECT);".format(env.getGlobals(), name)
+    return code
+
 _handlers = {
     "if": do_if,
     "while": do_while,
@@ -446,7 +463,8 @@ _handlers2 = {
     "attr": do_attr,
     "in": do_in,
     "import": do_import,
-    "from": do_from
+    "from": do_from,
+    "global": do_global
 }
 
 def do_item(item, env, indent = 0):

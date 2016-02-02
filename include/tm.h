@@ -66,6 +66,11 @@ void list_clear(TmList* list);
 // arg functions
 void arg_insert(Object arg);
 
+
+// function functions
+Object getFileNameObj(Object func);
+Object getFuncNameObj(Object func);
+
 // ops functions
 Object tmCall(Object func, int args, ...);
 Object objAppend(Object a, Object b);

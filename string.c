@@ -210,7 +210,9 @@ Object string_append_str(Object string, char* sz) {
     if (str->stype) {
         str->value = tm_realloc(str->value, str->len+1, str->len+1+sz_len);
     } else {
-        str->value = tm_malloc(sz_len+1);
+        char* oldValue = str->value;
+        str->value = tm_malloc(str->len + sz_len+1);
+        strcpy(str->value, oldValue);
     }
     strcpy(str->value+str->len, sz);
     str->len += sz_len;

@@ -127,7 +127,7 @@ int dict_set(TmDict* dict, Object key, Object val){
     int i;
     #if USE_IDX
     if (key.idx > 0) {
-        // tm_printf("idx=%d, obj=%o\n", key.idx, key);
+        // tmPrintf("idx=%d, obj=%o\n", key.idx, key);
         i = dict_set_attr2(dict, key, val);
         if (i > 0) return i;
     }

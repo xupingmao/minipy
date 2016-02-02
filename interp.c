@@ -203,7 +203,7 @@ Object tm_eval(TmFrame* f) {
             break;
 
         case LOAD_GLOBAL: {
-            /* tm_printf("load global %o\n", GET_CONST(i)); */
+            /* tmPrintf("load global %o\n", GET_CONST(i)); */
             int idx = dict_get_attr(GET_DICT(globals), i);
             if (idx == -1) {
                 idx = dict_get_attr(GET_DICT(tm->builtins), i);
@@ -312,7 +312,7 @@ Object tm_eval(TmFrame* f) {
             x = TM_POP();
             v = TM_POP();
             #if INTERP_DB
-                tm_printf("Self %o, Key %o, Val %o\n", x, k, v);
+                tmPrintf("Self %o, Key %o, Val %o\n", x, k, v);
             #endif
             objSet(x, k, v);
             break;

@@ -357,5 +357,5 @@ def boot(loadlibs=True):
         if exists(ARGV[0]):
             execfile(ARGV[0])
         else:
-            filename = "libs/" + ARGV[0]
+            filename = "D:\\temp\\subpy\\python\\" + ARGV[0]
             execfile(filename, False)

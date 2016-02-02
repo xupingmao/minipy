@@ -3,12 +3,12 @@
 
 #include "tm.h"
 #include "interp.h"
-void      tm_print(Object v);
-void      tm_println(Object v);
+void      tmPrint(Object v);
+void      tmPrintln(Object v);
 Object    tmFormatVaList(char* fmt, va_list ap, int appendln);
 Object    tmFormat(char*fmt, ...);
 Object    tmType(Object o);
-void      tm_printf(char* fmt, ...);
+void      tmPrintf(char* fmt, ...);
 /* avoid '\0' in char array, which will be regarded as end by c lang */
 /* Chars     ObjectInfo(char*,Object,int); */
 Object    tm_load(char* fname);

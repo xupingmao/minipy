@@ -29,7 +29,7 @@ void arg_insert(Object first) {
         tm->arguments[i] = tm->arguments[i-1];
     }
     #if 0
-        tm_printf("Self = %o\n", first);
+        tmPrintf("Self = %o\n", first);
     #endif
     tm->arguments[0] = first;
     tm->arg_cnt += 1;

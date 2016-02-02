@@ -153,6 +153,25 @@ char* getFuncNameSz(Object func) {
         return "<unknown>";
     }
 }
+
+/**
+ * @param func Object
+ * @return fileName Obj->string
+ */
+Object getFileNameObj(Object func) {
+  if (IS_FUNC(func)) {
+    return GET_MODULE(GET_FUNCTION(func)->mod)->file;
+  }
+  return NONE_OBJECT;
+}
+
+Object getFuncNameObj(Object func) {
+  if (IS_FUNC(func)) {
+    return GET_FUNCTION(func)->name;
+  }
+  return NONE_OBJECT;
+}
+
 #if DB_FUNC
 char* getFuncFileSz(Object func) {
     if (IS_FUNC(func)) {
