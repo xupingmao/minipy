@@ -20,8 +20,8 @@ def center(self, num):
     right = int(right)
     left = num - right - len(self)
     return left * ' ' + self + right * ' '
-def startswith(self,start):
-    return self.find(start)==0
+def startswith(self, tar):
+    return self.find(tar)==0
 def endswith(self, end):
     idx = self.find(end)
     if idx < 0: return False
@@ -89,7 +89,7 @@ add_obj_method("str", "format", sformat)
 add_obj_method('str', 'ljust', ljust)
 add_obj_method('str', 'rjust', rjust)
 add_obj_method('str', 'center', center)
-add_obj_method('str', 'startswith', startswith)
+add_obj_method("str", "startswith", startswith)
 add_obj_method('str', 'endswith', endswith)
 add_obj_method('str', 'join', str_join)
 add_obj_method('list', 'join', list_join)
@@ -202,10 +202,6 @@ def _import(des_glo, fname, tar = None):
             raise(sformat("import error, no definition named '%s'", tar))
         des_glo[tar] = g[tar]
 
-
-def newobj():
-    return {}
-
 def hasattr(obj, name):
     return name in obj
 
@@ -217,7 +213,6 @@ add_builtin("add_builtin", add_builtin)
 add_builtin("Exception", Exception)
 add_builtin("hasattr", hasattr)
 add_builtin("_import", _import)
-add_builtin("newobj", newobj)
 add_builtin("copy", copy)
 add_builtin("mtime", mtime)
 add_builtin("sformat0", sformat0)
@@ -357,5 +352,5 @@ def boot(loadlibs=True):
         if exists(ARGV[0]):
             execfile(ARGV[0])
         else:
-            filename = "D:\\temp\\subpy\\python\\" + ARGV[0]
+            filename = "D:\\temp\\subpy\\python\\libs\\" + ARGV[0]
             execfile(filename, False)

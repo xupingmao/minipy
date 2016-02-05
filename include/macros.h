@@ -17,7 +17,7 @@
 
 #define ASSERT_TYPE_WITH_INFO(obj, type, info) \
     if(TM_TYPE(obj)!=type){                    \
-        tm_raise(info, obj);                    \
+        tmRaise(info, obj);                    \
     }
 /* for instruction read */
 #define next_char(s) *s++
@@ -46,7 +46,7 @@
 #define GET_FUNCTION_GLOBALS(fnc) GET_MODULE(GET_FUNCTION(fnc)->mod)->globals
 
 /* assert macro */
-#define TM_ASSERT(cond, msg) if(!cond) {tm_raise( msg );}
+#define TM_ASSERT(cond, msg) if(!cond) {tmRaise( msg );}
 #endif
 
 

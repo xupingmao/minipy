@@ -1,4 +1,7 @@
-from encode import *
+import encode
+compile = encode.compile
+split_instr = encode.split_instr
+from asm import *
 
 def _op_add(a,b):
     return a+b

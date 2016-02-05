@@ -14,10 +14,10 @@
 
 Object           funcNew(Object mod,Object self,Object (*native_func)());
 Object           getFuncAttr(TmFunction* fnc, Object key);
-void             func_free(TmFunction*);
+void             funcFree(TmFunction*);
 Object           methodNew(Object _fnc, Object self);
 Object           moduleNew(Object file, Object name, Object code);
-void             module_free(TmModule*);
+void             moduleFree(TmModule*);
 // CodeCheckResult  resolveCode(TmModule *mod,  unsigned char*s , int isFuncDef);
 unsigned char*   getFunctionCode(TmFunction*);
 void             func_format(char* des, TmFunction* func);
@@ -27,7 +27,7 @@ TmModule*        getFuncMod(TmFunction* func);
 char* getFuncNameSz(Object func);
 char* getFuncFileSz(Object func);
 #endif
-Object           class_new(Object dict);
+Object           classNew(Object dict);
 Object           getFunctionGlobals(TmFunction*);
 unsigned char* func_resolve(TmFunction*, unsigned char*);
 #define getGlobals(func) getFunctionGlobals(GET_FUNCTION(func))

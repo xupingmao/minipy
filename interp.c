@@ -41,14 +41,14 @@ Object callFunction(Object func) {
             }
         }
     } else if (IS_DICT(func)) {
-        ret = class_new(func);
+        ret = classNew(func);
         Object *_fnc = dictGetByStr(ret, "__init__");
         if (_fnc != NULL) {
             callFunction(*_fnc);
         }
         return ret;
     }
-    tm_raise("File %o, line=%d: callFunction:invalid object %o", GET_FUNCTION_FILE(tm->frame->fnc), 
+    tmRaise("File %o, line=%d: callFunction:invalid object %o", GET_FUNCTION_FILE(tm->frame->fnc), 
         tm->frame->lineno, func);
     return NONE_OBJECT;
 }
@@ -65,7 +65,7 @@ void popFrame() {
 #define FRAME_CHECK_GC()  \
 f->top = top; \
 if (tm->allocated > tm->gcThreshold) {   \
-    gc_full();                            \
+    gcFull();                            \
 }
 
 TmFrame* pushFrame(Object fnc) {
@@ -77,13 +77,13 @@ TmFrame* pushFrame(Object fnc) {
     /* check oprand stack */
     if (top >= tm->stack + STACK_SIZE) {
         popFrame();
-        tm_raise("tm_eval: stack overflow");
+        tmRaise("tm_eval: stack overflow");
     }
     
     /* check frame stack*/
     if (tm->frame >= tm->frames + FRAMES_COUNT-1) {
         popFrame();
-        tm_raise("tm_eval: frame overflow");
+        tmRaise("tm_eval: frame overflow");
     }
 
     f->pc = GET_FUNCTION(fnc)->code;
@@ -161,15 +161,15 @@ Object tm_eval(TmFrame* f) {
 
         case OP_IMPORT: {
             Object import_func = tmGetGlobal(globals, szToString("_import"));
-            arg_start();
-            arg_push(globals);
+            argStart();
+            argPush(globals);
             if (i == 1) {
-                arg_push(TM_POP());
+                argPush(TM_POP());
             } else {
                 Object b = TM_POP();
                 Object a = TM_POP();
-                arg_push(a);
-                arg_push(b);
+                argPush(a);
+                argPush(b);
             }
             callFunction(import_func);
             break;
@@ -208,7 +208,7 @@ Object tm_eval(TmFrame* f) {
             if (idx == -1) {
                 idx = dict_get_attr(GET_DICT(tm->builtins), i);
                 if (idx == -1) {
-                    tm_raise("NameError: name %o is not defined", GET_CONST(i));
+                    tmRaise("NameError: name %o is not defined", GET_CONST(i));
                 }
                 TM_PUSH(GET_DICT(tm->builtins)->nodes[idx].val);
             } else {
@@ -289,7 +289,7 @@ Object tm_eval(TmFrame* f) {
             break;
         }
         case OP_IN: {
-            *(top-1) = tmNumber(objHas(*top, *(top-1)));
+            *(top-1) = tmNumber(objIn(*(top-1), *top));
             top--;
             break;
         }
@@ -326,7 +326,7 @@ Object tm_eval(TmFrame* f) {
         case CALL: {
             f->top = top;
             top -= i;
-            objSetArguments(top + 1, i);
+            argSetArguments(top + 1, i);
             Object func = TM_POP();
             #if INTERP_DB
                 printf("call %s\n", getFuncNameSz(func));
@@ -340,7 +340,7 @@ Object tm_eval(TmFrame* f) {
             int parg = pc[1];
             int varg = pc[2];
             if (tm->arg_cnt < parg || tm->arg_cnt > parg + varg) {
-                tm_raise("ArgError,parg=%d,varg=%d,given=%d", 
+                tmRaise("ArgError,parg=%d,varg=%d,given=%d", 
                     parg, varg, tm->arg_cnt);
             }
             for(i = 0; i < tm->arg_cnt; i++){
@@ -464,12 +464,12 @@ Object tm_eval(TmFrame* f) {
         case TM_DEBUG: {
             Object fdebug = tmGetGlobal(globals, szToString("__debug__"));
             f->top = top;
-            tmCall(fdebug, 1, tmNumber(tm->frame - tm->frames));        
+            tmCall(0, fdebug, 1, tmNumber(tm->frame - tm->frames));        
             break;
         }
 
         default:
-            tm_raise("BAD INSTRUCTION, %d\n  globals() = \n%o", pc[0],
+            tmRaise("BAD INSTRUCTION, %d\n  globals() = \n%o", pc[0],
                     GET_FUNCTION_GLOBALS(f->fnc));
             goto end;
         }
@@ -480,7 +480,7 @@ Object tm_eval(TmFrame* f) {
     end:
     /*
     if (top != f->stack) {
-        tm_raise("tm_eval: operand stack overflow");
+        tmRaise("tm_eval: operand stack overflow");
     }*/
     popFrame();
     return ret;

@@ -6,6 +6,6 @@
 
 void pushException(TmFrame* f);
 void traceback();
-void tm_raise(char* fmt, ...);
+void tmRaise(char* fmt, ...);
 
 #endif

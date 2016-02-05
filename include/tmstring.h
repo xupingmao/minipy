@@ -27,14 +27,14 @@ typedef struct StringIterator {
     String* string;
 }StringIterator;
 
-Object strinGET_CHAR(int c);
+Object stringCharNew(int c);
 Object stringAlloc(char* s, int size);
 #define szToString(s) stringAlloc(s, -1)
 #define stringNew(s) stringAlloc(s, strlen(s))
-void string_free(String*);
-int StringEquals(String*s0, String*s1);
+void stringFree(String*);
+int stringEquals(String*s0, String*s1);
 
-Object string_substring(String* str, int start, int end) ;
+Object stringSubstring(String* str, int start, int end) ;
 Object bf_stringFormat();
 Object tmStr(Object obj);
 Object string_chr(int n);

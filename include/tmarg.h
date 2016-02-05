@@ -6,24 +6,24 @@
 #include "tmlist.h"
 #include "function.h"
 
-void arg_start();
-void arg_push(Object obj) ;
-void objSetArguments(Object* first, int len);
-#define setArgs  objSetArguments
+void argStart();
+void argPush(Object obj) ;
+void argSetArguments(Object* first, int len);
+#define setArgs  argSetArguments
 void _resolveMethodSelf(TmFunction *fnc);
 #define resolveMethodSelf(fnc) _resolveMethodSelf(GET_FUNCTION((fnc)))
 void printArguments();
 int hasArg();
-Object arg_get_str(const char* fnc);
-char*  arg_get_sz(const char* fnc);
-Object arg_get_func(const char* fnc);
-int arg_get_int(const char* fnc);
-double arg_get_double(const char* fnc);
-TmList* arg_get_list_p(const char* fnc);
-Object arg_get_list(const char* fnc);
-Object arg_get_dict(const char* fnc);
-Object arg_get_obj(const char* fnc);
-Object arg_get_data(const char* fnc);
+Object argTakeStrObj(const char* fnc);
+char*  argTakeSz(const char* fnc);
+Object takeFuncObj(const char* fnc);
+int argTakeInt(const char* fnc);
+double argTakeDouble(const char* fnc);
+TmList* argTakeListPtr(const char* fnc);
+Object argTakeListObj(const char* fnc);
+Object argTakeDictObj(const char* fnc);
+Object argTakeObj(const char* fnc);
+Object argTakeDataObj(const char* fnc);
 int getArgsCount() ;
 void tmUngetArg();
 

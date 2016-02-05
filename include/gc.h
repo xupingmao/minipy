@@ -11,14 +11,14 @@ void initMemory();
 void freeMemory();
 
 void        gcInit();
-Object      gc_track(Object obj);
+Object      gcTrack(Object obj);
 void        gcDeinit();
-void        gc_full();
+void        gcFull();
 Object bfGetMallocInfo();
 
-void gc_mark(Object);
-void gc_markList(TmList*);
-void gc_markDict(TmDict*);
+void gcMark(Object);
+void gcMarkList(TmList*);
+void gcMarkDict(TmDict*);
 
 #if 0
 #define PRINT_OBJ_GC_INFO_START() int _gc_old = tm->allocated;

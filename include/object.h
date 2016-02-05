@@ -150,7 +150,9 @@ typedef struct TmVM {
 
   struct TmList* all;
   int allocated;
+  int maxAllocated;
   int gcThreshold;
+  int gcState;
 
 }TmVM;
 
@@ -161,7 +163,7 @@ TmVM* tm;
 Object* tm_stack_end;
 
 int              objEqSz(Object str, const char* value);
-void             tm_raise(char*fmt , ...);
+void             tmRaise(char*fmt , ...);
 #include "tmdata.h"
 #include "tmdict.h"
 #include "tmlist.h"

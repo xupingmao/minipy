@@ -39,9 +39,9 @@ static DataProto baseIterProto;
 Object dataNew(size_t size);
 void dataMark();
 void dataFree();
-void data_set(Object, Object, Object);
-Object data_get(Object, Object);
-Object data_str(Object self);
+void dataSet(Object, Object, Object);
+Object dataGet(Object, Object);
+Object dataStr(Object self);
 
 void obj_free(Object o);
 Object obj_new(int type, void* value);

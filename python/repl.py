@@ -1,5 +1,7 @@
 _PRINT_STR_LEN = 40
-from encode import *
+import encode
+
+compilefile = encode.compilefile
 
 def replPrint(p, n = 0, depth = 2):
     if depth <= 0:
@@ -59,9 +61,8 @@ def run(path, args = None):
     ARGV = bak_argv
     
 def repl():
-    from parse import *
-    from tokenize import *
-    from pyeval import *
+    import pyeval
+    fpyeval = pyeval.pyeval
     print("Welcome To TinyMatrix!!!")
     
     global debug
@@ -79,10 +80,11 @@ def repl():
                     break
                 if 'debug' not in g:
                     g['debug'] = 0
-                v = pyeval(x, g, g['debug'])
+                v = fpyeval(x, g, g['debug'])
                 if v != None:
                     replPrint(v)
             except Exception as e:
-                print(e)
+                traceback()
+                # print(e)
 if __name__ == '__main__':
     repl()

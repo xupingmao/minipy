@@ -21,11 +21,10 @@ void traceback() {
     tmPrintln(tm->ex);
 }
 
-void tm_raise(char* fmt, ...) {
-    DEBUG2("enter raise", fmt)
+void tmRaise(char* fmt, ...) {
     va_list a;
     va_start(a, fmt);
-    list_clear(GET_LIST(tm->exList));
+    listClear(GET_LIST(tm->exList));
     tm->ex = tmFormatVaList(fmt, a, 0);
     Object file = getFileNameObj(tm->frame->fnc);
     Object fncName = getFuncNameObj(tm->frame->fnc);

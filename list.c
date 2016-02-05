@@ -17,7 +17,7 @@ Object listNew(int cap) {
     Object v;
     v.type = TYPE_LIST;
     v.value.list = list_alloc_untracked(cap);
-    return gc_track(v);
+    return gcTrack(v);
 }
 
 void listFree(TmList* list) {
@@ -27,27 +27,27 @@ void listFree(TmList* list) {
     PRINT_OBJ_GC_INFO_END("list", list);
 }
 
-Object list_get(TmList* list, int n) {
+Object listGet(TmList* list, int n) {
     if (n < 0) {
         n += list->len;
     }
     if (n >= list->len || n < 0) {
-        tm_raise("list out of range");
+        tmRaise("list out of range");
     }
     return list->nodes[n];
 }
 
-void list_set(TmList* list, int n, Object val) {
+void listSet(TmList* list, int n, Object val) {
     if (n < 0) {
         n += list->len;
     }
     if (n >= list->len || n < 0) {
-        tm_raise("list out of range");
+        tmRaise("list out of range");
     }
     list->nodes[n] = val;
 }
 
-void list_clear(TmList* list) {
+void listClear(TmList* list) {
     list->len = 0;
 }
 
@@ -99,7 +99,7 @@ void listInsert(TmList* list, int n, Object obj) {
     }
 }
 
-int list_index(TmList* list, Object v) {
+int listIndex(TmList* list, Object v) {
     int i;
     int len = list->len;
     Object* nodes = list->nodes;
@@ -111,12 +111,12 @@ int list_index(TmList* list, Object v) {
     return -1;
 }
 
-Object list_remove(TmList* list, int index) {
+Object listRemove(TmList* list, int index) {
     if (index < 0) {
         index += list->len;
     }
     if (index < 0 || index >= list->len) {
-        tm_raise("list_remove(): index out of range, length=%d, index=%d",
+        tmRaise("listRemove(): index out of range, length=%d, index=%d",
                 list->len, index);
     }
     Object obj = list->nodes[index];
@@ -128,17 +128,17 @@ Object list_remove(TmList* list, int index) {
     return obj;
 }
 
-Object list_pop(TmList* list) {
-    return list_remove(list, -1);
+Object listPop(TmList* list) {
+    return listRemove(list, -1);
 }
 
-void list_del(TmList* list, Object key) {
+void listDel(TmList* list, Object key) {
     tmAssertType(key, TYPE_NUM, "list.del");
     int idx = GET_NUM(key);
-    list_remove(list, idx);
+    listRemove(list, idx);
 }
 
-Object list_add(TmList* list1, TmList*list2) {
+Object listAdd(TmList* list1, TmList*list2) {
     int newl = list1->len + list2->len;
     Object newlist = listNew(newl);
     TmList* list = GET_LIST(newlist);
@@ -159,33 +159,33 @@ int ListComputeSize(TmList* list){
 
 Object list_m_append() {
     const char* szFunc = "list.append";
-    Object self = arg_get_list(szFunc);
-    Object v = arg_get_obj(szFunc);
+    Object self = argTakeListObj(szFunc);
+    Object v = argTakeObj(szFunc);
     objAppend(self, v);
     return NONE_OBJECT;
 }
 
-Object bmlist_pop() {
-    Object self = arg_get_list("list.pop");
-    return list_pop(GET_LIST(self));
+Object bmlistPop() {
+    Object self = argTakeListObj("list.pop");
+    return listPop(GET_LIST(self));
 }
 Object bmlistInsert() {
     const char* szFunc = "list.insert";
-    Object self = arg_get_list(szFunc);
-    int n = arg_get_int(szFunc);
-    Object v = arg_get_obj(szFunc);
+    Object self = argTakeListObj(szFunc);
+    int n = argTakeInt(szFunc);
+    Object v = argTakeObj(szFunc);
     listInsert(GET_LIST(self), n, v);
     return self;
 }
 
-Object bmlist_index() {
-    TmList* self = arg_get_list_p("list.index");
-    Object v = arg_get_obj("list.index");
-    return tmNumber(list_index(self, v));
+Object bmlistIndex() {
+    TmList* self = argTakeListPtr("list.index");
+    Object v = argTakeObj("list.index");
+    return tmNumber(listIndex(self, v));
 }
 
 Object bmListReverse() {
-    TmList* self = arg_get_list_p("list.reverse");
+    TmList* self = argTakeListPtr("list.reverse");
     int start = 0, end = self->len - 1;
     while (end > start) {
         Object temp = self->nodes[start];
@@ -197,15 +197,15 @@ Object bmListReverse() {
     return NONE_OBJECT;
 }
 
-Object bmlist_remove() {
-    TmList* list = arg_get_list_p("list.remove");
-    int idx = arg_get_int("list.remove");
-    list_remove(list, idx);
+Object bmlistRemove() {
+    TmList* list = argTakeListPtr("list.remove");
+    int idx = argTakeInt("list.remove");
+    listRemove(list, idx);
     return NONE_OBJECT;
 }
 
 Object bmListClone() {
-    Object self = arg_get_obj("listClone");
+    Object self = argTakeObj("listClone");
     TmList* list = GET_LIST(self);
     Object _newlist = listNew(list->cap);
     TmList* newlist = GET_LIST(_newlist);
@@ -217,17 +217,17 @@ Object bmListClone() {
 void listMethodsInit() {
     tm->list_proto = dictNew();
     regModFunc(tm->list_proto, "append", list_m_append);
-    regModFunc(tm->list_proto, "pop", bmlist_pop);
+    regModFunc(tm->list_proto, "pop", bmlistPop);
     regModFunc(tm->list_proto, "insert", bmlistInsert);
-    regModFunc(tm->list_proto, "index", bmlist_index);
+    regModFunc(tm->list_proto, "index", bmlistIndex);
     regModFunc(tm->list_proto, "reverse", bmListReverse);
-    regModFunc(tm->list_proto, "remove", bmlist_remove);
+    regModFunc(tm->list_proto, "remove", bmlistRemove);
     regModFunc(tm->list_proto, "clone", bmListClone);
 }
 
 void listIterMark(DataObject* data) {
     TmListIterator* iter = (TmListIterator*) data;
-    gc_markList(iter->list);
+    gcMarkList(iter->list);
 }
 
 DataProto* getListIterProto() {

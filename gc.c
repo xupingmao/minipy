@@ -41,7 +41,9 @@ void gcInit() {
     tm->init = 0;
     tm->debug = 0;
     tm->allocated = 0;
+    tm->maxAllocated = 0;
     tm->gcThreshold = 1024 * 8; // set 8k to see gc process
+    tm->gcState = 1; // enable gc.
 
     tm->all = list_alloc_untracked(init_size);
     tm->list_proto.type = TYPE_NONE;
@@ -60,7 +62,7 @@ void gcInit() {
     /* initialize chars */
     ARRAY_CHARS = listNew(256);
     for (i = 0; i < 256; i++) {
-        objAppend(ARRAY_CHARS, strinGET_CHAR(i));
+        objAppend(ARRAY_CHARS, stringCharNew(i));
     }
     objAppend(tm->root, ARRAY_CHARS);
     
@@ -71,8 +73,7 @@ void gcInit() {
     for (i = 0; i < FRAMES_COUNT; i++) {
         TmFrame* f = tm->frames + i;
         f->stack = f->top = tm->stack;
-        /* f->ex = NONE_OBJECT; */
-        // f->line = NONE_OBJECT;
+        f->lineno = -1;
         f->fnc = NONE_OBJECT;
         f->pc = NULL;
         f->maxlocals = 0;
@@ -91,7 +92,7 @@ void* tm_malloc(size_t size) {
     Object* func;
 
     if (size <= 0) {
-        tm_raise("tm_malloc, attempts to allocate a memory block of size %d!", size);
+        tmRaise("tm_malloc, attempts to allocate a memory block of size %d!", size);
         return NULL;
     }
     block = malloc(size);
@@ -100,7 +101,7 @@ void* tm_malloc(size_t size) {
         log_debug("%d -> %d , +%d\n", tm->allocated, tm->allocated + size, size);
 #endif
     if (block == NULL) {
-        tm_raise("tm_malloc: fail to malloc memory block of size %d", size);
+        tmRaise("tm_malloc: fail to malloc memory block of size %d", size);
     }
     tm->allocated += size;
     return block;
@@ -120,14 +121,14 @@ void tm_free(void* o, size_t size) {
     if (size > 100)
     log_debug("Free %p, %d -> %d , -%d\n",o, tm->allocated, tm->allocated - size, size);
     if(size<=0) {
-        tm_raise("tm_free: you are free a block of size %d", size);
+        tmRaise("tm_free: you are free a block of size %d", size);
     }
 #endif
     free(o);
     tm->allocated -= size;
 }
 
-Object gc_track(Object v) {
+Object gcTrack(Object v) {
     switch (v.type) {
     case TYPE_NUM:
     case TYPE_NONE:
@@ -151,7 +152,7 @@ Object gc_track(Object v) {
         GET_DATA(v)->marked = GC_REACHED_SIGN;
         break;
     default:
-        tm_raise("gc_track(), not supported type %d", v.type);
+        tmRaise("gcTrack(), not supported type %d", v.type);
         return v;
     }
     SET_IDX(v, 0);
@@ -159,52 +160,52 @@ Object gc_track(Object v) {
     return v;
 }
 
-void gc_markList(TmList* list) {
+void gcMarkList(TmList* list) {
     if (list->marked)
         return;
     list->marked = GC_REACHED_SIGN;
     int i;
     for (i = 0; i < list->len; i++) {
-        gc_mark(list->nodes[i]);
+        gcMark(list->nodes[i]);
     }
 }
 /*
-void gc_markDict(TmDict* dict) {
+void gcMarkDict(TmDict* dict) {
     if (dict->marked)
         return;
     dict->marked = GC_REACHED_SIGN;
     DictNode* node = dict->head;
     while (node != NULL) {
-        gc_mark(node->key);
-        gc_mark(node->val);
+        gcMark(node->key);
+        gcMark(node->val);
         node = node->next;
     }
 }
  */
  
- void gc_markDict(TmDict* dict) {
+ void gcMarkDict(TmDict* dict) {
     if (dict->marked)
         return;
     dict->marked = GC_REACHED_SIGN;
     int i;
     for(i = 0; i < dict->cap; i++) {
         if (dict->nodes[i].used) {
-            gc_mark(dict->nodes[i].key);
-            gc_mark(dict->nodes[i].val);
+            gcMark(dict->nodes[i].key);
+            gcMark(dict->nodes[i].val);
         }
     }
 }
 
-void gc_markFunc(TmFunction* func) {
+void gcMarkFunc(TmFunction* func) {
     if (func->marked)
         return;
     func->marked = GC_REACHED_SIGN;
-    gc_mark(func->mod);
-    gc_mark(func->self);
-    gc_mark(func->name);
+    gcMark(func->mod);
+    gcMark(func->self);
+    gcMark(func->name);
 }
 
-void gc_mark(Object o) {
+void gcMark(Object o) {
     if (o.type == TYPE_NUM || o.type == TYPE_NONE)
         return;
     switch (o.type) {
@@ -215,22 +216,22 @@ void gc_mark(Object o) {
         break;
     }
     case TYPE_LIST:
-        gc_markList(GET_LIST(o));
+        gcMarkList(GET_LIST(o));
         break;
     case TYPE_DICT:
-        gc_markDict(GET_DICT(o));
+        gcMarkDict(GET_DICT(o));
         break;
     case TYPE_FUNCTION:
-        gc_markFunc(GET_FUNCTION(o));
+        gcMarkFunc(GET_FUNCTION(o));
         break;
     case TYPE_MODULE:
         if (GET_MODULE(o)->marked)
             return;
         GET_MODULE(o)->marked = GC_REACHED_SIGN;
-        gc_mark(GET_MODULE(o)->code);
-        gc_mark(GET_MODULE(o)->file);
-        /*gc_mark(GET_MODULE(o)->constants);*/
-        gc_mark(GET_MODULE(o)->globals);
+        gcMark(GET_MODULE(o)->code);
+        gcMark(GET_MODULE(o)->file);
+        /*gcMark(GET_MODULE(o)->constants);*/
+        gcMark(GET_MODULE(o)->globals);
         break;
     case TYPE_DATA:
         if (GET_DATA(o)->marked)
@@ -239,23 +240,23 @@ void gc_mark(Object o) {
         GET_DATA(o)->proto->mark(GET_DATA(o));
         break;
     default:
-        tm_raise("gc_mark(), unknown object type %d", o.type);
+        tmRaise("gcMark(), unknown object type %d", o.type);
     }
 }
 
-void gc_markLocalsAndStack() {
+void gcMarkLocalsAndStack() {
     TmFrame* f;
     for(f = tm->frames + 1; f <= tm->frame; f++) {
-        gc_mark(f->fnc);
+        gcMark(f->fnc);
         int j;
         /* mark locals */
         for(j = 0; j < f->maxlocals; j++) {
-            gc_mark(f->locals[j]);
+            gcMark(f->locals[j]);
         }
         /* mark operand stack */
         Object* temp;
         for(temp = f->stack; temp <= f->top; temp++) {
-            gc_mark(*temp);
+            gcMark(*temp);
         }
     }
 }
@@ -301,33 +302,42 @@ void gc_wipe() {
  * TODO maybe we can mark the object with different value to
  * recognize the GC type of the object.
  */
-void gc_full() {
+void gcFull() {
     int i;
     long t1, t2;
     t1 = clock();
 #if GC_DEBUG
     int old = tm->allocated;
 #endif
+
+    if (tm->allocated > tm->maxAllocated) {
+        tm->maxAllocated = tm->allocated;
+    }
     
+    // disable gc.
+    if (tm->gcState == 0) {
+        return;
+    }
+
     /* mark all objects to be unused */
     for (i = 0; i < tm->all->len; i++) {
         GC_MARKED(tm->all->nodes[i]) = 0;
     }
     
     /* mark protoes */
-    gc_mark(tm->list_proto);
-    gc_mark(tm->dict_proto);
-    gc_mark(tm->str_proto);
-    gc_mark(tm->builtins);
-    gc_mark(tm->modules);
-    gc_mark(tm->constants);
+    gcMark(tm->list_proto);
+    gcMark(tm->dict_proto);
+    gcMark(tm->str_proto);
+    gcMark(tm->builtins);
+    gcMark(tm->modules);
+    gcMark(tm->constants);
     
-    gc_mark(tm->root);
-    gc_markLocalsAndStack();
+    gcMark(tm->root);
+    gcMarkLocalsAndStack();
 
     /* wipe garbage */
     gc_wipe();
-    tm->gcThreshold = tm->allocated * 2;
+    tm->gcThreshold = tm->allocated + tm->allocated / 2;
     t2 = clock();
 #if GC_DEBUG
     log_debug("fullGC %dK => %dK, elasped time = %ld\n",
@@ -377,7 +387,7 @@ Object obj_new(int type, void * value) {
     case TYPE_NONE:
         break;
     default:
-        tm_raise("obj_new: not supported type %d", type);
+        tmRaise("obj_new: not supported type %d", type);
     }
     return o;
 }
@@ -386,7 +396,7 @@ Object obj_new(int type, void * value) {
 void obj_free(Object o) {
     switch (TM_TYPE(o)) {
     case TYPE_STR:
-        string_free(GET_STR_OBJ(o));
+        stringFree(GET_STR_OBJ(o));
         break;
     case TYPE_LIST:
         listFree(GET_LIST(o));
@@ -395,10 +405,10 @@ void obj_free(Object o) {
         dict_free(GET_DICT(o));
         break;
     case TYPE_FUNCTION:
-        func_free(GET_FUNCTION(o));
+        funcFree(GET_FUNCTION(o));
         break;
     case TYPE_MODULE:
-        module_free(o.value.mod);
+        moduleFree(o.value.mod);
         break;
     case TYPE_DATA:
         GET_DATA_PROTO(o)->free(GET_DATA(o));
@@ -416,7 +426,7 @@ Object* baseNext(TmBaseIterator* iterator) {
 }
 
 void baseMark(DataObject* data) {
-    gc_mark(((TmBaseIterator*)data)->func);
+    gcMark(((TmBaseIterator*)data)->func);
 }
 
 DataProto* getBaseIterProto() {
@@ -430,7 +440,7 @@ DataProto* getBaseIterProto() {
 }
 
 Object* dataNext(DataObject* data) {
-    tm_raise("next is not defined!");
+    tmRaise("next is not defined!");
     return NULL;
 }
 
@@ -440,9 +450,9 @@ DataProto* getDefaultDataProto() {
         defaultDataProto.mark = dataMark;
         defaultDataProto.free = dataFree;
         defaultDataProto.next = dataNext;
-        defaultDataProto.get = data_get;
-        defaultDataProto.set = data_set;
-        defaultDataProto.str = data_str;
+        defaultDataProto.get = dataGet;
+        defaultDataProto.set = dataSet;
+        defaultDataProto.str = dataStr;
         defaultDataProto.dataSize = sizeof(DataProto);
     }
     return &defaultDataProto;
@@ -451,10 +461,10 @@ DataProto* getDefaultDataProto() {
 void initDataProto(DataProto* proto) {
     proto->mark = dataMark;
     proto->free = dataFree;
-    proto->get = data_get;
-    proto->set = data_set;
+    proto->get = dataGet;
+    proto->set = dataSet;
     proto->next = dataNext;
-    proto->str = data_str;
+    proto->str = dataStr;
     proto->init = 1;
     proto->dataSize = sizeof(TmData);
 }
@@ -466,10 +476,10 @@ Object dataNew(size_t dataSize) {
 /*    GET_DATA_PROTO(data)->next = dataNext;
     GET_DATA_PROTO(data)->mark = dataMark;
     GET_DATA_PROTO(data)->free = dataFree;
-    GET_DATA_PROTO(data)->get = data_get;
-    GET_DATA_PROTO(data)->set = data_set;*/
+    GET_DATA_PROTO(data)->get = dataGet;
+    GET_DATA_PROTO(data)->set = dataSet;*/
     GET_DATA_PROTO(data) = getDefaultDataProto();
-    return gc_track(data);
+    return gcTrack(data);
 }
 
 void dataMark(DataObject* data) {
@@ -480,14 +490,14 @@ void dataFree(TmData* data) {
     tm_free(data, data->proto->dataSize);
 }
 
-Object data_get(Object self, Object key) {
+Object dataGet(Object self, Object key) {
     return NONE_OBJECT;
 }
 
-void data_set(Object self, Object key, Object value) {
+void dataSet(Object self, Object key, Object value) {
 
 }
 
-Object data_str(Object self) {
+Object dataStr(Object self) {
     return stringAlloc("data", -1);
 }

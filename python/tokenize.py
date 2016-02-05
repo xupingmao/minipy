@@ -252,7 +252,7 @@ def _main():
     fname = ARGV[1]
     print("try to tokenize file ", fname)
     content = load(fname)
-    list = dotokenize(content)
+    list = tokenize(content)
     for i in list:
         print(i.pos, i.type, i.val)
 

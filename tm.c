@@ -13,6 +13,7 @@
 #include "exception.c"
 #include "util.c"
 #include "tmarg.c"
+#include "initbin.c";
 
 void regModFunc(Object mod, char* name, Object (*native)()) {
     Object func = funcNew(NONE_OBJECT, NONE_OBJECT, native);
@@ -49,10 +50,25 @@ void loadModule(Object name, Object code) {
     callFunction(fnc);
 }
 
+int loadBinary() {
+    unsigned char* text = bin;
+    int count = uncode32(&text);
+    int i;for(i = 0; i < count; i++) {
+        int nameLen = uncode32(&text);
+        Object name = stringAlloc((char*)text, nameLen);
+        text += nameLen;
+        int codeLen = uncode32(&text);
+        Object code = stringAlloc((char*)text, codeLen);
+        text += codeLen;
+        loadModule(name, code);
+    }
+    return 1;
+}
+
 int callModFunc(char* mod, char* szFnc) {
     Object m = objGet(tm->modules, stringNew(mod));
     Object fnc = objGet(m, stringNew(szFnc));
-    arg_start();
+    argStart();
     callFunction(fnc);
     return 0;
 }
@@ -76,7 +92,11 @@ int runPyFunc(int argc, char* argv[], char* modName, void(*func)(void)) {
         listInsert(GET_LIST(p), 0, stringNew(modName));
         vmInit();
         dictSetByStr(tm->builtins, "ARGV", p);
+        loadBinary();
+        tm->gcState = 0;
         func();
+        tm->gcState = 1;
+        printf("tm->maxAllocated = %d\n", tm->maxAllocated);
     } else if (code == 1){
         DEBUG("enter traceback");
         traceback();

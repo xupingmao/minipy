@@ -53,7 +53,7 @@ void loadModule(Object name, Object code) {
 int callModFunc(char* mod, char* szFnc) {
     Object m = objGet(tm->modules, stringNew(mod));
     Object fnc = objGet(m, stringNew(szFnc));
-    arg_start();
+    argStart();
     callFunction(fnc);
     return 0;
 }

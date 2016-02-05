@@ -60,11 +60,12 @@ Object ARRAY_CHARS;
 #include "tmassert.h"
 
 // list functions
-void list_clear(TmList* list);
+void listClear(TmList* list);
 
 
 // arg functions
-void arg_insert(Object arg);
+void argInsert(Object arg);
+String* argTakeStrPtr(const char* fnc);
 
 
 // function functions
@@ -72,7 +73,7 @@ Object getFileNameObj(Object func);
 Object getFuncNameObj(Object func);
 
 // ops functions
-Object tmCall(Object func, int args, ...);
+Object tmCall(int lineno, Object func, int args, ...);
 Object objAppend(Object a, Object b);
 Object tmGetGlobal(Object globals, Object key);
 Object tmTakeArg();

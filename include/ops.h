@@ -18,6 +18,8 @@ Object    objMul(Object a, Object b);
 Object    objDiv(Object a, Object b);
 Object    objMod(Object a, Object b);
 Object    objNeg(Object o) ;
+
+int    objIn(Object key, Object collection);
 int objEquals(Object a, Object b);
 
 int objCmp(Object a, Object b);

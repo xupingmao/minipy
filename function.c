@@ -45,7 +45,7 @@ Object funcNew(Object mod,
   f->maxlocals = 0;
   f->self = self;
   f->name = NONE_OBJECT;
-  return gc_track(obj_new(TYPE_FUNCTION, f));
+  return gcTrack(obj_new(TYPE_FUNCTION, f));
 }
 
 Object methodNew(Object _fnc, Object self){
@@ -57,7 +57,7 @@ Object methodNew(Object _fnc, Object self){
   return nfnc;
 }
 
-Object class_new(Object clazz){
+Object classNew(Object clazz){
   TmDict* cl = GET_DICT(clazz);
   Object k,v;
   Object instance = dictNew();
@@ -74,7 +74,7 @@ Object class_new(Object clazz){
   return instance;
 }
 
-void func_free(TmFunction* func){
+void funcFree(TmFunction* func){
   // the references will be tracked by gc collecter
   GC_LOG_START(func, "function");
   tm_free(func, sizeof(TmFunction));
@@ -89,14 +89,14 @@ Object moduleNew(Object file , Object name, Object code){
   /*mod->constants = listNew(20);*/
   /*listAppend(GET_LIST(mod->constants), NONE_OBJECT);*/
   mod->globals = dictNew();
-  Object m = gc_track(obj_new(TYPE_MODULE, mod));
+  Object m = gcTrack(obj_new(TYPE_MODULE, mod));
   /* set module */
   objSet(tm->modules, file, mod->globals);
   dictSetByStr(mod->globals, "__name__", name);
   return m;
 }
 
-void module_free(TmModule* mod){
+void moduleFree(TmModule* mod){
   tm_free(mod, sizeof(TmModule));
 }
 
@@ -112,11 +112,27 @@ void func_format(char* des, TmFunction* func){
     }
 }
 
+Object funcGetCode(TmFunction* func) {
+    if (func->native != NULL) {
+        return NONE_OBJECT;
+    }
+    unsigned char* code = func->code;
+    int len = 0;
+    while (code[len] != TM_EOF) {
+        len += 3;
+    }
+    len += 3; /* TM_EOF */
+    return stringAlloc((char*)code, len);
+}
+
+
 Object getFuncAttr(TmFunction* fnc, Object key) {
     if(objEqSz(key, "func_name")) {
         return fnc->name;
     }else if(objEqSz(key, "__self__")) {
         return fnc->self;
+    } else if (objEqSz(key, "__code__")) {
+        return funcGetCode(fnc);
     }
     return NONE_OBJECT;
 }

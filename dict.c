@@ -51,7 +51,7 @@ Object dictNew(){
     Object o;
     o.type = TYPE_DICT;
     GET_DICT(o) = dict_init();
-    return gc_track(o);
+    return gcTrack(o);
 }
 
 
@@ -221,7 +221,7 @@ void dict_set_by_str(TmDict* dict, char* key, Object value) {
 void dict_del(TmDict* dict, Object key) {
     DictNode* node = dictGetNode(dict, key);
     if (node == NULL) {
-        tm_raise("objDel: keyError %o", key);
+        tmRaise("objDel: keyError %o", key);
     }
     node->used = 0;
     dict->len--;
@@ -240,12 +240,12 @@ Object dict_keys(TmDict* dict){
 }
 
 Object dict_m_keys(){
-    Object dict = arg_get_dict("dict.keys");
+    Object dict = argTakeDictObj("dict.keys");
     return dict_keys(GET_DICT(dict));
 }
 
 Object dict_m_values() {
-    Object _d = arg_get_dict("dict.values");
+    Object _d = argTakeDictObj("dict.values");
     TmDict* dict = GET_DICT(_d);
     Object list = listNew(dict->len);
     int i;
@@ -266,7 +266,7 @@ void dictMethodsInit() {
 
 void dict_iter_mark(DataObject* data) {
     TmDictIterator* iter = (TmDictIterator*) data;
-    gc_markDict(iter->dict);
+    gcMarkDict(iter->dict);
 }
 
 DataProto* getDictIterProto() {

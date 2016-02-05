@@ -10,7 +10,7 @@ typedef struct _FunctionDefine {
     int len;
 } FunctionDefine;
 
-#define TM_PUSH(x) *(++top) = (x); if(top > tm_stack_end) tm_raise("stack overflow");
+#define TM_PUSH(x) *(++top) = (x); if(top > tm_stack_end) tmRaise("stack overflow");
 #define TM_POP() *(top--)
 #define TM_TOP() (*top)
 #define GET_CONST(i) GET_DICT(tm->constants)->nodes[i].key

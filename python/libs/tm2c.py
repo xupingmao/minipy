@@ -73,7 +73,7 @@ class Env:
         self.func_cnt += 1
         
     def getCFuncName(self):
-        return self.prefix + "F" + str(self.func_cnt)
+        return self.prefix + "F" + str(self.func_cnt) 
             
     def getConst(self, val):
         if val not in self.consts:
@@ -250,6 +250,12 @@ def do_args(item, env):
             args += ", " + do_item(i, env)
         return args
     return "," + do_item(item, env)
+
+def getLineNo(item):
+    if hasattr(item, "pos"):
+        return item.pos[0]
+    elif hasattr(item, "first"):
+        return getLineNo(item.first)
     
 def do_call(item, env):
     name = do_item(item.first, env)
@@ -260,7 +266,9 @@ def do_call(item, env):
     else:
         n = 1
     args = do_args(item.second, env)
-    return tm_call + name + "," + str(n) + args + ")"
+    # tmCall(lineno, func, nargs, args)
+    return "tmCall(%s, %s, %s %s)".format(getLineNo(item), name, n, args)
+    # return tm_call + name + "," + + "," + str(n) + args + ")"
     
 def format_block(lines, indent):
     text = "{\n";
@@ -294,10 +302,11 @@ def do_def(item, env, indent=0, obj=None):
     vars = ["// " + name]
     for var in locs:
         vars.append("Object " + env.getVarName(var) + ";")
-    lines = ['puts("enter function %s");'.format(name)] + lines
+    # lines = ['puts("enter function %s");'.format(name)] + lines
     func_define = "Object " + cname + "() " + format_block(vars+lines, 0)
     env.exitScope(func_define)
-    return sformat("%s(%s, %s, %s);", tm_define, env.getGlobals(), env.getConst(name), cname)
+    return sformat("%s(%s,%s, %s);", 
+        tm_define, env.getGlobals(), env.getConst(name), cname)
     
 def do_return(item, env, indent=0):
     ret = do_item(item.first, env, 0)
@@ -383,7 +392,7 @@ def do_attr(item, env):
     return do_op(item, env, func_get)
 
 def do_in(item, env):
-    return do_op(item, env, "objHas")
+    return do_op(item, env, "objIn")
     
 def do_inplace_op(item, env, op):
     item2 = AstNode(op, item.first, item.second)
@@ -421,6 +430,12 @@ def do_global(item, env):
     code = "// global " + gName
     # code += "objSet(%s, %s, NONE_OBJECT);".format(env.getGlobals(), name)
     return code
+
+def do_break(item, env):
+    return "break;"
+
+def do_continue(item, env):
+    return "continue;"
 
 _handlers = {
     "if": do_if,
@@ -464,7 +479,9 @@ _handlers2 = {
     "in": do_in,
     "import": do_import,
     "from": do_from,
-    "global": do_global
+    "global": do_global,
+    "break": do_break,
+    "continue": do_continue
 }
 
 def do_item(item, env, indent = 0):
@@ -559,5 +576,9 @@ if __name__ == "__main__":
     # path = "../test/tm2c/" + name
     path = name
     text = load(path)
-    code = tm2c(name, text, "a")
+    pathes = path.split('/')
+    if len(pathes) > 1:
+        name = pathes[-1]
+    mod = name.split(".")[0]
+    code = tm2c(name, text, mod)
     print(code)
