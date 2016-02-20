@@ -3,9 +3,7 @@
   * 2015-6-16: interpreter for tinyvm bytecode.
  **/
 
-#include "include/interp.h"
-#include "include/exception.h"
-#include "include/function.h"
+#include "include/tm.h"
 
 #define INTERP_DB 0
 
@@ -20,11 +18,11 @@ Object callFunction(Object func) {
             TmFrame* f = pushFrame(func);
             /*
             if (GET_FUNCTION(func)->modifier == 0) {
-                return tm_eval(f);
+                return tmEval(f);
             }*/
             L_recall:
             if (setjmp(f->buf)==0) {
-                return tm_eval(f);
+                return tmEval(f);
             } else {
                 f = tm->frame;
                 /* handle exception in this frame */
@@ -77,13 +75,13 @@ TmFrame* pushFrame(Object fnc) {
     /* check oprand stack */
     if (top >= tm->stack + STACK_SIZE) {
         popFrame();
-        tmRaise("tm_eval: stack overflow");
+        tmRaise("tmEval: stack overflow");
     }
     
     /* check frame stack*/
     if (tm->frame >= tm->frames + FRAMES_COUNT-1) {
         popFrame();
-        tmRaise("tm_eval: frame overflow");
+        tmRaise("tmEval: frame overflow");
     }
 
     f->pc = GET_FUNCTION(fnc)->code;
@@ -120,7 +118,7 @@ TmFrame* pushFrame(Object fnc) {
 ** @param f: Frame
 ** @return evaluated value.
 */
-Object tm_eval(TmFrame* f) {
+Object tmEval(TmFrame* f) {
     Object* locals = f->locals;
     Object* top = f->stack;
     Object cur_fnc = f->fnc;
@@ -204,13 +202,22 @@ Object tm_eval(TmFrame* f) {
 
         case LOAD_GLOBAL: {
             /* tmPrintf("load global %o\n", GET_CONST(i)); */
-            int idx = dict_get_attr(GET_DICT(globals), i);
+            int idx = dictGetAttr(GET_DICT(globals), i);
             if (idx == -1) {
-                idx = dict_get_attr(GET_DICT(tm->builtins), i);
+                idx = dictGetAttr(GET_DICT(tm->builtins), i);
                 if (idx == -1) {
                     tmRaise("NameError: name %o is not defined", GET_CONST(i));
+                } else {
+                    Object value = GET_DICT(tm->builtins)->nodes[idx].val;
+                    // OPTIMIZE
+                    // set the builtin to `globals()`
+                    objSet(globals, GET_CONST(i), value);
+                    idx = dictGetAttr(GET_DICT(globals), i);
+                    pc[0] = FAST_LD_GLO;
+                    code16(pc+1, idx);
+                    // OPTIMIZE END
+                    TM_PUSH(value);
                 }
-                TM_PUSH(GET_DICT(tm->builtins)->nodes[idx].val);
             } else {
                 TM_PUSH(GET_DICT(globals)->nodes[idx].val);
                 pc[0] = FAST_LD_GLO;
@@ -220,7 +227,7 @@ Object tm_eval(TmFrame* f) {
         }
         case STORE_GLOBAL: {
             x = TM_POP();
-            int idx = dict_set_attr(GET_DICT(globals), i, x);
+            int idx = dictSetAttr(GET_DICT(globals), i, x);
             pc[0] = FAST_ST_GLO;
             code16(pc+1, idx);
             break;
@@ -241,14 +248,14 @@ Object tm_eval(TmFrame* f) {
         case LIST_APPEND:
             v = TM_POP();
             x = TM_TOP();
-            tmAssertType(x, TYPE_LIST, "tm_eval: LIST_APPEND");
+            tmAssertType(x, TYPE_LIST, "tmEval: LIST_APPEND");
             listAppend(GET_LIST(x), v);
             break;
         case DICT_SET:
             v = TM_POP();
             k = TM_POP();
             x = TM_TOP();
-            tmAssertType(x, TYPE_DICT, "tm_eval: DICT_SET");
+            tmAssertType(x, TYPE_DICT, "tmEval: DICT_SET");
             objSet(x, k, v);
             break;
         case DICT: {
@@ -403,7 +410,7 @@ Object tm_eval(TmFrame* f) {
         }
         case TM_UNARRAY: {
             x = TM_POP();
-            tmAssertType(x, TYPE_LIST, "tm_eval:TM_UNARRAY");
+            tmAssertType(x, TYPE_LIST, "tmEval:TM_UNARRAY");
             int j;
             for(j = LIST_LEN(x)-1; j >= 0; j--) {
                 TM_PUSH(LIST_GET(x, j));
@@ -480,7 +487,7 @@ Object tm_eval(TmFrame* f) {
     end:
     /*
     if (top != f->stack) {
-        tmRaise("tm_eval: operand stack overflow");
+        tmRaise("tmEval: operand stack overflow");
     }*/
     popFrame();
     return ret;

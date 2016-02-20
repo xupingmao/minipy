@@ -167,7 +167,6 @@ void             tmRaise(char*fmt , ...);
 #include "tmdata.h"
 #include "tmdict.h"
 #include "tmlist.h"
-#include "function.h"
 
 #define IS_NONE(obj) TM_TYPE(obj) == TYPE_NONE
 #define IS_LIST(obj) TM_TYPE(obj) == TYPE_LIST

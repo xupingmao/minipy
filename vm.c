@@ -1,6 +1,4 @@
 #include "include/tm.h"
-#include "include/vm.h"
-#include "include/exception.h"
 #include "string.c"
 #include "list.c"
 #include "number.c"
@@ -23,23 +21,6 @@ void regModFunc(Object mod, char* name, Object (*native)()) {
 
 void regBuiltinFunc(char* name, Object (*native)()) {
     regModFunc(tm->builtins, name, native);
-}
-
-void vmInit() {
-    /* set module boot */
-    Object boot = dictNew();
-    dictSetByStr(tm->modules, "boot", boot);
-    dictSetByStr(boot, "__name__", szToString("boot"));
-    dictSetByStr(tm->builtins, "tm", tmNumber(1));
-    dictSetByStr(tm->builtins, "True", tmNumber(1));
-    dictSetByStr(tm->builtins, "False", tmNumber(0));
-    dictSetByStr(tm->builtins, "__builtins__", tm->builtins);
-    dictSetByStr(tm->builtins, "__modules__", tm->modules);
-    
-    listMethodsInit();
-    stringMethodsInit();
-    dictMethodsInit();
-    builtinsInit();
 }
 
 void loadModule(Object name, Object code) {
@@ -73,41 +54,63 @@ int loadBinary() {
     return 1;
 }
 
-int tmRun(int argc, char* argv[]) {
-    Object p = listNew(argc);
+int vmInit(int argc, char* argv[]) {
+    
     int i;
-    for (i = 1; i < argc; i++) {
-        Object arg = stringNew(argv[i]);
-        objAppend(p, arg);
-    }
-    vmInit();
-    dictSetByStr(tm->builtins, "ARGV", p);
-    loadBinary();
-    callModFunc("init", "boot");
-    return 0;
-}
-
-int tmInit(int argc, char* argv[]) {
+    
     tm = malloc(sizeof(TmVM));
     if (tm == NULL) {
         fprintf(stderr, "vm init fail");
         return -1;
     }
+
+    // init gc
+    gcInit();
+
+    /* set module boot */
+    Object boot = dictNew();
+    dictSetByStr(tm->modules, "boot", boot);
+    dictSetByStr(boot, "__name__", szToString("boot"));
+    dictSetByStr(tm->builtins, "tm", tmNumber(1));
+    dictSetByStr(tm->builtins, "True", tmNumber(1));
+    dictSetByStr(tm->builtins, "False", tmNumber(0));
+    dictSetByStr(tm->builtins, "__builtins__", tm->builtins);
+    dictSetByStr(tm->builtins, "__modules__", tm->modules);
+    
+    listMethodsInit();
+    stringMethodsInit();
+    dictMethodsInit();
+    builtinsInit();
+    
+    Object p = listNew(argc);
+    for (i = 1; i < argc; i++) {
+        Object arg = stringNew(argv[i]);
+        objAppend(p, arg);
+    }
+    dictSetByStr(tm->builtins, "ARGV", p);
+    return 0;
+}
+
+void vmDestroy() {
+    gcDestroy();
+    free(tm);
+}
+
+int tmInit(int argc, char* argv[]) {
+    int ret = vmInit(argc, argv);
+    if (ret != 0) { 
+        return ret;
+    }
     /* use first frame */
     int code = setjmp(tm->frames->buf);
     if (code == 0) {
-        gcInit();
-        tmRun(argc, argv);
+        loadBinary();
+        callModFunc("init", "boot");
     } else if (code == 1){
         traceback();
     } else if (code == 2){
         
     }
-    gcDeinit();
-    free(tm);
+    vmDestroy();
     return 0;
-}
-
-int main(int argc, char* argv[]) {
-    return tmInit(argc, argv);
 }

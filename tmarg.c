@@ -1,5 +1,4 @@
-#include "include/tmarg.h"
-#include "include/function.h"
+#include "include/tm.h"
 
 void argStart() {
     tm->arguments = tm->internalArgStack;

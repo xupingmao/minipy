@@ -345,7 +345,12 @@ void gcFull() {
 #endif
 }
 
-void gcDeinit() {
+/**
+ * free, free memory
+ * release, release the reference of an object
+ * destroy, release and free, personal opinion
+ */ 
+void gcDestroy() {
     TmList* all = tm->all;
     int i;
     for (i = 0; i < all->len; i++) {

@@ -1,5 +1,4 @@
 #include "include/tm.h"
-#include "include/vm.h"
 
 Object stringCharNew(int c) {
     String* str = tm_malloc(sizeof(String));
@@ -29,7 +28,7 @@ Object stringAlloc(char *s, int size) {
         }
         str->value[size] = '\0';
     } else if(size == 1){
-        return string_chr(s[0]);
+        return stringChr(s[0]);
     /* use string ptr in C data section */
     } else {
         str->stype = 0;
@@ -46,7 +45,7 @@ Object stringAlloc(char *s, int size) {
     return gcTrack(v);
 }
 
-Object string_chr(int n) {
+Object stringChr(int n) {
     return listGet(GET_LIST(ARRAY_CHARS), n);
 }
 
@@ -86,14 +85,14 @@ Object stringSubstring(String* str, int start, int end) {
     return new_str;
 }
 
-Object string_m_find() {
+Object string_find() {
     static const char* szFunc = "find";
     Object self = argTakeStrObj(szFunc);
     Object str = argTakeStrObj(szFunc);
     return tmNumber(stringIndex(self.value.str, str.value.str, 0));
 }
 
-Object string_m_substring() {
+Object string_substring() {
     static const char* szFunc = "substring";
     Object self = argTakeStrObj(szFunc);
     int start = argTakeInt(szFunc);
@@ -101,7 +100,7 @@ Object string_m_substring() {
     return stringSubstring(self.value.str, start, end);
 }
 
-Object string_m_upper() {
+Object string_upper() {
     Object self = argTakeStrObj("upper");
     int i;
     char*s = GET_STR(self);
@@ -114,7 +113,7 @@ Object string_m_upper() {
     return nstr;
 }
 
-Object string_m_lower() {
+Object string_lower() {
     Object self = argTakeStrObj("lower");
     int i;
     char*s = GET_STR(self);
@@ -128,7 +127,7 @@ Object string_m_lower() {
 }
 
 
-Object string_m_replace() {
+Object string_replace() {
     static const char* szFunc;
     Object self = argTakeStrObj(szFunc);
     Object src = argTakeStrObj(szFunc);
@@ -151,7 +150,7 @@ Object string_m_replace() {
     return nstr;
 }
 
-Object string_m_split() {
+Object string_split() {
     const char* szFunc = "split";
     Object self = argTakeStrObj(szFunc);
     Object pattern = argTakeStrObj(szFunc);
@@ -181,11 +180,11 @@ Object string_m_split() {
 
 /**
  * the caller always starts with str = stringNew("");
- * which is not a string_chr();
+ * which is not a stringChr();
  * so we can just change the str->value;
  */
 Object stringAppendChar(Object string, char c) {
-    // return objAdd(string, string_chr(c));
+    // return objAdd(string, stringChr(c));
     String* str = GET_STR_OBJ(string);
     if (str->stype) {
         str->value = tm_realloc(str->value, str->len+1, str->len+2);
@@ -228,12 +227,12 @@ Object stringAppendObj(Object string, Object obj) {
 
 void stringMethodsInit() {
     tm->str_proto = dictNew();
-    regModFunc(tm->str_proto, "replace", string_m_replace);
-    regModFunc(tm->str_proto, "find", string_m_find);
-    regModFunc(tm->str_proto, "substring", string_m_substring);
-    regModFunc(tm->str_proto, "upper", string_m_upper);
-    regModFunc(tm->str_proto, "lower", string_m_lower);
-    regModFunc(tm->str_proto, "split", string_m_split);
+    regModFunc(tm->str_proto, "replace", string_replace);
+    regModFunc(tm->str_proto, "find", string_find);
+    regModFunc(tm->str_proto, "substring", string_substring);
+    regModFunc(tm->str_proto, "upper", string_upper);
+    regModFunc(tm->str_proto, "lower", string_lower);
+    regModFunc(tm->str_proto, "split", string_split);
 }
 
 DataProto* getStringProto() {
@@ -260,6 +259,6 @@ Object* stringNext(StringIterator* iterator) {
         return NULL;
     }
     iterator->cur += 1;
-    obj = string_chr(iterator->string->value[iterator->cur-1]);
+    obj = stringChr(iterator->string->value[iterator->cur-1]);
     return &obj;
 }

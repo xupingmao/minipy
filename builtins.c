@@ -1,7 +1,4 @@
-#include "include/builtins.h"
-#include "include/tmstring.h"
-#include "include/gc.h"
-#include "include/object.h"
+#include "include/tm.h"
 #include <ctype.h>
 #include <unistd.h>
 #include <sys/stat.h>
@@ -20,7 +17,7 @@ Object* getBuiltin(char* key) {
     return dictGetByStr(tm->builtins, key);
 }
 
-void tm_putchar(int c){
+void tmPutchar(int c){
     static char hex[] = {
         '0','1','2','3','4','5','6','7',
         '8','9','A','B','C','D','E','F'
@@ -40,64 +37,11 @@ void tm_putchar(int c){
     }
 }
 
-// func Object tmStr(Object a)
-Object tmStr(Object a) {
-    char buf[100];
-    memset(buf, 0, sizeof(buf));
-    switch (TM_TYPE(a)) {
-    case TYPE_STR:
-        return a;
-    case TYPE_NUM: {
-        char s[20];
-        double v = GET_NUM(a);
-        numberFormat(s, a);
-        return stringNew(s);
-    }
-    case TYPE_LIST: {
-        Object str = stringNew("");
-
-        str = stringAppendChar(str, '[');
-        int i, l = LIST_LEN(a);
-        for (i = 0; i < l; i++) {
-            Object obj = GET_LIST(a)->nodes[i];
-            /* reference to self in list */
-            if (objEquals(a, obj)) {
-                str = stringAppendSz(str, "[...]");
-            } else if (obj.type == TYPE_STR) {
-                str = stringAppendChar(str, '"');
-                str = stringAppendObj(str, obj);
-                str = stringAppendChar(str, '"');
-            } else {
-                str = stringAppendObj(str, obj);
-            }
-            if (i != l - 1) {
-                str = stringAppendChar(str, ',');
-            }
-        }
-        str = stringAppendChar(str, ']');
-        return str;
-    }
-    case TYPE_DICT:
-        sprintf(buf, "<dict at %p>", GET_DICT(a));
-        return stringNew(buf);
-    case TYPE_FUNCTION:
-        functionFormat(buf, a);
-        return stringNew(buf);
-    case TYPE_NONE:
-        return szToString("None");
-    case TYPE_DATA:
-        return GET_DATA_PROTO(a)->str(GET_DATA(a));
-    default:
-        tmRaise("str: not supported type %d", a.type);
-    }
-    return stringAlloc("", 0);
-}
-
 void tmPrint(Object o) {
     Object str = tmStr(o);
     int i;
     for(i = 0; i < GET_STR_LEN(str); i++) {
-        tm_putchar(GET_STR(str)[i]);
+        tmPutchar(GET_STR(str)[i]);
     }
 }
 
@@ -208,7 +152,9 @@ long get_rest_size(FILE* fp){
 }
 
 
-Object tm_load(char* fname){
+// vm-builtins
+
+Object tmLoad(char* fname){
     FILE* fp = fopen(fname, "rb");
     if(fp == NULL){
         tmRaise("load: can not open file \"%s\"",fname);
@@ -350,7 +296,7 @@ Object bf_istype() {
 
 Object bf_chr() {
     int n = argTakeInt("chr");
-    return string_chr(n);
+    return stringChr(n);
 }
 
 Object bf_ord() {
@@ -363,7 +309,7 @@ Object bf_code8() {
     int n = argTakeInt("code8");
     if (n < 0 || n > 255)
         tmRaise("code8(): expect number 0-255, but see %d", n);
-    return string_chr(n);
+    return stringChr(n);
 }
 
 Object bf_code16() {
@@ -431,11 +377,11 @@ Object bf_print() {
     return NONE_OBJECT;
 }
 
-Object bfLoad(Object p){
+Object bf_load(Object p){
     Object fname = argTakeStrObj("load");
-    return tm_load(GET_STR(fname));
+    return tmLoad(GET_STR(fname));
 }
-Object bfSave(){
+Object bf_save(){
     Object fname = argTakeStrObj("<save name>");
     return tm_save(GET_STR(fname), argTakeStrObj("<save content>"));
 }
@@ -469,15 +415,22 @@ Object bfApply() {
     return callFunction(func);
 }
 
-Object bfWrite() {
-    Object fmt = argTakeObj("puts");
+Object bf_write() {
+    Object fmt = argTakeObj("write");
     Object str = tmStr(fmt);
     char* s = GET_STR(str);
     int len = GET_STR_LEN(str);
     int i;
-    for(i = 0; i < len; i++) {
-        tm_putchar(s[i]);
-    }
+    // for(i = 0; i < len; i++) {
+        // tmPutchar(s[i]);
+        // putchar is very very slow
+        // when print 80 * 30 chars  
+        //     ==>  putcharTime=126, printfTime=2, putcTime=129
+        // putchar(s[i]);
+        // buffer[i] = s[i];
+    // }
+    printf("%s", s);
+    // return arrayToList(2, tmNumber(t2-t1), tmNumber(t3-t2));
     return NONE_OBJECT;
 }
 
@@ -575,7 +528,7 @@ Object bfInspectPtr() {
     double _ptr = argTakeDouble("inspectPtr");
     int idx = argTakeInt("inspectPtr");
     char* ptr = (char*)(long long)_ptr;
-    return string_chr(ptr[idx]);
+    return stringChr(ptr[idx]);
 }
 
 Object bfGetCurrentFrame() {
@@ -637,12 +590,17 @@ Object bfGetVmInfo() {
     return tmInfo;
 }
 
-Object bfClock() {
+long tmClock() {
 #ifdef TM_NT
-    return tmNumber(clock());
+    return clock();
 #else
-    return tmNumber((double)clock()/1000);
+    return (double)clock()/1000;
 #endif
+}
+
+
+Object bf_clock() {
+    return tmNumber(tmClock());
 }
 
 Object bfSleep() {
@@ -720,7 +678,7 @@ Object bfNext() {
     Object iter = argTakeDataObj("next");
     Object *ret = nextPtr(iter);
     if (ret == NULL) {
-        tmRaise("");
+        tmRaise("<<next end>>");
         return NONE_OBJECT;
     } else {
         return *ret;
@@ -870,12 +828,27 @@ Object bfNewobj() {
     return obj;
 }
 
+/**
+ * random
+ */
+Object bf_random() {
+    static long seed = 0;
+    if (seed == 0) {
+        seed = time(NULL);
+        srand(seed);
+    }
+    int n = rand() % 77;
+    // printf("%d\n", n);
+    double val = (double)((double) n / (double)77);
+    return tmNumber(val);
+}
+
 void builtinsInit() {
-    regBuiltinFunc("load", bfLoad);
-    regBuiltinFunc("save", bfSave);
+    regBuiltinFunc("load", bf_load);
+    regBuiltinFunc("save", bf_save);
     regBuiltinFunc("remove", bfRemove);
     regBuiltinFunc("print", bf_print);
-    regBuiltinFunc("write", bfWrite);
+    regBuiltinFunc("write", bf_write);
     regBuiltinFunc("input", bf_input);
     regBuiltinFunc("str", bf_str);
     regBuiltinFunc("int", bf_int);
@@ -898,6 +871,7 @@ void builtinsInit() {
     regBuiltinFunc("range", bfRange);
     regBuiltinFunc("mmatch", bfMmatch);
     regBuiltinFunc("newobj", bfNewobj);
+    regBuiltinFunc("random", bf_random);
     
     /* functions which has impact on vm follow camel case */
     regBuiltinFunc("getConstIdx", bfGetConstIdx);
@@ -911,7 +885,7 @@ void builtinsInit() {
     regBuiltinFunc("getVmInfo", bfGetVmInfo);
     regBuiltinFunc("traceback", bfTraceback);
 
-    regBuiltinFunc("clock", bfClock);
+    regBuiltinFunc("clock", bf_clock);
     regBuiltinFunc("add_obj_method", bfAddObjMethod);
     regBuiltinFunc("readFile", bfReadFile);
     regBuiltinFunc("iter", bfIter);

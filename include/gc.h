@@ -12,7 +12,7 @@ void freeMemory();
 
 void        gcInit();
 Object      gcTrack(Object obj);
-void        gcDeinit();
+void        gcDestroy();
 void        gcFull();
 Object bfGetMallocInfo();
 

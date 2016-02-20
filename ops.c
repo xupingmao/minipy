@@ -6,6 +6,30 @@
     GET_NUM(_num) = v;\
     return _num;
 
+
+const char* getTypeByInt(int type) {
+    switch (type) {
+    case TYPE_STR:
+        return "string";
+    case TYPE_NUM:
+        return "number";
+    case TYPE_LIST:
+        return "list";
+    case TYPE_FUNCTION:
+        return "function";
+    case TYPE_DICT:
+        return "dict";
+    case TYPE_NONE:
+        return "none";
+    }
+    return "unknown";
+}
+
+const char* getTypeByObj(Object obj) {
+    return getTypeByInt(TM_TYPE(obj));
+}
+
+
 void tmAssertType(Object o, int type, char* msg) {
     if (TM_TYPE(o) != type) {
         tmRaise("%s, expect %s but see %s", msg, 
@@ -55,7 +79,7 @@ Object objGet(Object self, Object k) {
             if (n >= GET_STR_LEN(self) || n < 0)
                 tmRaise("StringGet: index overflow ,len=%d,index=%d, str=%o",
                         GET_STR_LEN(self), n, self);
-            return string_chr(0xff & GET_STR(self)[n]);
+            return stringChr(0xff & GET_STR(self)[n]);
         } else if ((node = dictGetNode(GET_DICT(tm->str_proto), k)) != NULL) {
             return methodNew(node->val, self);
         }
@@ -426,10 +450,6 @@ Object tmCall(int lineno, Object func, int args, ...) {
     return callFunction(func);
 }
 
-Object tm_string(char* str) {
-    return szToString(str);
-}
-
 Object arrayToList(int n, ...) {
     va_list ap;
     int i = 0;
@@ -470,5 +490,59 @@ void tmImportAll(Object globals, Object modName) {
         Object modValue = objGet(tm->modules, modName);
         // do something here.
     }
+}
+
+
+// func Object tmStr(Object a)
+Object tmStr(Object a) {
+    char buf[100];
+    memset(buf, 0, sizeof(buf));
+    switch (TM_TYPE(a)) {
+    case TYPE_STR:
+        return a;
+    case TYPE_NUM: {
+        char s[20];
+        double v = GET_NUM(a);
+        numberFormat(s, a);
+        return stringNew(s);
+    }
+    case TYPE_LIST: {
+        Object str = stringNew("");
+
+        str = stringAppendChar(str, '[');
+        int i, l = LIST_LEN(a);
+        for (i = 0; i < l; i++) {
+            Object obj = GET_LIST(a)->nodes[i];
+            /* reference to self in list */
+            if (objEquals(a, obj)) {
+                str = stringAppendSz(str, "[...]");
+            } else if (obj.type == TYPE_STR) {
+                str = stringAppendChar(str, '"');
+                str = stringAppendObj(str, obj);
+                str = stringAppendChar(str, '"');
+            } else {
+                str = stringAppendObj(str, obj);
+            }
+            if (i != l - 1) {
+                str = stringAppendChar(str, ',');
+            }
+        }
+        str = stringAppendChar(str, ']');
+        return str;
+    }
+    case TYPE_DICT:
+        sprintf(buf, "<dict at %p>", GET_DICT(a));
+        return stringNew(buf);
+    case TYPE_FUNCTION:
+        functionFormat(buf, a);
+        return stringNew(buf);
+    case TYPE_NONE:
+        return szToString("None");
+    case TYPE_DATA:
+        return GET_DATA_PROTO(a)->str(GET_DATA(a));
+    default:
+        tmRaise("str: not supported type %d", a.type);
+    }
+    return stringAlloc("", 0);
 }
 

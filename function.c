@@ -187,20 +187,3 @@ Object getFuncNameObj(Object func) {
   }
   return NONE_OBJECT;
 }
-
-#if DB_FUNC
-char* getFuncFileSz(Object func) {
-    if (IS_FUNC(func)) {
-        return GET_STR(GET_MODULE(GET_FUNCTION(func)->mod)->file);
-    } else if (IS_DICT(func)){
-        return "<class>";
-    } else {
-        return "<unknown>";
-    }
-}
-
-TmModule* getFuncMod(TmFunction* fnc) {
-    // resolveModule(GET_MODULE(fnc->mod), fnc);
-    return GET_MODULE(fnc->mod);
-}
-#endif

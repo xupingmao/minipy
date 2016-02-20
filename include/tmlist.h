@@ -17,27 +17,24 @@ typedef struct TmListIterator {
 
 
 /* private */
-void listCheck(TmList*);
+void     listCheck(TmList*);
 
 /* private end */
 
-Object           listNew(int cap);
-TmList*         list_alloc_untracked(int cap);
-
-void             listSet(TmList* list, int n, Object v);
-Object listGet(TmList* list, int n);
-void listFree(TmList* );
-void listMethodsInit();
-
-
-Object listIterNew(TmList* list);
-Object* listNext(TmListIterator* iterator);
+Object   listNew(int cap);
+TmList*  list_alloc_untracked(int cap);
+void     listSet(TmList* list, int n, Object v);
+Object   listGet(TmList* list, int n);
+void     listFree(TmList* );
+void     listMethodsInit();
+Object   listIterNew(TmList* list);
+Object*  listNext(TmListIterator* iterator);
 
 /* private functions */
-Object listAdd(TmList*, TmList*);
-void listDel(TmList*list, Object key);
-int listIndex(TmList*, Object val);
-void listAppend(TmList* list, Object v);
+Object   listAdd(TmList*, TmList*);
+void     listDel(TmList*list, Object key);
+int      listIndex(TmList*, Object val);
+void     listAppend(TmList* list, Object v);
 
 
 

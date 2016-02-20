@@ -1,6 +1,4 @@
 #include "include/tm.h"
-#include "include/vm.h"
-#include "include/exception.h"
 #include "string.c"
 #include "list.c"
 #include "number.c"
@@ -103,7 +101,7 @@ int runPyFunc(int argc, char* argv[], char* modName, void(*func)(void)) {
     } else if (code == 2){
         
     }
-    gcDeinit();
+    gcDestroy();
     free(tm);
     return 0;
 }
