@@ -32,8 +32,7 @@ int              dict_set(TmDict* dict, Object key, Object val);
 DictNode*        dictGetNode(TmDict* dict, Object key);
 Object*          dict_get_by_str(TmDict* dict, char* key);
 Object           dict_keys(TmDict* );
-void             dict_del(TmDict* dict, Object k);
-#define          dictDel(dict, k) dict_del(GET_DICT(dict), k)
+void             dictDel(TmDict* dict, Object k);
 void             dictMethodsInit();
 
 void        dict_set_by_str(TmDict* dict, char* key, Object val);
@@ -44,7 +43,7 @@ static DataProto dictIterProto;
 
 DataProto*  getDictIterProto();
 Object      dict_iterNew(TmDict* dict);
-Object*     dict_next(TmDictIterator* iterator);
+Object*     dictNext(TmDictIterator* iterator);
 int         dictSetAttr(TmDict* dict, int constId, Object val);
 int         dictGetAttr(TmDict* dict, int constId);
 

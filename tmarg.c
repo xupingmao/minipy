@@ -89,7 +89,7 @@ char* argTakeSz(const char* fnc) {
     return GET_STR(value);
 }
 
-Object takeFuncObj(const char* fnc) {
+Object argTakeFuncObj(const char* fnc) {
     Object value = getArgFromVM0(fnc);
     if (NOT_FUNC(value)) {
         tmRaise("%s: expect function but see %s", fnc, getTypeByObj(value));

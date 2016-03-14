@@ -47,15 +47,46 @@ Object NONE_OBJECT;
 Object UNDEF;
 Object ARRAY_CHARS;
 
-#include "number.h"
-#include "gc.h"
 #include "instruction.h"
 #include "code.h"
-#include "tmassert.h"
+
+// gc functions
+#define GC_DEBUG_LIST 0
+void*       tm_malloc( size_t size);
+void*       tm_realloc(void* o, size_t osize, size_t nsize);
+void        tm_free(void* o, size_t size);
+void        initMemory();
+void        freeMemory();
+
+void        gcInit();
+Object      gcTrack(Object obj);
+void        gcDestroy();
+void        gcFull();
+Object      bfGetMallocInfo();
+void        gcMark(Object);
+void        gcMarkList(TmList*);
+void        gcMarkDict(TmDict*);
+
+#if 0
+    #define PRINT_OBJ_GC_INFO_START() int _gc_old = tm->allocated;
+    #define PRINT_OBJ_GC_INFO_END(str, addr) \
+        printf("free %s at 0x%p, %d => %d, ", str, addr, _gc_old, tm->allocated);
+    #else
+    #define PRINT_OBJ_GC_INFO_START()
+    #define PRINT_OBJ_GC_INFO_END(str, addr)
+
+    #define GC_LOG_START(ptr, desc)
+    #define GC_LOG_END(ptr, desc)
+#endif
+
+// number functions
+Object tmNumber(double v);
+void   numberFormat(char* des, Object num);
 
 // list functions
 void listClear(TmList* list);
 
+// dict functions
 
 // arg functions
 void    argInsert(Object arg);
@@ -69,7 +100,7 @@ void    printArguments();
 int     hasArg();
 Object  argTakeStrObj(const char* fnc);
 char*   argTakeSz(const char* fnc);
-Object  takeFuncObj(const char* fnc);
+Object  argTakeFuncObj(const char* fnc);
 int     argTakeInt(const char* fnc);
 double  argTakeDouble(const char* fnc);
 TmList* argTakeListPtr(const char* fnc);
@@ -174,6 +205,8 @@ TmFrame* pushFrame(Object fnc);
 void     popFrame();
 
 // exception functions
+void tmAssertType(Object o, int type, char* msg) ;
+void tmAssertInt(double value, char* msg) ;
 void pushException(TmFrame* f);
 void traceback();
 void tmRaise(char* fmt, ...);
@@ -209,6 +242,7 @@ Object*   getBuiltin(char* key);
 #define GET_MODULE(obj) GET_VAL(obj).mod
 #define DICT_LEN(obj)  GET_DICT(obj)->len
 #define ptr_addr(ptr) (long) (ptr) / sizeof(char*)
+#define GET_NUM(obj) (obj).value.dv
 
 #define IS_DICT(o) TM_TYPE(o)==TYPE_DICT
 

@@ -22,9 +22,8 @@ void tmPutchar(int c){
         '0','1','2','3','4','5','6','7',
         '8','9','A','B','C','D','E','F'
     };
-    if (isprint(c)) {
-        putchar(c);
-    } else if(c== '\n' || c == '\t'){
+
+    if (isprint(c) || c == '\n' || c == '\t') {
         putchar(c);
     } else if(c == '\b') {
         putchar('\b');
@@ -618,7 +617,7 @@ Object bfAddObjMethod() {
     static const char* szFunc = "add_obj_method";
     Object type = argTakeStrObj(szFunc);
     Object fname = argTakeStrObj(szFunc);
-    Object fnc = takeFuncObj(szFunc);
+    Object fnc = argTakeFuncObj(szFunc);
     char*s = GET_STR(type);
     if (strcmp(s, "str") == 0) {
         objSet(tm->str_proto, fname, fnc);
@@ -644,7 +643,7 @@ Object bfReadFile() {
     if (nsize < 0 || nsize > 1024) {
         tmRaise("%s: can not set bufsize beyond [1, 1024]",  szFunc);
     }
-    func = takeFuncObj(szFunc);
+    func = argTakeFuncObj(szFunc);
     FILE* fp = fopen(fname, "rb");
     if (fp == NULL) {
         tmRaise("%s: can not open file %s", szFunc, fname);

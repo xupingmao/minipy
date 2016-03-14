@@ -157,7 +157,7 @@ int ListComputeSize(TmList* list){
 //
 
 
-Object list_m_append() {
+Object list_append() {
     const char* szFunc = "list.append";
     Object self = argTakeListObj(szFunc);
     Object v = argTakeObj(szFunc);
@@ -165,11 +165,11 @@ Object list_m_append() {
     return NONE_OBJECT;
 }
 
-Object bmlistPop() {
+Object list_pop() {
     Object self = argTakeListObj("list.pop");
     return listPop(GET_LIST(self));
 }
-Object bmlistInsert() {
+Object list_insert() {
     const char* szFunc = "list.insert";
     Object self = argTakeListObj(szFunc);
     int n = argTakeInt(szFunc);
@@ -178,13 +178,13 @@ Object bmlistInsert() {
     return self;
 }
 
-Object bmlistIndex() {
+Object list_index() {
     TmList* self = argTakeListPtr("list.index");
     Object v = argTakeObj("list.index");
     return tmNumber(listIndex(self, v));
 }
 
-Object bmListReverse() {
+Object list_reverse() {
     TmList* self = argTakeListPtr("list.reverse");
     int start = 0, end = self->len - 1;
     while (end > start) {
@@ -197,14 +197,14 @@ Object bmListReverse() {
     return NONE_OBJECT;
 }
 
-Object bmlistRemove() {
+Object list_remove() {
     TmList* list = argTakeListPtr("list.remove");
     int idx = argTakeInt("list.remove");
     listRemove(list, idx);
     return NONE_OBJECT;
 }
 
-Object bmListClone() {
+Object list_clone() {
     Object self = argTakeObj("listClone");
     TmList* list = GET_LIST(self);
     Object _newlist = listNew(list->cap);
@@ -216,13 +216,13 @@ Object bmListClone() {
 
 void listMethodsInit() {
     tm->list_proto = dictNew();
-    regModFunc(tm->list_proto, "append", list_m_append);
-    regModFunc(tm->list_proto, "pop", bmlistPop);
-    regModFunc(tm->list_proto, "insert", bmlistInsert);
-    regModFunc(tm->list_proto, "index", bmlistIndex);
-    regModFunc(tm->list_proto, "reverse", bmListReverse);
-    regModFunc(tm->list_proto, "remove", bmlistRemove);
-    regModFunc(tm->list_proto, "clone", bmListClone);
+    regModFunc(tm->list_proto, "append", list_append);
+    regModFunc(tm->list_proto, "pop", list_pop);
+    regModFunc(tm->list_proto, "insert", list_insert);
+    regModFunc(tm->list_proto, "index", list_index);
+    regModFunc(tm->list_proto, "reverse", list_reverse);
+    regModFunc(tm->list_proto, "remove", list_remove);
+    regModFunc(tm->list_proto, "clone", list_clone);
 }
 
 void listIterMark(DataObject* data) {

@@ -47,11 +47,11 @@ def build(cc="tcc", libs=None, dstPath = "../bin.c"):
     export_clang_define("../include/instruction.h", "tmcode.py")
     if cc != None:
         if str(1.0) != '1.0':
-            cmd = cc + " -o tm0.exe ../vm.c"
+            cmd = cc + " -o tm0.exe ../main.c"
             if exists("tm0.exe"):
                 remove("tm0.exe")
         else:
-            cmd = cc + " -o tm.exe ../vm.c"
+            cmd = cc + " -o tm.exe ../main.c"
         system(cmd)
         #remove("../bin.c")
     

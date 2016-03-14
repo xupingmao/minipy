@@ -218,7 +218,7 @@ void dict_set_by_str(TmDict* dict, char* key, Object value) {
     dict_set(dict, szToString(key), value);
 }
 
-void dict_del(TmDict* dict, Object key) {
+void dictDel(TmDict* dict, Object key) {
     DictNode* node = dictGetNode(dict, key);
     if (node == NULL) {
         tmRaise("objDel: keyError %o", key);
@@ -273,7 +273,7 @@ DataProto* getDictIterProto() {
     if(!dictIterProto.init) {
         initDataProto(&dictIterProto);
         dictIterProto.dataSize = sizeof(TmDictIterator);
-        dictIterProto.next = dict_next;
+        dictIterProto.next = dictNext;
         dictIterProto.mark = dict_iter_mark;
     }
     return &dictIterProto;
@@ -299,7 +299,7 @@ Object dict_iterNew(TmDict* dict) {
     return data;
 }
 
-Object* dict_next(TmDictIterator* iterator) {
+Object* dictNext(TmDictIterator* iterator) {
     if (iterator->idx < iterator->dict->cap) {
         int i;
         for(i = iterator->idx; i < iterator->dict->cap; i++) {

@@ -372,7 +372,7 @@ Object* nextPtr(Object iterator) {
 void objDel(Object self, Object k) {
     switch(TM_TYPE(self)) {
         case TYPE_DICT:{
-            dict_del(GET_DICT(self), k);
+            dictDel(GET_DICT(self), k);
             break;
         }
         case TYPE_LIST:{

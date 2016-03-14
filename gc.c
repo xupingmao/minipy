@@ -1,4 +1,3 @@
-#include "include/gc.h"
 #include "include/tm.h"
 
 /**
