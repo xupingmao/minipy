@@ -3,6 +3,7 @@
 #include <unistd.h>
 #include <sys/stat.h>
 #include <errno.h>
+#include <time.h>
 
 #ifdef TM_NT
     #include <windows.h>
@@ -327,7 +328,7 @@ Object bf_code32() {
     return c;
 }
 
-Object bfRaise() {
+Object bf_raise() {
     if (getArgsCount() == 0) {
         tmRaise("raise");
     } else {
@@ -336,7 +337,7 @@ Object bfRaise() {
     return NONE_OBJECT;
 }
 
-Object bfSystem() {
+Object bf_system() {
     Object m = argTakeStrObj("system");
     int rs = system(GET_STR(m));
     return tmNumber(rs);
@@ -395,7 +396,7 @@ Object bfRemove(){
     }
 }
 
-Object bfApply() {
+Object bf_apply() {
     Object func = argTakeObj("apply");
     if (NOT_FUNC(func) && NOT_DICT(func)) {
         tmRaise("apply: expect function or dict");
@@ -433,7 +434,7 @@ Object bf_write() {
     return NONE_OBJECT;
 }
 
-Object bfPow() {
+Object bf_pow() {
     double base = argTakeDouble("pow");
     double y = argTakeDouble("pow");
     return tmNumber(pow(base, y));
@@ -471,7 +472,7 @@ DataProto* getRangeIterProto() {
     return &rangeIter;
 }
 
-Object bfRange() {
+Object bf_range() {
     long start = 0;
     long end = 0;
     int inc;
@@ -509,7 +510,7 @@ Object bfRange() {
     return data;
 }
 
-Object bfMmatch() {
+Object bf_mmatch() {
     char* str = argTakeSz("mmatch");
     int start = argTakeInt("mmatch");
     Object o_dst = argTakeStrObj("mmatch");
@@ -600,6 +601,10 @@ long tmClock() {
 
 Object bf_clock() {
     return tmNumber(tmClock());
+}
+
+Object bf_time0() {
+    return tmNumber(time(0));
 }
 
 Object bfSleep() {
@@ -822,7 +827,7 @@ Object bfTraceback() {
 /**
  * create a object in tm
  */ 
-Object bfNewobj() {
+Object bf_newobj() {
     Object obj = dictNew();
     return obj;
 }
@@ -863,13 +868,13 @@ void builtinsInit() {
     regBuiltinFunc("code8", bf_code8);
     regBuiltinFunc("code16", bf_code16);
     regBuiltinFunc("code32", bf_code32);
-    regBuiltinFunc("raise", bfRaise);
-    regBuiltinFunc("system", bfSystem);
-    regBuiltinFunc("apply", bfApply);
-    regBuiltinFunc("pow", bfPow);
-    regBuiltinFunc("range", bfRange);
-    regBuiltinFunc("mmatch", bfMmatch);
-    regBuiltinFunc("newobj", bfNewobj);
+    regBuiltinFunc("raise", bf_raise);
+    regBuiltinFunc("system", bf_system);
+    regBuiltinFunc("apply", bf_apply);
+    regBuiltinFunc("pow", bf_pow);
+    regBuiltinFunc("range", bf_range);
+    regBuiltinFunc("mmatch", bf_mmatch);
+    regBuiltinFunc("newobj", bf_newobj);
     regBuiltinFunc("random", bf_random);
     
     /* functions which has impact on vm follow camel case */
@@ -885,6 +890,7 @@ void builtinsInit() {
     regBuiltinFunc("traceback", bfTraceback);
 
     regBuiltinFunc("clock", bf_clock);
+    regBuiltinFunc("time0", bf_time0);
     regBuiltinFunc("add_obj_method", bfAddObjMethod);
     regBuiltinFunc("readFile", bfReadFile);
     regBuiltinFunc("iter", bfIter);

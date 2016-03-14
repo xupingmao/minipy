@@ -79,14 +79,95 @@ void        gcMarkDict(TmDict*);
     #define GC_LOG_END(ptr, desc)
 #endif
 
+/**
+ * string functions
+ */
+
+
+Object        stringCharNew(int c);
+Object        stringChr(int n); // get a char from charList.
+Object        stringAlloc(char* s, int size);
+#define       szToString(s) stringAlloc(s, -1)
+#define       stringNew(s) stringAlloc(s, strlen(s))
+void          stringFree(String*);
+int           stringEquals(String*s0, String*s1);
+Object        stringSubstring(String* str, int start, int end) ;
+Object        bf_stringFormat();
+Object        tmStr(Object obj);
+Object        StringJoin(Object self, Object list);
+void          stringMethodsInit();
+DataProto*    getStringProto();
+Object        stringIterNew(String* s);
+Object*       stringNext(StringIterator* iterator);
+
+static DataProto stringProto;
+/* macros */
+#define GET_STR(obj) (obj).value.str->value
+#define GET_STR_OBJ(obj) (obj).value.str
+#define GET_STR_LEN(obj) (obj).value.str->len
+
+
 // number functions
 Object tmNumber(double v);
 void   numberFormat(char* des, Object num);
 
-// list functions
-void listClear(TmList* list);
+/**
+ * list functions
+ */
+
+void     listCheck(TmList*);
+Object   listNew(int cap);
+/* create a TmList which not tracked by Garbage Collector. */
+TmList*  untrackedListNew(int cap);
+void     listSet(TmList* list, int n, Object v);
+Object   listGet(TmList* list, int n);
+void     listFree(TmList* );
+void     listClear(TmList* list);
+void     listMethodsInit();
+Object   listIterNew(TmList* list);
+Object*  listNext(TmListIterator* iterator);
+Object   listAdd(TmList*, TmList*);
+void     listDel(TmList*list, Object key);
+int      listIndex(TmList*, Object val);
+void     listAppend(TmList* list, Object v);
+
+/** 
+ * list iterator prototype
+ */
+DataProto listIterProto = { 0 };
+
+/* macros */
+#define LIST_GET(obj, i) listGet(GET_LIST(obj), i)
+#define LIST_NODES(obj) (GET_LIST(obj))->nodes
+#define LIST_LEN(obj) GET_LIST(obj)->len
+
 
 // dict functions
+
+
+Object           dictNew();
+TmDict*          dict_init();
+void             dict_free(TmDict* dict);
+int              dict_set(TmDict* dict, Object key, Object val);
+#define          dictSet(d, k, v) dict_set(GET_DICT(d), k, v)
+DictNode*        dictGetNode(TmDict* dict, Object key);
+Object*          dict_get_by_str(TmDict* dict, char* key);
+Object           dict_keys(TmDict* );
+void             dictDel(TmDict* dict, Object k);
+void             dictMethodsInit();
+void             dict_set_by_str(TmDict* dict, char* key, Object val);
+#define          dictSetByStr(dict, key, val) dict_set_by_str(GET_DICT(dict), key, val)
+#define          dictGetByStr(dict, key) dict_get_by_str(GET_DICT(dict), key)
+
+static DataProto dictIterProto;
+
+DataProto*       getDictIterProto();
+Object           dict_iterNew(TmDict* dict);
+Object*          dictNext(TmDictIterator* iterator);
+int              dictSetAttr(TmDict* dict, int constId, Object val);
+int              dictGetAttr(TmDict* dict, int constId);
+
+
 
 // arg functions
 void    argInsert(Object arg);
@@ -140,6 +221,24 @@ Object           getFuncNameObj(Object func);
 #define getGlobals(func) getFunctionGlobals(GET_FUNCTION(func))
 #define functionFormat(des, func) func_format(des, GET_FUNCTION(func))
 
+/**
+ * data functions
+ */
+static DataProto baseIterProto;
+
+Object     dataNew(size_t size);
+void       dataMark();
+void       dataFree();
+void       dataSet(Object, Object, Object);
+Object     dataGet(Object, Object);
+Object     dataStr(Object self);
+void       obj_free(Object o);
+Object     obj_new(int type, void* value);
+DataProto  defaultDataProto;
+DataProto* getDefaultDataProto();
+void       initDataProto(DataProto* proto);
+
+
 
 /** ops functions
  *  general object operation
@@ -186,6 +285,8 @@ void   regBuiltin(char* name, Object value);
 void   regModFunc(Object mod, char* name, Object(*native)());
 void   regBuiltinFunc(char* name, Object (*native)());
 void   regModAttr(char* modName,char* attr, Object value);
+int    objEqSz(Object str, const char* value);
+void   tmRaise(char*fmt , ...);
 
 // interp functions
 
@@ -244,7 +345,23 @@ Object*   getBuiltin(char* key);
 #define ptr_addr(ptr) (long) (ptr) / sizeof(char*)
 #define GET_NUM(obj) (obj).value.dv
 
-#define IS_DICT(o) TM_TYPE(o)==TYPE_DICT
+
+#define IS_NONE(obj)   TM_TYPE(obj) == TYPE_NONE
+#define IS_LIST(obj)   TM_TYPE(obj) == TYPE_LIST
+#define IS_FUNC(obj)   TM_TYPE(obj) == TYPE_FUNCTION
+#define IS_DICT(o)     TM_TYPE(o)==TYPE_DICT
+#define IS_STR(obj)    TM_TYPE(obj) == TYPE_STR
+#define IS_NUM(obj)    TM_TYPE(obj) == TYPE_NUM
+#define IS_DATA(obj)   TM_TYPE(obj) == TYPE_DATA
+#define IS_NATIVE(obj) GET_FUNCTION(obj)->native != NULL
+
+#define NOT_LIST(obj) TM_TYPE(obj) != TYPE_LIST
+#define NOT_DICT(obj) TM_TYPE(obj) != TYPE_DICT
+#define NOT_FUNC(obj) TM_TYPE(obj) != TYPE_FUNCTION
+#define NOT_STR(obj)  TM_TYPE(obj) != TYPE_STR
+#define NOT_NATIVE(obj) GET_FUNCTION(obj)->native == NULL
+
+
 
 #define ASSERT_TYPE_WITH_INFO(obj, type, info) \
     if(TM_TYPE(obj)!=type){                    \

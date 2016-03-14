@@ -53,8 +53,6 @@ typedef struct Object{
   TmValue value;
 }Object;
 
-#include "tmstring.h"
-
 struct  GC_Object {
   int marked;
   /* data */
@@ -156,30 +154,117 @@ typedef struct TmVM {
 
 }TmVM;
 
-/**
- * global virtual machine
+/** 
+ * definition for data
  */
+
+
+#define DATA_OBJECT_HEAD     \
+    int marked;              \
+    size_t dataSize;         \
+    int init;                \
+    void (*mark)();          \
+    void (*free)();          \
+    Object (*str)();         \
+    Object (*get)();         \
+    void (*set)();           \
+    Object* (*next)();
+
+typedef struct DataProto {
+    DATA_OBJECT_HEAD
+}DataProto;
+
+#define DATA_HEAD    int marked;      \
+    DataProto* proto;
+
+typedef struct TmData {
+    DATA_HEAD
+}TmData;
+
+typedef struct DataObject {
+  DATA_OBJECT_HEAD
+}DataObject;
+
+typedef struct _TmBaseIterator {
+    DATA_HEAD
+    Object func;
+  Object ret;
+}TmBaseIterator;
+
+/** 
+ * definition for list
+ */
+
+typedef struct TmList {
+  int marked;
+  int len;
+  int cap;
+  int cur;
+  struct Object* nodes;
+}TmList;
+
+typedef struct TmListIterator {
+    DATA_HEAD
+    TmList* list;
+    int cur;
+}TmListIterator;
+
+
+/** 
+ * definition for dictionary.
+ */
+
+typedef struct DictNode{
+  Object key;
+  Object val;
+  int hash;
+  int used; /* also used for attr index */
+}DictNode;
+
+typedef struct Dictonary {
+  int marked;
+  int len;
+  int cap;
+  int extend;
+  struct DictNode* nodes;
+}TmDict;
+
+typedef struct _TmDictIterator {
+    DATA_HEAD
+    TmDict* dict;
+    int idx;
+} TmDictIterator;
+
+
+/**
+ * definition of string
+ */
+typedef struct {
+    char *value;
+    int len;
+}Chars;
+
+typedef struct String {
+    int marked;
+    int len;
+    int stype; /* string type, static or not */
+    char *value;
+} String;
+
+typedef struct StringIterator {
+    DATA_HEAD
+    int cur;
+    String* string;
+}StringIterator;
+
+
+/**
+ * global variables
+ *
+ */ 
 TmVM* tm;
 Object* tm_stack_end;
 
-int              objEqSz(Object str, const char* value);
-void             tmRaise(char*fmt , ...);
-#include "tmdata.h"
-#include "tmdict.h"
-#include "tmlist.h"
 
-#define IS_NONE(obj) TM_TYPE(obj) == TYPE_NONE
-#define IS_LIST(obj) TM_TYPE(obj) == TYPE_LIST
-#define IS_FUNC(obj) TM_TYPE(obj) == TYPE_FUNCTION
-#define IS_STR(obj)  TM_TYPE(obj) == TYPE_STR
-#define IS_NUM(obj)  TM_TYPE(obj) == TYPE_NUM
-#define IS_DATA(obj) TM_TYPE(obj) == TYPE_DATA
-#define IS_NATIVE(obj) GET_FUNCTION(obj)->native != NULL
-
-#define NOT_LIST(obj) TM_TYPE(obj) != TYPE_LIST
-#define NOT_DICT(obj) TM_TYPE(obj) != TYPE_DICT
-#define NOT_FUNC(obj) TM_TYPE(obj) != TYPE_FUNCTION
-#define NOT_STR(obj)  TM_TYPE(obj) != TYPE_STR
-#define NOT_NATIVE(obj) GET_FUNCTION(obj)->native == NULL
 
 #endif /* OBJECT_H_ */

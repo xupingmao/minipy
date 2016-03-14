@@ -1,7 +1,6 @@
 #include "include/tm.h"
-#include "include/tmlist.h"
 
-TmList* list_alloc_untracked(int cap) {
+TmList* untrackedListNew(int cap) {
     TmList* list = tm_malloc(sizeof(TmList));
     list->len = 0;
     if (cap <= 0) {
@@ -16,7 +15,7 @@ TmList* list_alloc_untracked(int cap) {
 Object listNew(int cap) {
     Object v;
     v.type = TYPE_LIST;
-    v.value.list = list_alloc_untracked(cap);
+    v.value.list = untrackedListNew(cap);
     return gcTrack(v);
 }
 

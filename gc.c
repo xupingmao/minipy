@@ -44,7 +44,7 @@ void gcInit() {
     tm->gcThreshold = 1024 * 8; // set 8k to see gc process
     tm->gcState = 1; // enable gc.
 
-    tm->all = list_alloc_untracked(init_size);
+    tm->all = untrackedListNew(init_size);
     tm->list_proto.type = TYPE_NONE;
     tm->dict_proto.type = TYPE_NONE;
     tm->str_proto.type = TYPE_NONE;
@@ -263,7 +263,7 @@ void gcMarkLocalsAndStack() {
 void gc_wipe() {
     int n, i;
 
-    TmList* temp = list_alloc_untracked(200);
+    TmList* temp = untrackedListNew(200);
     TmList* all = tm->all;
     for (i = 0; i < all->len; i++) {
         if (GC_MARKED(tm->all->nodes[i])) {
