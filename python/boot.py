@@ -20,6 +20,9 @@ def require(path, name):
 def do_nothing(*args):
     pass
     
+def apply(fn, args):
+    return fn(*args)
+
 def clock():
     return time.time() * 1000
     

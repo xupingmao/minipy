@@ -233,7 +233,7 @@ void       dataSet(Object, Object, Object);
 Object     dataGet(Object, Object);
 Object     dataStr(Object self);
 void       obj_free(Object o);
-Object     obj_new(int type, void* value);
+Object     objNew(int type, void* value);
 DataProto  defaultDataProto;
 DataProto* getDefaultDataProto();
 void       initDataProto(DataProto* proto);

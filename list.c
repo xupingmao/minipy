@@ -198,8 +198,15 @@ Object list_reverse() {
 
 Object list_remove() {
     TmList* list = argTakeListPtr("list.remove");
-    int idx = argTakeInt("list.remove");
-    listRemove(list, idx);
+    Object obj = argTakeObj("list.remove");
+    int i = 0;
+    for (i = 0; i < list->len; i++) {
+        Object item = list->nodes[i];
+        if (objEquals(item, obj)) {
+            listRemove(list, i);
+            return item;
+        }
+    }
     return NONE_OBJECT;
 }
 
@@ -213,6 +220,13 @@ Object list_clone() {
     return _newlist;
 }
 
+Object list_clear() {
+    Object self = argTakeObj("list.clear");
+    TmList* list = GET_LIST(self);
+    list->len = 0;
+    return self;
+}
+
 void listMethodsInit() {
     tm->list_proto = dictNew();
     regModFunc(tm->list_proto, "append", list_append);
@@ -222,6 +236,7 @@ void listMethodsInit() {
     regModFunc(tm->list_proto, "reverse", list_reverse);
     regModFunc(tm->list_proto, "remove", list_remove);
     regModFunc(tm->list_proto, "clone", list_clone);
+    regModFunc(tm->list_proto, "clear", list_clear);
 }
 
 void listIterMark(DataObject* data) {

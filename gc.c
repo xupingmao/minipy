@@ -260,7 +260,7 @@ void gcMarkLocalsAndStack() {
     }
 }
 
-void gc_wipe() {
+void gcWipe() {
     int n, i;
 
     TmList* temp = untrackedListNew(200);
@@ -335,7 +335,7 @@ void gcFull() {
     gcMarkLocalsAndStack();
 
     /* wipe garbage */
-    gc_wipe();
+    gcWipe();
     tm->gcThreshold = tm->allocated + tm->allocated / 2;
     t2 = clock();
 #if GC_DEBUG
@@ -366,7 +366,7 @@ void gcDestroy() {
 }
 
 
-Object obj_new(int type, void * value) {
+Object objNew(int type, void * value) {
     Object o;
     TM_TYPE(o) = type;
     switch (type) {
@@ -391,7 +391,7 @@ Object obj_new(int type, void * value) {
     case TYPE_NONE:
         break;
     default:
-        tmRaise("obj_new: not supported type %d", type);
+        tmRaise("objNew: not supported type %d", type);
     }
     return o;
 }
