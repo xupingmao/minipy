@@ -372,6 +372,9 @@ Object*   getBuiltin(char* key);
 #define next_byte(s) *s++
 /* gcc process ++ from right to left */
 #define next_short(s) (((*s) << 8) + *(s+1));s+=2;
+
+#define READ_BYTE(s) *s++
+#define READ_SHORT(s) ((*s) << 8 | *(s+1)); s+= 2;
 /* #define next_short( s ) (((*s++) << 8) + *(s++)); */
 
 /* for math */

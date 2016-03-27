@@ -56,7 +56,7 @@ def expect(ctx, v):
         compile_error("parse", ctx.src, ctx.token, "expect " + v)
     ctx.next()
 
-def add_op(p, v):
+def addOp(p, v):
     r = p.tree.pop()
     l = p.tree.pop()
     node = AstNode(v)
@@ -123,7 +123,7 @@ def assign_exp(p):
         t = p.token.type
         p.next()
         fnc(p)
-        add_op(p, t)
+        addOp(p, t)
 
 
 def comma_exp(p):
@@ -134,7 +134,7 @@ def comma_exp(p):
         if p.token.type == ']':
             break # for list
         fnc(p)
-        # add_op(p, ',')
+        # addOp(p, ',')
         b = p.pop()
         a = p.pop()
         if gettype(a)=="list":
@@ -149,7 +149,7 @@ def or_exp(p):
     while p.token.type == 'or':
         p.next()
         fnc(p)
-        add_op(p, 'or')
+        addOp(p, 'or')
 
 def and_exp(p):
     fnc = not_exp
@@ -157,7 +157,7 @@ def and_exp(p):
     while p.token.type == 'and':
         p.next()
         fnc(p)
-        add_op(p, 'and')
+        addOp(p, 'and')
 
 def not_exp(p):
     fnc = cmp_exp
@@ -177,7 +177,7 @@ def cmp_exp(p):
         t = p.token.type
         p.next()
         fnc(p)
-        add_op(p, t)
+        addOp(p, t)
 
 def item(p):
     fnc = item2
@@ -186,23 +186,23 @@ def item(p):
         t = p.token.type
         p.next()
         fnc(p)
-        add_op(p, t)
+        addOp(p, t)
 
 
 def item2(p):
-    fnc = call_or_get_exp
+    fnc = callOrGetExp
     fnc(p)
     while p.token.type in ('*','/', '%'):
         t = p.token.type
         p.next()
         fnc(p)
-        add_op(p, t)
+        addOp(p, t)
 
 
-def call_or_get_exp(p):
+def callOrGetExp(p):
     if p.token.type == '-':
         p.next()
-        call_or_get_exp(p)
+        callOrGetExp(p)
         node = AstNode('neg', p.pop())
         p.add(node)
     else:
@@ -213,7 +213,7 @@ def call_or_get_exp(p):
             if t == '[':
                 expr(p)
                 expect(p, ']')
-                add_op(p, 'get')
+                addOp(p, 'get')
             elif t == '(':
                 node = AstNode('call', p.pop())
                 if p.token.type == ')':
@@ -529,10 +529,10 @@ def parse_block(p):
             
     
 def parse(content):
+    r = tokenize(content)
+    p = ParserCtx(r, content)
+    p.next()
     try:
-        r = tokenize(content)
-        p = ParserCtx(r, content)
-        p.next()
         while p.token.type != 'eof':
             parse_block(p)
         x = p.tree

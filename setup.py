@@ -2,7 +2,7 @@ from encode import *
 from boot import *
 from tmcode import *
 
-def code_str(s):
+def codeStr(s):
     return code32(len(s))+s
 
 class Lib:
@@ -10,7 +10,7 @@ class Lib:
         self.name = name
         self.path = path
 
-def build(cc="tcc", libs=None, dstPath = "../bin.c"):
+def build(cc="tcc", libs=None, dstPath = "bin.c"):
     destCode = ""
     if libs == None:
         libs = [
@@ -18,7 +18,6 @@ def build(cc="tcc", libs=None, dstPath = "../bin.c"):
             Lib("tokenize", "tokenize.py"), 
             Lib("parse", "parse.py"), 
             Lib("tmcode", "tmcode.py"),
-            Lib("asm", "asm.py"), 
             Lib("encode", "encode.py")
         ]
         #Lib("builtins", "builtins.py"),
@@ -41,21 +40,21 @@ def build(cc="tcc", libs=None, dstPath = "../bin.c"):
             except Exception as e:
                 print("parse file", obj.path, "failed")
                 raise
-            destCode += code_str(obj.name)+code_str(code)
-        code = modLen + code_str("constants") + code_str(build_const_code()) + destCode
-        save(dstPath, "unsigned char bin[] = {\n" + str_to_chars(code)+'\n};\n')
-    export_clang_define("../include/instruction.h", "tmcode.py")
+            destCode += codeStr(obj.name)+codeStr(code)
+        code = modLen + codeStr("constants") + codeStr(build_const_code()) + destCode
+        save(dstPath, "unsigned char bin[] = {\n" + strToChars(code)+'\n};\n')
+    export_clang_define("include/instruction.h", "tmcode.py")
     if cc != None:
         if str(1.0) != '1.0':
-            cmd = cc + " -o tm0.exe ../main.c"
+            cmd = cc + " -o tm0.exe main.c"
             if exists("tm0.exe"):
                 remove("tm0.exe")
         else:
-            cmd = cc + " -o tm.exe ../main.c"
+            cmd = cc + " -o tm.exe main.c"
         system(cmd)
         #remove("../bin.c")
     
-def str_to_chars(code):
+def strToChars(code):
     dest = ''
     for i in range(len(code)):
         if i != 0:
@@ -81,7 +80,6 @@ def build_one(cc):
             Lib("tokenize", "tokenize.py"), 
             Lib("parse", "parse.py"), 
             Lib("tmcode", "tmcode.py"),
-            Lib("asm", "asm.py"), 
             Lib("encode", "encode.py"),
             Lib("pyeval", "pyeval.py"),
             Lib("repl", "repl.py"),
@@ -93,7 +91,7 @@ def build_one(cc):
 def build_tm2c(cc):
     ccompiler = cc
     libs = [ Lib("init", "init.py") ]
-    build(ccompiler, libs, "../initbin.c")
+    build(ccompiler, libs, "initbin.c")
     
 def main():
     argc = len(ARGV)

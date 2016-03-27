@@ -1,3 +1,11 @@
+
+def _clock():
+    return time.time() * 1000
+
+if str(1.0) == "1.0":
+    import time
+    clock = _clock
+
 i = 0
 j = 0
 t1 = clock()
@@ -7,7 +15,8 @@ while i < 1000000:
 t2 = clock()
 print("global scope: used time = " + str(t2-t1))
 def test():
-    i = 0;j = 0
+    i = 0
+    j = 0
     t1 = clock()
     while i < 1000000:
         j = i * 34
@@ -23,3 +32,19 @@ t1 = clock()
 print(fib(30))
 t2 = clock()
 print("fib(30)", t2-t1)
+
+def fib2(n):
+    i = 0
+    a = 1
+    b = 1
+    while i < n:
+        tmp = a
+        a = b
+        b = tmp + b
+        i += 1
+    return a
+
+t1 = clock()
+print(fib2(30))
+t2 = clock()
+print("fib2(30)", t2-t1)
