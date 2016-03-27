@@ -41,7 +41,7 @@ def build(cc="tcc", libs=None, dstPath = "bin.c"):
                 print("parse file", obj.path, "failed")
                 raise
             destCode += codeStr(obj.name)+codeStr(code)
-        code = modLen + codeStr("constants") + codeStr(build_const_code()) + destCode
+        code = modLen + codeStr("constants") + codeStr(buildConstCode()) + destCode
         save(dstPath, "unsigned char bin[] = {\n" + strToChars(code)+'\n};\n')
     export_clang_define("include/instruction.h", "tmcode.py")
     if cc != None:
@@ -64,7 +64,7 @@ def strToChars(code):
         dest += str(ord(code[i]))
     return dest
 
-def build_const_code():
+def buildConstCode():
     b = ''
     for i in range(getConstLen()):
         v = getConst(i)
@@ -73,7 +73,7 @@ def build_const_code():
         b+=t+code16(len(v))+v
     return b+code8(TM_EOP)+code16(0)
 
-def build_one(cc):
+def buildOne(cc):
     ccompiler = cc
     libs = [
             Lib("init", "init.py"),
@@ -97,7 +97,7 @@ def main():
     argc = len(ARGV)
     if argc == 2:
         cc = ARGV[1]
-        build_one(cc)
+        buildOne(cc)
     elif argc == 3 and ARGV[1] == "-init":
         cc = ARGV[2]
         build_tm2c(cc)

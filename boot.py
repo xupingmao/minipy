@@ -32,6 +32,7 @@ def copy(src, des):
 class Obj:
     pass
 
+# newobj
 def newobj():
     return Obj()
 
