@@ -406,7 +406,7 @@ void obj_free(Object o) {
         listFree(GET_LIST(o));
         break;
     case TYPE_DICT:
-        dict_free(GET_DICT(o));
+        dictFree(GET_DICT(o));
         break;
     case TYPE_FUNCTION:
         funcFree(GET_FUNCTION(o));

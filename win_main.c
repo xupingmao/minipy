@@ -3,6 +3,7 @@
 #include <windows.h>
 
 Object g_repaintFunc;
+HWND   g_hwnd;
 // HANDLE stdInput = GetStdHandle(STD_INPUT_HANDLE);
 // HANDLE stdOutput = GetStdHandle(STD_OUTPUT_HANDLE);
 
@@ -36,6 +37,24 @@ Object bf_setRepaintFunc() {
     Object func = argTakeFuncObj("setRepaintFunc");
     g_repaintFunc = func;
     return NONE_OBJECT;
+}
+
+
+Object bf_DrawText() {
+  char* text = argTakeSz("DrawText");
+  PAINTSTRUCT ps;
+  HDC hdc;
+  RECT rc;
+
+  HWND hwnd = g_hwnd;
+  hdc = BeginPaint(hwnd, &ps);
+
+  GetClientRect(hwnd, &rc);
+  SetTextColor(hdc, RGB(240,240,96));
+  SetBkMode(hdc, TRANSPARENT);
+  DrawText(hdc, text, -1, &rc, DT_CENTER|DT_SINGLELINE|DT_VCENTER); 
+  EndPaint(hwnd, &ps);
+  return NONE_OBJECT;
 }
 
 #define APPNAME "HELLO_WIN"
@@ -89,20 +108,19 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
    PAINTSTRUCT ps;
    HDC hdc;
    RECT rc;
-   hdc = BeginPaint(hwnd, &ps);
+   // hdc = BeginPaint(hwnd, &ps);
 
-   GetClientRect(hwnd, &rc);
-   SetTextColor(hdc, RGB(240,240,96));
-   SetBkMode(hdc, TRANSPARENT);
-   DrawText(hdc, pWindowText, -1, &rc, DT_CENTER|DT_SINGLELINE|DT_VCENTER);
-   int i;
+   // GetClientRect(hwnd, &rc);
+   // SetTextColor(hdc, RGB(240,240,96));
+   // SetBkMode(hdc, TRANSPARENT);
+   // DrawText(hdc, pWindowText, -1, &rc, DT_CENTER|DT_SINGLELINE|DT_VCENTER);
+   // int i;
    // for(i = 0; i < 100; i++) {
    //  SetPixel(hdc, 10 + i, 10, RGB(100,100,100));
    // }
-   if (g_repaintFunc.type != 0) {
-       callFunction(g_repaintFunc);
-   }
-   EndPaint(hwnd, &ps);
+   tmPrintln(g_repaintFunc);
+   callFunction(g_repaintFunc);
+   // EndPaint(hwnd, &ps);
    break;
   }
 
@@ -163,6 +181,8 @@ int APIENTRY WinMain(
 
     if (NULL == hwnd) return 0;
 
+    g_hwnd = hwnd;
+
     printf("lpCmdLine=%s\n", lpCmdLine);
     pWindowText = lpCmdLine[0] ? lpCmdLine : "Hello Windows!";
 
@@ -184,6 +204,7 @@ int APIENTRY WinMain(
         regBuiltinFunc("getch", bf_getch);
         regBuiltinFunc("ctime", bf_ctime);
         regBuiltinFunc("setRepaintFunc", bf_setRepaintFunc);
+        regBuiltinFunc("DrawText", bf_DrawText);
         callModFunc("init", "boot");
     } else if (code == 1){
         traceback();

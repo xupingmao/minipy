@@ -10,19 +10,58 @@ cheader = '''/*
 ctail = "\n#endif\n\n"
 
 _opcode_names = [
-    'NEW_STRING', 'NEW_NUMBER',
+    'NEW_STRING', 
+    'NUM',
+    'STR',
+    'LD_CONST',
     "OP_IMPORT",
-    'ADD', 'SUB', 'MUL', 'DIV', 'MOD', 'NEG',
-    'NOT', 'OP_GT', 'OP_LT', 'GTEQ', 'LTEQ', 'EQEQ', 'NOTEQ', 'OP_IN', 'NOTIN',
+    'ADD', 
+    'SUB', 
+    'MUL', 
+    'DIV', 
+    'MOD', 
+    'NEQ',
+    'NOT', 
+    'GT', 
+    'LT', 
+    'GTEQ', 
+    'LTEQ', 
+    'EQEQ', 
+    'NOTEQ', 
+    'OP_IN', 
+    'NOTIN',
     'AND', 'OR', 'SET', 'GET',
-    'LOAD_NONE', 'STORE_LOCAL', 'STORE_GLOBAL', 'LOAD_LOCAL', 'LOAD_GLOBAL', 'LOAD_CONSTANT',
-    #'LOAD_GLOBALS', 
+    'LD_NONE',
+    'MOV',
+    'LOAD_CONSTANT',
+    'LIST',
+    'DICT', 
+    'SETG',
+
+    'GETG',
     'POP', 
-    'DICT_SET', 'LIST', 'DICT', 'LIST_APPEND',
-    'JUMP', 'UP_JUMP', 'POP_JUMP_ON_FALSE', 'JUMP_ON_FALSE', 'JUMP_ON_TRUE',
+    'DICT_SET', 
+    'LISTAPPEND',
+    'JMP', 
+    'UP_JMP', 
+    'JF',
+
+    'CALL0',
+    'CALL1',
+    'CALL2',
+    "CALL3",
+    "CALL4",
+    "CALL5",
+    "RET",
+    'TM_DEF',
+    'NARG',
+
+    'POP_JUMP_ON_FALSE', 
+    'JUMP_ON_FALSE', 
+    'JUMP_ON_TRUE',
     #TAGSIZE
     'TM_UNARRAY', 'TM_ROT', 'TM_DEL', 'TM_FOR', 'TM_NEXT', 'ITER_NEW', 'LOAD_EX',
-    'SETJUMP', 'CALL', 'TM_DEF', 'RETURN', 'LOAD_PARAMS', 'TM_NARG', 'TM_EOF',
+    'SETJUMP', 'CALL', 'RETURN', 'LOAD_PARAMS', 'TM_NARG', 'TM_EOF',
     "CLRJUMP",
     'TM_EOP',
     # mulity assignment, eg. x,y = 1,2
@@ -48,6 +87,7 @@ while i < len(_opcode_names):
     name = _opcode_names[i]
     globals()[name] = i + 1
     tmcodes[i+1] = name
+    # print(name, '=', i + 1)
     i += 1
 
 def export_clang_define(des, self = None):

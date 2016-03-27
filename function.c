@@ -9,8 +9,8 @@ unsigned char* func_resolve(TmFunction* fnc, unsigned char* pc) {
         return fnc->end;
     }
     while (1) {
-        int op = next_byte(s);
-        int val = next_short(s);
+        int op = READ_BYTE(s);
+        int val = READ_SHORT(s);
         if (op == NEW_STRING || op == NEW_NUMBER) {
             s += val;
         } else if (op == LOAD_LOCAL || op == STORE_LOCAL) {

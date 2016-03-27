@@ -58,7 +58,7 @@ void objSet(Object self, Object k, Object v) {
     }
         return;
     case TYPE_DICT:
-        dict_set(GET_DICT(self), k, v);
+        dictSet0(GET_DICT(self), k, v);
         return;
     }
     tmRaise("objSet: Self %o, Key %o, Val %o", self, k, v);
@@ -434,7 +434,7 @@ Object tmGetfname(Object fnc) {
 }
 
 void tmSetattr(Object dict, char* attr, Object value) {
-    dict_set(GET_DICT(dict), szToString(attr), value);
+    dictSet0(GET_DICT(dict), szToString(attr), value);
 }
 
 Object tmCall(int lineno, Object func, int args, ...) {

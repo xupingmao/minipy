@@ -33,7 +33,7 @@ int DictHash(Object key) {
 }
 
 
-TmDict* dict_init(){
+TmDict* dictInit(){
     int i;
     TmDict * dict = tm_malloc(sizeof(TmDict));
     dict->cap = 3;
@@ -50,7 +50,7 @@ TmDict* dict_init(){
 Object dictNew(){
     Object o;
     o.type = TYPE_DICT;
-    GET_DICT(o) = dict_init();
+    GET_DICT(o) = dictInit();
     return gcTrack(o);
 }
 
@@ -82,7 +82,7 @@ void dict_check(TmDict* dict){
     tm_free(temp, osize * sizeof(DictNode));
 }
 
-void dict_free(TmDict* dict){
+void dictFree(TmDict* dict){
     PRINT_OBJ_GC_INFO_START();
     tm_free(dict->nodes, (dict->cap) * sizeof(DictNode));
     tm_free(dict, sizeof(TmDict));
@@ -123,7 +123,7 @@ int dictGetAttr2(TmDict* dict, Object key) {
 }
 #endif
 
-int dict_set(TmDict* dict, Object key, Object val){
+int dictSet0(TmDict* dict, Object key, Object val){
     int i;
     #if USE_IDX
     if (key.idx > 0) {
@@ -157,7 +157,7 @@ int dictSetAttr(TmDict* dict, int constId, Object val) {
         }
     }
     Object key = GET_CONST(constId-2);
-    i = dict_set(dict, key, val);
+    i = dictSet0(dict, key, val);
     dict->nodes[i].used = constId;
     return i;
 }
@@ -200,7 +200,7 @@ DictNode* dictGetNode(TmDict* dict, Object key){
     return NULL;
 }
 
-Object* dict_get_by_str(TmDict* dict, char* key) {
+Object* dictGetByStr0(TmDict* dict, char* key) {
     //int hash = hashSz((unsigned char*) key, strlen(key));
     //int idx = hash % dict->cap;
     int i;
@@ -214,8 +214,8 @@ Object* dict_get_by_str(TmDict* dict, char* key) {
     return NULL;
 }
 
-void dict_set_by_str(TmDict* dict, char* key, Object value) {
-    dict_set(dict, szToString(key), value);
+void dictSetByStr0(TmDict* dict, char* key, Object value) {
+    dictSet0(dict, szToString(key), value);
 }
 
 void dictDel(TmDict* dict, Object key) {
@@ -228,7 +228,7 @@ void dictDel(TmDict* dict, Object key) {
     return;
 }
 
-Object dict_keys(TmDict* dict){
+Object dictKeys(TmDict* dict){
     Object list = listNew(dict->len);
     int i;
     for(i = 0; i < dict->cap; i++) {
@@ -239,12 +239,12 @@ Object dict_keys(TmDict* dict){
     return list;
 }
 
-Object dict_m_keys(){
+Object dict_keys(){
     Object dict = argTakeDictObj("dict.keys");
-    return dict_keys(GET_DICT(dict));
+    return dictKeys(GET_DICT(dict));
 }
 
-Object dict_m_values() {
+Object dict_values() {
     Object _d = argTakeDictObj("dict.values");
     TmDict* dict = GET_DICT(_d);
     Object list = listNew(dict->len);
@@ -260,8 +260,8 @@ Object dict_m_values() {
 void dictMethodsInit() {
     tm->dict_proto = dictNew();
     /* build dict class */
-    regModFunc(tm->dict_proto, "keys", dict_m_keys);
-    regModFunc(tm->dict_proto, "values", dict_m_values);
+    regModFunc(tm->dict_proto, "keys", dict_keys);
+    regModFunc(tm->dict_proto, "values", dict_values);
 }
 
 void dict_iter_mark(DataObject* data) {
@@ -282,9 +282,9 @@ DataProto* getDictIterProto() {
 
 Object dict_iterNew(TmDict* dict) {
     /*
-    Object *__iter__ = dict_get_by_str(dict, "__iter__");
+    Object *__iter__ = dictGetByStr(dict, "__iter__");
     if (__iter__ != NULL) {
-        Object *next = dict_get_by_str(dict, "next");
+        Object *next = dictGetByStr(dict, "next");
         Object data = dataNew(sizeof(TmBaseIterator));
         TmBaseIterator* baseIterator = (TmBaseIterator*)GET_DATA(data);
         baseIterator->func = *next;

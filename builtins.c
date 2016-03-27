@@ -172,10 +172,10 @@ Object tmLoad(char* fname){
     return text;
 }
 
-Object tm_save(char*fname, Object content) {
+Object tmSave(char*fname, Object content) {
     FILE* fp = fopen(fname, "wb");
     if (fp == NULL) {
-        tmRaise("tm_save : can not save to file \"%s\"", fname);
+        tmRaise("tmSave : can not save to file \"%s\"", fname);
     }
     char* txt = GET_STR(content);
     int len = GET_STR_LEN(content);
@@ -383,7 +383,22 @@ Object bf_load(Object p){
 }
 Object bf_save(){
     Object fname = argTakeStrObj("<save name>");
-    return tm_save(GET_STR(fname), argTakeStrObj("<save content>"));
+    return tmSave(GET_STR(fname), argTakeStrObj("<save content>"));
+}
+
+Object bf_fileAppend() {
+    char* fname = argTakeSz("fileAppend");
+    Object content = argTakeStrObj("fileAppend");
+    FILE* fp = fopen(fname, "ab+");
+    if (fp == NULL) {
+        tmRaise("fileAppend: fail to open file %s", fname);
+        return NONE_OBJECT;
+    }
+    char* txt = GET_STR(content);
+    int len = GET_STR_LEN(content);
+    fwrite(txt, 1, len, fp);
+    fclose(fp);
+    return NONE_OBJECT;
 }
 
 Object bfRemove(){
@@ -850,6 +865,7 @@ Object bf_random() {
 void builtinsInit() {
     regBuiltinFunc("load", bf_load);
     regBuiltinFunc("save", bf_save);
+    regBuiltinFunc("fileAppend", bf_fileAppend);
     regBuiltinFunc("remove", bfRemove);
     regBuiltinFunc("print", bf_print);
     regBuiltinFunc("write", bf_write);

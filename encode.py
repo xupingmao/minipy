@@ -738,8 +738,6 @@ def encodeItem(tk):
     if r != None:return r
     return 1
 
-load_type_list = ['number', 'name', "string", 'None']
-
 def encode(content):
     global _tagCnt
     global _bin 

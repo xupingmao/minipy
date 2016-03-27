@@ -143,21 +143,23 @@ DataProto listIterProto = { 0 };
 
 
 // dict functions
-
-
 Object           dictNew();
-TmDict*          dict_init();
-void             dict_free(TmDict* dict);
-int              dict_set(TmDict* dict, Object key, Object val);
-#define          dictSet(d, k, v) dict_set(GET_DICT(d), k, v)
+TmDict*          dictInit();
+void             dictFree(TmDict* dict);
+int              dictSet0(TmDict* dict, Object key, Object val);
+#define          dictSet(d, k, v) dictSet0(GET_DICT(d), k, v)
 DictNode*        dictGetNode(TmDict* dict, Object key);
-Object*          dict_get_by_str(TmDict* dict, char* key);
-Object           dict_keys(TmDict* );
+Object*          dictGetByStr0(TmDict* dict, char* key);
 void             dictDel(TmDict* dict, Object k);
 void             dictMethodsInit();
-void             dict_set_by_str(TmDict* dict, char* key, Object val);
-#define          dictSetByStr(dict, key, val) dict_set_by_str(GET_DICT(dict), key, val)
-#define          dictGetByStr(dict, key) dict_get_by_str(GET_DICT(dict), key)
+void             dictSetByStr0(TmDict* dict, char* key, Object val);
+#define          dictSetByStr(dict, key, val) dictSetByStr0(GET_DICT(dict), key, val)
+#define          dictGetByStr(dict, key) dictGetByStr0(GET_DICT(dict), key)
+Object           dictKeys(TmDict* );
+
+/** dict methods **/
+Object           dict_keys();
+Object           dict_values();
 
 static DataProto dictIterProto;
 
@@ -368,11 +370,8 @@ Object*   getBuiltin(char* key);
         tmRaise(info, obj);                    \
     }
 /* for instruction read */
-#define next_char(s) *s++
-#define next_byte(s) *s++
-/* gcc process ++ from right to left */
-#define next_short(s) (((*s) << 8) + *(s+1));s+=2;
 
+/* gcc process ++ from right to left */
 #define READ_BYTE(s) *s++
 #define READ_SHORT(s) ((*s) << 8 | *(s+1)); s+= 2;
 /* #define next_short( s ) (((*s++) << 8) + *(s++)); */
