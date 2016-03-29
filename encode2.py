@@ -21,6 +21,7 @@ _tagDict = {}
 _startTags = []
 _endTags = []
 
+
 def doNothing(*args):
     pass
 
@@ -32,11 +33,16 @@ def compilerInit():
     _tagIndex = 0
     _isGlobalScope = True
     _isFunctionScope = False
-    _globalTempRegs.clear()
-    _localTempRegs.clear()
-    _functionVars.clear()
-    _functionGlobalVars.clear()
-    _instructions.clear()
+    # _globalTempRegs.clear()
+    _globalTempRegs = []
+    # _localTempRegs.clear()
+    _localTempRegs = []
+    # _functionVars.clear()
+    _functionVars = []
+    # _functionGlobalVars.clear()
+    _functionGlobalVars = []
+    # _instructions.clear()
+    _instructions = []
     _tagDict = {}
 
 def getTempReg():
@@ -96,9 +102,12 @@ def setScope(scope):
     global _isFunctionScope
     global _isGlobalScope
     if scope == "function":
-        _functionVars.clear()
-        _localTempRegs.clear()
-        _functionGlobalVars.clear()
+        # _functionVars.clear()
+        _functionVars = []
+        # _localTempRegs.clear()
+        _localTempRegs = []
+        # _functionGlobalVars.clear()
+        _functionGlobalVars = []
         _isFunctionScope = True
         _isGlobalScope = False
         _localRegIndex = 0
@@ -229,7 +238,7 @@ def encodeNot(token, dest=None):
     return encodeOp1(token, dest, NOT)
 
 def encodeNeg(token, dest=None):
-    return encodeOp1(token, dest, NEQ)
+    return encodeOp1(token, dest, NEG)
 
 def encodeAttr(token, dest=None):
     self = encodeItem(token.first)
@@ -263,18 +272,6 @@ def encodeInplaceDiv(token, dest=None):
 def encodeInplaceMod(token, dest=None):
     return encodeInplaceOp(token, dest, "MOD")
 
-def encodeArg(token, dest=None):
-    name = token.first.val
-    value = token.second
-    addVar(name)
-    if value != None:
-        r = encodeItem(value, getVar(name))
-        # emit(["MOV", getVar(name), r])
-
-def encodeNArg(token, dest=None):
-    name = token.first.val
-    addVar(name)
-    emit([NARG, getVar(name)])
 
 def encodeNumber(token, dest=None):
     r = getTempReg()
@@ -343,12 +340,33 @@ def encodeBreak(token, dest=None):
     emit([JMP, _endTags[-1]])
     return None
 
+def encodeArg(token, dest=None):
+    name = token.first.val
+    value = token.second
+    # addVar(name), add name in encodeDef
+    if value != None:
+        r = encodeItem(value, getVar(name))
+        # emit(["MOV", getVar(name), r])
+
+
+def encodeNArg(token, dest=None):
+    name = token.first.val
+    # addVar(name)
+    emit([NARG, getVar(name)])
+
 def encodeFunction(token, dest = None):
     setScope("function")
     name = token.first.val
     emit([TM_DEF, name])
     args = token.second
     body = token.third
+    if istype(args, "list"):
+        for item in args:
+            name = item.first.val
+            addVar(name)
+    else:
+        name = item.first.val
+        addVar(name)
     encodeItem(args)
     encodeItem(body)
     emit([TM_EOF])
@@ -363,7 +381,7 @@ def encodeCall(token, dest=None):
         destReg = getTempReg()
     func = encodeItem(name)
     if args == None:
-        emit([CALL0, destReg, func])
+        emit([CALL0, destReg, func, 0])
     elif istype(args, "list"):
         if len(args) == 1:
             arg0 = encodeItem(args[0])
@@ -372,20 +390,20 @@ def encodeCall(token, dest=None):
         elif len(args) == 2:
             arg0 = encodeItem(args[0])
             arg1 = encodeItem(args[1])
-            callee = [CALL2, destReg, func, arg0, arg1]
+            callee = [CALL2, destReg, func, arg0, arg1, 0, 0, 0]
             emit(callee)
         elif len(args) == 3:
             arg0 = encodeItem(args[0])
             arg1 = encodeItem(args[1])
             arg2 = encodeItem(args[2])
-            callee = [CALL3, destReg, func, arg0, arg1, arg2]
+            callee = [CALL3, destReg, func, arg0, arg1, arg2, 0, 0]
             emit(callee)
         elif len(args) == 4:
             arg0 = encodeItem(args[0])
             arg1 = encodeItem(args[1])
             arg2 = encodeItem(args[2])
             arg3 = encodeItem(args[3])
-            callee = [CALL4, destReg, func, arg0, arg1, arg2, arg3]
+            callee = [CALL4, destReg, func, arg0, arg1, arg2, arg3, 0]
             emit(callee)
         elif len(args) == 5:
             arg0 = encodeItem(args[0])
@@ -594,19 +612,58 @@ def _dumpConstants():
         b+=t+code16(len(v))+v
     return b
 
+
+def codeStr(s):
+    return code32(len(s))+s
+
+def _code8List(list):
+    bin = ''
+    for item in list:
+        bin += code8(item)
+    return bin
+
 def _dump(fname, codeList):
-    constants = _dumpConstants()
+    eop = _code8List([TM_EOP,0,0,0])
+    constants = _dumpConstants() + eop
     bin = ""
     for code in codeList:
         op = code[0]
-        if op == TM_DEF:
-            bin += code8(op) + code16(code[1]) + code8(code[2])
-        elif op == TM_LINE:
-            bin += code8(op) + code16(code[1]) + code8(0)
-        elif op == GETG or op == JF:
-            bin += code8(op) + code8(code[1]) + code16(code[2])
-        elif op == SETG:
-            bin += code8(op) + code16(code[1]) + code8(code[1])
+        try:
+            if op == TM_DEF:
+                bin += code8(op) + code16(code[1])
+            elif op >= TM_LINE and op <= UP_JMP:
+                bin += code8(op) + code16(code[1]) + code8(0)
+            elif op >= LD_CONST and op <= JF:
+                bin += code8(op) + code8(code[1]) + code16(code[2])
+            elif op == SETG:
+                bin += code8(op) + code16(code[1]) + code8(code[1])
+            elif op >= ADD and op <= GET:
+                bin += code8(op) + code8(code[1]) + code8(code[2]) + code8(code[3])
+            elif op == RET:
+                bin += code8(op) + code16(code[1]) + code8(0)
+            elif op == TM_EOF:
+                bin += code8(op) + code16(0) + code8(0)
+            elif op >= CALL0 and op <= CALL5:
+                bin += _code8List(code)
+            elif op >= LD_NONE and op <= DICT:
+                bin += code8(op) + code8(code[1]) + code16(0)
+            elif op >= NOT and op <= LISTAPPEND:
+                bin += code8(op) + code8(code[1]) + code8(code[2]) + code8(0)
+            else:
+                raise Exception("unknown opcode, value=" + str(op))
+        except Exception as e:
+            print(code)
+            print(e)
+            raise
+    # save(fname, bin)
+    bin = code32(2) + codeStr("constants") + codeStr(constants) \
+        + codeStr("test") + codeStr(bin+eop)
+    list = []
+    for c in bin:
+        list.append(str(ord(c)))
+    print("unsigned char bin[] = {")
+    print(",".join(list))
+    print("};")
 
 
 def main():

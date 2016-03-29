@@ -72,6 +72,7 @@ void gcInit() {
     for (i = 0; i < FRAMES_COUNT; i++) {
         TmFrame* f = tm->frames + i;
         f->stack = f->top = tm->stack;
+        f->locals = tm->stack;
         f->lineno = -1;
         f->fnc = NONE_OBJECT;
         f->pc = NULL;
@@ -253,10 +254,10 @@ void gcMarkLocalsAndStack() {
             gcMark(f->locals[j]);
         }
         /* mark operand stack */
-        Object* temp;
-        for(temp = f->stack; temp <= f->top; temp++) {
-            gcMark(*temp);
-        }
+        // Object* temp;
+        // for(temp = f->stack; temp <= f->top; temp++) {
+        //     gcMark(*temp);
+        // }
     }
 }
 

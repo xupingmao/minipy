@@ -11,17 +11,16 @@ ctail = "\n#endif\n\n"
 
 _opcode_names = [
     'NEW_STRING', 
-    'NUM',
-    'STR',
-    'LD_CONST',
+    'NEW_NUMBER',
+
     "OP_IMPORT",
+
     'ADD', 
     'SUB', 
     'MUL', 
     'DIV', 
     'MOD', 
     'NEQ',
-    'NOT', 
     'GT', 
     'LT', 
     'GTEQ', 
@@ -30,21 +29,37 @@ _opcode_names = [
     'NOTEQ', 
     'OP_IN', 
     'NOTIN',
-    'AND', 'OR', 'SET', 'GET',
-    'LD_NONE',
-    'MOV',
-    'LOAD_CONSTANT',
-    'LIST',
-    'DICT', 
-    'SETG',
+    'OP_AND', 
+    'OP_OR', 
+    'SET', 
+    'GET',
+    # byte r, byte a, byte b
+    # 
+    'NOT', # byte a, byte b
+    'MOV', # byte a, byte b
+    'NEG',
+    'LISTAPPEND', # byte list, byte value
 
-    'GETG',
-    'POP', 
-    'DICT_SET', 
-    'LISTAPPEND',
-    'JMP', 
-    'UP_JMP', 
-    'JF',
+
+    'LD_NONE',
+    'LIST', # byte r, short 0
+    'DICT', # byte r, short 0
+
+    'SETG', # short const, byte r
+
+
+    'LD_CONST', # byte r, short const
+    'GETG',  # byte r, short const
+    'JF',    # byte r, short label
+    
+
+
+    'TM_LINE',
+    'JMP',    # short label, byte 0
+    'UP_JMP', # short label, byte 0
+    
+
+    
 
     'CALL0',
     'CALL1',
@@ -66,7 +81,7 @@ _opcode_names = [
     'TM_EOP',
     # mulity assignment, eg. x,y = 1,2
     'TM_DEBUG',
-    'TM_LINE',
+    
     'TAG', 
     # instructions for vm to optimize.
     'FAST_ST_GLO',
