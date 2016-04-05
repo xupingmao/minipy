@@ -10,78 +10,24 @@ cheader = '''/*
 ctail = "\n#endif\n\n"
 
 _opcode_names = [
-    'NEW_STRING', 
-    'NEW_NUMBER',
-
+    'NEW_STRING', 'NEW_NUMBER',
     "OP_IMPORT",
-
-    'ADD', 
-    'SUB', 
-    'MUL', 
-    'DIV', 
-    'MOD', 
-    'NEQ',
-    'GT', 
-    'LT', 
-    'GTEQ', 
-    'LTEQ', 
-    'EQEQ', 
-    'NOTEQ', 
-    'OP_IN', 
-    'NOTIN',
-    'OP_AND', 
-    'OP_OR', 
-    'SET', 
-    'GET',
-    # byte r, byte a, byte b
-    # 
-    'NOT', # byte a, byte b
-    'MOV', # byte a, byte b
-    'NEG',
-    'LISTAPPEND', # byte list, byte value
-
-
-    'LD_NONE',
-    'LIST', # byte r, short 0
-    'DICT', # byte r, short 0
-
-    'SETG', # short const, byte r
-
-
-    'LD_CONST', # byte r, short const
-    'GETG',  # byte r, short const
-    'JF',    # byte r, short label
-    
-
-
-    'TM_LINE',
-    'JMP',    # short label, byte 0
-    'UP_JMP', # short label, byte 0
-    
-
-    
-
-    'CALL0',
-    'CALL1',
-    'CALL2',
-    "CALL3",
-    "CALL4",
-    "CALL5",
-    "RET",
-    'TM_DEF',
-    'NARG',
-
-    'POP_JUMP_ON_FALSE', 
-    'JUMP_ON_FALSE', 
-    'JUMP_ON_TRUE',
+    'ADD', 'SUB', 'MUL', 'DIV', 'MOD', 'NEG',
+    'NOT', 'OP_GT', 'OP_LT', 'GTEQ', 'LTEQ', 'EQEQ', 'NOTEQ', 'OP_IN', 'NOTIN',
+    'AND', 'OR', 'SET', 'GET',
+    'LOAD_NONE', 'STORE_LOCAL', 'STORE_GLOBAL', 'LOAD_LOCAL', 'LOAD_GLOBAL', 'LOAD_CONSTANT',
+    #'LOAD_GLOBALS', 
+    'POP', 
+    'DICT_SET', 'LIST', 'DICT', 'LIST_APPEND',
+    'JUMP', 'UP_JUMP', 'POP_JUMP_ON_FALSE', 'JUMP_ON_FALSE', 'JUMP_ON_TRUE',
     #TAGSIZE
     'TM_UNARRAY', 'TM_ROT', 'TM_DEL', 'TM_FOR', 'TM_NEXT', 'ITER_NEW', 'LOAD_EX',
-    'SETJUMP', 'CALL', 'RETURN', 'LOAD_PARAMS', 'TM_NARG', 'TM_EOF',
+    'SETJUMP', 'CALL', 'TM_DEF', 'RETURN', 'LOAD_PARAMS', 'TM_NARG', 'TM_EOF',
     "CLRJUMP",
     'TM_EOP',
     # mulity assignment, eg. x,y = 1,2
     'TM_DEBUG',
-    
+    'TM_LINE',
     'TAG', 
     # instructions for vm to optimize.
     'FAST_ST_GLO',
@@ -102,7 +48,6 @@ while i < len(_opcode_names):
     name = _opcode_names[i]
     globals()[name] = i + 1
     tmcodes[i+1] = name
-    # print(name, '=', i + 1)
     i += 1
 
 def export_clang_define(des, self = None):

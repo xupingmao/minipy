@@ -427,7 +427,7 @@ Object tmGetGlobal(Object globals, Object okey) {
 }
 
 Object tmGetfname(Object fnc) {
-    if (NOT_FUNC(fnc)) {
+    if (!IS_FUNC(fnc)) {
         tmRaise("tmGetfname expect function");
     }
     return GET_MODULE(GET_FUNCTION(fnc)->mod)->file;

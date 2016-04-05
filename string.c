@@ -1,5 +1,4 @@
 #include "include/tm.h"
-#include <ctype.h>
 
 Object stringCharNew(int c) {
     String* str = tm_malloc(sizeof(String));

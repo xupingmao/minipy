@@ -68,18 +68,15 @@ if (tm->allocated > tm->gcThreshold) {   \
 
 TmFrame* pushFrame(Object fnc) {
     /* make extra space for self in method call */
-    // Object *top = tm->frame->top + 2;
-    Object * lastLocals = tm->frame->locals;
-    int lastLocalsCnt = tm->frame->maxlocals;
+    Object *top = tm->frame->top + 2;
     tm->frame ++ ;
     TmFrame* f = tm->frame;
 
-    printf("current frame = %d\n", tm->frame - tm->frames);
     /* check oprand stack */
-    // if (top >= tm->stack + STACK_SIZE) {
-    //    popFrame();
-    //    tmRaise("tmEval: stack overflow");
-    // }
+    if (top >= tm->stack + STACK_SIZE) {
+        popFrame();
+        tmRaise("tmEval: stack overflow");
+    }
     
     /* check frame stack*/
     if (tm->frame >= tm->frames + FRAMES_COUNT-1) {
@@ -89,24 +86,17 @@ TmFrame* pushFrame(Object fnc) {
 
     f->pc = GET_FUNCTION(fnc)->code;
 
-    f->locals = lastLocals + lastLocalsCnt;
+    f->locals = top;
     f->maxlocals = getFunctionMaxLocals(GET_FUNCTION(fnc));
-    // f->stack = f->locals + f->maxlocals;
-    // f->top = f->stack;
-
-    if (f->maxlocals <= 0) {
-        f->maxlocals = 20;
-    }
-
+    f->stack = f->locals + f->maxlocals;
+    f->top = f->stack;
     f->fnc = fnc;
-
-    printf("maxlocals = %d\n", f->maxlocals);
  
     // clear local variables
     int i;for(i = 0; i < f->maxlocals; i++) {
         f->locals[i] = NONE_OBJECT;
     }
-    // *(f->top) = NONE_OBJECT;
+    *(f->top) = NONE_OBJECT;
     f->jmp = NULL;
     return f;
 }
@@ -123,130 +113,12 @@ TmFrame* pushFrame(Object fnc) {
         *top = tmNumber(flag); \
     }
 
-#define _OP(funcName) r = READ_BYTE(pc); \
-    a = READ_BYTE(pc); \
-    b = READ_BYTE(pc); \
-    printf("%d = %d #funcName# %d\n", r, a, b); \
-    locals[r] = funcName(locals[a], locals[b]);
-
-
-Object tmEval(TmFrame *f) {
-    Object* locals = f->locals;
-    Object* top = f->stack;
-    Object cur_fnc = f->fnc;
-    Object globals = getGlobals(cur_fnc);
-    unsigned char* pc = f->pc;
-
-    int r,a,b;
-    r = 0; a = 0; b = 0;
-    while (1) {
-        int op = READ_BYTE(pc);
-
-        switch(op) {
-            case NEW_NUMBER: {
-                int i = READ_SHORT(pc);
-                double d = atof((char*)pc);
-                pc += i;
-                Object v = tmNumber(d);
-                dictSet(tm->constants, v, NONE_OBJECT);
-                printf("new number %g\n", d);
-                break;
-            }
-
-            case NEW_STRING: {
-                int i = READ_SHORT(pc);
-                Object v = stringAlloc((char*)pc, i);
-                pc += i;
-                dictSet(tm->constants, v, NONE_OBJECT);
-                printf("new string %s\n", GET_STR(v));
-                break;
-            }
-
-            case LD_CONST: {
-                r = READ_BYTE(pc);
-                int index = READ_SHORT(pc);
-                locals[r] = GET_CONST(index);
-                printf("load const %d, %d\n", r, index);
-                break;
-            }
-
-            case ADD: _OP(objAdd); break;
-            case SUB: _OP(objSub); break;
-            case MUL: _OP(objMul); break;
-            case DIV: _OP(objDiv); break;
-
-            case MOV: {
-                r = READ_BYTE(pc);
-                a = READ_BYTE(pc);
-                READ_BYTE(pc);
-                locals[r] = locals[a];
-                break;
-            }
-
-            case GETG: {
-                r = READ_BYTE(pc);
-                int i = READ_SHORT(pc);
-                printf("GETG %d, %d\n", r, i);
-                int idx = dictGetAttr(GET_DICT(globals), i);
-                if (idx == -1) {
-                    idx = dictGetAttr(GET_DICT(tm->builtins), i);
-                    if (idx == -1) {
-                        tmRaise("NameError: name %o is not defined", GET_CONST(i));
-                    } else {
-                        locals[r] = GET_DICT(tm->builtins)->nodes[idx].val;
-                    }
-                }
-                break;
-            }
-
-            case SETG: {
-                int i = READ_SHORT(pc);
-                a = READ_BYTE(pc);
-                printf("SETG %d, %d\n", i, a);
-                int idx = dictSetAttr(GET_DICT(globals), i, locals[a]);
-                break;
-            }
-
-            case CALL0: {
-                // CALL0 r, f, 0
-                r = READ_BYTE(pc);
-                int f = READ_BYTE(pc);
-                READ_BYTE(pc);
-                Object func = locals[f];
-                argStart();
-                locals[r] = callFunction(func);
-                break;
-            }
-
-            case CALL1: {
-                r = READ_BYTE(pc);
-                int f = READ_BYTE(pc);
-                int arg0 = READ_BYTE(pc);
-                Object func = locals[f];
-                argStart();
-                argPush(locals[arg0]);
-                locals[r] = callFunction(func);
-                break;
-            }
-
-            case TM_EOP:
-                return NONE_OBJECT;
-
-            default:
-                tmRaise("unknown opcode, value=%d\n", op);
-        }        
-    }
-    return NONE_OBJECT;
-}
-
-
 /** 
 ** evaluate byte code.
 ** @param f: Frame
 ** @return evaluated value.
 */
-/**
-Object tmEval1(TmFrame* f) {
+Object tmEval(TmFrame* f) {
     Object* locals = f->locals;
     Object* top = f->stack;
     Object cur_fnc = f->fnc;
@@ -272,7 +144,7 @@ Object tmEval1(TmFrame* f) {
             double d = atof((char*)pc + 3);
             pc += i;
             v = tmNumber(d);
-            // objAppend(tm->constants,v);
+            /* objAppend(tm->constants,v);*/
             dictSet(tm->constants, v, NONE_OBJECT);
             break;
         }
@@ -280,7 +152,7 @@ Object tmEval1(TmFrame* f) {
         case NEW_STRING: {
             v = stringAlloc((char*)pc + 3, i);
             pc += i;
-            /* objAppend(tm->constants,v); 
+            /* objAppend(tm->constants,v); */
             dictSet(tm->constants, v, NONE_OBJECT);
             break;
         }
@@ -310,7 +182,7 @@ Object tmEval1(TmFrame* f) {
             } else if(pc[0] == GET) {
                 
             }
-        
+            */
             break;
         }
         
@@ -329,7 +201,7 @@ Object tmEval1(TmFrame* f) {
             break;
 
         case LOAD_GLOBAL: {
-            /* tmPrintf("load global %o\n", GET_CONST(i)); 
+            /* tmPrintf("load global %o\n", GET_CONST(i)); */
             int idx = dictGetAttr(GET_DICT(globals), i);
             if (idx == -1) {
                 idx = dictGetAttr(GET_DICT(tm->builtins), i);
@@ -616,9 +488,7 @@ Object tmEval1(TmFrame* f) {
     /*
     if (top != f->stack) {
         tmRaise("tmEval: operand stack overflow");
-    }
+    }*/
     popFrame();
     return ret;
 }
-
-**/

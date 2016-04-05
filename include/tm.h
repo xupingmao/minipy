@@ -103,6 +103,7 @@ Object*       stringNext(StringIterator* iterator);
 static DataProto stringProto;
 /* macros */
 #define GET_STR(obj) (obj).value.str->value
+#define GET_SZ(obj)  (obj).value.str->value
 #define GET_STR_OBJ(obj) (obj).value.str
 #define GET_STR_LEN(obj) (obj).value.str->len
 
@@ -214,6 +215,7 @@ unsigned char*   func_resolve(TmFunction*, unsigned char*);
 Object           getFileNameObj(Object func);
 Object           getFuncNameObj(Object func);
 #define GET_FUNCTION(obj) (obj.value.func)
+#define GET_FUNC(obj) ((obj).value.func)
 #define IS_FUNCTION(o) TM_TYPE(o)==TYPE_FUNCTION
 #define GET_FUNCTIONTION_MODULE_PTR(fnc) GET_MODULE(GET_FUNCTION(fnc)->mod)
 #define GET_FUNC_CONSTANTS(fnc) GET_FUNCTIONTION_MODULE_PTR(fnc)->constants
@@ -263,6 +265,7 @@ Object*     nextPtr(Object iterator);
 Object      iterNew(Object collections);
 Object      objGet(Object self, Object k);
 void        objSet(Object self, Object k, Object v);
+char*       objToSz(Object obj);
 
 Object      tmStr(Object obj);
 int         isTrueObj(Object v);
@@ -343,6 +346,7 @@ Object*   getBuiltin(char* key);
 #define GET_DATA_PROTO(obj) (obj).value.data->proto
 #define GET_DICT(obj) GET_VAL(obj).dict
 #define GET_MODULE(obj) GET_VAL(obj).mod
+#define GET_MOD(obj) GET_VAL(obj).mod
 #define DICT_LEN(obj)  GET_DICT(obj)->len
 #define ptr_addr(ptr) (long) (ptr) / sizeof(char*)
 #define GET_NUM(obj) (obj).value.dv
@@ -407,3 +411,4 @@ Object*   getBuiltin(char* key);
     
 #endif
 
+#define LOG_INFO printf

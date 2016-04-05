@@ -10,52 +10,25 @@ unsigned char* func_resolve(TmFunction* fnc, unsigned char* pc) {
     }
     while (1) {
         int op = READ_BYTE(s);
-        printf("func_resolve: op=%d\n", op);
+        int val = READ_SHORT(s);
         if (op == NEW_STRING || op == NEW_NUMBER) {
-            int val = READ_SHORT(s);
             s += val;
-            printf("NEW %s\n", s-val);
-        } else if (op >= ADD && op <= GET) {
-          int r = READ_BYTE(s);
-          int a = READ_BYTE(s);
-          int b = READ_BYTE(s);
-          maxlocals = max(maxlocals, r);
-          maxlocals = max(maxlocals, a);
-          maxlocals = max(maxlocals, b);
-        } else if (op >= LD_CONST && op <= JF) {
-          int r = READ_BYTE(s);
-          s += 2;
-          maxlocals = max(maxlocals, r);
-        } else if (op >= LD_NONE && op <= DICT) {
-          int r = READ_BYTE(s);
-          s += 2;
-          maxlocals = max(maxlocals, r);
-        } else if (op >= NOT && op <= LISTAPPEND) {
-          int r = READ_BYTE(s);
-          int a = READ_BYTE(s);
-          READ_BYTE(s);
-          maxlocals = max(maxlocals, r);
-          maxlocals = max(maxlocals, a);
+        } else if (op == LOAD_LOCAL || op == STORE_LOCAL) {
+            maxlocals = max(val, maxlocals);
+        } else if (op == SETJUMP) {
+            fnc->modifier = 1;
         } else if(op == TM_EOF){
-            s += 3;
             defs--;
             if (defs == 0) break;
         } else if(op == TM_EOP) {
-            s += 3;
             break;
         } else if(op == TM_DEF) {
             defs++;
-            s += 3;
-        } else if (op >= CALL2 && op <= CALL5) {
-          s += 7;
-
-        } else {
-          s += 3;
         }
     }
     fnc->resolved = 1;
     fnc->maxlocals = maxlocals + 1;
-    fnc->code = pc;
+    fnc->code = pc + 3;
     fnc->end = s;
     return fnc->end;
 }
@@ -183,7 +156,7 @@ Object getFunctionGlobals(TmFunction* fnc) {
 }
 
 int getFunctionMaxLocals(TmFunction* fnc){
-    // resolveModule(GET_MODULE(fnc->mod), fnc);
+    //resolveModule(GET_MODULE(fnc->mod), fnc);
     return fnc->maxlocals;
 }
 

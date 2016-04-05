@@ -42,7 +42,6 @@ int callModFunc(char* mod, char* szFnc) {
 int loadBinary() {
     unsigned char* text = bin;
     int count = uncode32(&text);
-    printf("modules count is %d\n", count);
     int i;for(i = 0; i < count; i++) {
         int nameLen = uncode32(&text);
         Object name = stringAlloc((char*)text, nameLen);
@@ -50,7 +49,6 @@ int loadBinary() {
         int codeLen = uncode32(&text);
         Object code = stringAlloc((char*)text, codeLen);
         text += codeLen;
-        tmPrintf("load module %s\n", GET_STR(name));
         loadModule(name, code);
     }
     return 1;
