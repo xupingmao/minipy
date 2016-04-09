@@ -2,7 +2,7 @@ from boot import *
 from parse import *
 from tmcode import *
 
-_names = None
+_asmCtx = None
 _codeList = None
 _extCodeList = None # extra _codeList for optimize.
 
@@ -53,13 +53,20 @@ class Scope:
     def __init__(self):
         self.locals = []
         self.globals = []
+        self.tempVars = []
         self.jmps = 0 # try block count.
         
     def addGlobal(self, v):
         if v not in self.globals:
             self.globals.append(v)
+
+    def getNewTemp(self):
+        tempSize = len(self.tempVars)
+        tempName = "%" + str(tempSize)
+        self.tempVars.append(tempName)
+        return None
             
-class Names:
+class AsmContext:
     def __init__(self):
         self.scope = Scope()
         self.scopes = [self.scope]
@@ -108,23 +115,23 @@ class Names:
             emit(STORE_GLOBAL, idx)
 
 def asmInit():
-    global _names
+    global _asmCtx
     global _codeList
     global _extCodeList
 
-    _names = Names()
+    _asmCtx = AsmContext()
     _codeList = []
     _extCodeList = []
 
 def chkTryBlock(tag):
-    if _names.scope.jmps > 0:
+    if _asmCtx.scope.jmps > 0:
         return 0
-    _names.scope.jmps += 1
+    _asmCtx.scope.jmps += 1
     emit(SETJUMP, tag)
     return 1
 
 def exitTryBlock():
-    _names.scope.jmps -= 1
+    _asmCtx.scope.jmps -= 1
     
 def asm_switch__codeList():
     global _codeList
@@ -132,14 +139,14 @@ def asm_switch__codeList():
     _codeList, _extCodeList = _extCodeList, _codeList
 
 def asm_get_regs():
-    return len(_names.scope.locals)
+    return len(_asmCtx.scope.locals)
 
 def storeGlobal(glo):
     idx = getConstIdx(glo.val)
     emit(STORE_GLOBAL, idx)
 
 def addGlobal(v):
-    _names.scope.globals.append(v.val)
+    _asmCtx.scope.globals.append(v.val)
 # opcode : op
 
 def emit(op, val = 0):
@@ -165,7 +172,7 @@ def emitLoad(v):
     elif t == 'None':
         emit(LOAD_NONE, 0)
     elif t == 'name':
-        _names.load(v)
+        _asmCtx.load(v)
     else:
         print('LOAD_LOCAL ' + str(v.val))
         
@@ -231,24 +238,24 @@ def genCode(lst = False):
 
 
 def def_local(v):
-    _names.addLocal(v)
+    _asmCtx.addLocal(v)
 
 def get_loc_num():
-    return len(_names.scope.locals)
+    return len(_asmCtx.scope.locals)
 
 def push_scope():
-    _names.push()
+    _asmCtx.push()
 
 def pop_scope():
-    _names.pop()
+    _asmCtx.pop()
 
 def emit_store(v):
-    _names.store(v)
+    _asmCtx.store(v)
 
 
 def encode_error(token, msg):
-    global ctx
-    compile_error("encode", ctx.src, token, msg)
+    global _ctx
+    compile_error("encode", _ctx.src, token, msg)
     
 def loadAttr(name):
     if name.type == 'name':
@@ -752,12 +759,14 @@ class EncodeCtx:
         self.src = src
 
 def compile(src, des = None):
-    global ctx
+    global _ctx
+    # lock here
     asmInit()
-    ctx = EncodeCtx(src)
+    _ctx = EncodeCtx(src)
     encode(src)
-    ctx = None
+    _ctx = None
     code = genCode()
+    # unlock
     if des: save(des, code)
     return code
 
