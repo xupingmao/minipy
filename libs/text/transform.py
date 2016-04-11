@@ -62,6 +62,8 @@ def transform_args(args):
     return s
 def transform_tuple(itemList):
     if itemList == None: return ""
+    if not istype(itemList, "list"):
+        return transform_item(itemList)
     code = None
     for item in itemList:
         code = stringAppendItem(code, transform_item(item))
@@ -93,19 +95,21 @@ def get_printable_str(s):
 def transformDict(dictItem):
     if dictItem == None:
         return ""
-    for node in dictItem:
+    dictStr = None
+    for node in dictItem.first:
+        k,v = node
         if dictStr == None:
-            dictStr = transform_item(node.first)
-            dictStr += ":" + transform_item(node.second)
+            dictStr = transform_item(k)
+            dictStr += ":" + transform_item(v)
         else:
-            dictStr += "," + transform_item(node.first)
-            dictStr += ":" + transform_item(node.second)
+            dictStr += "," + transform_item(k)
+            dictStr += ":" + transform_item(v)
     return dictStr
     
-def transformWhile(whileItem):
-    cond = transform_item(whileItem.first)
-    body = transform_item(whileItem.second)
-    return "while(" + cond + "){\n" + body + "\n}\n"
+def transformWhile(whileItem, gap = 0):
+    cond = transform_item(whileItem.first, 0)
+    body = transform_item(whileItem.second, gap + 2)
+    return "while (" + cond + "){\n" + body + "\n}\n"
     
     
 def transformArgs(args):
@@ -122,7 +126,7 @@ def transform_item(item, gap = 0):
     if istype(item, "list"):
         code = ""
         for node in item:
-            code = stringAppendItem(code, transform_item(node), "\n")
+            code = stringAppendItem(code, transform_item(node, gap), "\n")
         return code
     if item.type == 'name':
         return item.val
@@ -141,14 +145,14 @@ def transform_item(item, gap = 0):
     elif item.type == ',':
         return transform_item(item.first) + ', ' + transform_item(item.second)
     elif item.type == 'None':
-        return 'undefined'
+        return 'None'
     elif item.type == 'return':
         return 'return ' + transform_item(item.first)
     elif item.type =='def':
         name = item.first
         args = item.second
         body = item.third
-        head = '\nfunction ' + name.val + '(' + transform_args(args) + ')'
+        head = '\ndef ' + name.val + '(' + transform_args(args) + ')'
         body = transform_list(body, gap + 2)
         return head + ' {\n' + body + '}\n'
     elif item.type in _op_list:
@@ -165,17 +169,17 @@ def transform_item(item, gap = 0):
     elif item.type == 'call':
         return transform_item(item.first) + '(' + transformArgs(item.second) + ')'
     elif item.type == 'if':
-        return transform_if("if", item, gap)
+        return transform_if("if ", item, gap)
     elif item.type == 'for':
         return transform_if('for', item, gap)
     elif item.type == "while":
-        return transformWhile(item)
+        return transformWhile(item, gap)
     elif item.type == "break":
         return "break;"
     elif item.type == "continue":
         return "continue"
     elif item.type == 'elif':
-        return transform_if("} else if", item, gap)
+        return transform_if("} elif ", item, gap)
     elif item.type == 'from':
         # replPrint (item)
         return 'from ' + transform_item(item.first) + " import " + transform_item(item.second)
