@@ -50,6 +50,27 @@ def transform_list(list, gap = 0):
 _op_list = ['+', '-', '*', '/', '=', '+=', '-=', '*=',
      '/=', '==', '>=', '<=', '!=', '>', '<', 'and', 'or', 'in', 'notin']
 
+_op_map = {
+    '+': '+',
+    '-': '-',
+    '*': '*',
+    '/': '/',
+    '=': '=',
+    '+=': '+=',
+    '-=': '-=',
+    '*=': '*=',
+    '/=': '/=',
+    '==': '==',
+    '>=': '>=',
+    '<=': '<=',
+    '!=': '!=',
+    '>' : '>',
+    '<' : '<',
+    'and': '&&',
+    'or' : '||',
+    'in' : 'in',
+    'notin': 'not in'
+}
 _ws_both += _op_list
 def transform_args(args):
     s = ""
@@ -65,9 +86,11 @@ def transform_tuple(itemList):
     if not istype(itemList, "list"):
         return transform_item(itemList)
     code = None
-    for item in itemList:
-        code = stringAppendItem(code, transform_item(item))
-    return code
+    if istype(itemList, 'list'):
+        for item in itemList:
+            code = stringAppendItem(code, transform_item(item))
+        return code
+    return transform_item(itemList)
     
 def get_printable_str(s):
     if '\\' in s:
@@ -121,6 +144,19 @@ def transformArgs(args):
         return code
     return transform_item(args)
 
+def forCondTransformer(forCond):
+    itemVar = transform_item(forCond.first)
+    collection = transform_item(forCond.second)
+    return itemVar+"=pyNext(" + collection + ")"
+
+def transformFunc(name, args, body, gap):
+    if args:
+        head = '\nfunction ' + name.val + '(' + transform_args(args) + ')'
+    else:
+        head = '\nfunction ' + name.val + '()'
+    body = transform_list(body, gap + 2)
+    return head + ' {\n' + body + '}\n'
+
 def transform_item(item, gap = 0):
     if item == None:return ""
     if istype(item, "list"):
@@ -152,14 +188,15 @@ def transform_item(item, gap = 0):
         name = item.first
         args = item.second
         body = item.third
-        head = '\ndef ' + name.val + '(' + transform_args(args) + ')'
-        body = transform_list(body, gap + 2)
-        return head + ' {\n' + body + '}\n'
-    elif item.type in _op_list:
-        return transform_item(item.first) +' ' + item.type + ' ' \
+        return transformFunc(name, args, body, gap)
+    elif item.type == 'class':
+        return transformFunc(item.first, None, item.second, gap)
+    elif item.type in _op_map:
+        op = _op_map[item.type]
+        return transform_item(item.first) +' ' + op + ' ' \
             + transform_item(item.second)
     elif item.type == "not":
-        return "not " + transform_item(item.first)
+        return "! " + transform_item(item.first)
     elif item.type == "neg":
         return "-" + transform_item(item.first)
     elif item.type == 'get':
@@ -171,7 +208,7 @@ def transform_item(item, gap = 0):
     elif item.type == 'if':
         return transform_if("if ", item, gap)
     elif item.type == 'for':
-        return transform_if('for', item, gap)
+        return transform_if('while', item, gap, forCondTransformer)
     elif item.type == "while":
         return transformWhile(item, gap)
     elif item.type == "break":
@@ -188,9 +225,12 @@ def transform_item(item, gap = 0):
     return ""
 
 
-def transform_if(prefix, item, gap):
+def transform_if(prefix, item, gap, condTransformer=None):
     head = prefix + "("
-    cond = transform_item(item.first)
+    if condTransformer:
+        cond = condTransformer(item.first)
+    else:
+        cond = transform_item(item.first)
     body = transform_list(item.second, gap+2)
     if not hasattr(item, 'third'):
         return head + cond + ') {\n' + body + '%s}'.format(gap * ' ')
