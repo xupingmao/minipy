@@ -1,4 +1,6 @@
-from boot import *
+
+if "tm" not in globals():
+    from boot import *
 
 def Token(type='symbol',val=None,pos=None):
     o = newobj()

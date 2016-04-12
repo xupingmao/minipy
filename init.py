@@ -296,7 +296,7 @@ def resolvepath(path):
     chdir(parent)
     return fname
     
-def execfile(path, chdir = False):
+def execfile(path, chdir = True):
     from encode import *
     if chdir:
         fname = resolvepath(path)

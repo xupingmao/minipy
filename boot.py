@@ -36,7 +36,7 @@ class Obj:
 def newobj():
     return Obj()
 
-def add_builtin(name, func):
+def addBuiltin(name, func):
     if isinstance(__builtins__, dict):
         #print 'dict'
         __builtins__[name] = func
@@ -46,7 +46,6 @@ def add_builtin(name, func):
 
 def asctime():
     return time.asctime()
-add_builtin("asctime", asctime)
 
 def printf(s, *nargs):
     if len(nargs) == 0:
@@ -159,10 +158,13 @@ def code(type, val):
         return chr(type) + codeF(val)
         
         
-add_builtin("add_builtin", add_builtin)
-add_builtin('require', require)
-add_builtin('add_obj_method', do_nothing)
-add_builtin('istype', istype)
+addBuiltin("addBuiltin", addBuiltin)
+addBuiltin('require', require)
+addBuiltin('add_obj_method', do_nothing)
+addBuiltin('istype', istype)
+addBuiltin("newobj", newobj)
+addBuiltin("asctime", asctime)
+addBuiltin("mmatch", mmatch)
 
 if __name__ == '__main__':
     file = sys.argv[1]

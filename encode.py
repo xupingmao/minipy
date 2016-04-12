@@ -1,4 +1,7 @@
-from boot import *
+
+if "tm" not in globals():
+    from boot import *
+
 from parse import *
 from tmcode import *
 

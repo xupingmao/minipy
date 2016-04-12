@@ -1,5 +1,7 @@
 from tokenize import *
-from boot import *
+
+if "tm" not in globals():
+    from boot import *
 
 
 _stm_end_list = ['nl', 'dedent']
