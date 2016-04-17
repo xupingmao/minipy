@@ -85,14 +85,6 @@ def str_join(sep, list):
 def list_join(list, sep):
     return str_join(sep, list)
     
-add_obj_method("str", "format", sformat)
-add_obj_method('str', 'ljust', ljust)
-add_obj_method('str', 'rjust', rjust)
-add_obj_method('str', 'center', center)
-add_obj_method("str", "startswith", startswith)
-add_obj_method('str', 'endswith', endswith)
-add_obj_method('str', 'join', str_join)
-add_obj_method('list', 'join', list_join)
 
 ## dict.
 def _dict_update(self, dict):
@@ -208,19 +200,6 @@ def hasattr(obj, name):
 def Exception(e):
     return e
 
-add_builtin("uncode16", uncode16)
-add_builtin("add_builtin", add_builtin)
-add_builtin("Exception", Exception)
-add_builtin("hasattr", hasattr)
-add_builtin("_import", _import)
-add_builtin("copy", copy)
-add_builtin("mtime", mtime)
-add_builtin("sformat0", sformat0)
-add_builtin("sformat", sformat)
-add_builtin("escape", escape)
-add_builtin("quote", quote)
-
-
 class Lib:
     def __init__(self, name, path, load = 1):
         self.name = name
@@ -247,8 +226,6 @@ def require(path, name = None):
     m = load_module(name, code)
     __modules__[path] = m
     return m
-
-add_builtin("require", require)
 
 if getosname() == "nt":
     FILE_SEP = '\\'
@@ -320,10 +297,32 @@ def __debug__(fidx):
         replPrint(vmopt("frame.local", fidx, i))
     input("continue")
     
+add_obj_method("str", "format", sformat)
+add_obj_method('str', 'ljust', ljust)
+add_obj_method('str', 'rjust', rjust)
+add_obj_method('str', 'center', center)
+add_obj_method("str", "startswith", startswith)
+add_obj_method('str', 'endswith', endswith)
+add_obj_method('str', 'join', str_join)
+add_obj_method('list', 'join', list_join)
+add_builtin("uncode16", uncode16)
+add_builtin("add_builtin", add_builtin)
+add_builtin("Exception", Exception)
+add_builtin("hasattr", hasattr)
+add_builtin("_import", _import)
+add_builtin("copy", copy)
+add_builtin("mtime", mtime)
+add_builtin("sformat0", sformat0)
+add_builtin("sformat", sformat)
+add_builtin("escape", escape)
+add_builtin("quote", quote)
 add_builtin("execfile", execfile)
 add_builtin("assert", _assert)
 add_builtin("__debug__", __debug__)
-    
+add_builtin("require", require)
+
+
+
 def _time():
     return clock() / 1000
     

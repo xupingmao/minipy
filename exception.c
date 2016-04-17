@@ -18,7 +18,7 @@ void traceback() {
         tmPrintln(LIST_NODES(exlist)[i]);
     }
     printf("Exception:\n  ");
-    tmPrintln(tm->ex);
+    tmPrintln(tm->exLine);
 }
 
 void tmRaise(char* fmt, ...) {
@@ -28,7 +28,7 @@ void tmRaise(char* fmt, ...) {
     tm->ex = tmFormatVaList(fmt, a, 0);
     Object file = getFileNameObj(tm->frame->fnc);
     Object fncName = getFuncNameObj(tm->frame->fnc);
-    tm->ex = tmFormat("File %o: in %o at line %d\n  %os", 
+    tm->exLine = tmFormat("File %o: in %o at line %d\n  %os", 
         file, fncName, tm->frame->lineno, tm->ex);
     va_end(a);
     longjmp(tm->frame->buf, 1);

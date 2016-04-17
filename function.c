@@ -127,7 +127,7 @@ Object funcGetCode(TmFunction* func) {
 
 
 Object getFuncAttr(TmFunction* fnc, Object key) {
-    if(objEqSz(key, "func_name")) {
+    if(objEqSz(key, "__name__")) {
         return fnc->name;
     }else if(objEqSz(key, "__self__")) {
         return fnc->self;

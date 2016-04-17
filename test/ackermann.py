@@ -1,4 +1,3 @@
-from boot import *
 from test import *
 
 def ackermann(x, y):

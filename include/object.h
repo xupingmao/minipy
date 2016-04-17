@@ -118,6 +118,7 @@ typedef struct TmVM {
   int exitCode; /* function call exit code, to recognize exceptions */
 
   Object ex;
+  Object exLine;
   Object exList;
 
   int exIndex; /* index of frame where exception was thrown */

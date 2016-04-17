@@ -66,6 +66,7 @@ void gcInit() {
     objAppend(tm->root, ARRAY_CHARS);
     
     tm->ex = NONE_OBJECT;
+    tm->exLine = NONE_OBJECT;
     
     /* initialize frames */
     tm->framesInitDone = 0;
@@ -333,7 +334,9 @@ void gcFull() {
     
     gcMark(tm->root);
     gcMarkLocalsAndStack();
-
+    gcMark(tm->ex);
+    gcMark(tm->exLine);
+    
     /* wipe garbage */
     gcWipe();
     tm->gcThreshold = tm->allocated + tm->allocated / 2;

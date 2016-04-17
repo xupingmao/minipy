@@ -1,70 +1,73 @@
+# test tools
+import logging
 
+class Result:
 
-# a = [1,2,3]
+    def __init__(self, success, result, exception = None):
+        self.success = success
+        self.result = result
+        self.exception = exception
 
-# def mret():
-#     return 1,2,3
-
-# for a in [1,2,3]:
-#     print(a)
-
-# for b in (1,2,3):
-#     print(b)
-
-# while i < 1:
-#     print(i)
-
-# print(a,b,c,d)
-
-# a = 10
-# print(a)
-
-def test_add(a, b, d = 10):
-    hello = a + b
-    hello = hello + d
-    x = a + b + d
-    return hello + d
-
-def test_assign(a,b,c):
-    a = 10
-    b = a
-    global g
-    g = a
-    g = a + b
-    return g
-
-def test_call():
-    call0()
-    call1(1)
-    call2(1,2)
-    call3(1,2,3)
-    call4(1,2,3,4)
-    call5(1,2,3,4,5)
-    # call6(1,2,3,4,5,6)
-
-def test_while():
-    while a < 10:
-        print(a)
-        a = a + 1
-        if a == 1:
-            continue
-        else:
-            break
-        print(a,b)
-
-def test_set():
-    obj.name = "test";
-    obj.friend.age = 10;
-
-def test_raise():
-    raise 1
-    raise 1,2
-
-def test_list():
-    a = [1,2,3]
-    c = [-1]
-    return [a,b,c]
-
-def test_dict():
-    a = {'name': "hello", age:10}
-    a['friend'] = {}
+def toPrintableStr(obj):
+    if istype(obj, 'string'):
+        obj = obj.replace('\t', '\\t')
+        obj = obj.replace('\n', '\\n')
+        obj = obj.replace('\r', '')
+        obj = obj.replace('"', '\\"')
+        return '"' + obj + '"'
+    elif istype(obj, 'number'):
+        return str(obj)
+    return str(obj)
+    
+def getFuncName(func):
+    return func.__name__
+        
+        
+def testException(func, args, expect = None):
+    try:
+        logging.info('RUN', getFuncName(func), args)
+        ret = apply(func, args)
+        logging.error("FAIL")
+    except Exception as e:
+        assertEquals(e, expect)
+        
+def testExceptionType(func, args, expect = None):
+    try:
+        logging.info('RUN', getFuncName(func), args)
+        ret = apply(func, args)
+        logging.error("FAIL")
+    except Exception as e:
+        assertStarts(e, expect)
+        
+def testfunc(func, args, expect = None):
+    try:
+        logging.info('RUN', getFuncName(func), args)
+        ret = apply(func, args)
+        if expect != None and not assertEquals(ret, expect, 'testfunc'):
+            return Result(False, ret)
+        return Result(True, ret)
+    except Exception as e:
+        return Result(False, e, e)
+        
+def assertEquals(result, expect, msg=None):
+    if result == expect:
+        logging.info('PASS, result=', toPrintableStr(result))
+        return True
+    else:
+        logging.error('FAIL, result=', toPrintableStr(result),\
+            'expect=', toPrintableStr(expect), msg)
+        raise
+        
+def assertStarts(result, expect, msg=None):
+    if result.startswith(expect):
+        logging.info('PASS, result=', toPrintableStr(result))
+        return True
+    else:
+        logging.error('FAIL, result=', toPrintableStr(result),\
+            'expect=', toPrintableStr(expect), msg)
+        raise
+        
+def assertTrue(value, msg=None):
+    if not value:
+        logging.error('FAIL, msg=', msg)
+        raise
