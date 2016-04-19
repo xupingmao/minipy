@@ -26,7 +26,10 @@ def build(cc="tcc", libs=None, dstPath = "bin.c"):
         #Lib("repl", "repl.py"),
         #Lib("pyeval", "pyeval.py")]
     modLen = code32(len(libs)+1) # constants
-    dstMtime = mtime(dstPath)
+    if not exists(dstPath):
+        dstMtime = -1
+    else:
+        dstMtime = mtime(dstPath)
     modified = False
     for obj in libs:
         path = obj.path
