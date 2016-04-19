@@ -1,3 +1,13 @@
+<pre>
+       _____________ ____________________________.___.
+      /   _____/    |   \______   \______   \__  |   |
+      \_____  \|    |   /|    |  _/|     ___//   |   |
+      /        \    |  / |    |   \|    |    \____   |
+     /_______  /______/  |______  /|____|    / ______|
+             \/                 \/           \/       
+
+</pre>
+
 # subpy
 a subset of python, vm implemented with ANSI C and compiler implemented with Python 3.
 # subpy
