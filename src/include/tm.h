@@ -34,6 +34,7 @@
 #include <time.h>
 /* #include <sys/stat.h> */
 #include <math.h>
+#include <ctype.h>
 
 #define TM_INLINE inline
 typedef char instruction;

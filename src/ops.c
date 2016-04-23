@@ -427,7 +427,7 @@ Object tmGetGlobal(Object globals, Object okey) {
 }
 
 Object tmGetfname(Object fnc) {
-    if (!IS_FUNC(fnc)) {
+    if (NOT_FUNC(fnc)) {
         tmRaise("tmGetfname expect function");
     }
     return GET_MODULE(GET_FUNCTION(fnc)->mod)->file;
@@ -448,6 +448,21 @@ Object tmCall(int lineno, Object func, int args, ...) {
     va_end(ap);
     // tmPrintf("at line %d, try to call %o with %d args\n", lineno, getFuncNameObj(func), args);
     return callFunction(func);
+}
+
+Object tmCallNative(int lineno, Object (*fn)(int, va_list), int args, ...) {
+    int i = 0;
+    va_list ap;
+    va_start(ap, args);
+    argStart();
+    for (i = 0; i < args; i++) {
+        argPush(va_arg(ap, Object));
+    }
+    va_end(ap);
+    va_start(ap, args);
+    Object ret = fn(args, ap);
+    va_end(ap);
+    return ret;
 }
 
 Object arrayToList(int n, ...) {
