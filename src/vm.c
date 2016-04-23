@@ -114,3 +114,38 @@ int tmInit(int argc, char* argv[]) {
     vmDestroy();
     return 0;
 }
+
+int tmRunFunc(int argc, char* argv[], char* modName, void(*func)(void)) {
+
+    int ret = vmInit(argc, argv);
+    if (ret != 0) { 
+        return ret;
+    }
+    /* use first frame */
+    int code = setjmp(tm->frames->buf);
+    if (code == 0) {
+        
+        // 
+        Object *_argv = dictGetByStr(tm->builtins, "ARGV");
+        if (_argv == NULL) {
+            tmRaise("ARGV is not defined!");
+        }
+        Object argv = *_argv;
+        listInsert(GET_LIST(argv), 0, stringNew(modName));
+
+        loadBinary();
+
+        tm->gcState = 0;
+        func();
+        tm->gcState = 1;
+        printf("tm->maxAllocated = %d\n", tm->maxAllocated);
+
+    } else if (code == 1){
+        traceback();
+    } else if (code == 2){
+        
+    }
+    vmDestroy();
+    return 0;
+}
+
