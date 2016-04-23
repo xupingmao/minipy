@@ -130,6 +130,7 @@ Object   listIterNew(TmList* list);
 Object*  listNext(TmListIterator* iterator);
 Object   listAdd(TmList*, TmList*);
 void     listDel(TmList*list, Object key);
+void     listInsert(TmList*list, int index, Object value);
 int      listIndex(TmList*, Object val);
 void     listAppend(TmList* list, Object v);
 

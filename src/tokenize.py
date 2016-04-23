@@ -243,7 +243,7 @@ def do_comment(s,i,l):
         if s[i] == '\n': break
         value += s[i]
         i += 1
-    if value.startswith(".debugger"):
+    if value.startswith("@debugger"):
         T.add("@", "debugger")
     return i
 
