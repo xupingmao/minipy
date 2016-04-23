@@ -12,18 +12,18 @@
 a subset of python, vm implemented with ANSI C and compiler implemented with Python 3.
 
 ## How to start
-run `python setup.py gcc` in console(or you may use other c compiler)
+`cd src` run `python setup.py gcc` in console(or you may use other c compiler)
 
 ## features
 
 ### compiler
 1. `tokenize.py` tokenizer modified from tinypy/tokenize
 2. `parse.py` handwrite LL parser
-3. `encode.py`, `asm.py` code generator
+3. `encode.py` code generator
 
 ### vm features
 1. stack based
-2. bytecode defined in `python/libs/tmcode.py`
+2. bytecode defined in `python/src/tmcode.py`
 3. exception handling implemented with setjmp
 4. C function and python function.
 5. exception can be tracked by lineno and handled.
