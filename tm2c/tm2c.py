@@ -14,12 +14,32 @@ def visitNumber(item, context):
     ref = context.getNumber(item.val)
     context.push(ref, ref)
 
+def visitString(item, context):
+    ref = context.getString(item.val)
+    context.push(ref, ref)
+
 def visitName(item, context):
     if context.scope == "global":
         # ref = context.getVar(item.val)
         context.push(None, sformat("tmGetGlobal(%s)", context.getString(item.val)))
     else:
         context.push(item.val, item.val)
+
+def visitReturn(item, context):
+    visitItem(item.first, context)
+    ref, val = context.pop()
+    context.push(None, "return " + val + ";")
+
+def visitDef(item, context):
+    # visitItem(item.first, context)
+    name = context.getVar(item.first.val)
+    # ref, name = context.pop()
+    context.push(None, "Object " + name + "() {\n")
+    context.scope = "local"
+    visitItem(item.second, context)
+    visitItem(item.third, context)
+    context.push(None, "}\n")
+    context.scope = "global"
 
 def visitAdd(item, context):
     visitItem(item.first, context)
@@ -66,7 +86,7 @@ def visitCall(item, context):
     elif second == None:
         context.push(None, sformat("tmCall(%s,%s,0);", getLineNo(item), funcRef))
     else:
-        visitItem(second)
+        visitItem(second, context)
         ref, val = context.pop()
         if ref == None:
             ref = context.getTemp(val)
@@ -75,9 +95,12 @@ def visitCall(item, context):
 _handlers = {
     "number": visitNumber,
     "name":   visitName,
+    "string": visitString,
     "=" : visitAssignment,
     "+" : visitAdd,
     "call": visitCall,
+    "def": visitDef,
+    "return": visitReturn
 }
 
 def visitItem0(item, context):
@@ -102,11 +125,12 @@ def tm2c(fname, src, prefix=None):
     tree = parse(src)
     # printAst(tree)
     context = Context()
+    context.setFname(prefix)
     try:
         visitItemList(tree, context)
     except Exception as e:
-        print(context.item)
-        print(e)
+        traceback()
+        printAst(context.item)
     return context.getCode()
     
 if __name__ == "__main__":
