@@ -474,6 +474,9 @@ def encodeDef(tk, in_class = 0):
         else:
             parg += 1
     if not narg:
+        lineNo = getlineno(tk.first)
+        if lineNo != None:
+            emit(TM_LINE, lineNo)
         emit(LOAD_PARAMS, parg*256 + varg)
     encodeItem(tk.third)
     emit(TM_EOF)

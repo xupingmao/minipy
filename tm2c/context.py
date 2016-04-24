@@ -2,6 +2,11 @@
 def toCodeStr(val):
     return '"' + escape(val) + '"'
 
+def getPrefix(fname):
+    v = fname.split(".")[0]
+    v = v.replace("-", "_")
+    return v
+
 class Context:
 
     def __init__(self):
@@ -13,6 +18,10 @@ class Context:
         self.numbers = []
         self.prefix = "_"
         self.fname = "None"
+
+    def setFname(self, fname):
+        self.fname = fname
+        self.prefix = getPrefix(fname)
 
     def push(self, ref, value):
         self.stack.append([ref, value])

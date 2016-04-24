@@ -102,8 +102,15 @@ def main():
             dis(fname, 'const')
         elif opt == '-simple':
             dissimple0(load(fname))
+
+def copy(collection):
+    vv = []
+    for c in collection:
+        vv.append(c)
+    return vv
+
 test = None
 if __name__ == "__main__":
-    argv = sys.argv.clone()
+    argv = copy(sys.argv)
     del argv[0]
     dissimple(argv)
