@@ -20,7 +20,7 @@ def writeFile(path, content):
     fp.close()
     return content
 
-def gen():
+def gen_tm2c_py():
     dirname = "visitors"
 
     files = os.listdir(dirname)
@@ -49,6 +49,19 @@ def gen():
     
     writeFile("tm2c.py", content)
 
+def gen_tm2c_c():
+    h_file_list = ["instruction.h", "object.h", "tm.h"]
+    c_file_list = ['gc.c', 'string.c', 'list.c', 'dict.c', 'function.c', 'number.c', 'tmarg.c', 'util.c', 'ops.c', 'vm.c', 'exception.c', 'builtins.c']
+    content = ""
+    
+    for name in h_file_list:
+        content += readFile("../src/include/" + name)
+    
+    for name in c_file_list:
+        content += readFile("../src/" + name)
+    writeFile("tm2c.c", content)
+        
 
 if __name__ == '__main__':
-    gen()
+    gen_tm2c_py()
+    # gen_tm2c_c()

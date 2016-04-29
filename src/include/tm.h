@@ -49,7 +49,13 @@ Object UNDEF;
 Object ARRAY_CHARS;
 
 #include "instruction.h"
-#include "code.h"
+
+/** code functions **/
+void code16(unsigned char*s, int value);
+void code32(unsigned char*s, int value);
+int uncode32(unsigned char**s);
+int uncode16(unsigned char**s);
+
 
 // gc functions
 #define GC_DEBUG_LIST 0

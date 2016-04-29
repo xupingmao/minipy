@@ -16,8 +16,16 @@ class Context:
         self.globals = []
         self.strings = []
         self.numbers = []
+        self.globalTempList = []
+        self.localTempList = []
         self.prefix = "_"
         self.fname = "None"
+        
+    def switchToScope(self, scope):
+        self.scope = scope
+        if scope == "local":
+            self.localTempList = []
+            self.push('#temp', self.localTempList)
 
     def setFname(self, fname):
         self.fname = fname
@@ -35,7 +43,11 @@ class Context:
             varName = self.getString(name)
             varRef = self.getVar(name)
             self.push(varRef, sformat("%s=%s;", varRef, val))
-            self.push(varRef, sformat('tmSetGlobal(%s, %s);', varName, varRef))
+            self.push(varRef, sformat('objSet(%s,%s,%s);', self.getGlobals(), varName, varRef))
+        else:
+            ref, val = self.pop()
+            varName = self.getVar(name)
+            self.push(varName, sformat("%s=%s;", varName, val))
 
     def getTempSize(self):
         return len(self.regs)
@@ -43,6 +55,14 @@ class Context:
     def restoreTempSize(self, size):
         while len(self.regs) > size:
             self.regs.pop()
+            
+    def addToTempList(self, temp):
+        if self.scope == "global":
+            list = self.globalTempList
+        else:
+            list = self.localTempList
+        if temp not in list:
+            list.append(temp)
 
     def getTemp(self, value=None):
         n = len(self.regs)
@@ -50,6 +70,7 @@ class Context:
         temp = "_t" + str(n)
         if value != None:
             self.push(temp, temp + "=" + str(value)+";")
+        self.addToTempList(temp)
         return temp
 
     def freeTemp(self):
@@ -63,6 +84,9 @@ class Context:
         # if name not in self.globals:
         #     self.globals.append(name)
         return self.prefix + "G" + name
+        
+    def getGlobals(self):
+        return self.prefix + "0";
 
     def getString(self, name):
         if name not in self.strings:
@@ -75,7 +99,9 @@ class Context:
         return self.prefix + "N" + str(self.numbers.index(name))
 
     def getDefinition(self):
-        code = '#include"tm.c";\n'
+        code  = '#include"include/tm.h";\n'
+        code += '#define TM_NO_BIN 1\n'
+        code += '#include "vm.c"\n'
         
         code += "/* definition begin */\n"
         for string in self.strings:
@@ -96,17 +122,31 @@ class Context:
 
         code += self.getDefinition()
 
-        code += sformat("Object %s_main() {\n", self.prefix)
+        code += sformat("void %s_main() {\n", self.prefix)
         # code += "int main(int argc, char* argv[]) {\n"
         for string in self.strings:
             code += self.getString(string) + sformat("=stringNew(\"%s\");\n", escape(string))
 
+        # definition of numbers
         for num in self.numbers:
             code += self.getNumber(num) + sformat("=tmNumber(%s);\n", num)
 
+        # temp variables
+        for temp in self.globalTempList:
+            code += sformat('Object %s;\n', temp)
+        
+        # globals
+        code += sformat('Object %s = dictNew();\n', self.getGlobals());
+        
+        # code
         for kv in self.stack:
             name, value = kv
-            code += value +"\n"
+            if name == '#temp':
+                if len(value) > 0:
+                    for temp in value:
+                        code += sformat('Object %s;\n', temp)
+            else:
+                code += value +"\n"
 
         code += "}\n"
 

@@ -15,6 +15,7 @@ _handlers = {
     "+" : visitAdd,
     "call": visitCall,
     "def": visitDef,
+    "arg": visitArg,
     "return": visitReturn
 }
 

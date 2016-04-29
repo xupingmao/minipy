@@ -11,8 +11,12 @@
 #include "exception.c"
 #include "util.c"
 #include "tmarg.c"
-#include "bin.c"
 
+/** do not need to boot from binary **/
+#ifndef TM_NO_BIN
+    #include "bin.c"
+#endif
+    
 void regModFunc(Object mod, char* name, Object (*native)()) {
     Object func = funcNew(NONE_OBJECT, NONE_OBJECT, native);
     GET_FUNCTION(func)->name = szToString(name);
@@ -40,6 +44,9 @@ int callModFunc(char* mod, char* szFnc) {
 }
 
 int loadBinary() {
+#ifdef TM_NO_BIN
+    return 0;
+#else
     unsigned char* text = bin;
     int count = uncode32(&text);
     int i;for(i = 0; i < count; i++) {
@@ -52,6 +59,7 @@ int loadBinary() {
         loadModule(name, code);
     }
     return 1;
+#endif
 }
 
 int vmInit(int argc, char* argv[]) {
