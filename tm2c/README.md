@@ -9,7 +9,9 @@ for example, you want to convert the following source code to C.
 print("Hello,World")
 ```
 
-just run `tm tm2c.py hello.py > hello.c` or `python tm2c.py hello.py > hello.c`
+1. run `python gen_tm2c.py` to generate `tm2c.py` file
+
+2. just run `tm tm2c.py hello.py > hello.c` or `python tm2c.py hello.py > hello.c`
 
 then you can get the C code.
 
