@@ -13,6 +13,7 @@ _handlers = {
     "None": visitNone,
     "=" : visitAssignment,
     "+" : visitAdd,
+    "if": visitIf,
     "call": visitCall,
     "def": visitDef,
     "arg": visitArg,

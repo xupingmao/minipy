@@ -106,7 +106,6 @@ Object objGet(Object self, Object k) {
     }
     case TYPE_FUNCTION:
         return getFuncAttr(GET_FUNCTION(self), k);
-        break;
     case TYPE_DATA:
         return GET_DATA_PROTO(self)->get(GET_DATA(self), k);
     }
@@ -187,35 +186,6 @@ int objEquals(Object a, Object b){
     return 0;
 }
 
-/*
-#define DEF_CMP_FUNC(fnc_name, op) Object fnc_name(Object a, Object b) {      \
-    if(TM_TYPE(a) != TM_TYPE(b))                             \
-        tmRaise(#fnc_name"(): can not compare [%o] and [%o]", (a), (b));                 \
-    switch(a.type){                      \
-        case TYPE_NUM: { RET_NUM(GET_NUM(a) op GET_NUM(b) );} \
-        case TYPE_STR: { RET_NUM(strcmp(GET_STR(a), GET_STR(b)) op 0); } \
-        default : tmRaise(#fnc_name"() not support yet"); \
-    }                           \
-    return NONE_OBJECT;\
-}
-
-#define DEF_CMP_FUNC_2(fnc_name, op) int fnc_name(Object a, Object b) {      \
-    if(TM_TYPE(a) != TM_TYPE(b))                             \
-        tmRaise(#fnc_name"(): can not compare [%o] and [%o]", (a), (b));                 \
-    switch(a.type){                      \
-        case TYPE_NUM: return  GET_NUM(a) op GET_NUM(b); \
-        case TYPE_STR: return  strcmp(GET_STR(a) , GET_STR(b)) op 0; \
-        default : tmRaise(#fnc_name"() not support yet"); \
-    }                           \
-    return 0;\
-}
-
-DEF_CMP_FUNC(tmLessThan, <);
-DEF_CMP_FUNC(tmGreaterThan, >);
-DEF_CMP_FUNC(tmLessEqual, <=);
-DEF_CMP_FUNC(tmGreaterEqual, >=);
-*/
-
 int objCmp(Object a, Object b) {
     if (TM_TYPE(a) == TM_TYPE(b)) {
         switch (TM_TYPE(a)) {
@@ -234,12 +204,6 @@ int objCmp(Object a, Object b) {
     tmRaise("objCmp: can not compare %o and %o", a, b);
     return 0;
 }
-/*
-DEF_CMP_FUNC_2(isTrueObj_lt, <);
-DEF_CMP_FUNC_2(isTrueObj_gt, >);
-DEF_CMP_FUNC_2(isTrueObj_lteq, <=);
-DEF_CMP_FUNC_2(isTrueObj_gteq, >=);
-*/
 
 Object objMul(Object a, Object b) {
     if (a.type == b.type && a.type == TYPE_NUM) {

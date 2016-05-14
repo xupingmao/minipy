@@ -1,5 +1,9 @@
 #include "include/tm.h"
 
+/** 
+ * @param cap capacity of the list
+ * create a list which will not be tracked by garbage collector
+ */
 TmList* untrackedListNew(int cap) {
     TmList* list = tm_malloc(sizeof(TmList));
     list->len = 0;

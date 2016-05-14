@@ -7,6 +7,27 @@ def getPrefix(fname):
     v = v.replace("-", "_")
     return v
 
+def _genCode(codeList):
+    code = ""
+    for kv in codeList:
+        name, value = kv
+        if name == '#temp':
+            if len(value) > 0:
+                for temp in value:
+                    code += sformat('Object %s;\n', temp)
+        else:
+            code += value +"\n"
+    return code
+
+
+class CodeWriter:
+
+    def __init__(self):
+        self.strings = []
+
+    def write(self, value):
+        self.strings.append(value)
+
 class Context:
 
     def __init__(self):
@@ -18,6 +39,7 @@ class Context:
         self.numbers = []
         self.globalTempList = []
         self.localTempList = []
+        self.functionDict = {}
         self.prefix = "_"
         self.fname = "None"
         
@@ -41,9 +63,11 @@ class Context:
         if self.scope == "global":
             ref, val = self.pop()
             varName = self.getString(name)
-            varRef = self.getVar(name)
-            self.push(varRef, sformat("%s=%s;", varRef, val))
-            self.push(varRef, sformat('objSet(%s,%s,%s);', self.getGlobals(), varName, varRef))
+            # varRef = self.getVar(name)
+            if ref == None:
+                ref = self.getTemp(val)
+            # self.push(varRef, sformat("%s=%s;", varRef, val))
+            self.push(None, sformat('objSet(%s,%s,%s);', self.getGlobals(), varName, ref))
         else:
             ref, val = self.pop()
             varName = self.getVar(name)
@@ -98,8 +122,13 @@ class Context:
             self.numbers.append(name)
         return self.prefix + "N" + str(self.numbers.index(name))
 
-    def getDefinition(self):
-        code  = '#include"include/tm.h";\n'
+    def defineFunction(self, name, codeList):
+        if name in self.functionDict:
+            raise sformat("function %s already exists!", name)
+        self.functionDict[name] = codeList
+
+    def genVarDef(self):
+        code  = '#include"include/tm.h"\n'
         code += '#define TM_NO_BIN 1\n'
         code += '#include "vm.c"\n'
         
@@ -113,14 +142,27 @@ class Context:
         for name in self.numbers:
             code += "Object " + self.getNumber(name) + ";\n"
 
+        # globals definition
+        code += "Object " + self.getGlobals() + ";\n"
+
         code += "/* definition end */\n"
+        return code
+
+    def genFuncDef(self):
+        code = ""
+        for name in self.functionDict:
+            codeList = self.functionDict[name]
+            code += _genCode(codeList)
+
         return code
 
 
     def getCode(self):
         code = ''
 
-        code += self.getDefinition()
+        code += self.genVarDef()
+
+        code += self.genFuncDef()
 
         code += sformat("void %s_main() {\n", self.prefix)
         # code += "int main(int argc, char* argv[]) {\n"
@@ -135,18 +177,11 @@ class Context:
         for temp in self.globalTempList:
             code += sformat('Object %s;\n', temp)
         
-        # globals
-        code += sformat('Object %s = dictNew();\n', self.getGlobals());
+        # globals init
+        code += sformat('%s = dictNew();\n', self.getGlobals());
         
         # code
-        for kv in self.stack:
-            name, value = kv
-            if name == '#temp':
-                if len(value) > 0:
-                    for temp in value:
-                        code += sformat('Object %s;\n', temp)
-            else:
-                code += value +"\n"
+        code += _genCode(self.stack)
 
         code += "}\n"
 
