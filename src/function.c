@@ -33,7 +33,7 @@ unsigned char* func_resolve(TmFunction* fnc, unsigned char* pc) {
     return fnc->end;
 }
 
-Object funcNew(Object mod,
+Object func_new(Object mod,
         Object self,
         Object (*native_func)()){
   TmFunction* f= tm_malloc(sizeof(TmFunction));
@@ -45,74 +45,74 @@ Object funcNew(Object mod,
   f->maxlocals = 0;
   f->self = self;
   f->name = NONE_OBJECT;
-  return gcTrack(objNew(TYPE_FUNCTION, f));
+  return gc_track(obj_new(TYPE_FUNCTION, f));
 }
 
-Object methodNew(Object _fnc, Object self){
+Object method_new(Object _fnc, Object self){
   TmFunction* fnc = GET_FUNCTION(_fnc);
-  Object nfnc = funcNew(fnc->mod, self, fnc->native);
+  Object nfnc = func_new(fnc->mod, self, fnc->native);
   GET_FUNCTION(nfnc)->name = GET_FUNCTION(_fnc)->name;
   GET_FUNCTION(nfnc)->maxlocals = GET_FUNCTION(_fnc)->maxlocals;
   GET_FUNCTION(nfnc)->code = GET_FUNCTION(_fnc)->code;
   return nfnc;
 }
 
-Object classNew(Object clazz){
+Object class_new(Object clazz){
   TmDict* cl = GET_DICT(clazz);
   Object k,v;
-  Object instance = dictNew();
-  DictNode* nodes = cl->nodes;
+  Object instance = dict_new();
+  Dict_node* nodes = cl->nodes;
   int i;
   for(i = 0; i < cl->cap; i++) {
       k = nodes[i].key;
       v = nodes[i].val;
       if(nodes[i].used && IS_FUNC(v)){
-        Object method = methodNew(v, instance);
-        objSet(instance, k, method);
+        Object method = method_new(v, instance);
+        obj_set(instance, k, method);
       }
   }
   return instance;
 }
 
-void funcFree(TmFunction* func){
+void func_free(TmFunction* func){
   // the references will be tracked by gc collecter
   GC_LOG_START(func, "function");
   tm_free(func, sizeof(TmFunction));
   GC_LOG_END(func, "function");
 }
 
-Object moduleNew(Object file , Object name, Object code){
+Object module_new(Object file , Object name, Object code){
   TmModule *mod = tm_malloc(sizeof(TmModule));
   mod->file = file;
   mod->code = code;
   mod->resolved = 0;
-  /*mod->constants = listNew(20);*/
-  /*listAppend(GET_LIST(mod->constants), NONE_OBJECT);*/
-  mod->globals = dictNew();
-  Object m = gcTrack(objNew(TYPE_MODULE, mod));
+  /*mod->constants = list_new(20);*/
+  /*list_append(GET_LIST(mod->constants), NONE_OBJECT);*/
+  mod->globals = dict_new();
+  Object m = gc_track(obj_new(TYPE_MODULE, mod));
   /* set module */
-  objSet(tm->modules, file, mod->globals);
-  dictSetByStr(mod->globals, "__name__", name);
+  obj_set(tm->modules, file, mod->globals);
+  dict_set_by_str(mod->globals, "__name__", name);
   return m;
 }
 
-void moduleFree(TmModule* mod){
+void module_free(TmModule* mod){
   tm_free(mod, sizeof(TmModule));
 }
 
 
 void func_format(char* des, TmFunction* func){
-    char szBuf[20];
-    char* szFnc = GET_STR(func->name);
-    strncpy(szBuf, szFnc, 19);
+    char sz_buf[20];
+    char* sz_fnc = GET_STR(func->name);
+    strncpy(sz_buf, sz_fnc, 19);
     if (func->self.type != TYPE_NONE) {
-        sprintf(des, "<method %p %s>", func, szBuf);
+        sprintf(des, "<method %p %s>", func, sz_buf);
     } else {
-        sprintf(des, "<function %p %s>", func, szBuf);
+        sprintf(des, "<function %p %s>", func, sz_buf);
     }
 }
 
-Object funcGetCode(TmFunction* func) {
+Object func_get_code(TmFunction* func) {
     if (func->native != NULL) {
         return NONE_OBJECT;
     }
@@ -122,45 +122,45 @@ Object funcGetCode(TmFunction* func) {
         len += 3;
     }
     len += 3; /* TM_EOF */
-    return stringAlloc((char*)code, len);
+    return string_alloc((char*)code, len);
 }
 
 
-Object getFuncAttr(TmFunction* fnc, Object key) {
-    if(objEqSz(key, "__name__")) {
+Object get_func_attr(TmFunction* fnc, Object key) {
+    if(obj_eq_sz(key, "__name__")) {
         return fnc->name;
-    }else if(objEqSz(key, "__self__")) {
+    }else if(obj_eq_sz(key, "__self__")) {
         return fnc->self;
-    } else if (objEqSz(key, "__code__")) {
-        return funcGetCode(fnc);
+    } else if (obj_eq_sz(key, "__code__")) {
+        return func_get_code(fnc);
     }
     return NONE_OBJECT;
 }
 /*
-void resolveModule(TmModule* mod, TmFunction* fnc){
+void resolve_module(TmModule* mod, TmFunction* fnc){
     if (! mod->resolved) {
-        CodeCheckResult st = resolveCode(mod, (unsigned char*) GET_STR(mod->code), 0);
+        Code_check_result st = resolve_code(mod, (unsigned char*) GET_STR(mod->code), 0);
         fnc->code = st.code;
         fnc->maxlocals = st.maxlocals;
         fnc->maxstack = st.maxstack;
     }
 }*/
 
-unsigned char* getFunctionCode(TmFunction *fnc){
-    //resolveModule(GET_MODULE(fnc->mod), fnc);
+unsigned char* get_function_code(TmFunction *fnc){
+    //resolve_module(GET_MODULE(fnc->mod), fnc);
     return fnc->code;
 }
 
-Object getFunctionGlobals(TmFunction* fnc) {
+Object get_function_globals(TmFunction* fnc) {
     return GET_MODULE(fnc->mod)->globals;
 }
 
-int getFunctionMaxLocals(TmFunction* fnc){
-    //resolveModule(GET_MODULE(fnc->mod), fnc);
+int get_function_max_locals(TmFunction* fnc){
+    //resolve_module(GET_MODULE(fnc->mod), fnc);
     return fnc->maxlocals;
 }
 
-char* getFuncNameSz(Object func) {
+char* get_func_name_sz(Object func) {
     if (IS_FUNC(func)) {
         return GET_STR(GET_FUNCTION(func)->name);
     } else if (IS_DICT(func)){
@@ -172,18 +172,29 @@ char* getFuncNameSz(Object func) {
 
 /**
  * @param func Object
- * @return fileName Obj->string
+ * @return file_name Obj->string
  */
-Object getFileNameObj(Object func) {
+Object get_file_name_obj(Object func) {
   if (IS_FUNC(func)) {
     return GET_MODULE(GET_FUNCTION(func)->mod)->file;
   }
   return NONE_OBJECT;
 }
 
-Object getFuncNameObj(Object func) {
+Object get_func_name_obj(Object func) {
   if (IS_FUNC(func)) {
     return GET_FUNCTION(func)->name;
   }
   return NONE_OBJECT;
 }
+
+
+
+
+
+
+
+
+
+
+

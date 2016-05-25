@@ -17,115 +17,115 @@
     #include "bin.c"
 #endif
     
-void regModFunc(Object mod, char* name, Object (*native)()) {
-    Object func = funcNew(NONE_OBJECT, NONE_OBJECT, native);
-    GET_FUNCTION(func)->name = szToString(name);
-    objSet(mod,GET_FUNCTION(func)->name, func);
+void reg_mod_func(Object mod, char* name, Object (*native)()) {
+    Object func = func_new(NONE_OBJECT, NONE_OBJECT, native);
+    GET_FUNCTION(func)->name = sz_to_string(name);
+    obj_set(mod,GET_FUNCTION(func)->name, func);
 }
 
-void regBuiltinFunc(char* name, Object (*native)()) {
-    regModFunc(tm->builtins, name, native);
+void reg_builtin_func(char* name, Object (*native)()) {
+    reg_mod_func(tm->builtins, name, native);
 }
 
-void loadModule(Object name, Object code) {
-    Object mod = moduleNew(name, name, code);
-    Object fnc = funcNew(mod, NONE_OBJECT, NULL);
+void load_module(Object name, Object code) {
+    Object mod = module_new(name, name, code);
+    Object fnc = func_new(mod, NONE_OBJECT, NULL);
     GET_FUNCTION(fnc)->code = (unsigned char*) GET_STR(code);
-    GET_FUNCTION(fnc)->name = szToString("#main");
-    callFunction(fnc);
+    GET_FUNCTION(fnc)->name = sz_to_string("#main");
+    call_function(fnc);
 }
 
-int callModFunc(char* mod, char* szFnc) {
-    Object m = objGet(tm->modules, stringNew(mod));
-    Object fnc = objGet(m, stringNew(szFnc));
-    argStart();
-    callFunction(fnc);
+int call_mod_func(char* mod, char* sz_fnc) {
+    Object m = obj_get(tm->modules, string_new(mod));
+    Object fnc = obj_get(m, string_new(sz_fnc));
+    arg_start();
+    call_function(fnc);
     return 0;
 }
 
-int loadBinary() {
+int load_binary() {
 #ifdef TM_NO_BIN
     return 0;
 #else
     unsigned char* text = bin;
     int count = uncode32(&text);
     int i;for(i = 0; i < count; i++) {
-        int nameLen = uncode32(&text);
-        Object name = stringAlloc((char*)text, nameLen);
-        text += nameLen;
-        int codeLen = uncode32(&text);
-        Object code = stringAlloc((char*)text, codeLen);
-        text += codeLen;
-        loadModule(name, code);
+        int name_len = uncode32(&text);
+        Object name = string_alloc((char*)text, name_len);
+        text += name_len;
+        int code_len = uncode32(&text);
+        Object code = string_alloc((char*)text, code_len);
+        text += code_len;
+        load_module(name, code);
     }
     return 1;
 #endif
 }
 
-int vmInit(int argc, char* argv[]) {
+int vm_init(int argc, char* argv[]) {
     
     int i;
     
-    tm = malloc(sizeof(TmVM));
+    tm = malloc(sizeof(TmVm));
     if (tm == NULL) {
         fprintf(stderr, "vm init fail");
         return -1;
     }
 
     // init gc
-    gcInit();
+    gc_init();
 
     /* set module boot */
-    Object boot = dictNew();
-    dictSetByStr(tm->modules, "boot", boot);
-    dictSetByStr(boot, "__name__", szToString("boot"));
-    dictSetByStr(tm->builtins, "tm", tmNumber(1));
-    dictSetByStr(tm->builtins, "True", tmNumber(1));
-    dictSetByStr(tm->builtins, "False", tmNumber(0));
-    dictSetByStr(tm->builtins, "__builtins__", tm->builtins);
-    dictSetByStr(tm->builtins, "__modules__", tm->modules);
+    Object boot = dict_new();
+    dict_set_by_str(tm->modules, "boot", boot);
+    dict_set_by_str(boot, "__name__", sz_to_string("boot"));
+    dict_set_by_str(tm->builtins, "tm", tm_number(1));
+    dict_set_by_str(tm->builtins, "True", tm_number(1));
+    dict_set_by_str(tm->builtins, "False", tm_number(0));
+    dict_set_by_str(tm->builtins, "__builtins__", tm->builtins);
+    dict_set_by_str(tm->builtins, "__modules__", tm->modules);
     
-    listMethodsInit();
-    stringMethodsInit();
-    dictMethodsInit();
-    builtinsInit();
+    list_methods_init();
+    string_methods_init();
+    dict_methods_init();
+    builtins_init();
     
-    Object p = listNew(argc);
+    Object p = list_new(argc);
     for (i = 1; i < argc; i++) {
-        Object arg = stringNew(argv[i]);
-        objAppend(p, arg);
+        Object arg = string_new(argv[i]);
+        obj_append(p, arg);
     }
-    dictSetByStr(tm->builtins, "ARGV", p);
+    dict_set_by_str(tm->builtins, "ARGV", p);
     return 0;
 }
 
-void vmDestroy() {
-    gcDestroy();
+void vm_destroy() {
+    gc_destroy();
     free(tm);
 }
 
-int tmInit(int argc, char* argv[]) {
-    int ret = vmInit(argc, argv);
+int tm_init(int argc, char* argv[]) {
+    int ret = vm_init(argc, argv);
     if (ret != 0) { 
         return ret;
     }
     /* use first frame */
     int code = setjmp(tm->frames->buf);
     if (code == 0) {
-        loadBinary();
-        callModFunc("init", "boot");
+        load_binary();
+        call_mod_func("init", "boot");
     } else if (code == 1){
         traceback();
     } else if (code == 2){
         
     }
-    vmDestroy();
+    vm_destroy();
     return 0;
 }
 
-int tmRunFunc(int argc, char* argv[], char* modName, void(*func)(void)) {
+int tm_run_func(int argc, char* argv[], char* mod_name, void(*func)(void)) {
 
-    int ret = vmInit(argc, argv);
+    int ret = vm_init(argc, argv);
     if (ret != 0) { 
         return ret;
     }
@@ -134,26 +134,38 @@ int tmRunFunc(int argc, char* argv[], char* modName, void(*func)(void)) {
     if (code == 0) {
         
         // 
-        Object *_argv = dictGetByStr(tm->builtins, "ARGV");
+        Object *_argv = dict_get_by_str(tm->builtins, "ARGV");
         if (_argv == NULL) {
-            tmRaise("ARGV is not defined!");
+            tm_raise("ARGV is not defined!");
         }
         Object argv = *_argv;
-        listInsert(GET_LIST(argv), 0, stringNew(modName));
+        list_insert(GET_LIST(argv), 0, string_new(mod_name));
 
-        loadBinary();
+        load_binary();
 
-        tm->gcState = 0;
+        tm->gc_state = 0;
         func();
-        tm->gcState = 1;
-        printf("tm->maxAllocated = %d\n", tm->maxAllocated);
+        tm->gc_state = 1;
+        printf("tm->max_allocated = %d\n", tm->max_allocated);
 
     } else if (code == 1){
         traceback();
     } else if (code == 2){
         
     }
-    vmDestroy();
+    vm_destroy();
     return 0;
 }
+
+
+
+
+
+
+
+
+
+
+
+
 

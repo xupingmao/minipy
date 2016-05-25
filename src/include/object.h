@@ -111,23 +111,23 @@ typedef struct _tm_jmp_buf tm_jmp_buf;
 #define FRAMES_COUNT 128
 #define MAX_ARG_COUNT 10
 #define STACK_SIZE 2048
-typedef struct TmVM {
+typedef struct TmVm {
   char* version;
   int debug;
   
-  int exitCode; /* function call exit code, to recognize exceptions */
+  int exit_code; /* function call exit code, to recognize exceptions */
 
   Object ex;
-  Object exLine;
-  Object exList;
+  Object ex_line;
+  Object ex_list;
 
-  int exIndex; /* index of frame where exception was thrown */
-  int framesInitDone;
+  int ex_index; /* index of frame where exception was thrown */
+  int frames_init_done;
   TmFrame frames[FRAMES_COUNT];
   TmFrame *frame;
   
   Object stack[STACK_SIZE];
-  Object internalArgStack[MAX_ARG_COUNT];
+  Object internal_arg_stack[MAX_ARG_COUNT];
   /* Object *top; */
   Object *arguments;
   
@@ -149,11 +149,11 @@ typedef struct TmVM {
 
   struct TmList* all;
   int allocated;
-  int maxAllocated;
-  int gcThreshold;
-  int gcState;
+  int max_allocated;
+  int gc_threshold;
+  int gc_state;
 
-}TmVM;
+}TmVm;
 
 /** 
  * definition for data
@@ -162,7 +162,7 @@ typedef struct TmVM {
 
 #define DATA_OBJECT_HEAD     \
     int marked;              \
-    size_t dataSize;         \
+    size_t data_size;         \
     int init;                \
     void (*mark)();          \
     void (*free)();          \
@@ -171,26 +171,26 @@ typedef struct TmVM {
     void (*set)();           \
     Object* (*next)();
 
-typedef struct DataProto {
+typedef struct Data_proto {
     DATA_OBJECT_HEAD
-}DataProto;
+}Data_proto;
 
 #define DATA_HEAD    int marked;      \
-    DataProto* proto;
+    Data_proto* proto;
 
 typedef struct TmData {
     DATA_HEAD
 }TmData;
 
-typedef struct DataObject {
+typedef struct Data_object {
   DATA_OBJECT_HEAD
-}DataObject;
+}Data_object;
 
-typedef struct _TmBaseIterator {
+typedef struct _Tm_base_iterator {
     DATA_HEAD
     Object func;
   Object ret;
-}TmBaseIterator;
+}Tm_base_iterator;
 
 /** 
  * definition for list
@@ -204,30 +204,30 @@ typedef struct TmList {
   struct Object* nodes;
 }TmList;
 
-typedef struct TmListIterator {
+typedef struct Tm_list_iterator {
     DATA_HEAD
     TmList* list;
     int cur;
-}TmListIterator;
+}Tm_list_iterator;
 
 
 /** 
  * definition for dictionary.
  */
 
-typedef struct DictNode{
+typedef struct Dict_node{
   Object key;
   Object val;
   int hash;
   int used; /* also used for attr index */
-}DictNode;
+}Dict_node;
 
 typedef struct Dictonary {
   int marked;
   int len;
   int cap;
   int extend;
-  struct DictNode* nodes;
+  struct Dict_node* nodes;
 }TmDict;
 
 typedef struct _TmDictIterator {
@@ -252,20 +252,32 @@ typedef struct String {
     char *value;
 } String;
 
-typedef struct StringIterator {
+typedef struct String_iterator {
     DATA_HEAD
     int cur;
     String* string;
-}StringIterator;
+}String_iterator;
 
 
 /**
  * global variables
  *
  */ 
-TmVM* tm;
+TmVm* tm;
 Object* tm_stack_end;
 
 
 
 #endif /* OBJECT_H_ */
+
+
+
+
+
+
+
+
+
+
+
+

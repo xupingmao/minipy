@@ -1,7 +1,7 @@
 import os
 import codecs
 
-def readFile(path):
+def read_file(path):
     try:
         fp = open(path, encoding="utf-8")
         content = fp.read()
@@ -13,7 +13,7 @@ def readFile(path):
         fp.close()
         return content
 
-def writeFile(path, content):
+def write_file(path, content):
     fp = open(path, "wb")
     buffer = codecs.encode(content, "utf-8")
     fp.write(buffer)
@@ -42,12 +42,12 @@ def gen_tm2c_py():
         fname = os.path.join(dirname, fname)
         name = fname.split(".")[0]
 
-        content += readFile(fname)
+        content += read_file(fname)
         content += "\n"
 
-    content += readFile("common.py")
+    content += read_file("common.py")
     
-    writeFile("tm2c.py", content)
+    write_file("tm2c.py", content)
 
 def gen_tm2c_c():
     h_file_list = ["instruction.h", "object.h", "tm.h"]
@@ -55,13 +55,14 @@ def gen_tm2c_c():
     content = ""
     
     for name in h_file_list:
-        content += readFile("../src/include/" + name)
+        content += read_file("../src/include/" + name)
     
     for name in c_file_list:
-        content += readFile("../src/" + name)
-    writeFile("tm2c.c", content)
+        content += read_file("../src/" + name)
+    write_file("tm2c.c", content)
         
 
 if __name__ == '__main__':
     gen_tm2c_py()
     # gen_tm2c_c()
+

@@ -1,6 +1,6 @@
 #include "include/tm.h"
 
-Object tmNumber(double v){
+Object tm_number(double v){
   Object o;
   TM_TYPE(o) = TYPE_NUM;
   SET_IDX(o, 0);
@@ -10,7 +10,7 @@ Object tmNumber(double v){
 
 
 
-void numberFormat(char* des, Object num){
+void number_format(char* des, Object num){
     double v = GET_NUM(num);
     if (fabs(v) - fabs((double)(long) v) < 0.000000001) {
         sprintf(des, "%ld", (long) v);
@@ -18,3 +18,15 @@ void numberFormat(char* des, Object num){
         sprintf(des, "%g", v);
     }
 }
+
+
+
+
+
+
+
+
+
+
+
+

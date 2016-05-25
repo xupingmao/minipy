@@ -2,74 +2,74 @@
 #include <conio.h>
 #include <windows.h>
 
-Object g_repaintFunc;
+Object g_repaint_func;
 HWND   g_hwnd;
-// HANDLE stdInput = GetStdHandle(STD_INPUT_HANDLE);
-// HANDLE stdOutput = GetStdHandle(STD_OUTPUT_HANDLE);
+// HANDLE std_input = Get_std_handle(STD_INPUT_HANDLE);
+// HANDLE std_output = Get_std_handle(STD_OUTPUT_HANDLE);
 
 void gotoxy(int x, int y) 
 {
     COORD pos;
     pos.X = x - 1;
     pos.Y = y - 1;
-    SetConsoleCursorPosition(GetStdHandle(STD_OUTPUT_HANDLE),pos);
+    Set_console_cursor_position(Get_std_handle(STD_OUTPUT_HANDLE),pos);
 }
 
 Object bf_gotoxy() {
     const char* fnc = "gotoxy";
-    int x = argTakeInt(fnc);
-    int y = argTakeInt(fnc);
+    int x = arg_take_int(fnc);
+    int y = arg_take_int(fnc);
     gotoxy(x,y);
     return NONE_OBJECT;
 }
 
 Object bf_getch() {
     int key = getch();
-    return tmNumber(key);
+    return tm_number(key);
 }
 
 Object bf_ctime() {
-    return tmNumber(time(NULL));
+    return tm_number(time(NULL));
 }
 
 
-Object bf_setRepaintFunc() {
-    Object func = argTakeFuncObj("setRepaintFunc");
-    g_repaintFunc = func;
+Object bf_set_repaint_func() {
+    Object func = arg_take_func_obj("set_repaint_func");
+    g_repaint_func = func;
     return NONE_OBJECT;
 }
 
 
-Object bf_DrawText() {
-  char* text = argTakeSz("DrawText");
+Object bf__draw_text() {
+  char* text = arg_take_sz("Draw_text");
   PAINTSTRUCT ps;
   HDC hdc;
   RECT rc;
 
   HWND hwnd = g_hwnd;
-  hdc = BeginPaint(hwnd, &ps);
+  hdc = Begin_paint(hwnd, &ps);
 
-  GetClientRect(hwnd, &rc);
-  SetTextColor(hdc, RGB(240,240,96));
-  SetBkMode(hdc, TRANSPARENT);
-  DrawText(hdc, text, -1, &rc, DT_CENTER|DT_SINGLELINE|DT_VCENTER); 
-  EndPaint(hwnd, &ps);
+  Get_client_rect(hwnd, &rc);
+  Set_text_color(hdc, RGB(240,240,96));
+  Set_bk_mode(hdc, TRANSPARENT);
+  Draw_text(hdc, text, -1, &rc, DT_CENTER|DT_SINGLELINE|DT_VCENTER); 
+  End_paint(hwnd, &ps);
   return NONE_OBJECT;
 }
 
 #define APPNAME "HELLO_WIN"
 
-char szAppName[] = APPNAME; // The name of this application
-char szTitle[] = APPNAME; // The title bar text
-char *pWindowText;
+char sz_app_name[] = APPNAME; // The name of this application
+char sz_title[] = APPNAME; // The title bar text
+char *p_window_text;
 
-HINSTANCE g_hInst; // current instance
+HINSTANCE g_h_inst; // current instance
 
-void CenterWindow(HWND hWnd);
+void Center_window(HWND h_wnd);
 
 //+---------------------------------------------------------------------------
 //
-// Function: WndProc
+// Function: Wnd_proc
 //
 // Synopsis: very unusual type of function - gets called by system to
 // process windows messages.
@@ -77,28 +77,28 @@ void CenterWindow(HWND hWnd);
 // Arguments: same as always.
 //----------------------------------------------------------------------------
 
-LRESULT CALLBACK WndProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
+LRESULT CALLBACK Wnd_proc(HWND hwnd, UINT message, WPARAM w_param, LPARAM l_param)
 {
  switch (message)
  {
   // ----------------------- first and last
   case WM_CREATE:
-   CenterWindow(hwnd);
+   Center_window(hwnd);
    break;
 
   case WM_DESTROY:
-   PostQuitMessage(0);
+   Post_quit_message(0);
    break;
 
 
   // ----------------------- get out of it...
   case WM_RBUTTONUP:
-   DestroyWindow(hwnd);
+   Destroy_window(hwnd);
    break;
 
   case WM_KEYDOWN:
-   if (VK_ESCAPE == wParam)
-    DestroyWindow(hwnd);
+   if (VK_ESCAPE == w_param)
+    Destroy_window(hwnd);
    break;
 
 
@@ -108,41 +108,41 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
    PAINTSTRUCT ps;
    HDC hdc;
    RECT rc;
-   // hdc = BeginPaint(hwnd, &ps);
+   // hdc = Begin_paint(hwnd, &ps);
 
-   // GetClientRect(hwnd, &rc);
-   // SetTextColor(hdc, RGB(240,240,96));
-   // SetBkMode(hdc, TRANSPARENT);
-   // DrawText(hdc, pWindowText, -1, &rc, DT_CENTER|DT_SINGLELINE|DT_VCENTER);
+   // Get_client_rect(hwnd, &rc);
+   // Set_text_color(hdc, RGB(240,240,96));
+   // Set_bk_mode(hdc, TRANSPARENT);
+   // Draw_text(hdc, p_window_text, -1, &rc, DT_CENTER|DT_SINGLELINE|DT_VCENTER);
    // int i;
    // for(i = 0; i < 100; i++) {
-   //  SetPixel(hdc, 10 + i, 10, RGB(100,100,100));
+   //  Set_pixel(hdc, 10 + i, 10, RGB(100,100,100));
    // }
-   tmPrintln(g_repaintFunc);
-   callFunction(g_repaintFunc);
-   // EndPaint(hwnd, &ps);
+   tm_println(g_repaint_func);
+   call_function(g_repaint_func);
+   // End_paint(hwnd, &ps);
    break;
   }
 
   // ----------------------- let windows do all other stuff
   default:
-   return DefWindowProc(hwnd, message, wParam, lParam);
+   return Def_window_proc(hwnd, message, w_param, l_param);
  }
  return 0;
 }
 
 //+---------------------------------------------------------------------------
 //
-// Function: WinMain
+// Function: Win_main
 //
 // Synopsis: standard entrypoint for GUI Win32 apps
 //
 //----------------------------------------------------------------------------
-int APIENTRY WinMain(
-    HINSTANCE hInstance,
-    HINSTANCE hPrevInstance,
-    LPSTR lpCmdLine,
-    int nCmdShow)
+int APIENTRY Win_main(
+    HINSTANCE h_instance,
+    HINSTANCE h_prev_instance,
+    LPSTR lp_cmd_line,
+    int n_cmd_show)
 {
     MSG msg;
 
@@ -153,22 +153,22 @@ int APIENTRY WinMain(
     // Fill in window class structure with parameters that describe
     // the main window.
 
-    ZeroMemory(&wc, sizeof wc);
-    wc.hInstance = hInstance;
-    wc.lpszClassName = szAppName;
-    wc.lpfnWndProc = (WNDPROC)WndProc;
+    Zero_memory(&wc, sizeof wc);
+    wc.h_instance = h_instance;
+    wc.lpsz_class_name = sz_app_name;
+    wc.lpfn_wnd_proc = (WNDPROC)Wnd_proc;
     wc.style = CS_DBLCLKS|CS_VREDRAW|CS_HREDRAW;
-    wc.hbrBackground = (HBRUSH)GetStockObject(BLACK_BRUSH);
-    wc.hIcon = LoadIcon(NULL, IDI_APPLICATION);
-    wc.hCursor = LoadCursor(NULL, IDC_ARROW);
+    wc.hbr_background = (HBRUSH)Get_stock_object(BLACK_BRUSH);
+    wc.h_icon = Load_icon(NULL, IDI_APPLICATION);
+    wc.h_cursor = Load_cursor(NULL, IDC_ARROW);
 
-    if (FALSE == RegisterClass(&wc)) return 0;
+    if (FALSE == Register_class(&wc)) return 0;
 
 
     // create the browser
-    hwnd = CreateWindow(
-        szAppName,
-        szTitle,
+    hwnd = Create_window(
+        sz_app_name,
+        sz_title,
         WS_OVERLAPPEDWINDOW|WS_VISIBLE,
         CW_USEDEFAULT,
         CW_USEDEFAULT,
@@ -176,36 +176,36 @@ int APIENTRY WinMain(
         240,//CW_USEDEFAULT,
         0,
         0,
-        g_hInst,
+        g_h_inst,
         0);
 
     if (NULL == hwnd) return 0;
 
     g_hwnd = hwnd;
 
-    printf("lpCmdLine=%s\n", lpCmdLine);
-    pWindowText = lpCmdLine[0] ? lpCmdLine : "Hello Windows!";
+    printf("lp_cmd_line=%s\n", lp_cmd_line);
+    p_window_text = lp_cmd_line[0] ? lp_cmd_line : "Hello Windows!";
 
-    g_repaintFunc.type = 0;
+    g_repaint_func.type = 0;
 
-    printf("load file %s\n", pWindowText);
+    printf("load file %s\n", p_window_text);
 
     // start vm.
-    char *argv[] = {"win_main.exe", lpCmdLine};
-    int ret = vmInit(2, argv);
+    char *argv[] = {"win_main.exe", lp_cmd_line};
+    int ret = vm_init(2, argv);
     if (ret != 0) { 
         return ret;
     }
     /* use first frame */
     int code = setjmp(tm->frames->buf);
     if (code == 0) {
-        loadBinary();
-        regBuiltinFunc("gotoxy", bf_gotoxy);
-        regBuiltinFunc("getch", bf_getch);
-        regBuiltinFunc("ctime", bf_ctime);
-        regBuiltinFunc("setRepaintFunc", bf_setRepaintFunc);
-        regBuiltinFunc("DrawText", bf_DrawText);
-        callModFunc("init", "boot");
+        load_binary();
+        reg_builtin_func("gotoxy", bf_gotoxy);
+        reg_builtin_func("getch", bf_getch);
+        reg_builtin_func("ctime", bf_ctime);
+        reg_builtin_func("set_repaint_func", bf_set_repaint_func);
+        reg_builtin_func("Draw_text", bf__draw_text);
+        call_mod_func("init", "boot");
     } else if (code == 1){
         traceback();
     } else if (code == 2){
@@ -213,34 +213,46 @@ int APIENTRY WinMain(
     }
 
     // Main message loop:
-    while (GetMessage(&msg, NULL, 0, 0) > 0)
+    while (Get_message(&msg, NULL, 0, 0) > 0)
     {
-        TranslateMessage(&msg);
-        DispatchMessage(&msg);
+        Translate_message(&msg);
+        Dispatch_message(&msg);
     }
 
-    vmDestroy();
+    vm_destroy();
 
-    return msg.wParam;
+    return msg.w_param;
 }
 
 //+---------------------------------------------------------------------------
 
 //+---------------------------------------------------------------------------
 
-void CenterWindow(HWND hwnd_self)
+void Center_window(HWND hwnd_self)
 {
  RECT rw_self, rc_parent, rw_parent; HWND hwnd_parent;
- hwnd_parent = GetParent(hwnd_self);
- if (NULL==hwnd_parent) hwnd_parent = GetDesktopWindow();
- GetWindowRect(hwnd_parent, &rw_parent);
- GetClientRect(hwnd_parent, &rc_parent);
- GetWindowRect(hwnd_self, &rw_self);
- SetWindowPos(hwnd_self, NULL,
+ hwnd_parent = Get_parent(hwnd_self);
+ if (NULL==hwnd_parent) hwnd_parent = Get_desktop_window();
+ Get_window_rect(hwnd_parent, &rw_parent);
+ Get_client_rect(hwnd_parent, &rc_parent);
+ Get_window_rect(hwnd_self, &rw_self);
+ Set_window_pos(hwnd_self, NULL,
   rw_parent.left + (rc_parent.right + rw_self.left - rw_self.right) / 2,
   rw_parent.top + (rc_parent.bottom + rw_self.top - rw_self.bottom) / 2,
   0, 0,
   SWP_NOSIZE|SWP_NOZORDER|SWP_NOACTIVATE
   );
 }
+
+
+
+
+
+
+
+
+
+
+
+
 

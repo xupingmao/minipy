@@ -26,7 +26,7 @@ class ParserCtx:
         self.l = len(r)
         self.tree = []
         self.src = txt
-        self.lastToken = None
+        self.last_token = None
 
     def next(self):
         if self.i < self.l:
@@ -40,7 +40,7 @@ class ParserCtx:
 
     def add(self, v):
         self.tree.append(v)
-        self.lastToken = v
+        self.last_token = v
 
     def visit_block(self):
         self.tree.append('block')
@@ -58,7 +58,7 @@ def expect(ctx, v):
         compile_error("parse", ctx.src, ctx.token, "expect " + v)
     ctx.next()
 
-def addOp(p, v):
+def add_op(p, v):
     r = p.tree.pop()
     l = p.tree.pop()
     node = AstNode(v)
@@ -125,7 +125,7 @@ def assign_exp(p):
         t = p.token.type
         p.next()
         fnc(p)
-        addOp(p, t)
+        add_op(p, t)
 
 
 def comma_exp(p):
@@ -136,7 +136,7 @@ def comma_exp(p):
         if p.token.type == ']':
             break # for list
         fnc(p)
-        # addOp(p, ',')
+        # add_op(p, ',')
         b = p.pop()
         a = p.pop()
         if gettype(a)=="list":
@@ -151,7 +151,7 @@ def or_exp(p):
     while p.token.type == 'or':
         p.next()
         fnc(p)
-        addOp(p, 'or')
+        add_op(p, 'or')
 
 def and_exp(p):
     fnc = not_exp
@@ -159,7 +159,7 @@ def and_exp(p):
     while p.token.type == 'and':
         p.next()
         fnc(p)
-        addOp(p, 'and')
+        add_op(p, 'and')
 
 def not_exp(p):
     fnc = cmp_exp
@@ -179,7 +179,7 @@ def cmp_exp(p):
         t = p.token.type
         p.next()
         fnc(p)
-        addOp(p, t)
+        add_op(p, t)
 
 def item(p):
     fnc = item2
@@ -188,23 +188,23 @@ def item(p):
         t = p.token.type
         p.next()
         fnc(p)
-        addOp(p, t)
+        add_op(p, t)
 
 
 def item2(p):
-    fnc = callOrGetExp
+    fnc = call_or_get_exp
     fnc(p)
     while p.token.type in ('*','/', '%'):
         t = p.token.type
         p.next()
         fnc(p)
-        addOp(p, t)
+        add_op(p, t)
 
 
-def callOrGetExp(p):
+def call_or_get_exp(p):
     if p.token.type == '-':
         p.next()
-        callOrGetExp(p)
+        call_or_get_exp(p)
         node = AstNode('neg', p.pop())
         p.add(node)
     else:
@@ -215,7 +215,7 @@ def callOrGetExp(p):
             if t == '[':
                 expr(p)
                 expect(p, ']')
-                addOp(p, 'get')
+                add_op(p, 'get')
             elif t == '(':
                 node = AstNode('call', p.pop())
                 if p.token.type == ')':
@@ -319,7 +319,7 @@ def parse_del(p):
 def parse_global(p):
     p.next()
     node = AstNode('global')
-    assert_type(p, 'name', 'GlobalException')
+    assert_type(p, 'name', 'Global_exception')
     node.first = p.token
     p.add(node)
     p.next()
@@ -408,7 +408,7 @@ def parse_arg(p):
 
 def parse_def(p):
     p.next()
-    assert_type(p, 'name', 'DefException')
+    assert_type(p, 'name', 'Def_exception')
     func = AstNode("def")
     func.first = p.token
     p.next()
@@ -419,14 +419,14 @@ def parse_def(p):
 
 def parse_class(p):
     p.next()
-    assert_type(p, 'name','ClassException')
+    assert_type(p, 'name','Class_exception')
     clazz = AstNode()
     clazz.type = 'class'
     clazz.first = p.token
     p.next()
     if p.token.type == '(':
         p.next()
-        assert_type(p, 'name', 'ClassException')
+        assert_type(p, 'name', 'Class_exception')
         p.third = p.token
         p.next()
         expect(p, ')')
@@ -547,7 +547,7 @@ def parse(content):
         compile_error("parse", content, p.token, str(e))
         raise(e)
 
-def printAstObj(tree, n=0):
+def print_ast_obj(tree, n=0):
     if tree == None:
         return
     if tree.type in ("number", "string", "None"):
@@ -558,29 +558,29 @@ def printAstObj(tree, n=0):
     else:
         print(" " * n, tree.type)
     if hasattr(tree, "first"):
-        printAst(tree.first, n+2)
+        print_ast(tree.first, n+2)
     if hasattr(tree, "second"):
-        printAst(tree.second, n+2)
+        print_ast(tree.second, n+2)
     if hasattr(tree, "third"):
-        printAst(tree.third, n+2)
+        print_ast(tree.third, n+2)
 
-def printAstList(tree, n=0):
+def print_ast_list(tree, n=0):
     print(" " * n, "[]")
     for item in tree:
-        printAstObj(item, n+2)
+        print_ast_obj(item, n+2)
 
-def printAst(tree, n=0):
+def print_ast(tree, n=0):
     if gettype(tree) == "list":
         print("     ")
-        return printAstList(tree, n)
+        return print_ast_list(tree, n)
     if hasattr(tree, "pos"):
         line = tree.pos[0]
-        lineStr = str(line)
-        space = 4 - len(lineStr)
-        printf(space*' ' + lineStr + ':')
+        line_str = str(line)
+        space = 4 - len(line_str)
+        printf(space*' ' + line_str + ':')
     else:
         print("     ")
-    return printAstObj(tree, n)
+    return print_ast_obj(tree, n)
 
 def parsefile(fname):
     try:
@@ -596,4 +596,15 @@ def tk_list_len(tk):
 if __name__ == "__main__":
     import sys
     tree = parsefile(sys.argv[1])
-    printAst(tree)
+    print_ast(tree)
+
+
+
+
+
+
+
+
+
+
+

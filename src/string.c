@@ -1,6 +1,6 @@
 #include "include/tm.h"
 
-Object stringCharNew(int c) {
+Object string_char_new(int c) {
     String* str = tm_malloc(sizeof(String));
     struct Object obj;
     str->stype = 1;
@@ -10,10 +10,10 @@ Object stringCharNew(int c) {
     str->value[1] = '\0';
     TM_TYPE(obj) = TYPE_STR;
     GET_STR_OBJ(obj) = str;
-    return gcTrack(obj);
+    return gc_track(obj);
 }
 
-Object stringAlloc(char *s, int size) {
+Object string_alloc(char *s, int size) {
     String* str = tm_malloc(sizeof(String));
     Object v;
     /* malloc new memory */
@@ -28,7 +28,7 @@ Object stringAlloc(char *s, int size) {
         }
         str->value[size] = '\0';
     } else if(size == 1){
-        return stringChr(s[0]);
+        return string_chr(s[0]);
     /* use string ptr in C data section */
     } else {
         str->stype = 0;
@@ -42,21 +42,21 @@ Object stringAlloc(char *s, int size) {
     }
     v.type = TYPE_STR;
     v.value.str = str;
-    return gcTrack(v);
+    return gc_track(v);
 }
 
-Object stringChr(int n) {
-    return listGet(GET_LIST(ARRAY_CHARS), n);
+Object string_chr(int n) {
+    return list_get(GET_LIST(ARRAY_CHARS), n);
 }
 
-void stringFree(String *str) {
+void string_free(String *str) {
     if (str->stype) {
         tm_free(str->value, str->len + 1);
     }
     tm_free(str, sizeof(String));
 }
 
-int stringIndex(String* s1, String* s2, int start) {
+int string_index(String* s1, String* s2, int start) {
     char* ss1 = s1->value;
     char* ss2 = s2->value;
     char* p = strstr(ss1 + start, ss2);
@@ -66,7 +66,7 @@ int stringIndex(String* s1, String* s2, int start) {
 }
 
 
-Object stringSubstring(String* str, int start, int end) {
+Object string_substring(String* str, int start, int end) {
     int max_end, len, i;
     char* s;
     Object new_str;
@@ -76,8 +76,8 @@ Object stringSubstring(String* str, int start, int end) {
     end = max_end < end ? max_end : end;
     len = end - start;
     if (len <= 0)
-        return szToString("");
-    new_str = stringAlloc(NULL, len);
+        return sz_to_string("");
+    new_str = string_alloc(NULL, len);
     s = GET_STR(new_str);
     for (i = start; i < end; i++) {
         *(s++) = str->value[i];
@@ -86,26 +86,26 @@ Object stringSubstring(String* str, int start, int end) {
 }
 
 Object string_find() {
-    static const char* szFunc = "find";
-    Object self = argTakeStrObj(szFunc);
-    Object str = argTakeStrObj(szFunc);
-    return tmNumber(stringIndex(self.value.str, str.value.str, 0));
+    static const char* sz_func = "find";
+    Object self = arg_take_str_obj(sz_func);
+    Object str = arg_take_str_obj(sz_func);
+    return tm_number(string_index(self.value.str, str.value.str, 0));
 }
 
-Object string_substring() {
-    static const char* szFunc = "substring";
-    Object self = argTakeStrObj(szFunc);
-    int start = argTakeInt(szFunc);
-    int end = argTakeInt(szFunc);
-    return stringSubstring(self.value.str, start, end);
+Object string_builtin_substring() {
+    static const char* sz_func = "substring";
+    Object self = arg_take_str_obj(sz_func);
+    int start = arg_take_int(sz_func);
+    int end = arg_take_int(sz_func);
+    return string_substring(self.value.str, start, end);
 }
 
 Object string_upper() {
-    Object self = argTakeStrObj("upper");
+    Object self = arg_take_str_obj("upper");
     int i;
     char*s = GET_STR(self);
     int len = GET_STR_LEN(self);
-    Object nstr = stringAlloc(NULL, len);
+    Object nstr = string_alloc(NULL, len);
     char*news = GET_STR(nstr);
     for (i = 0; i < len; i++) {
         news[i] = toupper(s[i]);
@@ -114,11 +114,11 @@ Object string_upper() {
 }
 
 Object string_lower() {
-    Object self = argTakeStrObj("lower");
+    Object self = arg_take_str_obj("lower");
     int i;
     char*s = GET_STR(self);
     int len = GET_STR_LEN(self);
-    Object nstr = stringAlloc(NULL, len);
+    Object nstr = string_alloc(NULL, len);
     char*news = GET_STR(nstr);
     for (i = 0; i < len; i++) {
         news[i] = tolower(s[i]);
@@ -128,63 +128,63 @@ Object string_lower() {
 
 
 Object string_replace() {
-    static const char* szFunc;
-    Object self = argTakeStrObj(szFunc);
-    Object src = argTakeStrObj(szFunc);
-    Object des = argTakeStrObj(szFunc);
+    static const char* sz_func;
+    Object self = arg_take_str_obj(sz_func);
+    Object src = arg_take_str_obj(sz_func);
+    Object des = arg_take_str_obj(sz_func);
 
-    Object nstr = stringAlloc("", 0);
-    int pos = stringIndex(self.value.str, src.value.str, 0);
+    Object nstr = string_alloc("", 0);
+    int pos = string_index(self.value.str, src.value.str, 0);
     int lastpos = 0;
     while (pos != -1 && pos < GET_STR_LEN(self)) {
         if (pos != 0){
-            nstr = objAdd(nstr,
-                    stringSubstring(self.value.str, lastpos, pos));
+            nstr = obj_add(nstr,
+                    string_substring(self.value.str, lastpos, pos));
         }
-        nstr = objAdd(nstr, des);
+        nstr = obj_add(nstr, des);
         lastpos = pos + GET_STR_LEN(src);
-        pos = stringIndex(self.value.str, src.value.str, lastpos);
+        pos = string_index(self.value.str, src.value.str, lastpos);
         // printf("lastpos = %d\n", lastpos);
     }
-    nstr = objAdd(nstr, stringSubstring(self.value.str, lastpos, GET_STR_LEN(self)));
+    nstr = obj_add(nstr, string_substring(self.value.str, lastpos, GET_STR_LEN(self)));
     return nstr;
 }
 
 Object string_split() {
-    const char* szFunc = "split";
-    Object self = argTakeStrObj(szFunc);
-    Object pattern = argTakeStrObj(szFunc);
+    const char* sz_func = "split";
+    Object self = arg_take_str_obj(sz_func);
+    Object pattern = arg_take_str_obj(sz_func);
     int pos, lastpos;
     Object nstr, list;
     if (GET_STR_LEN(pattern) == 0) {
         /* currently return none */
         return NONE_OBJECT;
     }
-    pos = stringIndex(self.value.str, pattern.value.str, 0);
+    pos = string_index(self.value.str, pattern.value.str, 0);
     lastpos = 0;
-    nstr = stringAlloc("", 0);
-    list = listNew(10);
+    nstr = string_alloc("", 0);
+    list = list_new(10);
     while (pos != -1 && pos < GET_STR_LEN(self)) {
         if (pos == 0) {
-            objAppend(list, stringAlloc("", -1));
+            obj_append(list, string_alloc("", -1));
         } else {
-            Object str = stringSubstring(self.value.str, lastpos, pos);
-            objAppend(list, str);
+            Object str = string_substring(self.value.str, lastpos, pos);
+            obj_append(list, str);
         }
         lastpos = pos + GET_STR_LEN(pattern);
-        pos = stringIndex(self.value.str, pattern.value.str, lastpos);
+        pos = string_index(self.value.str, pattern.value.str, lastpos);
     }
-    objAppend(list, stringSubstring(self.value.str, lastpos, GET_STR_LEN(self)));
+    obj_append(list, string_substring(self.value.str, lastpos, GET_STR_LEN(self)));
     return list;
 }
 
 /**
- * the caller always starts with str = stringNew("");
- * which is not a stringChr();
+ * the caller always starts with str = string_new("");
+ * which is not a string_chr();
  * so we can just change the str->value;
  */
-Object stringAppendChar(Object string, char c) {
-    // return objAdd(string, stringChr(c));
+Object string_append_char(Object string, char c) {
+    // return obj_add(string, string_chr(c));
     String* str = GET_STR_OBJ(string);
     if (str->stype) {
         str->value = tm_realloc(str->value, str->len+1, str->len+2);
@@ -202,16 +202,16 @@ Object stringAppendChar(Object string, char c) {
 /**
  * must be assigned
  */
-Object stringAppendSz(Object string, char* sz) {
-    // return objAdd(string, stringNew(sz));
+Object string_append_sz(Object string, char* sz) {
+    // return obj_add(string, string_new(sz));
     String* str = GET_STR_OBJ(string);
     int sz_len = strlen(sz);
     if (str->stype) {
         str->value = tm_realloc(str->value, str->len+1, str->len+1+sz_len);
     } else {
-        char* oldValue = str->value;
+        char* old_value = str->value;
         str->value = tm_malloc(str->len + sz_len+1);
-        strcpy(str->value, oldValue);
+        strcpy(str->value, old_value);
     }
     strcpy(str->value+str->len, sz);
     str->len += sz_len;
@@ -219,46 +219,58 @@ Object stringAppendSz(Object string, char* sz) {
     return string;
 }
 
-Object stringAppendObj(Object string, Object obj) {
-    Object objStr = tmStr(obj);
-    char* sz = GET_STR(objStr);
-    return stringAppendSz(string, sz);
+Object string_append_obj(Object string, Object obj) {
+    Object obj_str = tm_str(obj);
+    char* sz = GET_STR(obj_str);
+    return string_append_sz(string, sz);
 }
 
-void stringMethodsInit() {
-    tm->str_proto = dictNew();
-    regModFunc(tm->str_proto, "replace", string_replace);
-    regModFunc(tm->str_proto, "find", string_find);
-    regModFunc(tm->str_proto, "substring", string_substring);
-    regModFunc(tm->str_proto, "upper", string_upper);
-    regModFunc(tm->str_proto, "lower", string_lower);
-    regModFunc(tm->str_proto, "split", string_split);
+void string_methods_init() {
+    tm->str_proto = dict_new();
+    reg_mod_func(tm->str_proto, "replace", string_replace);
+    reg_mod_func(tm->str_proto, "find", string_find);
+    reg_mod_func(tm->str_proto, "substring", string_builtin_substring);
+    reg_mod_func(tm->str_proto, "upper", string_upper);
+    reg_mod_func(tm->str_proto, "lower", string_lower);
+    reg_mod_func(tm->str_proto, "split", string_split);
 }
 
-DataProto* getStringProto() {
-    if(!stringProto.init) {
-        initDataProto(&stringProto);
-        stringProto.next = stringNext;
-        stringProto.dataSize = sizeof(StringIterator);
+Data_proto* get_string_proto() {
+    if(!string_proto.init) {
+        init_data_proto(&string_proto);
+        string_proto.next = string_next;
+        string_proto.data_size = sizeof(String_iterator);
     }
-    return &stringProto;
+    return &string_proto;
 }
 
-Object stringIterNew(String* str) {
-    Object data = dataNew(sizeof(StringIterator));
-    StringIterator* iterator = (StringIterator*) GET_DATA(data);
+Object string_iter_new(String* str) {
+    Object data = data_new(sizeof(String_iterator));
+    String_iterator* iterator = (String_iterator*) GET_DATA(data);
     iterator->cur = 0;
     iterator->string = str;
-    iterator->proto = getStringProto();
+    iterator->proto = get_string_proto();
     return data;
 }
 
-Object* stringNext(StringIterator* iterator) {
+Object* string_next(String_iterator* iterator) {
     static Object obj;
     if (iterator->cur >= iterator->string->len) {
         return NULL;
     }
     iterator->cur += 1;
-    obj = stringChr(iterator->string->value[iterator->cur-1]);
+    obj = string_chr(iterator->string->value[iterator->cur-1]);
     return &obj;
 }
+
+
+
+
+
+
+
+
+
+
+
+

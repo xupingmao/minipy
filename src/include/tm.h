@@ -62,17 +62,17 @@ int uncode16(unsigned char**s);
 void*       tm_malloc( size_t size);
 void*       tm_realloc(void* o, size_t osize, size_t nsize);
 void        tm_free(void* o, size_t size);
-void        initMemory();
-void        freeMemory();
+void        init_memory();
+void        free_memory();
 
-void        gcInit();
-Object      gcTrack(Object obj);
-void        gcDestroy();
-void        gcFull();
-Object      bfGetMallocInfo();
-void        gcMark(Object);
-void        gcMarkList(TmList*);
-void        gcMarkDict(TmDict*);
+void        gc_init();
+Object      gc_track(Object obj);
+void        gc_destroy();
+void        gc_full();
+Object      bf_get_malloc_info();
+void        gc_mark(Object);
+void        gc_mark_list(TmList*);
+void        gc_mark_dict(TmDict*);
 
 #if 0
     #define PRINT_OBJ_GC_INFO_START() int _gc_old = tm->allocated;
@@ -91,23 +91,23 @@ void        gcMarkDict(TmDict*);
  */
 
 
-Object        stringCharNew(int c);
-Object        stringChr(int n); // get a char from charList.
-Object        stringAlloc(char* s, int size);
-#define       szToString(s) stringAlloc(s, -1)
-#define       stringNew(s) stringAlloc(s, strlen(s))
-void          stringFree(String*);
-int           stringEquals(String*s0, String*s1);
-Object        stringSubstring(String* str, int start, int end) ;
-Object        bf_stringFormat();
-Object        tmStr(Object obj);
-Object        StringJoin(Object self, Object list);
-void          stringMethodsInit();
-DataProto*    getStringProto();
-Object        stringIterNew(String* s);
-Object*       stringNext(StringIterator* iterator);
+Object        string_char_new(int c);
+Object        string_chr(int n); // get a char from char_list.
+Object        string_alloc(char* s, int size);
+#define       sz_to_string(s) string_alloc(s, -1)
+#define       string_new(s) string_alloc(s, strlen(s))
+void          string_free(String*);
+int           string_equals(String*s0, String*s1);
+Object        string_substring(String* str, int start, int end) ;
+Object        bf_string_format();
+Object        tm_str(Object obj);
+Object        String_join(Object self, Object list);
+void          string_methods_init();
+Data_proto*    get_string_proto();
+Object        string_iter_new(String* s);
+Object*       string_next(String_iterator* iterator);
 
-static DataProto stringProto;
+static Data_proto string_proto;
 /* macros */
 #define GET_STR(obj) (obj).value.str->value
 #define GET_SZ(obj)  (obj).value.str->value
@@ -116,112 +116,112 @@ static DataProto stringProto;
 
 
 // number functions
-Object tmNumber(double v);
-void   numberFormat(char* des, Object num);
+Object tm_number(double v);
+void   number_format(char* des, Object num);
 
 /**
  * list functions
  */
 
-void     listCheck(TmList*);
-Object   listNew(int cap);
+void     list_check(TmList*);
+Object   list_new(int cap);
 /* create a TmList which not tracked by Garbage Collector. */
-TmList*  untrackedListNew(int cap);
-void     listSet(TmList* list, int n, Object v);
-Object   listGet(TmList* list, int n);
-void     listFree(TmList* );
-void     listClear(TmList* list);
-void     listMethodsInit();
-Object   listIterNew(TmList* list);
-Object*  listNext(TmListIterator* iterator);
-Object   listAdd(TmList*, TmList*);
-void     listDel(TmList*list, Object key);
-void     listInsert(TmList*list, int index, Object value);
-int      listIndex(TmList*, Object val);
-void     listAppend(TmList* list, Object v);
+TmList*  untracked_list_new(int cap);
+void     list_set(TmList* list, int n, Object v);
+Object   list_get(TmList* list, int n);
+void     list_free(TmList* );
+void     list_clear(TmList* list);
+void     list_methods_init();
+Object   list_iter_new(TmList* list);
+Object*  list_next(Tm_list_iterator* iterator);
+Object   list_add(TmList*, TmList*);
+void     list_del(TmList*list, Object key);
+void     list_insert(TmList*list, int index, Object value);
+int      list_index(TmList*, Object val);
+void     list_append(TmList* list, Object v);
 
 /** 
  * list iterator prototype
  */
-DataProto listIterProto = { 0 };
+Data_proto list_iter_proto = { 0 };
 
 /* macros */
-#define LIST_GET(obj, i) listGet(GET_LIST(obj), i)
+#define LIST_GET(obj, i) list_get(GET_LIST(obj), i)
 #define LIST_NODES(obj) (GET_LIST(obj))->nodes
 #define LIST_LEN(obj) GET_LIST(obj)->len
 
 
 // dict functions
-Object           dictNew();
-TmDict*          dictInit();
-void             dictFree(TmDict* dict);
-int              dictSet0(TmDict* dict, Object key, Object val);
-#define          dictSet(d, k, v) dictSet0(GET_DICT(d), k, v)
-DictNode*        dictGetNode(TmDict* dict, Object key);
-Object*          dictGetByStr0(TmDict* dict, char* key);
-void             dictDel(TmDict* dict, Object k);
-void             dictMethodsInit();
-void             dictSetByStr0(TmDict* dict, char* key, Object val);
-#define          dictSetByStr(dict, key, val) dictSetByStr0(GET_DICT(dict), key, val)
-#define          dictGetByStr(dict, key) dictGetByStr0(GET_DICT(dict), key)
-Object           dictKeys(TmDict* );
+Object           dict_new();
+TmDict*          dict_init();
+void             dict_free(TmDict* dict);
+int              dict_set0(TmDict* dict, Object key, Object val);
+#define          dict_set(d, k, v) dict_set0(GET_DICT(d), k, v)
+Dict_node*        dict_get_node(TmDict* dict, Object key);
+Object*          dict_get_by_str0(TmDict* dict, char* key);
+void             dict_del(TmDict* dict, Object k);
+void             dict_methods_init();
+void             dict_set_by_str0(TmDict* dict, char* key, Object val);
+#define          dict_set_by_str(dict, key, val) dict_set_by_str0(GET_DICT(dict), key, val)
+#define          dict_get_by_str(dict, key) dict_get_by_str0(GET_DICT(dict), key)
+Object           dict_keys(TmDict* );
 
 /** dict methods **/
 Object           dict_keys();
 Object           dict_values();
 
-static DataProto dictIterProto;
+static Data_proto dict_iter_proto;
 
-DataProto*       getDictIterProto();
-Object           dict_iterNew(TmDict* dict);
-Object*          dictNext(TmDictIterator* iterator);
-int              dictSetAttr(TmDict* dict, int constId, Object val);
-int              dictGetAttr(TmDict* dict, int constId);
+Data_proto*       get_dict_iter_proto();
+Object           dict_iter_new(TmDict* dict);
+Object*          dict_next(TmDictIterator* iterator);
+int              dict_set_attr(TmDict* dict, int const_id, Object val);
+int              dict_get_attr(TmDict* dict, int const_id);
 
 
 
 // arg functions
-void    argInsert(Object arg);
-String* argTakeStrPtr(const char* fnc);
-void    argStart();
-void    argPush(Object obj) ;
-void    argSetArguments(Object* first, int len);
-void    _resolveMethodSelf(TmFunction *fnc);
-#define resolveMethodSelf(fnc) _resolveMethodSelf(GET_FUNCTION((fnc)))
-void    printArguments();
-int     hasArg();
-Object  argTakeStrObj(const char* fnc);
-char*   argTakeSz(const char* fnc);
-Object  argTakeFuncObj(const char* fnc);
-int     argTakeInt(const char* fnc);
-double  argTakeDouble(const char* fnc);
-TmList* argTakeListPtr(const char* fnc);
-Object  argTakeListObj(const char* fnc);
-Object  argTakeDictObj(const char* fnc);
-Object  argTakeObj(const char* fnc);
-Object  argTakeDataObj(const char* fnc);
-int     getArgsCount() ;
-void    tmUngetArg();
+void    arg_insert(Object arg);
+String* arg_take_str_ptr(const char* fnc);
+void    arg_start();
+void    arg_push(Object obj) ;
+void    arg_set_arguments(Object* first, int len);
+void    _resolve_method_self(TmFunction *fnc);
+#define resolve_method_self(fnc) _resolve_method_self(GET_FUNCTION((fnc)))
+void    print_arguments();
+int     has_arg();
+Object  arg_take_str_obj(const char* fnc);
+char*   arg_take_sz(const char* fnc);
+Object  arg_take_func_obj(const char* fnc);
+int     arg_take_int(const char* fnc);
+double  arg_take_double(const char* fnc);
+TmList* arg_take_list_ptr(const char* fnc);
+Object  arg_take_list_obj(const char* fnc);
+Object  arg_take_dict_obj(const char* fnc);
+Object  arg_take_obj(const char* fnc);
+Object  arg_take_data_obj(const char* fnc);
+int     get_args_count() ;
+void    tm_unget_arg();
 
 
 
 // function functions
 
 
-Object           funcNew(Object mod,Object self,Object (*native_func)());
-Object           getFuncAttr(TmFunction* fnc, Object key);
-void             funcFree(TmFunction*);
-Object           methodNew(Object _fnc, Object self);
-Object           moduleNew(Object file, Object name, Object code);
-void             moduleFree(TmModule*);
-unsigned char*   getFunctionCode(TmFunction*);
+Object           func_new(Object mod,Object self,Object (*native_func)());
+Object           get_func_attr(TmFunction* fnc, Object key);
+void             func_free(TmFunction*);
+Object           method_new(Object _fnc, Object self);
+Object           module_new(Object file, Object name, Object code);
+void             module_free(TmModule*);
+unsigned char*   get_function_code(TmFunction*);
 void             func_format(char* des, TmFunction* func);
-TmModule*        getFuncMod(TmFunction* func);
-Object           classNew(Object dict);
-Object           getFunctionGlobals(TmFunction*);
+TmModule*        get_func_mod(TmFunction* func);
+Object           class_new(Object dict);
+Object           get_function_globals(TmFunction*);
 unsigned char*   func_resolve(TmFunction*, unsigned char*);
-Object           getFileNameObj(Object func);
-Object           getFuncNameObj(Object func);
+Object           get_file_name_obj(Object func);
+Object           get_func_name_obj(Object func);
 #define GET_FUNCTION(obj) (obj.value.func)
 #define GET_FUNC(obj) ((obj).value.func)
 #define IS_FUNCTION(o) TM_TYPE(o)==TYPE_FUNCTION
@@ -230,25 +230,25 @@ Object           getFuncNameObj(Object func);
 #define GET_FUNC_MOD_NAME(fnc) GET_FUNCTIONTION_MODULE_PTR(fnc)->file
 #define GET_FUNC_CONSTANTS_NODES(fnc) LIST_NODES(GET_FUNC_CONSTANTS(fnc))
 #define GET_FUNCTION_NAME(fnc) GET_FUNCTION(fnc)->name
-#define getGlobals(func) getFunctionGlobals(GET_FUNCTION(func))
-#define functionFormat(des, func) func_format(des, GET_FUNCTION(func))
+#define get_globals(func) get_function_globals(GET_FUNCTION(func))
+#define function_format(des, func) func_format(des, GET_FUNCTION(func))
 
 /**
  * data functions
  */
-static DataProto baseIterProto;
+static Data_proto base_iter_proto;
 
-Object     dataNew(size_t size);
-void       dataMark();
-void       dataFree();
-void       dataSet(Object, Object, Object);
-Object     dataGet(Object, Object);
-Object     dataStr(Object self);
+Object     data_new(size_t size);
+void       data_mark();
+void       data_free();
+void       data_set(Object, Object, Object);
+Object     data_get(Object, Object);
+Object     data_str(Object self);
 void       obj_free(Object o);
-Object     objNew(int type, void* value);
-DataProto  defaultDataProto;
-DataProto* getDefaultDataProto();
-void       initDataProto(DataProto* proto);
+Object     obj_new(int type, void* value);
+Data_proto  default_data_proto;
+Data_proto* get_default_data_proto();
+void       init_data_proto(Data_proto* proto);
 
 
 
@@ -256,94 +256,94 @@ void       initDataProto(DataProto* proto);
  *  general object operation
  *  some tools
  */
-const char* getTypeByInt(int type);
-const char* getTypeByObj(Object obj);
-void        objSet(Object self, Object key, Object value);
-Object      objGet(Object self, Object key);
-Object      objAdd(Object a, Object b);
-Object      objSub(Object a, Object b);
-Object      objMul(Object a, Object b);
-Object      objDiv(Object a, Object b);
-Object      objMod(Object a, Object b);
-Object      objNeg(Object o) ;
-int         objIn(Object key, Object collection);
-int         objEquals(Object a, Object b);
-int         objCmp(Object a, Object b);
-Object*     nextPtr(Object iterator);
-Object      iterNew(Object collections);
-Object      objGet(Object self, Object k);
-void        objSet(Object self, Object k, Object v);
-char*       objToSz(Object obj);
+const char* get_type_by_int(int type);
+const char* get_type_by_obj(Object obj);
+void        obj_set(Object self, Object key, Object value);
+Object      obj_get(Object self, Object key);
+Object      obj_add(Object a, Object b);
+Object      obj_sub(Object a, Object b);
+Object      obj_mul(Object a, Object b);
+Object      obj_div(Object a, Object b);
+Object      obj_mod(Object a, Object b);
+Object      obj_neg(Object o) ;
+int         obj_in(Object key, Object collection);
+int         obj_equals(Object a, Object b);
+int         obj_cmp(Object a, Object b);
+Object*     next_ptr(Object iterator);
+Object      iter_new(Object collections);
+Object      obj_get(Object self, Object k);
+void        obj_set(Object self, Object k, Object v);
+char*       obj_to_sz(Object obj);
 
-Object      tmStr(Object obj);
-int         isTrueObj(Object v);
-int         tmIter(Object self, Object *k);
-void        objDel(Object self, Object k);
-Object      tmCall(int lineno, Object func, int args, ...);
-Object      objAppend(Object a, Object b);
-Object      tmGetGlobal(Object globals, Object key);
-Object      tmTakeArg();
-Object      objGetlocal(int fidx, int lidx);
-Object      objGetstack(int fidx, int sidx);
-Object      arrayToList(int n, ...);
-TmFrame*    objGetframe(int fidx);
-Object      tmGetfname(Object func);
-void        tmSetattr(Object a, char* key, Object value);
-void        defFunc(Object globals, Object a, Object(*func)());
-void        defMethod(Object dict, Object name, Object(*func)());
+Object      tm_str(Object obj);
+int         is_true_obj(Object v);
+int         tm_iter(Object self, Object *k);
+void        obj_del(Object self, Object k);
+Object      tm_call(int lineno, Object func, int args, ...);
+Object      obj_append(Object a, Object b);
+Object      tm_get_global(Object globals, Object key);
+Object      tm_take_arg();
+Object      obj_getlocal(int fidx, int lidx);
+Object      obj_getstack(int fidx, int sidx);
+Object      array_to_list(int n, ...);
+TmFrame*    obj_getframe(int fidx);
+Object      tm_getfname(Object func);
+void        tm_setattr(Object a, char* key, Object value);
+void        def_func(Object globals, Object a, Object(*func)());
+void        def_method(Object dict, Object name, Object(*func)());
 
 // vm functions
-Object callModuleFunction(char* mod, char* fnc);
-void   regBuiltin(char* name, Object value);
-void   regModFunc(Object mod, char* name, Object(*native)());
-void   regBuiltinFunc(char* name, Object (*native)());
-void   regModAttr(char* modName,char* attr, Object value);
-int    objEqSz(Object str, const char* value);
-void   tmRaise(char*fmt , ...);
+Object call_module_function(char* mod, char* fnc);
+void   reg_builtin(char* name, Object value);
+void   reg_mod_func(Object mod, char* name, Object(*native)());
+void   reg_builtin_func(char* name, Object (*native)());
+void   reg_mod_attr(char* mod_name,char* attr, Object value);
+int    obj_eq_sz(Object str, const char* value);
+void   tm_raise(char*fmt , ...);
 
 // interp functions
 
-typedef struct _FunctionDefine {
+typedef struct _Function_define {
     Object fnc;
     int len;
-} FunctionDefine;
+} Function_define;
 
-#define  TM_PUSH(x) *(++top) = (x); if(top > tm_stack_end) tmRaise("stack overflow");
+#define  TM_PUSH(x) *(++top) = (x); if(top > tm_stack_end) tm_raise("stack overflow");
 #define  TM_POP() *(top--)
 #define  TM_TOP() (*top)
 #define  GET_CONST(i) GET_DICT(tm->constants)->nodes[i].key
-Object   callUnsafe(Object fnc);
-Object   callFunction(Object func);
-Object   tmEval(TmFrame*);
-TmFrame* pushFrame(Object fnc);
-void     popFrame();
+Object   call_unsafe(Object fnc);
+Object   call_function(Object func);
+Object   tm_eval(TmFrame*);
+TmFrame* push_frame(Object fnc);
+void     pop_frame();
 
 // exception functions
-void tmAssertType(Object o, int type, char* msg) ;
-void tmAssertInt(double value, char* msg) ;
-void pushException(TmFrame* f);
+void tm_assert_type(Object o, int type, char* msg) ;
+void tm_assert_int(double value, char* msg) ;
+void push_exception(TmFrame* f);
 void traceback();
-void tmRaise(char* fmt, ...);
+void tm_raise(char* fmt, ...);
 
 // builtin functions
-void      tmPrint(Object v);
-void      tmPrintln(Object v);
-Object    tmFormatVaList(char* fmt, va_list ap, int appendln);
-Object    tmFormat(char*fmt, ...);
-Object    tmType(Object o);
-void      tmPrintf(char* fmt, ...);
+void      tm_print(Object v);
+void      tm_println(Object v);
+Object    tm_format_va_list(char* fmt, va_list ap, int appendln);
+Object    tm_format(char*fmt, ...);
+Object    tm_type(Object o);
+void      tm_printf(char* fmt, ...);
 /* avoid '\0' in char array, which will be regarded as end by c lang */
-/* Chars     ObjectInfo(char*,Object,int); */
-Object    tmLoad(char* fname); // load the content of a file.
+/* Chars     Object_info(char*,Object,int); */
+Object    tm_load(char* fname); // load the content of a file.
 Object    bf_load();
 Object    bf_save(); // save(fname, content);
 Object    bf_int();
 Object    bf_float();
 Object    bf_system();
 Object    bf_print();
-Object    blt_AddTypeMethod();
-void      builtinsInit();
-Object*   getBuiltin(char* key);
+Object    blt__add_type_method();
+void      builtins_init();
+Object*   get_builtin(char* key);
 
 
 // macros
@@ -379,7 +379,7 @@ Object*   getBuiltin(char* key);
 
 #define ASSERT_TYPE_WITH_INFO(obj, type, info) \
     if(TM_TYPE(obj)!=type){                    \
-        tmRaise(info, obj);                    \
+        tm_raise(info, obj);                    \
     }
 /* for instruction read */
 
@@ -408,7 +408,7 @@ Object*   getBuiltin(char* key);
 #define GET_FUNCTION_GLOBALS(fnc) GET_MODULE(GET_FUNCTION(fnc)->mod)->globals
 
 /* assert macro */
-#define TM_ASSERT(cond, msg) if(!cond) {tmRaise( msg );}
+#define TM_ASSERT(cond, msg) if(!cond) {tm_raise( msg );}
 
 
 #define DEBUG(msg) \
@@ -420,3 +420,14 @@ Object*   getBuiltin(char* key);
 #endif
 
 #define LOG_INFO printf
+
+
+
+
+
+
+
+
+
+
+

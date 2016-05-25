@@ -2,7 +2,7 @@ from encode import *
 from boot import *
 from tmcode import *
 
-def codeStr(s):
+def code_str(s):
     return code32(len(s))+s
 
 class Lib:
@@ -10,8 +10,8 @@ class Lib:
         self.name = name
         self.path = path
 
-def build(cc="tcc", libs=None, dstPath = "bin.c"):
-    destCode = ""
+def build(cc="tcc", libs=None, dst_path = "bin.c"):
+    dest_code = ""
     if libs == None:
         libs = [
             Lib("init", "init.py"),
@@ -25,15 +25,15 @@ def build(cc="tcc", libs=None, dstPath = "bin.c"):
         #Lib("printast", "printast.py"),
         #Lib("repl", "repl.py"),
         #Lib("pyeval", "pyeval.py")]
-    modLen = code32(len(libs)+1) # constants
-    if not exists(dstPath):
-        dstMtime = -1
+    mod_len = code32(len(libs)+1) # constants
+    if not exists(dst_path):
+        dst_mtime = -1
     else:
-        dstMtime = mtime(dstPath)
+        dst_mtime = mtime(dst_path)
     modified = False
     for obj in libs:
         path = obj.path
-        if mtime(path) > dstMtime:
+        if mtime(path) > dst_mtime:
             modified = True
             break
     if modified:
@@ -43,9 +43,9 @@ def build(cc="tcc", libs=None, dstPath = "bin.c"):
             except Exception as e:
                 print("parse file", obj.path, "failed")
                 raise
-            destCode += codeStr(obj.name)+codeStr(code)
-        code = modLen + codeStr("constants") + codeStr(buildConstCode()) + destCode
-        save(dstPath, "unsigned char bin[] = {\n" + strToChars(code)+'\n};\n')
+            dest_code += code_str(obj.name)+code_str(code)
+        code = mod_len + code_str("constants") + code_str(build_const_code()) + dest_code
+        save(dst_path, "unsigned char bin[] = {\n" + str_to_chars(code)+'\n};\n')
     export_clang_define("include/instruction.h", "tmcode.py")
     if cc != None:
         # tm itself
@@ -64,7 +64,7 @@ def build(cc="tcc", libs=None, dstPath = "bin.c"):
         system(cmd)
         #remove("../bin.c")
     
-def strToChars(code):
+def str_to_chars(code):
     dest = ''
     for i in range(len(code)):
         if i != 0:
@@ -74,16 +74,16 @@ def strToChars(code):
         dest += str(ord(code[i]))
     return dest
 
-def buildConstCode():
+def build_const_code():
     b = ''
-    for i in range(getConstLen()):
-        v = getConst(i)
+    for i in range(get_const_len()):
+        v = get_const(i)
         t = chr(NEW_STRING)
         if gettype(v) == 'number':t = chr(NEW_NUMBER); v = str(v)
         b+=t+code16(len(v))+v
     return b+code8(TM_EOP)+code16(0)
 
-def buildOne(cc):
+def build_one(cc):
     ccompiler = cc
     libs = [
             Lib("init", "init.py"),
@@ -107,7 +107,7 @@ def main():
     argc = len(ARGV)
     if argc == 2:
         cc = ARGV[1]
-        buildOne(cc)
+        build_one(cc)
     elif argc == 3 and ARGV[1] == "-init":
         cc = ARGV[2]
         build_tm2c(cc)
@@ -117,3 +117,14 @@ def main():
     
 if __name__ == '__main__':
     main()
+
+
+
+
+
+
+
+
+
+
+

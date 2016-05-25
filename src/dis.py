@@ -20,7 +20,7 @@ def dis(fname ,constants = ['None']):
             vv = s.substring(i, i + val)
             i += val
         elif op in global_mod_list:
-            print(tmcodes[op], getConst(val))
+            print(tmcodes[op], get_const(val))
         else:
             print(tmcodes[op], val)
 
@@ -59,7 +59,7 @@ def dis_code(s, start = 0, end = 0):
         if end and lineno > end:break
         if lineno > start:
             if op in global_mod_list:
-                val = getConst(val)
+                val = get_const(val)
             printf("%4s: %s, %s\n", lineno, tmcodes[op], val)
 
 def dis_txt(s):
@@ -96,7 +96,7 @@ def main():
         fname = ARGV[2]
         if opt == '-src':
             tmp = compilefile(fname, "temp")
-            dis("temp", getConstList())
+            dis("temp", get_const_list())
             rm("temp")
         elif opt == '-const':
             dis(fname, 'const')
@@ -114,3 +114,15 @@ if __name__ == "__main__":
     argv = copy(sys.argv)
     del argv[0]
     dissimple(argv)
+
+
+
+
+
+
+
+
+
+
+
+

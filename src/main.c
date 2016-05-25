@@ -2,5 +2,16 @@
 
 int main(int argc, char *argv[])
 {
-    return tmInit(argc, argv);
+    return tm_init(argc, argv);
 }
+
+
+
+
+
+
+
+
+
+
+

@@ -15,7 +15,7 @@
 *   better not similar to computer binary size ( as to say 2 ), 
 *   such as 2, 10 etc.
 */
-int hashSz(unsigned char* s, int len) {
+int hash_sz(unsigned char* s, int len) {
     int hash = 1315423911;
     int i = 0;
     for(i = 0; i < len; i++)
@@ -23,9 +23,9 @@ int hashSz(unsigned char* s, int len) {
     return abs(hash);
 }
 
-int DictHash(Object key) {
+int Dict_hash(Object key) {
     switch(TM_TYPE(key)) {
-    case TYPE_STR:return hashSz((unsigned char*) GET_STR(key), GET_STR_LEN(key));
+    case TYPE_STR:return hash_sz((unsigned char*) GET_STR(key), GET_STR_LEN(key));
     case TYPE_NUM:return abs((int) GET_NUM(key));
     default: return 0;
     }
@@ -33,12 +33,12 @@ int DictHash(Object key) {
 }
 
 
-TmDict* dictInit(){
+TmDict* dict_init(){
     int i;
     TmDict * dict = tm_malloc(sizeof(TmDict));
     dict->cap = 3;
     dict->extend = 2;
-    dict->nodes = tm_malloc(sizeof(DictNode) * (dict->cap));
+    dict->nodes = tm_malloc(sizeof(Dict_node) * (dict->cap));
     // to mark that the node is not allocated.
     for(i = 0; i < dict->cap; i++){
         dict->nodes[i].used = 0;
@@ -47,11 +47,11 @@ TmDict* dictInit(){
     return dict;
 }
 
-Object dictNew(){
+Object dict_new(){
     Object o;
     o.type = TYPE_DICT;
-    GET_DICT(o) = dictInit();
-    return gcTrack(o);
+    GET_DICT(o) = dict_init();
+    return gc_track(o);
 }
 
 
@@ -65,7 +65,7 @@ void dict_check(TmDict* dict){
     } else {
         nsize = osize + osize / 2 + 1;
     }
-    DictNode* nodes = tm_malloc(nsize * sizeof(DictNode));
+    Dict_node* nodes = tm_malloc(nsize * sizeof(Dict_node));
     for(i = 0; i < nsize; i++) {
         nodes[i].used = 0;
     }
@@ -76,15 +76,15 @@ void dict_check(TmDict* dict){
             j++;
         }
     }
-    DictNode* temp = dict->nodes;
+    Dict_node* temp = dict->nodes;
     dict->nodes = nodes;
     dict->cap = nsize;
-    tm_free(temp, osize * sizeof(DictNode));
+    tm_free(temp, osize * sizeof(Dict_node));
 }
 
-void dictFree(TmDict* dict){
+void dict_free(TmDict* dict){
     PRINT_OBJ_GC_INFO_START();
-    tm_free(dict->nodes, (dict->cap) * sizeof(DictNode));
+    tm_free(dict->nodes, (dict->cap) * sizeof(Dict_node));
     tm_free(dict, sizeof(TmDict));
     PRINT_OBJ_GC_INFO_END("dict", dict);
 }
@@ -99,9 +99,9 @@ int findfreepos(TmDict* dict) {
     return -1;
 }
 #if USE_IDX
-int dictSetAttr2(TmDict* dict, Object key, Object val) {
+int dict_set_attr2(TmDict* dict, Object key, Object val) {
     int i = 0;
-    DictNode* nodes = dict->nodes;
+    Dict_node* nodes = dict->nodes;
     for (i = 0; i < dict->cap; i++) {
         if (nodes[i].used && nodes[i].key.idx == key.idx) {
             nodes[i].val = val;
@@ -111,9 +111,9 @@ int dictSetAttr2(TmDict* dict, Object key, Object val) {
     return -1;
 }
 
-int dictGetAttr2(TmDict* dict, Object key) {
+int dict_get_attr2(TmDict* dict, Object key) {
     int i = 0;
-    DictNode* nodes = dict->nodes;
+    Dict_node* nodes = dict->nodes;
     for (i = 0; i < dict->cap; i++) {
         if (nodes[i].used && nodes[i].key.idx == key.idx) {
             return i;
@@ -123,16 +123,16 @@ int dictGetAttr2(TmDict* dict, Object key) {
 }
 #endif
 
-int dictSet0(TmDict* dict, Object key, Object val){
+int dict_set0(TmDict* dict, Object key, Object val){
     int i;
     #if USE_IDX
     if (key.idx > 0) {
-        // tmPrintf("idx=%d, obj=%o\n", key.idx, key);
-        i = dictSetAttr2(dict, key, val);
+        // tm_printf("idx=%d, obj=%o\n", key.idx, key);
+        i = dict_set_attr2(dict, key, val);
         if (i > 0) return i;
     }
     #endif
-    DictNode* node = dictGetNode(dict, key);
+    Dict_node* node = dict_get_node(dict, key);
     if (node != NULL) {
         node->val = val;
         return (node - dict->nodes);
@@ -146,65 +146,65 @@ int dictSet0(TmDict* dict, Object key, Object val){
     return i;
 }
 
-int dictSetAttr(TmDict* dict, int constId, Object val) {
+int dict_set_attr(TmDict* dict, int const_id, Object val) {
     int i;
-    DictNode* nodes = dict->nodes;
-    constId += 2; /* start from 2, as 0,1 are used by normal node. */
+    Dict_node* nodes = dict->nodes;
+    const_id += 2; /* start from 2, as 0,1 are used by normal node. */
     for (i = 0; i < dict->cap; i++) {
-        if (nodes[i].used == constId) {
+        if (nodes[i].used == const_id) {
             nodes[i].val = val;
             return i;
         }
     }
-    Object key = GET_CONST(constId-2);
-    i = dictSet0(dict, key, val);
-    dict->nodes[i].used = constId;
+    Object key = GET_CONST(const_id-2);
+    i = dict_set0(dict, key, val);
+    dict->nodes[i].used = const_id;
     return i;
 }
 
-int dictGetAttr(TmDict* dict, int constId) {
+int dict_get_attr(TmDict* dict, int const_id) {
     int i;
-    DictNode* nodes = dict->nodes;
-    constId += 2; /* prevent first const to be 0, and normal dict node to be 1. */
+    Dict_node* nodes = dict->nodes;
+    const_id += 2; /* prevent first const to be 0, and normal dict node to be 1. */
     for (i = 0; i < dict->cap; i++) {
-        if (nodes[i].used == constId) {
+        if (nodes[i].used == const_id) {
             return i;
         }
     }
-    DictNode* node = dictGetNode(dict, GET_CONST(constId-2));
+    Dict_node* node = dict_get_node(dict, GET_CONST(const_id-2));
     if (node != NULL) {
-        node->used = constId;
+        node->used = const_id;
         return node - nodes;
     }
     return -1;
 }
 
-DictNode* dictGetNode(TmDict* dict, Object key){
-    //int hash = DictHash(key);
+Dict_node* dict_get_node(TmDict* dict, Object key){
+    //int hash = Dict_hash(key);
     //int idx = hash % dict->cap;
     int i;
     #if USE_IDX
     if (key.idx > 0) {
-        i = dictGetAttr2(dict, key);
+        i = dict_get_attr2(dict, key);
         if (i > 0) {
             return dict->nodes + i;
         }
     }
     #endif
-    DictNode* nodes = dict->nodes;
+    Dict_node* nodes = dict->nodes;
     for (i = 0; i < dict->cap; i++) {
-        if (nodes[i].used && objEquals(nodes[i].key, key)) {
+        if (nodes[i].used && obj_equals(nodes[i].key, key)) {
             return nodes + i;
         }
     }
     return NULL;
 }
 
-Object* dictGetByStr0(TmDict* dict, char* key) {
-    //int hash = hashSz((unsigned char*) key, strlen(key));
+Object* dict_get_by_str0(TmDict* dict, char* key) {
+    //int hash = hash_sz((unsigned char*) key, strlen(key));
     //int idx = hash % dict->cap;
     int i;
-    DictNode* nodes = dict->nodes;
+    Dict_node* nodes = dict->nodes;
     for (i = 0; i < dict->cap; i++) {
         if (nodes[i].used && TM_TYPE(nodes[i].key) == TYPE_STR && 
             strcmp(GET_STR(nodes[i].key), key) == 0) {
@@ -214,92 +214,92 @@ Object* dictGetByStr0(TmDict* dict, char* key) {
     return NULL;
 }
 
-void dictSetByStr0(TmDict* dict, char* key, Object value) {
-    dictSet0(dict, szToString(key), value);
+void dict_set_by_str0(TmDict* dict, char* key, Object value) {
+    dict_set0(dict, sz_to_string(key), value);
 }
 
-void dictDel(TmDict* dict, Object key) {
-    DictNode* node = dictGetNode(dict, key);
+void dict_del(TmDict* dict, Object key) {
+    Dict_node* node = dict_get_node(dict, key);
     if (node == NULL) {
-        tmRaise("objDel: keyError %o", key);
+        tm_raise("obj_del: key_error %o", key);
     }
     node->used = 0;
     dict->len--;
     return;
 }
 
-Object dictKeys(TmDict* dict){
-    Object list = listNew(dict->len);
+Object dict_keys(TmDict* dict){
+    Object list = list_new(dict->len);
     int i;
     for(i = 0; i < dict->cap; i++) {
         if (dict->nodes[i].used) {
-            objAppend(list, dict->nodes[i].key);
+            obj_append(list, dict->nodes[i].key);
         }
     }
     return list;
 }
 
-Object dict_keys(){
-    Object dict = argTakeDictObj("dict.keys");
-    return dictKeys(GET_DICT(dict));
+Object dict_builtin_keys(){
+    Object dict = arg_take_dict_obj("dict.keys");
+    return dict_keys(GET_DICT(dict));
 }
 
-Object dict_values() {
-    Object _d = argTakeDictObj("dict.values");
+Object dict_builtin_values() {
+    Object _d = arg_take_dict_obj("dict.values");
     TmDict* dict = GET_DICT(_d);
-    Object list = listNew(dict->len);
+    Object list = list_new(dict->len);
     int i;
     for(i = 0; i < dict->cap; i++) {
         if (dict->nodes[i].used) {
-            objAppend(list, dict->nodes[i].val);
+            obj_append(list, dict->nodes[i].val);
         }
     }
     return list;
 }
 
-void dictMethodsInit() {
-    tm->dict_proto = dictNew();
+void dict_methods_init() {
+    tm->dict_proto = dict_new();
     /* build dict class */
-    regModFunc(tm->dict_proto, "keys", dict_keys);
-    regModFunc(tm->dict_proto, "values", dict_values);
+    reg_mod_func(tm->dict_proto, "keys", dict_builtin_keys);
+    reg_mod_func(tm->dict_proto, "values", dict_builtin_values);
 }
 
-void dict_iter_mark(DataObject* data) {
+void dict_iter_mark(Data_object* data) {
     TmDictIterator* iter = (TmDictIterator*) data;
-    gcMarkDict(iter->dict);
+    gc_mark_dict(iter->dict);
 }
 
-DataProto* getDictIterProto() {
-    if(!dictIterProto.init) {
-        initDataProto(&dictIterProto);
-        dictIterProto.dataSize = sizeof(TmDictIterator);
-        dictIterProto.next = dictNext;
-        dictIterProto.mark = dict_iter_mark;
+Data_proto* get_dict_iter_proto() {
+    if(!dict_iter_proto.init) {
+        init_data_proto(&dict_iter_proto);
+        dict_iter_proto.data_size = sizeof(TmDictIterator);
+        dict_iter_proto.next = dict_next;
+        dict_iter_proto.mark = dict_iter_mark;
     }
-    return &dictIterProto;
+    return &dict_iter_proto;
 }
 
 
-Object dict_iterNew(TmDict* dict) {
+Object dict_iter_new(TmDict* dict) {
     /*
-    Object *__iter__ = dictGetByStr(dict, "__iter__");
+    Object *__iter__ = dict_get_by_str(dict, "__iter__");
     if (__iter__ != NULL) {
-        Object *next = dictGetByStr(dict, "next");
-        Object data = dataNew(sizeof(TmBaseIterator));
-        TmBaseIterator* baseIterator = (TmBaseIterator*)GET_DATA(data);
-        baseIterator->func = *next;
-        baseIterator->proto = getBaseIterProto();
+        Object *next = dict_get_by_str(dict, "next");
+        Object data = data_new(sizeof(Tm_base_iterator));
+        Tm_base_iterator* base_iterator = (Tm_base_iterator*)GET_DATA(data);
+        base_iterator->func = *next;
+        base_iterator->proto = get_base_iter_proto();
         return data;
     }*/
-    Object data = dataNew(sizeof(TmDictIterator));
+    Object data = data_new(sizeof(TmDictIterator));
     TmDictIterator* iterator = (TmDictIterator*)GET_DATA(data);
     iterator->dict = dict;
     iterator->idx = 0;
-    iterator->proto = getDictIterProto();
+    iterator->proto = get_dict_iter_proto();
     return data;
 }
 
-Object* dictNext(TmDictIterator* iterator) {
+Object* dict_next(TmDictIterator* iterator) {
     if (iterator->idx < iterator->dict->cap) {
         int i;
         for(i = iterator->idx; i < iterator->dict->cap; i++) {
@@ -312,4 +312,16 @@ Object* dictNext(TmDictIterator* iterator) {
     }
     return NULL;
 }
+
+
+
+
+
+
+
+
+
+
+
+
 

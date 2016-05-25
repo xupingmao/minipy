@@ -27,7 +27,7 @@ static Symbol SYM_TAB[] = {
     {NULL, 0}
 };
 
-void lexReadChar(LexState*);
+void lex_read_char(Lex_state*);
 
 int lex_utf8_len(char* utf8) {
     int count;
@@ -39,26 +39,26 @@ int lex_utf8_len(char* utf8) {
 }
 
 int lex_utf8_size(unsigned short c) {
-  if ((0x0001 <= c) && (c <= 0x007F)) return 1;
-  if (c <= 0x07FF) return 2;
+  if ((0x0001 <= c) && (c <= 0x007_f)) return 1;
+  if (c <= 0x07_f_f) return 2;
   return 3;
 }
 
 /*
  * static int names[256];
  * static int numbers[256];
- * names['a..zA..Z_0..9'] = 1;
+ * names['a..z_a..Z_0..9'] = 1;
  * numbers['0..9a..f'] = 1;
  */
-LexState* lexNew(FILE* fp, char* buf)
+Lex_state* lex_new(FILE* fp, char* buf)
 {
-	LexState* s = malloc(sizeof(LexState));
+	Lex_state* s = malloc(sizeof(Lex_state));
 	s->cur = 0;
 	memset(s->error, 0, sizeof(s->error));
 	s->len = 0;
 	s->state = 0;
 	s->next = 1;
-	s->tokenCount = 0;
+	s->token_count = 0;
 	s->lineno = 1;
 	s->recordrf = 0;
     s->fp = fp;
@@ -80,28 +80,28 @@ LexState* lexNew(FILE* fp, char* buf)
         s->buf[size] = EOF;
     } 
     if (s->buf == NULL) {
-        lexError(s, "no input is defined");
+        lex_error(s, "no input is defined");
     }
-    lexReadChar(s);
+    lex_read_char(s);
 	return s;
 }
 
-void lexFree(LexState *l){
+void lex_free(Lex_state *l){
     free(l->buf);
 	free(l);
 }
 
-void lexError(LexState *s, char* fmt, ...){
+void lex_error(Lex_state *s, char* fmt, ...){
 	va_list ap;
 	va_start(ap, fmt);
 	vprintf(fmt, ap);
 	vsprintf(s->error, fmt, ap);
 	va_end(fmt);
-    lexFree(s);
+    lex_free(s);
     exit(-1);
 }
 
-void lexReadChar(LexState* l){
+void lex_read_char(Lex_state* l){
 	if (l->next != EOF){
         l->next = *l->bufp++;
 	}else{
@@ -110,12 +110,12 @@ void lexReadChar(LexState* l){
 }
 
 
-void lexReadName(LexState* s)
+void lex_read_name(Lex_state* s)
 {
 	int p = 0;
 	while(isalnum(s->next)){
 		s->name[p] = s->next;
-		lexReadChar(s);
+		lex_read_char(s);
 		p++;
 	}
 	s->name[p] = '\0';
@@ -125,12 +125,12 @@ void lexReadName(LexState* s)
  * 0x123
  *  ^
  */
-void lexReadHexNum(LexState* s){
+void lex_read_hex_num(Lex_state* s){
 	int state = 1;
-	lexReadChar(s);
+	lex_read_char(s);
 	long value=0;
-	int isNum=1;
-	while(isNum){
+	int is_num=1;
+	while(is_num){
 		if(s->next>='0'&&s->next<='9'){
 			value = (value<<4)+s->next-'0';
 		}else if(s->next>='a'&&s->next<='f'){
@@ -138,9 +138,9 @@ void lexReadHexNum(LexState* s){
 		}else if(s->next>='A'&&s->next<='F'){
 			value = (value<<4)+s->next-'A'+10;
 		}else{
-			isNum=0;
+			is_num=0;
 		}
-		lexReadChar(s);
+		lex_read_char(s);
 	}
 	s->type = LEX_NUMBER;
 	s->number = value;
@@ -152,33 +152,33 @@ void lexReadHexNum(LexState* s){
  * 12.23
  * 0x123
  */
-void lexReadNum(LexState* s){
+void lex_read_num(Lex_state* s){
 	int p = 0;
 	char first = s->next;
-	lexReadChar(s);
+	lex_read_char(s);
 	/* 16 raidx */
 	if(first=='0'&&('x'==s->next||'X'==s->next)){
-		lexReadHexNum(s);
+		lex_read_hex_num(s);
 		return;
 	}else{
 		p = 2;
 		s->name[0] = first;
 		s->name[1] = s->next;
-		lexReadChar(s);
+		lex_read_char(s);
 	}
 	while(isnumber(s->next)){
 		s->name[p] = s->next;
 		p++;
-		lexReadChar(s);
+		lex_read_char(s);
 	}
 	if(s->next == '.'){
 		s->name[p] = '.';
 		p++;
-		lexReadChar(s);
+		lex_read_char(s);
 		while(isnumber(s->next)){
 			s->name[p] = s->next;
 			p++;
-			lexReadChar(s);
+			lex_read_char(s);
 		}
 	}
 
@@ -188,13 +188,13 @@ void lexReadNum(LexState* s){
 }
 
 
-void lexReadStr(LexState* s, char end) {
-	lexReadChar(s);
+void lex_read_str(Lex_state* s, char end) {
+	lex_read_char(s);
 	int p = 0;
 	s->strlen = 0;
 	while (s->next != EOF && s->next != end){
 		if (s->next == '\\'){
-			lexReadChar(s);
+			lex_read_char(s);
 			switch( s->next ){
 			case '0':s->next = '\0';break;
 			case 'b':s->next = '\b';break;
@@ -208,18 +208,18 @@ void lexReadStr(LexState* s, char end) {
 		s->name[p] = s->next;
 		p++;
 		s->strlen ++;
-		lexReadChar(s);
+		lex_read_char(s);
 	}
 	s->name[p] = '\0';
 	s->type = LEX_STRING;
 
 	if (s->next == end){
-		lexReadChar(s);
+		lex_read_char(s);
 	}
 }
 
 
-void lexSkipWhiteChars(LexState* s){
+void lex_skip_white_chars(Lex_state* s){
 	if(iswhite(s->next)){
 		while(iswhite(s->next)){
 			if(s->next=='\n'){
@@ -229,18 +229,18 @@ void lexSkipWhiteChars(LexState* s){
 					return;
 				}
 			}
-			lexReadChar(s);
+			lex_read_char(s);
 		}
 	}
 }
 
-void lexSkipChars(LexState* l, int cnt) {
+void lex_skip_chars(Lex_state* l, int cnt) {
     while(cnt--) {
-        lexReadChar(l);
+        lex_read_char(l);
     }
 }
 
-void lexReadSymbol(LexState* l) {
+void lex_read_symbol(Lex_state* l) {
     Symbol* s;
     char buf[10];
     char* lex_buf = l->bufp;
@@ -251,62 +251,62 @@ void lexReadSymbol(LexState* l) {
         int len = strlen(s->name);
         if (strncmp(buf, s->name, len) == 0) {
             LOG("get %s\n", s->name);
-            lexSkipChars(l, len);
+            lex_skip_chars(l, len);
             l->type = s->type;
             strcpy(l->name, s->name);
             return;
         }
     }
     l->type = l->next;
-    lexReadChar(l);
+    lex_read_char(l);
 }
 
-void lexNext(LexState* s) {
-	lexSkipWhiteChars(s);
+void lex_next(Lex_state* s) {
+	lex_skip_white_chars(s);
     if (EOF == s->next) {
         return;
     }
-    s->tokenCount ++;
+    s->token_count ++;
     // LOG("next %c\n", s->next);
     if (isname(s->next)) {
-        lexReadName(s);
+        lex_read_name(s);
     } else if (isnumber(s->next)) {
-        lexReadNum(s);
+        lex_read_num(s);
     } else if (isstring(s->next)) {
-        lexReadStr(s, s->next);
+        lex_read_str(s, s->next);
     } else if (issymbol(s->next)) {
-        lexReadSymbol(s);
+        lex_read_symbol(s);
     } else {
-        lexError(s, "unknown char type , value = %d\n", s->next);
+        lex_error(s, "unknown char type , value = %d\n", s->next);
     }
-    // lexSkipWhiteChars(s);
+    // lex_skip_white_chars(s);
 }
 
 
-void lexPrint(LexState * s)
+void lex_print(Lex_state * s)
 {
 	if (EOF==s->type) {
 		return;
 	}
-	char* sType = "symbol";
-	char staticValue[100];
-	char* sValue = staticValue;
+	char* s_type = "symbol";
+	char static_value[100];
+	char* s_value = static_value;
 	switch(s->type){
     case 0:
-        sType = "<init>";
-        sValue = "init";
+        s_type = "<init>";
+        s_value = "init";
         break;
 	case LEX_STRING:
-		sType = "string";
-		strcpy(sValue, s->name);
+		s_type = "string";
+		strcpy(s_value, s->name);
 		break;
 	case LEX_NAME:
-		sType = "name";
-		strcpy(sValue, s->name);
+		s_type = "name";
+		strcpy(s_value, s->name);
 		break;
 	case LEX_NUMBER:
-		sType="number";
-		sprintf(sValue, "%g", s->number);
+		s_type="number";
+		sprintf(s_value, "%g", s->number);
 		break;
 	case ',': case ':': case ';':
 	case '+': case '-': case '*': case '/': case '%':
@@ -314,56 +314,68 @@ void lexPrint(LexState * s)
 	case '(': case ')': case '[': 
     case ']': case '{': case '}':
     case '&': case '|':
-		charToString(sValue, s->type);
+		char_to_string(s_value, s->type);
 		break;
-	case LEX_EQ:sValue="==";break;
-	case LEX_GE:sValue=">=";break;
-	case LEX_LE:sValue="<=";break;
-    case LEX_AND:sValue="AND";break;
-    case LEX_OR:sValue="OR";break;
+	case LEX_EQ:s_value="==";break;
+	case LEX_GE:s_value=">=";break;
+	case LEX_LE:s_value="<=";break;
+    case LEX_AND:s_value="AND";break;
+    case LEX_OR:s_value="OR";break;
 	case '\n': {
-        sType="line";
-        sprintf(sValue, "[%3d]", s->lineno);
+        s_type="line";
+        sprintf(s_value, "[%3d]", s->lineno);
         break;
     }
 	default:
-		sType="unknown";
+		s_type="unknown";
 	}
-	printf("%3d %-10s => %s\n", s->tokenCount, sType, sValue);
+	printf("%3d %-10s => %s\n", s->token_count, s_type, s_value);
 }
 
 int main(int argc, char* argv[]){
     FILE* fp;
     // printf("EOF=%d\n", EOF);
-    LexState* l = NULL;
+    Lex_state* l = NULL;
     
     if (argc == 1) {
         fp = stdin;
         char buf[1024];
         fgets(buf, 1024, stdin);
-        l = lexNew(NULL, buf);
+        l = lex_new(NULL, buf);
     } else if (argc == 2){
         fp = fopen(argv[1], "rb");
         if (fp == NULL) {
             printf("can not open %s\n", argv[1]);
             return 0;
         }
-        l = lexNew(fp, NULL);
+        l = lex_new(fp, NULL);
     } else {
         printf("usage: %s source\n", argv[0]);
         return 0;
     }
     
 	while (1){
-        lexNext(l);
+        lex_next(l);
         if (l->next == EOF) {
             break;
         } 
-        lexPrint(l);
+        lex_print(l);
 		//Sleep(500);
 	}
 	printf("lineno=%d\n",l->lineno);
-	lexFree(l);
+	lex_free(l);
 	return 0;
 }
+
+
+
+
+
+
+
+
+
+
+
+
 

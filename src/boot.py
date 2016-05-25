@@ -36,7 +36,7 @@ class Obj:
 def newobj():
     return Obj()
 
-def addBuiltin(name, func):
+def add_builtin(name, func):
     if isinstance(__builtins__, dict):
         #print 'dict'
         __builtins__[name] = func
@@ -54,18 +54,18 @@ def printf(s, *nargs):
         sys.stdout.write(s % nargs)
     
 const_list = []
-def getConstIdx(v):
+def get_const_idx(v):
     #print v,
     if v not in const_list:
         const_list.append(v)
     return const_list.index(v) # const_list[0] should be None
-def getConstList():
+def get_const_list():
     return const_list
     
-def getConstLen():
+def get_const_len():
     return len(const_list)
     
-def getConst(i):
+def get_const(i):
     return const_list[i]
     
 def mtime(name):
@@ -148,24 +148,35 @@ def code32(ins):
     return chr((ins>>20) & 0xff) + chr((ins>>16) & 0xff) + \
         chr((ins>>8) & 0xff) + chr(ins & 0xff)
 
-def codeF(value):
+def code_f(value):
     return struct.pack('d', value)
 
 def code(type, val):
     if istype(val, "string"):
         return chr(type) + code16(len(val))+ val
     elif istype(val, "number"):
-        return chr(type) + codeF(val)
+        return chr(type) + code_f(val)
         
         
-addBuiltin("addBuiltin", addBuiltin)
-addBuiltin('require', require)
-addBuiltin('add_obj_method', do_nothing)
-addBuiltin('istype', istype)
-addBuiltin("newobj", newobj)
-addBuiltin("asctime", asctime)
-addBuiltin("mmatch", mmatch)
+add_builtin("add_builtin", add_builtin)
+add_builtin('require', require)
+add_builtin('add_obj_method', do_nothing)
+add_builtin('istype', istype)
+add_builtin("newobj", newobj)
+add_builtin("asctime", asctime)
+add_builtin("mmatch", mmatch)
 
 if __name__ == '__main__':
     file = sys.argv[1]
     loadlib(file)
+
+
+
+
+
+
+
+
+
+
+

@@ -11,14 +11,14 @@
     #include <unistd.h>
 #endif
 
-Object* getBuiltin(char* key) {
+Object* get_builtin(char* key) {
     if (!tm->init) {
         return NULL;
     }
-    return dictGetByStr(tm->builtins, key);
+    return dict_get_by_str(tm->builtins, key);
 }
 
-void tmPutchar(int c){
+void tm_putchar(int c){
     static char hex[] = {
         '0','1','2','3','4','5','6','7',
         '8','9','A','B','C','D','E','F'
@@ -31,22 +31,22 @@ void tmPutchar(int c){
     } else if(c=='\r'){
         /* output nothing */
     } else {
-        int c0 = (c & 0xF0) >> 4;
-        int c1 = c & 0x0F;
+        int c0 = (c & 0xf0) >> 4;
+        int c1 = c & 0x0f;
         printf("0x%c%c", hex[c0], hex[c1]);
     }
 }
 
-void tmPrint(Object o) {
-    Object str = tmStr(o);
+void tm_print(Object o) {
+    Object str = tm_str(o);
     int i;
     for(i = 0; i < GET_STR_LEN(str); i++) {
-        tmPutchar(GET_STR(str)[i]);
+        tm_putchar(GET_STR(str)[i]);
     }
 }
 
-void tmPrintln(Object o) {
-    tmPrint(o);
+void tm_println(Object o) {
+    tm_print(o);
     puts("");
 }
 
@@ -62,10 +62,10 @@ void tmPrintln(Object o) {
  * o  -> repl(object)
  * os -> object
  */
-Object tmFormatVaList(char* fmt, va_list ap, int acquireNewLine) {
+Object tm_format_va_list(char* fmt, va_list ap, int acquire_new_line) {
     int i;
     int len = strlen(fmt);
-    Object str = stringNew("");
+    Object str = string_new("");
     int templ = 0;
     char* start = fmt;
     int istrans = 1;
@@ -76,36 +76,36 @@ Object tmFormatVaList(char* fmt, va_list ap, int acquireNewLine) {
             switch (fmt[i]) {
             case 'd':
                 sprintf(buf, "%d", va_arg(ap, int));
-                str = stringAppendSz(str, buf);
+                str = string_append_sz(str, buf);
                 break;
             case 'f':
                 /* ... will pass float as double */
                 sprintf(buf, "%lf", va_arg(ap, double));
-                str = stringAppendSz(str, buf);
+                str = string_append_sz(str, buf);
                 break;
                 /* ... will pass char  as int */
             case 'c':
-                str = stringAppendChar(str, va_arg(ap, int));
+                str = string_append_char(str, va_arg(ap, int));
                 break;
             case 's': {
-                str = stringAppendSz(str, va_arg(ap, char*));
+                str = string_append_sz(str, va_arg(ap, char*));
                 break;
             }
             case 'P':
             case 'p': {
                 sprintf(buf, "%p", va_arg(ap, void*));
-                str = stringAppendSz(str, buf);
+                str = string_append_sz(str, buf);
                 break;
             }
             case 'o': {
                 int next = fmt[i+1];
                 Object v = va_arg(ap, Object);
                 if (IS_STR(v) && next != 's') {
-                    str = stringAppendChar(str, '"');
+                    str = string_append_char(str, '"');
                 }
-                str = stringAppendObj(str, v);
+                str = string_append_obj(str, v);
                 if (IS_STR(v) && next != 's') {
-                    str = stringAppendChar(str, '"');
+                    str = string_append_char(str, '"');
                 }
                 if (next == 's') {
                     i++;
@@ -113,31 +113,31 @@ Object tmFormatVaList(char* fmt, va_list ap, int acquireNewLine) {
                 break;
             }
             default:
-                tmRaise("format, unknown pattern %c", fmt[i]);
+                tm_raise("format, unknown pattern %c", fmt[i]);
                 break;
             }
         } else {
-            str = stringAppendChar(str, fmt[i]);
+            str = string_append_char(str, fmt[i]);
         }
     }
-    if (acquireNewLine) {
-        str = stringAppendChar(str, '\n');
+    if (acquire_new_line) {
+        str = string_append_char(str, '\n');
     }
     return str;
 }
 
-Object tmFormat(char* fmt, ...) {
+Object tm_format(char* fmt, ...) {
     va_list a;
     va_start(a, fmt);
-    Object v = tmFormatVaList(fmt, a, 0);
+    Object v = tm_format_va_list(fmt, a, 0);
     va_end(a);
     return v;
 }
 
-void tmPrintf(char* fmt, ...) {
+void tm_printf(char* fmt, ...) {
     va_list a;
     va_start(a, fmt);
-    tmPrint(tmFormatVaList(fmt, a, 0));
+    tm_print(tm_format_va_list(fmt, a, 0));
     va_end(a);
 }
 
@@ -154,28 +154,28 @@ long get_rest_size(FILE* fp){
 
 // vm-builtins
 
-Object tmLoad(char* fname){
+Object tm_load(char* fname){
     FILE* fp = fopen(fname, "rb");
     if(fp == NULL){
-        tmRaise("load: can not open file \"%s\"",fname);
+        tm_raise("load: can not open file \"%s\"",fname);
         return NONE_OBJECT;
     }
     long len = get_rest_size(fp);
     if(len > MAX_FILE_SIZE){
-        tmRaise("load: file too big to load, size = %d", (len));
+        tm_raise("load: file too big to load, size = %d", (len));
         return NONE_OBJECT;
     }
-    Object text = stringAlloc(NULL, len);
+    Object text = string_alloc(NULL, len);
     char* s = GET_STR(text);
     fread(s, 1, len, fp);
     fclose(fp);
     return text;
 }
 
-Object tmSave(char*fname, Object content) {
+Object tm_save(char*fname, Object content) {
     FILE* fp = fopen(fname, "wb");
     if (fp == NULL) {
-        tmRaise("tmSave : can not save to file \"%s\"", fname);
+        tm_raise("tm_save : can not save to file \"%s\"", fname);
     }
     char* txt = GET_STR(content);
     int len = GET_STR_LEN(content);
@@ -187,8 +187,8 @@ Object tmSave(char*fname, Object content) {
 
 Object bf_input() {
     int i = 0;
-    if (hasArg()) {
-        tmPrint(argTakeObj("input"));
+    if (has_arg()) {
+        tm_print(arg_take_obj("input"));
     }
     char buf[2048];
     memset(buf, '\0', sizeof(buf));
@@ -198,28 +198,28 @@ Object bf_input() {
     if(buf[len-1]=='\n'){
         buf[len-1] = '\0';
     }
-    return stringNew(buf);
+    return string_new(buf);
 }
 
 Object bf_int() {
-    Object v = argTakeObj("int");
+    Object v = arg_take_obj("int");
     if (v.type == TYPE_NUM) {
-        return tmNumber((int) GET_NUM(v));
+        return tm_number((int) GET_NUM(v));
     } else if (v.type == TYPE_STR) {
-        return tmNumber((int) atof(GET_STR(v)));
+        return tm_number((int) atof(GET_STR(v)));
     }
-    tmRaise("int: %o can not be parsed to int ", v);
+    tm_raise("int: %o can not be parsed to int ", v);
     return NONE_OBJECT;
 }
 
 Object bf_float() {
-    Object v = argTakeObj("float");
+    Object v = arg_take_obj("float");
     if (v.type == TYPE_NUM) {
         return v;
     } else if (v.type == TYPE_STR) {
-        return tmNumber(atof(GET_STR(v)));
+        return tm_number(atof(GET_STR(v)));
     }
-    tmRaise("float: %o can not be parsed to float", v);
+    tm_raise("float: %o can not be parsed to float", v);
     return NONE_OBJECT;
 }
 
@@ -227,19 +227,19 @@ Object bf_float() {
  *   load_module( name, code, mod_name = None )
  */
 Object bf_load_module() {
-    const char* szFnc = "load_module";
-    Object file = argTakeStrObj(szFnc);
-    Object code = argTakeStrObj(szFnc);
+    const char* sz_fnc = "load_module";
+    Object file = arg_take_str_obj(sz_fnc);
+    Object code = arg_take_str_obj(sz_fnc);
     Object mod;
-    if (getArgsCount() == 3) {
-        mod = moduleNew(file, argTakeStrObj(szFnc), code);
+    if (get_args_count() == 3) {
+        mod = module_new(file, arg_take_str_obj(sz_fnc), code);
     } else {
-        mod = moduleNew(file, file, code);
+        mod = module_new(file, file, code);
     }
-    Object fnc = funcNew(mod, NONE_OBJECT, NULL);
+    Object fnc = func_new(mod, NONE_OBJECT, NULL);
     GET_FUNCTION(fnc)->code = (unsigned char*) GET_STR(code);
-    GET_FUNCTION(fnc)->name = stringNew("#main");
-    callFunction(fnc);
+    GET_FUNCTION(fnc)->name = string_new("#main");
+    call_function(fnc);
     return GET_MODULE(mod)->globals;
 }
 
@@ -257,99 +257,99 @@ Object bf_exit() {
 }
 
 Object bf_gettype() {
-    Object obj = argTakeObj("gettype");
+    Object obj = arg_take_obj("gettype");
     switch(TM_TYPE(obj)) {
-        case TYPE_STR: return szToString("string");
-        case TYPE_NUM: return szToString("number");
-        case TYPE_LIST: return szToString("list");
-        case TYPE_DICT: return szToString("dict");
-        case TYPE_FUNCTION: return szToString("function");
-        case TYPE_DATA: return szToString("data");
-        case TYPE_NONE: return szToString("None");
-        default: tmRaise("gettype(%o)", obj);
+        case TYPE_STR: return sz_to_string("string");
+        case TYPE_NUM: return sz_to_string("number");
+        case TYPE_LIST: return sz_to_string("list");
+        case TYPE_DICT: return sz_to_string("dict");
+        case TYPE_FUNCTION: return sz_to_string("function");
+        case TYPE_DATA: return sz_to_string("data");
+        case TYPE_NONE: return sz_to_string("None");
+        default: tm_raise("gettype(%o)", obj);
     }
     return NONE_OBJECT;
 }
 
 /**
- * bool istype(obj, strType);
+ * bool istype(obj, str_type);
  * this function is better than `gettype(obj) == 'string'`;
  * think that you want to check a `basetype` which contains both `number` and `string`;
  * so, a check function with less result is better.
  */
 Object bf_istype() {
-    Object obj = argTakeObj("istype");
-    char* type = argTakeSz("istype");
-    int isType = 0;
+    Object obj = arg_take_obj("istype");
+    char* type = arg_take_sz("istype");
+    int is_type = 0;
     switch(TM_TYPE(obj)) {
-        case TYPE_STR: isType = strcmp(type, "string") == 0 ; break;
-        case TYPE_NUM: isType = strcmp(type, "number") == 0 ; break;
-        case TYPE_LIST: isType = strcmp(type, "list") == 0; break;
-        case TYPE_DICT: isType = strcmp(type, "dict") == 0; break;
-        case TYPE_FUNCTION: isType = strcmp(type, "function") == 0;break;
-        case TYPE_DATA: isType = strcmp(type, "data") == 0; break;
-        case TYPE_NONE: isType = strcmp(type, "None") == 0; break;
-        default: tmRaise("gettype(%o)", obj);
+        case TYPE_STR: is_type = strcmp(type, "string") == 0 ; break;
+        case TYPE_NUM: is_type = strcmp(type, "number") == 0 ; break;
+        case TYPE_LIST: is_type = strcmp(type, "list") == 0; break;
+        case TYPE_DICT: is_type = strcmp(type, "dict") == 0; break;
+        case TYPE_FUNCTION: is_type = strcmp(type, "function") == 0;break;
+        case TYPE_DATA: is_type = strcmp(type, "data") == 0; break;
+        case TYPE_NONE: is_type = strcmp(type, "None") == 0; break;
+        default: tm_raise("gettype(%o)", obj);
     }
-    return tmNumber(isType);
+    return tm_number(is_type);
 }
 
 Object bf_chr() {
-    int n = argTakeInt("chr");
-    return stringChr(n);
+    int n = arg_take_int("chr");
+    return string_chr(n);
 }
 
 Object bf_ord() {
-    Object c = argTakeStrObj("ord");
+    Object c = arg_take_str_obj("ord");
     TM_ASSERT(GET_STR_LEN(c) == 1, "ord() expected a character");
-    return tmNumber((unsigned char) GET_STR(c)[0]);
+    return tm_number((unsigned char) GET_STR(c)[0]);
 }
 
 Object bf_code8() {
-    int n = argTakeInt("code8");
+    int n = arg_take_int("code8");
     if (n < 0 || n > 255)
-        tmRaise("code8(): expect number 0-255, but see %d", n);
-    return stringChr(n);
+        tm_raise("code8(): expect number 0-255, but see %d", n);
+    return string_chr(n);
 }
 
 Object bf_code16() {
-    int n = argTakeInt("code16");
+    int n = arg_take_int("code16");
     if (n < 0 || n > 0xffff)
-        tmRaise("code16(): expect number 0-0xffff, but see %x", n);
-    Object nchar = stringAlloc(NULL, 2);
+        tm_raise("code16(): expect number 0-0xffff, but see %x", n);
+    Object nchar = string_alloc(NULL, 2);
     code16((unsigned char*) GET_STR(nchar), n);
     return nchar;
 }
 
 Object bf_code32() {
-    int n = argTakeInt("code32");
-    Object c = stringAlloc(NULL, 4);
+    int n = arg_take_int("code32");
+    Object c = string_alloc(NULL, 4);
     code32((unsigned char*) GET_STR(c), n);
     return c;
 }
 
 Object bf_raise() {
-    if (getArgsCount() == 0) {
-        tmRaise("raise");
+    if (get_args_count() == 0) {
+        tm_raise("raise");
     } else {
-        tmRaise("%s", argTakeSz("raise"));
+        tm_raise("%s", arg_take_sz("raise"));
     }
     return NONE_OBJECT;
 }
 
 Object bf_system() {
-    Object m = argTakeStrObj("system");
+    Object m = arg_take_str_obj("system");
     int rs = system(GET_STR(m));
-    return tmNumber(rs);
+    return tm_number(rs);
 }
 
 Object bf_str() {
-    Object a = argTakeObj("str");
-    return tmStr(a);
+    Object a = arg_take_obj("str");
+    return tm_str(a);
 }
 
 Object bf_len() {
-    Object o = argTakeObj("len");
+    Object o = arg_take_obj("len");
     int len = -1;
     switch (TM_TYPE(o)) {
     case TYPE_STR:
@@ -360,16 +360,16 @@ Object bf_len() {
         len = DICT_LEN(o);
     }
     if (len < 0) {
-        tmRaise("tmLen: %o has no attribute len", o);
+        tm_raise("tm_len: %o has no attribute len", o);
     }
-    return tmNumber(len);
+    return tm_number(len);
 }
 
 Object bf_print() {
     int i = 0;
-    while (hasArg()) {
-        tmPrint(argTakeObj("print"));
-        if (hasArg()) {
+    while (has_arg()) {
+        tm_print(arg_take_obj("print"));
+        if (has_arg()) {
             putchar(' ');
         }
     }
@@ -378,20 +378,20 @@ Object bf_print() {
 }
 
 Object bf_load(Object p){
-    Object fname = argTakeStrObj("load");
-    return tmLoad(GET_STR(fname));
+    Object fname = arg_take_str_obj("load");
+    return tm_load(GET_STR(fname));
 }
 Object bf_save(){
-    Object fname = argTakeStrObj("<save name>");
-    return tmSave(GET_STR(fname), argTakeStrObj("<save content>"));
+    Object fname = arg_take_str_obj("<save name>");
+    return tm_save(GET_STR(fname), arg_take_str_obj("<save content>"));
 }
 
-Object bf_fileAppend() {
-    char* fname = argTakeSz("fileAppend");
-    Object content = argTakeStrObj("fileAppend");
+Object bf_file_append() {
+    char* fname = arg_take_sz("file_append");
+    Object content = arg_take_str_obj("file_append");
     FILE* fp = fopen(fname, "ab+");
     if (fp == NULL) {
-        tmRaise("fileAppend: fail to open file %s", fname);
+        tm_raise("file_append: fail to open file %s", fname);
         return NONE_OBJECT;
     }
     char* txt = GET_STR(content);
@@ -401,137 +401,137 @@ Object bf_fileAppend() {
     return NONE_OBJECT;
 }
 
-Object bfRemove(){
-    Object fname = argTakeStrObj("remove");
+Object bf_remove(){
+    Object fname = arg_take_str_obj("remove");
     int flag = remove(GET_STR(fname));
     if(flag) {
-        return tmNumber(0);
+        return tm_number(0);
     } else {
-        return tmNumber(1);
+        return tm_number(1);
     }
 }
 
 Object bf_apply() {
-    Object func = argTakeObj("apply");
+    Object func = arg_take_obj("apply");
     if (NOT_FUNC(func) && NOT_DICT(func)) {
-        tmRaise("apply: expect function or dict");
+        tm_raise("apply: expect function or dict");
     }
-    Object args = argTakeObj("apply");
-    argStart();
+    Object args = arg_take_obj("apply");
+    arg_start();
     if (IS_NONE(args)) {
     } else if(IS_LIST(args)) {
         int i;for(i = 0; i < LIST_LEN(args); i++) {
-            argPush(LIST_NODES(args)[i]);
+            arg_push(LIST_NODES(args)[i]);
         }
     } else {
-        tmRaise("apply: expect list arguments or None, but see %o", args);
+        tm_raise("apply: expect list arguments or None, but see %o", args);
         return NONE_OBJECT;
     }
-    return callFunction(func);
+    return call_function(func);
 }
 
 Object bf_write() {
-    Object fmt = argTakeObj("write");
-    Object str = tmStr(fmt);
+    Object fmt = arg_take_obj("write");
+    Object str = tm_str(fmt);
     char* s = GET_STR(str);
     int len = GET_STR_LEN(str);
     int i;
     // for(i = 0; i < len; i++) {
-        // tmPutchar(s[i]);
+        // tm_putchar(s[i]);
         // putchar is very very slow
         // when print 80 * 30 chars  
-        //     ==>  putcharTime=126, printfTime=2, putcTime=129
+        //     ==>  putchar_time=126, printf_time=2, putc_time=129
         // putchar(s[i]);
         // buffer[i] = s[i];
     // }
     printf("%s", s);
-    // return arrayToList(2, tmNumber(t2-t1), tmNumber(t3-t2));
+    // return array_to_list(2, tm_number(t2-t1), tm_number(t3-t2));
     return NONE_OBJECT;
 }
 
 Object bf_pow() {
-    double base = argTakeDouble("pow");
-    double y = argTakeDouble("pow");
-    return tmNumber(pow(base, y));
+    double base = arg_take_double("pow");
+    double y = arg_take_double("pow");
+    return tm_number(pow(base, y));
 }
 
-typedef struct RangeIter {
+typedef struct Range_iter {
     DATA_HEAD
     long cur;
     long inc;
     long stop;
     Object cur_obj;
-}RangeIter;
+}Range_iter;
 
-Object* rangeNext(RangeIter* data) {
+Object* range_next(Range_iter* data) {
     long cur = data->cur;
     if (data->inc > 0 && cur < data->stop) {
         data->cur += data->inc;
-        data->cur_obj = tmNumber(cur);
+        data->cur_obj = tm_number(cur);
         return &data->cur_obj;
     } else if (data->inc < 0 && cur > data->stop) {
         data->cur += data->inc;
-        data->cur_obj = tmNumber(cur);
+        data->cur_obj = tm_number(cur);
         return &data->cur_obj;
     }
     return NULL;
 }
 
-static DataProto rangeIter;
-DataProto* getRangeIterProto() {
-    if(!rangeIter.init) {
-        initDataProto(&rangeIter);
-        rangeIter.next = rangeNext;
-        rangeIter.dataSize = sizeof(RangeIter);
+static Data_proto range_iter;
+Data_proto* get_range_iter_proto() {
+    if(!range_iter.init) {
+        init_data_proto(&range_iter);
+        range_iter.next = range_next;
+        range_iter.data_size = sizeof(Range_iter);
     }
-    return &rangeIter;
+    return &range_iter;
 }
 
 Object bf_range() {
     long start = 0;
     long end = 0;
     int inc;
-    static const char* szFunc = "range";
+    static const char* sz_func = "range";
     switch (tm->arg_cnt) {
     case 1:
         start = 0;
-        end = (long)argTakeDouble(szFunc);
+        end = (long)arg_take_double(sz_func);
         inc = 1;
         break;
     case 2:
-        start = (long)argTakeDouble(szFunc);
-        end = (long)argTakeDouble(szFunc);
+        start = (long)arg_take_double(sz_func);
+        end = (long)arg_take_double(sz_func);
         inc = 1;
         break;
     case 3:
-        start = (long)argTakeDouble(szFunc);
-        end = (long)argTakeDouble(szFunc);
-        inc = (long)argTakeDouble(szFunc);
+        start = (long)arg_take_double(sz_func);
+        end = (long)arg_take_double(sz_func);
+        inc = (long)arg_take_double(sz_func);
         break;
     default:
-        tmRaise("range([n, [ n, [n]]]), but see %d arguments",
+        tm_raise("range([n, [ n, [n]]]), but see %d arguments",
                 tm->arg_cnt);
     }
     if (inc == 0)
-        tmRaise("range(): increment can not be 0!");
+        tm_raise("range(): increment can not be 0!");
     if (inc * (end - start) < 0)
-        tmRaise("range(%d, %d, %d): not valid range!", start, end, inc);
-    Object data = dataNew(sizeof(RangeIter));
-    RangeIter *iterator = (RangeIter*) GET_DATA(data);
+        tm_raise("range(%d, %d, %d): not valid range!", start, end, inc);
+    Object data = data_new(sizeof(Range_iter));
+    Range_iter *iterator = (Range_iter*) GET_DATA(data);
     iterator->cur = start;
     iterator->stop = end;
     iterator->inc = inc;
-    iterator->proto = getRangeIterProto();
+    iterator->proto = get_range_iter_proto();
     return data;
 }
 
 Object bf_mmatch() {
-    char* str = argTakeSz("mmatch");
-    int start = argTakeInt("mmatch");
-    Object o_dst = argTakeStrObj("mmatch");
+    char* str = arg_take_sz("mmatch");
+    int start = arg_take_int("mmatch");
+    Object o_dst = arg_take_str_obj("mmatch");
     char* dst = GET_STR(o_dst);
     int size = GET_STR_LEN(o_dst);
-    return tmNumber(strncmp(str+start, dst, size) == 0);
+    return tm_number(strncmp(str+start, dst, size) == 0);
 }
 
 
@@ -539,73 +539,73 @@ Object bf_mmatch() {
 * built-in functions for developers
 ***********************************/
 
-Object bfInspectPtr() {
-    double _ptr = argTakeDouble("inspectPtr");
-    int idx = argTakeInt("inspectPtr");
+Object bf_inspect_ptr() {
+    double _ptr = arg_take_double("inspect_ptr");
+    int idx = arg_take_int("inspect_ptr");
     char* ptr = (char*)(long long)_ptr;
-    return stringChr(ptr[idx]);
+    return string_chr(ptr[idx]);
 }
 
-Object bfGetCurrentFrame() {
-    Object frameInfo = dictNew();
-    dictSetByStr(frameInfo, "function", tm->frame->fnc);
-    // dictSetByStr(frameInfo, "pc", tmNumber((long long)tm->frame->pc));
-    dictSetByStr(frameInfo, "index", tmNumber((long long) (tm->frame - tm->frames)));
-    return frameInfo;
+Object bf_get_current_frame() {
+    Object frame_info = dict_new();
+    dict_set_by_str(frame_info, "function", tm->frame->fnc);
+    // dict_set_by_str(frame_info, "pc", tm_number((long long)tm->frame->pc));
+    dict_set_by_str(frame_info, "index", tm_number((long long) (tm->frame - tm->frames)));
+    return frame_info;
 }
 
-Object bfVmopt() {
-    char* opt = argTakeSz("vminfo");
+Object bf_vmopt() {
+    char* opt = arg_take_sz("vminfo");
     if (strcmp(opt, "gc") == 0) {
-        gcFull();
+        gc_full();
     } else if (strcmp(opt, "help") == 0) {
-        return szToString("gc, help");
+        return sz_to_string("gc, help");
     } else if (strcmp(opt, "frame.local") == 0) {
-        int fidx = argTakeInt("vminfo");
-        int lidx = argTakeInt("vminfo");
-        return objGetlocal(fidx, lidx);
+        int fidx = arg_take_int("vminfo");
+        int lidx = arg_take_int("vminfo");
+        return obj_getlocal(fidx, lidx);
     } else if (strcmp(opt, "frame.stack") == 0) {
-        int fidx = argTakeInt("vminfo");
-        int sidx = argTakeInt("vminfo");
-        return objGetstack(fidx, sidx);
+        int fidx = arg_take_int("vminfo");
+        int sidx = arg_take_int("vminfo");
+        return obj_getstack(fidx, sidx);
     } else if (strcmp(opt, "frame.index") == 0) {
-        return tmNumber(tm->frame-tm->frames);
+        return tm_number(tm->frame-tm->frames);
     } else if (strcmp(opt, "frame.info") == 0) {
-        int fidx = argTakeInt("vminfo");
-        TmFrame *f = objGetframe(fidx);
-        Object info = dictNew();
-        tmSetattr(info, "maxlocals", tmNumber(f->maxlocals));
-        tmSetattr(info, "stacksize", tmNumber(f->top - f->stack));
-        tmSetattr(info, "func", f->fnc);
-        tmSetattr(info, "fname", tmGetfname(f->fnc));
-        tmSetattr(info, "lineno", tmNumber(f->lineno));
+        int fidx = arg_take_int("vminfo");
+        TmFrame *f = obj_getframe(fidx);
+        Object info = dict_new();
+        tm_setattr(info, "maxlocals", tm_number(f->maxlocals));
+        tm_setattr(info, "stacksize", tm_number(f->top - f->stack));
+        tm_setattr(info, "func", f->fnc);
+        tm_setattr(info, "fname", tm_getfname(f->fnc));
+        tm_setattr(info, "lineno", tm_number(f->lineno));
         return info;
     } else {
-        tmRaise("invalid opt %s", opt);
+        tm_raise("invalid opt %s", opt);
     }
     return NONE_OBJECT;
 }
 
-Object bfGetVmInfo() {
-    Object tmInfo = dictNew();
-    dictSetByStr(tmInfo, "name", stringNew("tm"));
-    dictSetByStr(tmInfo, "vm_size", tmNumber(sizeof(TmVM)));
-    dictSetByStr(tmInfo, "obj_size", tmNumber(sizeof(Object)));
-    dictSetByStr(tmInfo, "int_size", tmNumber(sizeof(int)));
-    dictSetByStr(tmInfo, "long_size", tmNumber(sizeof(long)));
-    dictSetByStr(tmInfo, "long_long_size", tmNumber(sizeof(long long)));
-    dictSetByStr(tmInfo, "float_size", tmNumber(sizeof(float)));
-    dictSetByStr(tmInfo, "double_size", tmNumber(sizeof(double)));
-    dictSetByStr(tmInfo, "jmp_buf_size", tmNumber(sizeof(jmp_buf)));
-    dictSetByStr(tmInfo, "total_obj_len", tmNumber(tm->all->len));
-    dictSetByStr(tmInfo, "alloc_mem", tmNumber(tm->allocated));
-    dictSetByStr(tmInfo, "gc_threshold", tmNumber(tm->gcThreshold));
-    dictSetByStr(tmInfo, "frame_index", tmNumber(tm->frame - tm->frames));
-    dictSetByStr(tmInfo, "consts_len", tmNumber(DICT_LEN(tm->constants)));
-    return tmInfo;
+Object bf_get_vm_info() {
+    Object tm_info = dict_new();
+    dict_set_by_str(tm_info, "name", string_new("tm"));
+    dict_set_by_str(tm_info, "vm_size", tm_number(sizeof(TmVm)));
+    dict_set_by_str(tm_info, "obj_size", tm_number(sizeof(Object)));
+    dict_set_by_str(tm_info, "int_size", tm_number(sizeof(int)));
+    dict_set_by_str(tm_info, "long_size", tm_number(sizeof(long)));
+    dict_set_by_str(tm_info, "long_long_size", tm_number(sizeof(long long)));
+    dict_set_by_str(tm_info, "float_size", tm_number(sizeof(float)));
+    dict_set_by_str(tm_info, "double_size", tm_number(sizeof(double)));
+    dict_set_by_str(tm_info, "jmp_buf_size", tm_number(sizeof(jmp_buf)));
+    dict_set_by_str(tm_info, "total_obj_len", tm_number(tm->all->len));
+    dict_set_by_str(tm_info, "alloc_mem", tm_number(tm->allocated));
+    dict_set_by_str(tm_info, "gc_threshold", tm_number(tm->gc_threshold));
+    dict_set_by_str(tm_info, "frame_index", tm_number(tm->frame - tm->frames));
+    dict_set_by_str(tm_info, "consts_len", tm_number(DICT_LEN(tm->constants)));
+    return tm_info;
 }
 
-long tmClock() {
+long tm_clock() {
 #ifdef TM_NT
     return clock();
 #else
@@ -615,16 +615,16 @@ long tmClock() {
 
 
 Object bf_clock() {
-    return tmNumber(tmClock());
+    return tm_number(tm_clock());
 }
 
 Object bf_time0() {
-    return tmNumber(time(0));
+    return tm_number(time(0));
 }
 
-Object bfSleep() {
+Object bf_sleep() {
     int i = 0;
-    int t = argTakeInt("sleep");
+    int t = arg_take_int("sleep");
 #ifdef _WINDOWS_H
     Sleep(t);
 #else
@@ -633,43 +633,43 @@ Object bfSleep() {
     return NONE_OBJECT;
 }
 
-Object bfAddObjMethod() {
-    static const char* szFunc = "add_obj_method";
-    Object type = argTakeStrObj(szFunc);
-    Object fname = argTakeStrObj(szFunc);
-    Object fnc = argTakeFuncObj(szFunc);
+Object bf_add_obj_method() {
+    static const char* sz_func = "add_obj_method";
+    Object type = arg_take_str_obj(sz_func);
+    Object fname = arg_take_str_obj(sz_func);
+    Object fnc = arg_take_func_obj(sz_func);
     char*s = GET_STR(type);
     if (strcmp(s, "str") == 0) {
-        objSet(tm->str_proto, fname, fnc);
+        obj_set(tm->str_proto, fname, fnc);
     } else if (strcmp(s, "list") == 0) {
-        objSet(tm->list_proto, fname, fnc);
+        obj_set(tm->list_proto, fname, fnc);
     } else if (strcmp(s, "dict") == 0) {
-        objSet(tm->dict_proto, fname, fnc);
+        obj_set(tm->dict_proto, fname, fnc);
     } else {
-        tmRaise("add_obj_method: not valid object type, expect str, list, dict");
+        tm_raise("add_obj_method: not valid object type, expect str, list, dict");
     }
     return NONE_OBJECT;
 }
 
-Object bfReadFile() {
-    static const char* szFunc = "readFile";
+Object bf_read_file() {
+    static const char* sz_func = "read_file";
     char c;
-    char* fname = argTakeSz(szFunc);
-    int nsize = argTakeInt(szFunc);
+    char* fname = arg_take_sz(sz_func);
+    int nsize = arg_take_int(sz_func);
     char buf[1024];
     int i;
     int end = 0;
     Object func;
     if (nsize < 0 || nsize > 1024) {
-        tmRaise("%s: can not set bufsize beyond [1, 1024]",  szFunc);
+        tm_raise("%s: can not set bufsize beyond [1, 1024]",  sz_func);
     }
-    func = argTakeFuncObj(szFunc);
+    func = arg_take_func_obj(sz_func);
     FILE* fp = fopen(fname, "rb");
     if (fp == NULL) {
-        tmRaise("%s: can not open file %s", szFunc, fname);
+        tm_raise("%s: can not open file %s", sz_func, fname);
     }
     while (1) {
-        argStart();
+        arg_start();
         for (i = 0; i < nsize; i++) {
             if ((c = fgetc(fp)) != EOF) {
                 buf[i] = c;
@@ -678,8 +678,8 @@ Object bfReadFile() {
                 break;
             }
         }
-        argPush(stringAlloc(buf, i));
-        callFunction(func);
+        arg_push(string_alloc(buf, i));
+        call_function(func);
         if (end) {
             break;
         }
@@ -688,24 +688,24 @@ Object bfReadFile() {
     return NONE_OBJECT;
 }
 
-Object bfIter() {
-    Object func = argTakeObj("iter");
-    return iterNew(func);
+Object bf_iter() {
+    Object func = arg_take_obj("iter");
+    return iter_new(func);
 }
 
-Object bfNext() {
-    Object iter = argTakeDataObj("next");
-    Object *ret = nextPtr(iter);
+Object bf_next() {
+    Object iter = arg_take_data_obj("next");
+    Object *ret = next_ptr(iter);
     if (ret == NULL) {
-        tmRaise("<<next end>>");
+        tm_raise("<<next end>>");
         return NONE_OBJECT;
     } else {
         return *ret;
     }
 }
 
-Object bfSetVMState() {
-    int state = argTakeInt("setVMState");
+Object bf_set_v_m_state() {
+    int state = arg_take_int("set_v_m_state");
     switch(state) {
         case 0:tm->debug = 0;break;
         case 1:tm->debug = 1;break;
@@ -713,36 +713,36 @@ Object bfSetVMState() {
     return NONE_OBJECT;
 }
 
-Object bfGetConstIdx() {
-    Object key = argTakeObj("getConstIdx");
+Object bf_get_const_idx() {
+    Object key = arg_take_obj("get_const_idx");
     SET_IDX(key, 0);
-    int i = dictSet(tm->constants, key, NONE_OBJECT);
+    int i = dict_set(tm->constants, key, NONE_OBJECT);
     SET_IDX(GET_CONST(i), i);
-    return tmNumber(i);
+    return tm_number(i);
 }
 
-Object bfGetConst() {
-    int num = argTakeInt("getConst");
+Object bf_get_const() {
+    int num = arg_take_int("get_const");
     int idx = num;
     if (num < 0) {
         idx += DICT_LEN(tm->constants);
     }
     if (idx < 0 || idx >= DICT_LEN(tm->constants)) {
-        tmRaise("getConst(idx): out of range [%d]", num);
+        tm_raise("get_const(idx): out of range [%d]", num);
     }
     return GET_CONST(idx);
 }
 /* for save */
-Object bfGetConstLen() {
-    return tmNumber(DICT_LEN(tm->constants));
+Object bf_get_const_len() {
+    return tm_number(DICT_LEN(tm->constants));
 }
 
-Object bfGetExList() {
-    return tm->exList;
+Object bf_get_ex_list() {
+    return tm->ex_list;
 }
 
-Object bfExists(){
-    Object _fname = argTakeStrObj("exists");
+Object bf_exists(){
+    Object _fname = arg_take_str_obj("exists");
     char* fname = GET_STR(_fname);
     FILE*fp = fopen(fname, "rb");
     if(fp == NULL) return NUMBER_FALSE;
@@ -750,29 +750,29 @@ Object bfExists(){
     return NUMBER_TRUE;
 }
 
-Object bfStat(){
-    const char *s = argTakeSz("stat");
+Object bf_stat(){
+    const char *s = arg_take_sz("stat");
     struct stat stbuf;
     if (!stat(s,&stbuf)) { 
-        Object st = dictNew();
-        dictSetByStr(st, "st_mtime", tmNumber(stbuf.st_mtime));
-        dictSetByStr(st, "st_atime", tmNumber(stbuf.st_atime));
-        dictSetByStr(st, "st_ctime", tmNumber(stbuf.st_ctime));
-        dictSetByStr(st, "st_size" , tmNumber(stbuf.st_size));
-        dictSetByStr(st, "st_mode",  tmNumber(stbuf.st_mode));
-        dictSetByStr(st, "st_nlink", tmNumber(stbuf.st_nlink));
-        dictSetByStr(st, "st_dev",   tmNumber(stbuf.st_dev));
-        dictSetByStr(st, "st_ino",   tmNumber(stbuf.st_ino));
-        dictSetByStr(st, "st_uid",   tmNumber(stbuf.st_uid));
-        dictSetByStr(st, "st_gid",   tmNumber(stbuf.st_gid));
+        Object st = dict_new();
+        dict_set_by_str(st, "st_mtime", tm_number(stbuf.st_mtime));
+        dict_set_by_str(st, "st_atime", tm_number(stbuf.st_atime));
+        dict_set_by_str(st, "st_ctime", tm_number(stbuf.st_ctime));
+        dict_set_by_str(st, "st_size" , tm_number(stbuf.st_size));
+        dict_set_by_str(st, "st_mode",  tm_number(stbuf.st_mode));
+        dict_set_by_str(st, "st_nlink", tm_number(stbuf.st_nlink));
+        dict_set_by_str(st, "st_dev",   tm_number(stbuf.st_dev));
+        dict_set_by_str(st, "st_ino",   tm_number(stbuf.st_ino));
+        dict_set_by_str(st, "st_uid",   tm_number(stbuf.st_uid));
+        dict_set_by_str(st, "st_gid",   tm_number(stbuf.st_gid));
         return st;
     }
-    tmRaise("stat(%s), file not exists or accessable.",s);
+    tm_raise("stat(%s), file not exists or accessable.",s);
     return NONE_OBJECT;
 }
 
-Object bfGetcwd() {
-    const char* szFunc = "getcwd";
+Object bf_getcwd() {
+    const char* sz_func = "getcwd";
     char buf[1025];
     char* r = getcwd(buf, 1024);
     if (r == NULL) {
@@ -783,58 +783,58 @@ Object bfGetcwd() {
             case EACCES: msg = "Read or search permission was denied for a component of the pathname.";break;
             case ENOMEM: msg = "Insufficient storage space is available.";break;
         }
-        tmRaise("%s: error -- %s", szFunc, msg);
+        tm_raise("%s: error -- %s", sz_func, msg);
     }
-    return stringNew(buf);
+    return string_new(buf);
 }
 
-Object bfChdir() {
-    const char* szFunc = "chdir";
-    char *path = argTakeSz(szFunc);
+Object bf_chdir() {
+    const char* sz_func = "chdir";
+    char *path = arg_take_sz(sz_func);
     int r = chdir(path);
     if (r != 0) {
-        tmRaise("%s: -- fatal error, can not chdir(\"%s\")", szFunc, path);
+        tm_raise("%s: -- fatal error, can not chdir(\"%s\")", sz_func, path);
     } 
     return NONE_OBJECT;
 }
 
-Object bfGetOsName() {
-    const char* szFunc = "getosname";
+Object bf_get_os_name() {
+    const char* sz_func = "getosname";
 #ifdef _WINDOWS_H
-    return szToString("nt");
+    return sz_to_string("nt");
 #else
-    return szToString("posix");
+    return sz_to_string("posix");
 #endif
 }
 
-Object bfListdir() {
-    Object list = listNew(10);
-    Object path = argTakeStrObj("listdir");
+Object bf_listdir() {
+    Object list = list_new(10);
+    Object path = arg_take_str_obj("listdir");
 #ifdef _WINDOWS_H
-    WIN32_FIND_DATA FindFileData;
-    Object _path = objAdd(path, stringNew("\\*.*"));
-    HANDLE hFind = FindFirstFile(GET_STR(_path), &FindFileData);
-    if (hFind == INVALID_HANDLE_VALUE) {
-        tmRaise("%s is not a directory", path);
+    WIN32_FIND_DATA Find_file_data;
+    Object _path = obj_add(path, string_new("\\*.*"));
+    HANDLE h_find = FindFirstFile(GET_STR(_path), &Find_file_data);
+    if (h_find == INVALID_HANDLE_VALUE) {
+        tm_raise("%s is not a directory", path);
     }
     do {
-        if (strcmp(FindFileData.cFileName, "..")==0 || strcmp(FindFileData.cFileName, ".") == 0) {
+        if (strcmp(Find_file_data.cFileName, "..")==0 || strcmp(Find_file_data.cFileName, ".") == 0) {
             continue;
         }
-        if (FindFileData.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) {
+        if (Find_file_data.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) {
             // do nothing.
         }
-        Object file = stringNew(FindFileData.cFileName);
-        objAppend(list, file);
-    } while (FindNextFile(hFind, &FindFileData));
-    FindClose(hFind);
+        Object file = string_new(Find_file_data.cFileName);
+        obj_append(list, file);
+    } while (FindNextFile(h_find, &Find_file_data));
+    FindClose(h_find);
 #else
-    tmRaise("listdir not implemented in posix.");
+    tm_raise("listdir not implemented in posix.");
 #endif
     return list;
 }
 
-Object bfTraceback() {
+Object bf_traceback() {
     traceback();
     return NONE_OBJECT;
 }
@@ -843,7 +843,7 @@ Object bfTraceback() {
  * create a object in tm
  */ 
 Object bf_newobj() {
-    Object obj = dictNew();
+    Object obj = dict_new();
     return obj;
 }
 
@@ -859,65 +859,77 @@ Object bf_random() {
     int n = rand() % 77;
     // printf("%d\n", n);
     double val = (double)((double) n / (double)77);
-    return tmNumber(val);
+    return tm_number(val);
 }
 
-void builtinsInit() {
-    regBuiltinFunc("load", bf_load);
-    regBuiltinFunc("save", bf_save);
-    regBuiltinFunc("fileAppend", bf_fileAppend);
-    regBuiltinFunc("remove", bfRemove);
-    regBuiltinFunc("print", bf_print);
-    regBuiltinFunc("write", bf_write);
-    regBuiltinFunc("input", bf_input);
-    regBuiltinFunc("str", bf_str);
-    regBuiltinFunc("int", bf_int);
-    regBuiltinFunc("float", bf_float);
-    regBuiltinFunc("load_module", bf_load_module);
-    regBuiltinFunc("globals", bf_globals);
-    regBuiltinFunc("len", bf_len);
-    regBuiltinFunc("exit", bf_exit);
-    regBuiltinFunc("gettype", bf_gettype);
-    regBuiltinFunc("istype", bf_istype);
-    regBuiltinFunc("chr", bf_chr);
-    regBuiltinFunc("ord", bf_ord);
-    regBuiltinFunc("code8", bf_code8);
-    regBuiltinFunc("code16", bf_code16);
-    regBuiltinFunc("code32", bf_code32);
-    regBuiltinFunc("raise", bf_raise);
-    regBuiltinFunc("system", bf_system);
-    regBuiltinFunc("apply", bf_apply);
-    regBuiltinFunc("pow", bf_pow);
-    regBuiltinFunc("range", bf_range);
-    regBuiltinFunc("mmatch", bf_mmatch);
-    regBuiltinFunc("newobj", bf_newobj);
-    regBuiltinFunc("random", bf_random);
+void builtins_init() {
+    reg_builtin_func("load", bf_load);
+    reg_builtin_func("save", bf_save);
+    reg_builtin_func("file_append", bf_file_append);
+    reg_builtin_func("remove", bf_remove);
+    reg_builtin_func("print", bf_print);
+    reg_builtin_func("write", bf_write);
+    reg_builtin_func("input", bf_input);
+    reg_builtin_func("str", bf_str);
+    reg_builtin_func("int", bf_int);
+    reg_builtin_func("float", bf_float);
+    reg_builtin_func("load_module", bf_load_module);
+    reg_builtin_func("globals", bf_globals);
+    reg_builtin_func("len", bf_len);
+    reg_builtin_func("exit", bf_exit);
+    reg_builtin_func("gettype", bf_gettype);
+    reg_builtin_func("istype", bf_istype);
+    reg_builtin_func("chr", bf_chr);
+    reg_builtin_func("ord", bf_ord);
+    reg_builtin_func("code8", bf_code8);
+    reg_builtin_func("code16", bf_code16);
+    reg_builtin_func("code32", bf_code32);
+    reg_builtin_func("raise", bf_raise);
+    reg_builtin_func("system", bf_system);
+    reg_builtin_func("apply", bf_apply);
+    reg_builtin_func("pow", bf_pow);
+    reg_builtin_func("range", bf_range);
+    reg_builtin_func("mmatch", bf_mmatch);
+    reg_builtin_func("newobj", bf_newobj);
+    reg_builtin_func("random", bf_random);
     
     /* functions which has impact on vm follow camel case */
-    regBuiltinFunc("getConstIdx", bfGetConstIdx);
-    regBuiltinFunc("getConst", bfGetConst);
-    regBuiltinFunc("getConstLen", bfGetConstLen);
-    regBuiltinFunc("getExList", bfGetExList);
-    regBuiltinFunc("setVMState", bfSetVMState);
-    regBuiltinFunc("inspectPtr", bfInspectPtr);
-    regBuiltinFunc("getCurrentFrame", bfGetCurrentFrame);
-    regBuiltinFunc("vmopt", bfVmopt);
-    regBuiltinFunc("getVmInfo", bfGetVmInfo);
-    regBuiltinFunc("traceback", bfTraceback);
+    reg_builtin_func("get_const_idx", bf_get_const_idx);
+    reg_builtin_func("get_const", bf_get_const);
+    reg_builtin_func("get_const_len", bf_get_const_len);
+    reg_builtin_func("get_ex_list", bf_get_ex_list);
+    reg_builtin_func("set_v_m_state", bf_set_v_m_state);
+    reg_builtin_func("inspect_ptr", bf_inspect_ptr);
+    reg_builtin_func("get_current_frame", bf_get_current_frame);
+    reg_builtin_func("vmopt", bf_vmopt);
+    reg_builtin_func("get_vm_info", bf_get_vm_info);
+    reg_builtin_func("traceback", bf_traceback);
 
-    regBuiltinFunc("clock", bf_clock);
-    regBuiltinFunc("time0", bf_time0);
-    regBuiltinFunc("add_obj_method", bfAddObjMethod);
-    regBuiltinFunc("readFile", bfReadFile);
-    regBuiltinFunc("iter", bfIter);
-    regBuiltinFunc("next", bfNext);
-    regBuiltinFunc("sleep", bfSleep);
+    reg_builtin_func("clock", bf_clock);
+    reg_builtin_func("time0", bf_time0);
+    reg_builtin_func("add_obj_method", bf_add_obj_method);
+    reg_builtin_func("read_file", bf_read_file);
+    reg_builtin_func("iter", bf_iter);
+    reg_builtin_func("next", bf_next);
+    reg_builtin_func("sleep", bf_sleep);
     
-    regBuiltinFunc("exists", bfExists);
-    regBuiltinFunc("stat", bfStat);
-    regBuiltinFunc("getcwd", bfGetcwd);
-    regBuiltinFunc("chdir", bfChdir);
-    regBuiltinFunc("getosname", bfGetOsName);
-    regBuiltinFunc("listdir", bfListdir);
+    reg_builtin_func("exists", bf_exists);
+    reg_builtin_func("stat", bf_stat);
+    reg_builtin_func("getcwd", bf_getcwd);
+    reg_builtin_func("chdir", bf_chdir);
+    reg_builtin_func("getosname", bf_get_os_name);
+    reg_builtin_func("listdir", bf_listdir);
 }
+
+
+
+
+
+
+
+
+
+
+
+
 

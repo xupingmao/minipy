@@ -1,25 +1,27 @@
 
-def visitIf (item, context):
+def visit_if (item, context):
     # { first : condition, second : body, third : rest }
     condition = item.first
     body = item.second
     rest = item.third
 
-    visitItem(condition, context)
+    visit_item(condition, context)
 
     ref, val = context.pop()
 
     if ref == None:
-        ref = context.getTemp(val)
+        ref = context.get_temp(val)
 
-    context.push (None, sformat("if (isTrue(%s)) { ", ref))
+    context.push (None, sformat("if (is_true(%s)) { ", ref))
 
-    visitItem(body, context)
+    visit_item(body, context)
 
     context.push (None, "}")
 
     if rest != None:
         context.push(None, "else { ")
-        visitItem(rest, context)
+        visit_item(rest, context)
         context.push(None, "}")
+
+
 

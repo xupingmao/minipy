@@ -81,7 +81,7 @@ def pyeval(src, glo_vars = None, debug = False):
             print(' ' * 10, cyc, tmcodes[op], v)
         cyc += 1
         if op == LOAD_CONSTANT:
-            r = getConst(v)
+            r = get_const(v)
             stack.append(r)
             if debug:
                 print(' ' * 30, '<==' + str(r))
@@ -92,7 +92,7 @@ def pyeval(src, glo_vars = None, debug = False):
             r = stack.pop()
             loc_vars[v] = r
         elif op == LOAD_GLOBAL:
-            name = getConst(v)
+            name = get_const(v)
             if debug:
                 print(' ' * 30, '<==' + name)
             if name in glo_vars:
@@ -101,7 +101,7 @@ def pyeval(src, glo_vars = None, debug = False):
                 r = __builtins__[name]
             stack.append(r)
         elif op == STORE_GLOBAL:
-            name = getConst(v)
+            name = get_const(v)
             if debug:
                 print(' '* 30, '==>' + name)
             r = stack.pop()
@@ -204,6 +204,18 @@ if __name__ == "__main__":
     if argc == 2:
         text = load(argv[1])
         pyeval(text, None, True)
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

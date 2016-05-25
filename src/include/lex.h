@@ -20,11 +20,11 @@
 
 typedef struct {
     int type;
-    char sValue[200];
-    double dValue;
-}LexToken;
+    char s_value[200];
+    double d_value;
+}Lex_token;
 
-typedef struct LexState{
+typedef struct Lex_state{
 	int cur;
 	int next;
 	int len;
@@ -39,17 +39,17 @@ typedef struct LexState{
 
 	int recordrf; // whether record RF
 	int lineno; // line number.
-	int tokenCount; // count of words
+	int token_count; // count of words
 	char error[2048];
 	int type;
 	char name[1024];
 	double number;
-}LexState;
+}Lex_state;
 
-LexState* lexNew(FILE* fp, char* buf);
+Lex_state* lex_new(FILE* fp, char* buf);
 /* Functions */
-void lexNext(LexState* s);
-void lexError(LexState* s, char* fmt, ...);
+void lex_next(Lex_state* s);
+void lex_error(Lex_state* s, char* fmt, ...);
 
 
 
@@ -88,8 +88,20 @@ int issymbol(int c) {
 }
 
 
-void charToString(char* dest, char c){
+void char_to_string(char* dest, char c){
     dest[0] = c;dest[1] = 0;
 }
 #endif
+
+
+
+
+
+
+
+
+
+
+
+
 

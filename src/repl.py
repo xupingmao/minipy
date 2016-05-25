@@ -3,7 +3,7 @@ import encode
 
 compilefile = encode.compilefile
 
-def replPrint(p, n = 0, depth = 2):
+def repl_print(p, n = 0, depth = 2):
     if depth <= 0:
         print("...")
         return
@@ -15,7 +15,7 @@ def replPrint(p, n = 0, depth = 2):
         for key in p:
             printf(' '*(n+1)+str(key))
             printf(":")
-            replPrint(p[key], n+1, depth-1)
+            repl_print(p[key], n+1, depth-1)
         print(' '*n+"}")
     elif gettype(p) == 'list':
         if depth == 1:
@@ -24,7 +24,7 @@ def replPrint(p, n = 0, depth = 2):
         printf("%s[\n", n * ' ')
         for item in p:
             #printf((n+1) * ' ')
-            replPrint(item, n+1, depth-1)
+            repl_print(item, n+1, depth-1)
             #printf(",")
         printf('%s]\n', n * ' ')
     elif gettype(p) == "string":
@@ -49,7 +49,7 @@ def remove_consts(g):
         del g[k]
 
 def getmem():
-    return str(getVmInfo().alloc_mem / 1024) + ' kb'
+    return str(get_vm_info().alloc_mem / 1024) + ' kb'
 
 def run(path, args = None):
     bak_argv = ARGV
@@ -63,7 +63,7 @@ def run(path, args = None):
 def repl():
     import pyeval
     fpyeval = pyeval.pyeval
-    print("Welcome To TinyMatrix!!!")
+    print("Welcome To Tiny_matrix!!!")
     
     global debug
     debug = 0
@@ -82,9 +82,20 @@ def repl():
                     g['debug'] = 0
                 v = fpyeval(x, g, g['debug'])
                 if v != None:
-                    replPrint(v)
+                    repl_print(v)
             except Exception as e:
                 traceback()
                 # print(e)
 if __name__ == '__main__':
     repl()
+
+
+
+
+
+
+
+
+
+
+

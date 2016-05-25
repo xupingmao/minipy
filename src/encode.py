@@ -5,11 +5,11 @@ if "tm" not in globals():
 from parse import *
 from tmcode import *
 
-_asmCtx = None
-_codeList = None
-_extCodeList = None # extra _codeList for optimize.
+_asm_ctx = None
+_code_list = None
+_ext_code_list = None # extra _code_list for optimize.
 
-_jmpList = [
+_jmp_list = [
     JUMP_ON_FALSE, 
     JUMP_ON_TRUE, 
     POP_JUMP_ON_FALSE, 
@@ -19,7 +19,7 @@ _jmpList = [
 ]
 
 
-_opDict = {
+_op_dict = {
     '+':ADD,
     '-':SUB,
     '*':MUL,
@@ -34,7 +34,7 @@ _opDict = {
     'get':GET
     #'notin' : NOTIN,
 }
-_opExtDict = {
+_op_ext_dict = {
     '+=' : ADD,
     '-=' : SUB,
     '*=' : MUL,
@@ -42,31 +42,31 @@ _opExtDict = {
     '%=' : MOD
 }
 
-_beginTagList = [-1]
-_endTagList = [-1]
+_begin_tag_list = [-1]
+_end_tag_list = [-1]
 
-_tagCnt = 0
-_globalIndex = 0
+_tag_cnt = 0
+_global_index = 0
 
 
-def loadConst(const):
-    emit(LOAD_CONSTANT, getConstIdx(const.val))
+def load_const(const):
+    emit(LOAD_CONSTANT, get_const_idx(const.val))
 
 class Scope:
     def __init__(self):
         self.locals = []
         self.globals = []
-        self.tempVars = []
+        self.temp_vars = []
         self.jmps = 0 # try block count.
         
-    def addGlobal(self, v):
+    def add_global(self, v):
         if v not in self.globals:
             self.globals.append(v)
 
-    def getNewTemp(self):
-        tempSize = len(self.tempVars)
-        tempName = "%" + str(tempSize)
-        self.tempVars.append(tempName)
+    def get_new_temp(self):
+        temp_size = len(self.temp_vars)
+        temp_name = "%" + str(temp_size)
+        self.temp_vars.append(temp_name)
         return None
             
 class AsmContext:
@@ -81,24 +81,24 @@ class AsmContext:
     def pop(self):
         self.scopes.pop()
         
-    def addLocal(self, v):
+    def add_local(self, v):
         if v.val not in self.scope.locals:
             self.scope.locals.append(v.val)
 
     def load(self, v):
         # same as store, check scope level first
         if len(self.scopes) == 1:
-            idx = getConstIdx(v.val)
+            idx = get_const_idx(v.val)
             emit(LOAD_GLOBAL, idx)
         # check locals
         elif v.val not in self.scope.locals:
-            idx = getConstIdx(v.val)
+            idx = get_const_idx(v.val)
             emit(LOAD_GLOBAL, idx)
         else:
             idx = self.scope.locals.index(v.val)
             emit(LOAD_LOCAL, idx)
             
-    def indexLocal(self, v):
+    def index_local(self, v):
         if v.val not in self.scope.locals:
             self.scope.locals.append(v.val)
         return self.scope.locals.index(v.val)
@@ -106,80 +106,80 @@ class AsmContext:
     def store(self, v):
         # first ,check scope level
         if len(self.scopes) == 1:
-            idx = getConstIdx(v.val)
+            idx = get_const_idx(v.val)
             emit(STORE_GLOBAL, idx)
         # check if in globals defined in the function, 
         # or store as local
         elif v.val not in self.scope.globals:
-            idx = self.indexLocal(v)
+            idx = self.index_local(v)
             emit(STORE_LOCAL, idx)
         else:
-            idx = getConstIdx(v.val)
+            idx = get_const_idx(v.val)
             emit(STORE_GLOBAL, idx)
 
-def asmInit():
-    global _asmCtx
-    global _codeList
-    global _extCodeList
+def asm_init():
+    global _asm_ctx
+    global _code_list
+    global _ext_code_list
 
-    _asmCtx = AsmContext()
-    _codeList = []
-    _extCodeList = []
+    _asm_ctx = AsmContext()
+    _code_list = []
+    _ext_code_list = []
 
-def chkTryBlock(tag):
-    if _asmCtx.scope.jmps > 0:
+def chk_try_block(tag):
+    if _asm_ctx.scope.jmps > 0:
         return 0
-    _asmCtx.scope.jmps += 1
+    _asm_ctx.scope.jmps += 1
     emit(SETJUMP, tag)
     return 1
 
-def exitTryBlock():
-    _asmCtx.scope.jmps -= 1
+def exit_try_block():
+    _asm_ctx.scope.jmps -= 1
     
-def asm_switch__codeList():
-    global _codeList
-    global _extCodeList
-    _codeList, _extCodeList = _extCodeList, _codeList
+def asm_switch__code_list():
+    global _code_list
+    global _ext_code_list
+    _code_list, _ext_code_list = _ext_code_list, _code_list
 
 def asm_get_regs():
-    return len(_asmCtx.scope.locals)
+    return len(_asm_ctx.scope.locals)
 
-def storeGlobal(glo):
-    idx = getConstIdx(glo.val)
+def store_global(glo):
+    idx = get_const_idx(glo.val)
     emit(STORE_GLOBAL, idx)
 
-def addGlobal(v):
-    _asmCtx.scope.globals.append(v.val)
+def add_global(v):
+    _asm_ctx.scope.globals.append(v.val)
 # opcode : op
 
 def emit(op, val = 0):
     ins = [op, val]
-    _codeList.append(ins)
+    _code_list.append(ins)
     return ins
     
-def emitDef(v):
-    idx = getConstIdx(v.val)
+def emit_def(v):
+    idx = get_const_idx(v.val)
     emit(TM_DEF, idx)
 
 # inside function, assignment will be made to locals by default,
 # except that a global is declared. so we must save the declared
 # globals to a local scope.
 # 
-def emitLoad(v):
+def emit_load(v):
     if v == None:
         emit(LOAD_NONE)
         return;
     t = v.type
     if t == 'string' or t == 'number':
-        loadConst(v)
+        load_const(v)
     elif t == 'None':
         emit(LOAD_NONE, 0)
     elif t == 'name':
-        _asmCtx.load(v)
+        _asm_ctx.load(v)
     else:
         print('LOAD_LOCAL ' + str(v.val))
         
-def saveAsBin(lst):
+def save_as_bin(lst):
     bin = ''
     # print lst
     for _ins in lst:
@@ -191,7 +191,7 @@ def saveAsBin(lst):
             bin += code8(ins) + code16(val)
     return bin
 
-def findTag(code, val):
+def find_tag(code, val):
     cur = 0
     for ins in code:
         if ins[0] == TAG and ins[1] == val:
@@ -200,81 +200,81 @@ def findTag(code, val):
         if ins[0] != TAG:
             cur+=1
 
-def handleJmps(code):
-    codeSize = len(code)
+def handle_jmps(code):
+    code_size = len(code)
     cur = 0
-    newCode = []
+    new_code = []
     for ins in code:
-        if ins[0] in _jmpList:
-            pos = findTag(code, ins[1])
+        if ins[0] in _jmp_list:
+            pos = find_tag(code, ins[1])
             gap = pos - cur
             if gap < 0:ins = [UP_JUMP, -gap]
             else:ins[1] = gap
         if ins[0] != TAG:
             cur+=1
-            newCode.append(ins)
-    return newCode
+            new_code.append(ins)
+    return new_code
     
 def optimize(x, optimize_jmp = False):
     last = 0
     tag = 0
-    nx = handleJmps(x)
+    nx = handle_jmps(x)
     return nx
     
     
-def genCode(lst = False):
-    global _codeList
-    global _extCodeList
+def gen_code(lst = False):
+    global _code_list
+    global _ext_code_list
 
     emit(TM_EOP)
-    #x = gen_constants(tagsize) + _codeList
-    x = _extCodeList + _codeList
+    #x = gen_constants(tagsize) + _code_list
+    x = _ext_code_list + _code_list
     # release memory
-    _codeList = []
-    _extCodeList = []
+    _code_list = []
+    _ext_code_list = []
     x = optimize(x)
     if lst:return x
     for i in x:
         if i[1] == None:
             print(i)
-    return saveAsBin(x)
+    return save_as_bin(x)
 
 
 def def_local(v):
-    _asmCtx.addLocal(v)
+    _asm_ctx.add_local(v)
 
 def get_loc_num():
-    return len(_asmCtx.scope.locals)
+    return len(_asm_ctx.scope.locals)
 
 def push_scope():
-    _asmCtx.push()
+    _asm_ctx.push()
 
 def pop_scope():
-    _asmCtx.pop()
+    _asm_ctx.pop()
 
 def emit_store(v):
-    _asmCtx.store(v)
+    _asm_ctx.store(v)
 
 
 def encode_error(token, msg):
     global _ctx
     compile_error("encode", _ctx.src, token, msg)
     
-def loadAttr(name):
+def load_attr(name):
     if name.type == 'name':
         name.type = 'string'
-    emitLoad(name)
+    emit_load(name)
     
 def store(t):
     if t.type == 'name':
         emit_store(t)
     elif t.type == 'get':
-        encodeItem(t.first)
-        encodeItem(t.second)
+        encode_item(t.first)
+        encode_item(t.second)
         emit(SET)
     elif t.type == 'attr':
-        encodeItem(t.first)
-        loadAttr(t.second)
+        encode_item(t.first)
+        load_attr(t.second)
         emit(SET)
     elif t.type == ',':
         # remains unsure.
@@ -282,44 +282,44 @@ def store(t):
         store(t.second)
 
 def newglo():
-    global _globalIndex
-    _globalIndex += 1
-    return Token("name", "#" + str(_globalIndex-1))
+    global _global_index
+    _global_index += 1
+    return Token("name", "#" + str(_global_index-1))
 
 def newtag():
-    global _tagCnt
-    _tagCnt+=1
-    return _tagCnt-1
+    global _tag_cnt
+    _tag_cnt+=1
+    return _tag_cnt-1
 
 def jump(p, ins = JUMP):
     emit(ins, p)
 
-def emitTag(p):
+def emit_tag(p):
     emit(TAG, p)
     
 
 def build_set(self, key, val):
     node = AstNode('=')
     node.first = val
-    setNode = AstNode('get')
-    setNode.first = key
-    setNode.second = val
-    node.first = setNode
+    set_node = AstNode('get')
+    set_node.first = key
+    set_node.second = val
+    node.first = set_node
     return node
 
 def encode_op(tk):
-    encodeItem(tk.first)
-    encodeItem(tk.second)
-    emit(_opDict[tk.type])
+    encode_item(tk.first)
+    encode_item(tk.second)
+    emit(_op_dict[tk.type])
 
-def encodeNotin(tk):
-    encodeIn(tk)
+def encode_notin(tk):
+    encode_in(tk)
     emit(NOT)
 
-def encodeInplaceOp(tk):
-    encodeItem(tk.first)
-    encodeItem(tk.second)
-    emit(_opExtDict[tk.type])
+def encode_inplace_op(tk):
+    encode_item(tk.first)
+    encode_item(tk.second)
+    emit(_op_ext_dict[tk.type])
     store(tk.first)
     
 # [1, 2, 3] 
@@ -327,7 +327,7 @@ def encodeInplaceOp(tk):
 #     ^
 #    ^  3
 #  1  2
-def encodeList0(v):
+def encode_list0(v):
     if v == None: return
     newlist = []
     while v.type == ',':
@@ -336,27 +336,27 @@ def encodeList0(v):
     newlist.append(v)
     newlist.reverse()
     for item in newlist:
-        encodeItem(item)
+        encode_item(item)
         emit(LIST_APPEND)
 
         
-def encodeList(v):
+def encode_list(v):
     emit(LIST, 0)
-    # encodeList0(v.first)
+    # encode_list0(v.first)
     if v.first == None:
         return 0
     if gettype(v.first) == "list":
         for item in v.first:
-            encodeItem(item)
+            encode_item(item)
             emit(LIST_APPEND)
     else:
-        encodeItem(v.first)
+        encode_item(v.first)
         emit(LIST_APPEND)
     return 1
 
     #emit(LIST, tk_list_len(v.first))
 
-def isConstList(list):
+def is_const_list(list):
     for item in list:
         if not hasattr(item, "type"):
             return False
@@ -364,40 +364,40 @@ def isConstList(list):
             return False
     return True
 
-def getConstList(list):
-    asm_switch__codeList()
+def get_const_list(list):
+    asm_switch__code_list()
     g = newglo()
     emit(LIST)
     for item in list:
-        encodeItem(item)
+        encode_item(item)
         emit(LIST_APPEND)
-    storeGlobal(g)
-    asm_switch__codeList()
+    store_global(g)
+    asm_switch__code_list()
     return g
     
     
-def encodeIf(tk):
+def encode_if(tk):
     # refuse assignment in if condition
     if tk.first.type == '=':
         encode_error(tk.first, 'do not allow assignment in if condition')
-    encodeItem(tk.first)
+    encode_item(tk.first)
     else_tag,end_tag = newtag(), newtag()
     jump(else_tag, POP_JUMP_ON_FALSE)
     # optimize for `if x in const_list`
-    encodeItem(tk.second)
+    encode_item(tk.second)
     jump(end_tag)
-    emitTag(else_tag)
-    encodeItem(tk.third)
-    emitTag(end_tag)
+    emit_tag(else_tag)
+    encode_item(tk.third)
+    emit_tag(end_tag)
     
     
-def encodeAssign(tk):
+def encode_assign(tk):
     if gettype(tk.second) == "list":
         for item in tk.second:
-            encodeItem(item)
+            encode_item(item)
         n = len(tk.second)
     else:
-        encodeItem(tk.second)
+        encode_item(tk.second)
         n = 1
     if gettype(tk.first) == "list":
         if n == 1:
@@ -409,45 +409,45 @@ def encodeAssign(tk):
     else:
         store(tk.first)
     
-def encodeTuple(tk):
-    return encodeItem(tk.first) + encodeItem(tk.second)
+def encode_tuple(tk):
+    return encode_item(tk.first) + encode_item(tk.second)
     
-def encodeDict(tk):
+def encode_dict(tk):
     items = tk.first
     emit(DICT, 0)
     if items != None:
         for item in items:
-            encodeItem(item[0])
-            encodeItem(item[1])
+            encode_item(item[0])
+            encode_item(item[1])
             emit(DICT_SET)
     
-def encodeNeg(tk):
+def encode_neg(tk):
     if tk.first.type == 'number':
         tk = tk.first
         tk.val = -tk.val
-        encodeItem(tk)
+        encode_item(tk)
     else:
-        encodeItem(tk.first)
+        encode_item(tk.first)
         emit(NEG)
         
-def encodeNot(tk):
-    encodeItem(tk.first)
+def encode_not(tk):
+    encode_item(tk.first)
     emit(NOT)
     
     
-def encodeCall(tk):
-    encodeItem(tk.first)
+def encode_call(tk):
+    encode_item(tk.first)
     if gettype(tk.second) == "list":
         for item in tk.second:
-            encodeItem(item)
+            encode_item(item)
         n = len(tk.second)
     else:
-        n = encodeItem(tk.second)
+        n = encode_item(tk.second)
     emit(CALL, n)
 
     
-def encodeDef(tk, in_class = 0):
-    emitDef(tk.first)
+def encode_def(tk, in_class = 0):
+    emit_def(tk.first)
     # emit(TM_DEF, 0)
     # regs = []
     # emit(0, 0) # filename
@@ -469,26 +469,26 @@ def encodeDef(tk, in_class = 0):
             break
         if item.second:
             varg += 1
-            encodeItem(item.second)
+            encode_item(item.second)
             store(item.first)
         else:
             parg += 1
     if not narg:
-        lineNo = getlineno(tk.first)
-        if lineNo != None:
-            emit(TM_LINE, lineNo)
+        line_no = getlineno(tk.first)
+        if line_no != None:
+            emit(TM_LINE, line_no)
         emit(LOAD_PARAMS, parg*256 + varg)
-    encodeItem(tk.third)
+    encode_item(tk.third)
     emit(TM_EOF)
     #regs[1] = asm_get_regs()
-    #emitTag(func_end)
+    #emit_tag(func_end)
     #loc_num_ins[1] = get_loc_num()
     pop_scope()
     if not in_class:
         emit_store(tk.first)
  
 
-def encodeClass(tk):
+def encode_class(tk):
     buildclass = []
     emit(DICT, 0)
     store(tk.first)
@@ -496,55 +496,55 @@ def encodeClass(tk):
         if func.type == "pass": continue
         if func.type != "def":
             encode_error(func, "non-func expression in class is invalid")
-        encodeDef(func, 1)
-        emitLoad(tk.first)
-        loadAttr(func.first)
+        encode_def(func, 1)
+        emit_load(tk.first)
+        load_attr(func.first)
         emit(SET)
 
-def encodeReturn(tk):
+def encode_return(tk):
     if tk.first:
         if gettype(tk.first) == "list":
             emit(LIST)
             for item in tk.first:
-                encodeItem(item)
+                encode_item(item)
                 emit(LIST_APPEND)
         else:
-            encodeItem(tk.first)
+            encode_item(tk.first)
     else:
         # is this necessary ?
-        emitLoad(None);
+        emit_load(None);
     emit(RETURN)
 
-def encodeWhile(tk):
+def encode_while(tk):
     start_tag, end_tag = newtag(), newtag()
     # set while stack
-    _beginTagList.append(start_tag)
-    _endTagList.append(end_tag)
+    _begin_tag_list.append(start_tag)
+    _end_tag_list.append(end_tag)
     ###
-    emitTag(start_tag)
-    encodeItem(tk.first)
+    emit_tag(start_tag)
+    encode_item(tk.first)
     jump(end_tag, POP_JUMP_ON_FALSE)
-    encodeItem(tk.second)
+    encode_item(tk.second)
     #emit(UP_JUMP, start_tag)
     jump(start_tag)
-    emitTag(end_tag)
+    emit_tag(end_tag)
     # clear while stack
-    _beginTagList.pop()
-    _endTagList.pop()
+    _begin_tag_list.pop()
+    _end_tag_list.pop()
     
-def encodeContinue(tk):
-    #emit( UP_JUMP, _beginTagList[-1] )
-    jump(_beginTagList[-1])
+def encode_continue(tk):
+    #emit( UP_JUMP, _begin_tag_list[-1] )
+    jump(_begin_tag_list[-1])
 
     
-def encodeBreak(tk):
-    jump(_endTagList[-1])
+def encode_break(tk):
+    jump(_end_tag_list[-1])
 
-def encode_impIt_one(mod, item):
-    # encodeItem(Token("name", "_import"))
-    encodeItem(mod)
+def encode_imp_it_one(mod, item):
+    # encode_item(Token("name", "_import"))
+    encode_item(mod)
     item.type = 'string'
-    encodeItem(item)
+    encode_item(item)
     emit(OP_IMPORT, 2)
 
 def _import_name2str(mod):
@@ -558,174 +558,174 @@ def _import_name2str(mod):
     elif mod.type == 'string':
         return mod
     
-def encode_impoI_many(mod, items):
+def encode_impo_i_many(mod, items):
     mod = _import_name2str(mod)
     if items.type == ',':
-        encode_impoI_many(mod, items.first)
-        encode_impoI_many(mod, items.second)
+        encode_impo_i_many(mod, items.first)
+        encode_impo_i_many(mod, items.second)
     else:
-        encode_impIt_one(mod, items)
+        encode_imp_it_one(mod, items)
 
-def encodeFrom(tk):
-    encode_impoI_many(tk.first, tk.second)
+def encode_from(tk):
+    encode_impo_i_many(tk.first, tk.second)
 
-def _encodeImport(item):
+def _encode_import(item):
     item.type = 'string'
-    encodeItem(item)
+    encode_item(item)
     emit(OP_IMPORT, 1)
 
-def encodeImport(tk):
+def encode_import(tk):
     if tk.first.type == ',':
         tk = tk.first
-        _encodeImport(tk.first)
-        _encodeImport(tk.second)
+        _encode_import(tk.first)
+        _encode_import(tk.second)
     else:
-        _encodeImport(tk.first)
+        _encode_import(tk.first)
 
 
-def encodeAnd(tk):
+def encode_and(tk):
     end = newtag()
-    encodeItem(tk.first)
+    encode_item(tk.first)
     emit(JUMP_ON_FALSE, end)
-    encodeItem(tk.second)
+    encode_item(tk.second)
     emit(AND)
-    emitTag(end)
+    emit_tag(end)
     
 
-def encodeOr(tk):
+def encode_or(tk):
     end = newtag()
-    encodeItem(tk.first)
+    encode_item(tk.first)
     emit(JUMP_ON_TRUE, end)
-    encodeItem(tk.second)
+    encode_item(tk.second)
     emit(OR)
-    emitTag(end)
+    emit_tag(end)
     
-def encodeRawList(list):
+def encode_raw_list(list):
     if gettype(list) == "list":
         emit(LIST)
         for item in list:
-            encodeItem(item)
+            encode_item(item)
             emit(LIST_APPEND)
         return len(list)
     else:
-        encodeItem(list)
+        encode_item(list)
         return 1
 
-def encodeFor(tk):
+def encode_for(tk):
     start_tag = newtag()
     end_tag = newtag()
     # set for stack
-    _beginTagList.append(start_tag)
-    _endTagList.append(end_tag)
+    _begin_tag_list.append(start_tag)
+    _end_tag_list.append(end_tag)
     ### load index and iterator
-    encodeRawList(tk.first.second)
+    encode_raw_list(tk.first.second)
     emit(ITER_NEW) # create a iterator
-    emitTag(start_tag)
+    emit_tag(start_tag)
     jump(end_tag, TM_NEXT)
     store(tk.first.first)
-    encodeItem(tk.second)
+    encode_item(tk.second)
     jump(start_tag)
-    emitTag(end_tag)
+    emit_tag(end_tag)
     # clear for stack
-    _beginTagList.pop()
-    _endTagList.pop()
+    _begin_tag_list.pop()
+    _end_tag_list.pop()
     emit(POP) # pop iterator.
     
-def encodeGlobal(tk):
-    addGlobal(tk.first)
+def encode_global(tk):
+    add_global(tk.first)
     
-def encodeTry(tk):
+def encode_try(tk):
     exception = newtag()
     end = newtag()
-    if not chkTryBlock(exception):
+    if not chk_try_block(exception):
         encode_error(tk, "do not support cursive try")
-    encodeItem(tk.first)
+    encode_item(tk.first)
     emit(CLRJUMP)
     jump(end)
-    emitTag(exception)
+    emit_tag(exception)
     if tk.second != None:
         emit(LOAD_EX)
         store(tk.second)
     else:
         emit(POP)
-    encodeItem(tk.third)
-    emitTag(end)
-    exitTryBlock()
+    encode_item(tk.third)
+    emit_tag(end)
+    exit_try_block()
     
-def doNothing(tk):
+def do_nothing(tk):
     pass
 
-def encodeDel(tk):
+def encode_del(tk):
     item = tk.first
     if item.type != 'get' and item.type != 'attr':
         encode_error(item, 'require get or attr expression')
-    encodeItem(item.first)
+    encode_item(item.first)
     if item.type == 'attr':
-        loadAttr(item.second)
+        load_attr(item.second)
     else:
-        encodeItem(item.second)
+        encode_item(item.second)
     emit(TM_DEL)
     
-def encodeAnnotation(tk):
+def encode_annotation(tk):
     token = tk.first
     if token.val == "debugger":
         emit(TM_DEBUG)
     
-def encodeAttr(tk):
+def encode_attr(tk):
     tk.second.type = 'string'
-    encodeItem(tk.first)
-    encodeItem(tk.second)
+    encode_item(tk.first)
+    encode_item(tk.second)
     emit(GET)
     
-def encodeIn(tk):
-    encodeItem(tk.first)
-    if gettype(tk.second) == 'list' and isConstList(tk.second):
-        g = getConstList(tk.second)
-        emitLoad(g)
+def encode_in(tk):
+    encode_item(tk.first)
+    if gettype(tk.second) == 'list' and is_const_list(tk.second):
+        g = get_const_list(tk.second)
+        emit_load(g)
     else:
-        encodeItem(tk.second)
+        encode_item(tk.second)
     emit(OP_IN)    
     
-_encodeDict = {
-    'if': encodeIf,
-    '=': encodeAssign,
-    ',': encodeTuple,
-    'dict': encodeDict,
-    'call': encodeCall,
-    'neg': encodeNeg,
-    'not': encodeNot,
-    'list':encodeList,
-    'def':encodeDef,
-    'del':encodeDel,
-    'class':encodeClass,
-    'return':encodeReturn,
-    'while':encodeWhile,
-    'continue': encodeContinue,
-    'break':encodeBreak,
-    'from':encodeFrom,
-    'import':encodeImport,
-    'and':encodeAnd,
-    'or':encodeOr,
-    'for':encodeFor,
-    'global':encodeGlobal,
-    'name':emitLoad,
-    'number':emitLoad,
-    'string':emitLoad,
-    'None':emitLoad,
-    'True':emitLoad,
-    'False':emitLoad,
-    'try':encodeTry,
-    'pass':doNothing,
-    'notin':encodeNotin,
-    'attr':encodeAttr,
-    'in': encodeIn,
-    '@':encodeAnnotation,
+_encode_dict = {
+    'if': encode_if,
+    '=': encode_assign,
+    ',': encode_tuple,
+    'dict': encode_dict,
+    'call': encode_call,
+    'neg': encode_neg,
+    'not': encode_not,
+    'list':encode_list,
+    'def':encode_def,
+    'del':encode_del,
+    'class':encode_class,
+    'return':encode_return,
+    'while':encode_while,
+    'continue': encode_continue,
+    'break':encode_break,
+    'from':encode_from,
+    'import':encode_import,
+    'and':encode_and,
+    'or':encode_or,
+    'for':encode_for,
+    'global':encode_global,
+    'name':emit_load,
+    'number':emit_load,
+    'string':emit_load,
+    'None':emit_load,
+    'True':emit_load,
+    'False':emit_load,
+    'try':encode_try,
+    'pass':do_nothing,
+    'notin':encode_notin,
+    'attr':encode_attr,
+    'in': encode_in,
+    '@':encode_annotation,
 }
 
-for k in _opDict:
-    _encodeDict[k] = encode_op
-for k in _opExtDict:
-    _encodeDict[k] = encodeInplaceOp
+for k in _op_dict:
+    _encode_dict[k] = encode_op
+for k in _op_ext_dict:
+    _encode_dict[k] = encode_inplace_op
 
 def getlineno(tk):
     if hasattr(tk, 'pos'):
@@ -734,7 +734,7 @@ def getlineno(tk):
         return getlineno(tk.first)
     return None
     
-def encodeItem(tk):
+def encode_item(tk):
     if tk == None: return 0
     # encode for statement list.
     if gettype(tk) == 'list':
@@ -744,21 +744,21 @@ def encodeItem(tk):
                 continue
             lineno = getlineno(i)
             if lineno != None: emit(TM_LINE, lineno)
-            encodeItem(i)
+            encode_item(i)
             if i.type == 'call': emit(POP)
         return
-    r = _encodeDict[tk.type](tk)
+    r = _encode_dict[tk.type](tk)
     if r != None:return r
     return 1
 
 def encode(content):
-    global _tagCnt
+    global _tag_cnt
     global _bin 
     global _bin_ext
-    _tagCnt = 0
-    _globalIndex = 0
+    _tag_cnt = 0
+    _global_index = 0
     r = parse(content)
-    encodeItem(r)
+    encode_item(r)
 
 class EncodeCtx:
     def __init__(self, src):
@@ -767,11 +767,11 @@ class EncodeCtx:
 def compile(src, des = None):
     global _ctx
     # lock here
-    asmInit()
+    asm_init()
     _ctx = EncodeCtx(src)
     encode(src)
     _ctx = None
-    code = genCode()
+    code = gen_code()
     # unlock
     if des: save(des, code)
     return code
@@ -797,14 +797,26 @@ def main():
         import tmcode
         tmcodes = tmcode.tmcodes
         # from tools import *
-        replPrint = repl.replPrint
+        repl_print = repl.repl_print
         code = compilefile(ARGV[1])
         list = split_instr(code)
         for item in list:
             print(tmcodes[item[0]], item[1])
-        # replPrint(code, 0, 3)
+        # repl_print(code, 0, 3)
     elif len(ARGV) == 3:
         compile(ARGV[1], ARGV[2])
 
 if __name__ == "__main__":
     main()
+
+
+
+
+
+
+
+
+
+
+
+

@@ -18,27 +18,29 @@ then you can get the C code.
 ```
 #include "tm.c"
 /* DEFINE START */
-Object helloC0;
-Object helloC1;
-Object helloC2;
-Object helloC3;
+Object hello_c0;
+Object hello_c1;
+Object hello_c2;
+Object hello_c3;
 Object hello0g;
-Object helloV__name__;
+Object hello_v__name__;
 /* DEFINE END */
 void hello_main(){
-hello0g=dictNew();
-helloC0=stringNew("__main__");
-helloC1=stringNew("__name__");
-helloC2=stringNew("print");
-helloC3=stringNew("hello,world");
-tmDefMod("hello.py", hello0g);
-helloV__name__=helloC0;
-objSet(hello0g, helloC1, helloV__name__);
-tmCall(2, tmGetGlobal(hello0g,helloC2), 1 ,helloC3);
+hello0g=dict_new();
+hello_c0=string_new("__main__");
+hello_c1=string_new("__name__");
+hello_c2=string_new("print");
+hello_c3=string_new("hello,world");
+tm_def_mod("hello.py", hello0g);
+hello_v__name__=hello_c0;
+obj_set(hello0g, hello_c1, hello_v__name__);
+tm_call(2, tm_get_global(hello0g,hello_c2), 1 ,hello_c3);
 }
 
 int main(int argc, char* argv[]) {
-tmRunFunc(argc, argv, "hello.py", hello_main);
+tm_run_func(argc, argv, "hello.py", hello_main);
 }
 ```
+
+
 

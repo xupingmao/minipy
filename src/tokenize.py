@@ -32,20 +32,20 @@ def find_error_line(s, pos):
     r += "     "+" "*x+"^" +'\n'
     return r
 
-def printToken(token):
+def print_token(token):
     for key in token:
         print(key, token[key])
         if gettype(token[key]) == "dict":
-            printToken(token[key])
+            print_token(token[key])
     
-def compile_error(ctx, s, token, eMsg = ""):
+def compile_error(ctx, s, token, e_msg = ""):
     if token != None:
-        # printToken(token)
+        # print_token(token)
         pos = findpos(token)
         r = find_error_line(s, pos)
-        raise Exception('Error at '+ctx+':\n'+r + eMsg)
+        raise Exception('Error at '+ctx+':\n'+r + e_msg)
     else:
-        raise Exception(eMsg)
+        raise Exception(e_msg)
     #raise
 
 ISYMBOLS = '-=[];,./!%*()+{}:<>@^$'
@@ -260,3 +260,14 @@ def _main():
 
 if __name__ == "__main__":
     _main()
+
+
+
+
+
+
+
+
+
+
+

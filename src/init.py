@@ -286,7 +286,7 @@ def execfile(path, chdir = True):
 def _assert(exp):
     fidx = vmopt("frame.index")
     info = vmopt("frame.info", fidx-1)
-    if not exp: raise "AssertionError, " + info.fname + ":" + str(info.lineno)
+    if not exp: raise "Assertion_error, " + info.fname + ":" + str(info.lineno)
     
 def __debug__(fidx):
     info = vmopt("frame.info", fidx)
@@ -294,7 +294,7 @@ def __debug__(fidx):
     print(info.fname, info.lineno)
     for i in range(lcnt):
         printf("#"+str(i))
-        replPrint(vmopt("frame.local", fidx, i))
+        repl_print(vmopt("frame.local", fidx, i))
     input("continue")
     
 add_obj_method("str", "format", sformat)
@@ -353,3 +353,15 @@ def boot(loadlibs=True):
         else:
             filename = "D:\\temp\\subpy\\python\\libs\\" + ARGV[0]
             execfile(filename, False)
+
+
+
+
+
+
+
+
+
+
+
+
