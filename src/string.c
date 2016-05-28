@@ -66,118 +66,6 @@ int string_index(String* s1, String* s2, int start) {
 }
 
 
-Object string_substring(String* str, int start, int end) {
-    int max_end, len, i;
-    char* s;
-    Object new_str;
-    start = start >= 0 ? start : start + str->len;
-    end = end >= 0 ? end : end + str->len;
-    max_end = str->len;
-    end = max_end < end ? max_end : end;
-    len = end - start;
-    if (len <= 0)
-        return sz_to_string("");
-    new_str = string_alloc(NULL, len);
-    s = GET_STR(new_str);
-    for (i = start; i < end; i++) {
-        *(s++) = str->value[i];
-    }
-    return new_str;
-}
-
-Object string_find() {
-    static const char* sz_func = "find";
-    Object self = arg_take_str_obj(sz_func);
-    Object str = arg_take_str_obj(sz_func);
-    return tm_number(string_index(self.value.str, str.value.str, 0));
-}
-
-Object string_builtin_substring() {
-    static const char* sz_func = "substring";
-    Object self = arg_take_str_obj(sz_func);
-    int start = arg_take_int(sz_func);
-    int end = arg_take_int(sz_func);
-    return string_substring(self.value.str, start, end);
-}
-
-Object string_upper() {
-    Object self = arg_take_str_obj("upper");
-    int i;
-    char*s = GET_STR(self);
-    int len = GET_STR_LEN(self);
-    Object nstr = string_alloc(NULL, len);
-    char*news = GET_STR(nstr);
-    for (i = 0; i < len; i++) {
-        news[i] = toupper(s[i]);
-    }
-    return nstr;
-}
-
-Object string_lower() {
-    Object self = arg_take_str_obj("lower");
-    int i;
-    char*s = GET_STR(self);
-    int len = GET_STR_LEN(self);
-    Object nstr = string_alloc(NULL, len);
-    char*news = GET_STR(nstr);
-    for (i = 0; i < len; i++) {
-        news[i] = tolower(s[i]);
-    }
-    return nstr;
-}
-
-
-Object string_replace() {
-    static const char* sz_func;
-    Object self = arg_take_str_obj(sz_func);
-    Object src = arg_take_str_obj(sz_func);
-    Object des = arg_take_str_obj(sz_func);
-
-    Object nstr = string_alloc("", 0);
-    int pos = string_index(self.value.str, src.value.str, 0);
-    int lastpos = 0;
-    while (pos != -1 && pos < GET_STR_LEN(self)) {
-        if (pos != 0){
-            nstr = obj_add(nstr,
-                    string_substring(self.value.str, lastpos, pos));
-        }
-        nstr = obj_add(nstr, des);
-        lastpos = pos + GET_STR_LEN(src);
-        pos = string_index(self.value.str, src.value.str, lastpos);
-        // printf("lastpos = %d\n", lastpos);
-    }
-    nstr = obj_add(nstr, string_substring(self.value.str, lastpos, GET_STR_LEN(self)));
-    return nstr;
-}
-
-Object string_split() {
-    const char* sz_func = "split";
-    Object self = arg_take_str_obj(sz_func);
-    Object pattern = arg_take_str_obj(sz_func);
-    int pos, lastpos;
-    Object nstr, list;
-    if (GET_STR_LEN(pattern) == 0) {
-        /* currently return none */
-        return NONE_OBJECT;
-    }
-    pos = string_index(self.value.str, pattern.value.str, 0);
-    lastpos = 0;
-    nstr = string_alloc("", 0);
-    list = list_new(10);
-    while (pos != -1 && pos < GET_STR_LEN(self)) {
-        if (pos == 0) {
-            obj_append(list, string_alloc("", -1));
-        } else {
-            Object str = string_substring(self.value.str, lastpos, pos);
-            obj_append(list, str);
-        }
-        lastpos = pos + GET_STR_LEN(pattern);
-        pos = string_index(self.value.str, pattern.value.str, lastpos);
-    }
-    obj_append(list, string_substring(self.value.str, lastpos, GET_STR_LEN(self)));
-    return list;
-}
-
 /**
  * the caller always starts with str = string_new("");
  * which is not a string_chr();
@@ -225,35 +113,158 @@ Object string_append_obj(Object string, Object obj) {
     return string_append_sz(string, sz);
 }
 
+Object string_append_int(Object string, int64_t num) {
+    // the maxium length of long is 20
+    char buf[30];
+    sprintf(buf, "%ld", num);
+    string = string_append_sz(string, buf); 
+    // not use tail-call, prevent buf destroyed by compiler
+    return string;
+}
+
+
+Object string_substring(String* str, int start, int end) {
+    int max_end, len, i;
+    char* s;
+    Object new_str;
+    start = start >= 0 ? start : start + str->len;
+    end = end >= 0 ? end : end + str->len;
+    max_end = str->len;
+    end = max_end < end ? max_end : end;
+    len = end - start;
+    if (len <= 0)
+        return sz_to_string("");
+    new_str = string_alloc(NULL, len);
+    s = GET_STR(new_str);
+    for (i = start; i < end; i++) {
+        *(s++) = str->value[i];
+    }
+    return new_str;
+}
+
+Object string_builtin_find() {
+    static const char* sz_func = "find";
+    Object self = arg_take_str_obj(sz_func);
+    Object str = arg_take_str_obj(sz_func);
+    return tm_number(string_index(self.value.str, str.value.str, 0));
+}
+
+Object string_builtin_substring() {
+    static const char* sz_func = "substring";
+    Object self = arg_take_str_obj(sz_func);
+    int start = arg_take_int(sz_func);
+    int end = arg_take_int(sz_func);
+    return string_substring(self.value.str, start, end);
+}
+
+Object string_builtin_upper() {
+    Object self = arg_take_str_obj("upper");
+    int i;
+    char*s = GET_STR(self);
+    int len = GET_STR_LEN(self);
+    Object nstr = string_alloc(NULL, len);
+    char*news = GET_STR(nstr);
+    for (i = 0; i < len; i++) {
+        news[i] = toupper(s[i]);
+    }
+    return nstr;
+}
+
+Object string_builtin_lower() {
+    Object self = arg_take_str_obj("lower");
+    int i;
+    char*s = GET_STR(self);
+    int len = GET_STR_LEN(self);
+    Object nstr = string_alloc(NULL, len);
+    char*news = GET_STR(nstr);
+    for (i = 0; i < len; i++) {
+        news[i] = tolower(s[i]);
+    }
+    return nstr;
+}
+
+
+Object string_builtin_replace() {
+    static const char* sz_func;
+    Object self = arg_take_str_obj(sz_func);
+    Object src = arg_take_str_obj(sz_func);
+    Object des = arg_take_str_obj(sz_func);
+
+    Object nstr = string_alloc("", 0);
+    int pos = string_index(self.value.str, src.value.str, 0);
+    int lastpos = 0;
+    while (pos != -1 && pos < GET_STR_LEN(self)) {
+        if (pos != 0){
+            nstr = obj_add(nstr,
+                    string_substring(self.value.str, lastpos, pos));
+        }
+        nstr = obj_add(nstr, des);
+        lastpos = pos + GET_STR_LEN(src);
+        pos = string_index(self.value.str, src.value.str, lastpos);
+        // printf("lastpos = %d\n", lastpos);
+    }
+    nstr = obj_add(nstr, string_substring(self.value.str, lastpos, GET_STR_LEN(self)));
+    return nstr;
+}
+
+Object string_builtin_split() {
+    const char* sz_func = "split";
+    Object self = arg_take_str_obj(sz_func);
+    Object pattern = arg_take_str_obj(sz_func);
+    int pos, lastpos;
+    Object nstr, list;
+    if (GET_STR_LEN(pattern) == 0) {
+        /* currently return none */
+        return NONE_OBJECT;
+    }
+    pos = string_index(self.value.str, pattern.value.str, 0);
+    lastpos = 0;
+    nstr = string_alloc("", 0);
+    list = list_new(10);
+    while (pos != -1 && pos < GET_STR_LEN(self)) {
+        if (pos == 0) {
+            obj_append(list, string_alloc("", -1));
+        } else {
+            Object str = string_substring(self.value.str, lastpos, pos);
+            obj_append(list, str);
+        }
+        lastpos = pos + GET_STR_LEN(pattern);
+        pos = string_index(self.value.str, pattern.value.str, lastpos);
+    }
+    obj_append(list, string_substring(self.value.str, lastpos, GET_STR_LEN(self)));
+    return list;
+}
+
+
 void string_methods_init() {
     tm->str_proto = dict_new();
-    reg_mod_func(tm->str_proto, "replace", string_replace);
-    reg_mod_func(tm->str_proto, "find", string_find);
+    reg_mod_func(tm->str_proto, "replace",   string_builtin_replace);
+    reg_mod_func(tm->str_proto, "find",      string_builtin_find);
     reg_mod_func(tm->str_proto, "substring", string_builtin_substring);
-    reg_mod_func(tm->str_proto, "upper", string_upper);
-    reg_mod_func(tm->str_proto, "lower", string_lower);
-    reg_mod_func(tm->str_proto, "split", string_split);
+    reg_mod_func(tm->str_proto, "upper",     string_builtin_upper);
+    reg_mod_func(tm->str_proto, "lower",     string_builtin_lower);
+    reg_mod_func(tm->str_proto, "split",     string_builtin_split);
 }
 
 Data_proto* get_string_proto() {
     if(!string_proto.init) {
         init_data_proto(&string_proto);
         string_proto.next = string_next;
-        string_proto.data_size = sizeof(String_iterator);
+        string_proto.data_size = sizeof(StringIterator);
     }
     return &string_proto;
 }
 
 Object string_iter_new(String* str) {
-    Object data = data_new(sizeof(String_iterator));
-    String_iterator* iterator = (String_iterator*) GET_DATA(data);
+    Object data = data_new(sizeof(StringIterator));
+    StringIterator* iterator = (StringIterator*) GET_DATA(data);
     iterator->cur = 0;
     iterator->string = str;
     iterator->proto = get_string_proto();
     return data;
 }
 
-Object* string_next(String_iterator* iterator) {
+Object* string_next(StringIterator* iterator) {
     static Object obj;
     if (iterator->cur >= iterator->string->len) {
         return NULL;

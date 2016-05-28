@@ -5,10 +5,10 @@
 /** 
  *  coding standards
  *  static variable . not specified
- *  function        . camel case starts with lower case
- *  structure       . camel case starts with upper case
- *  method          . like string_xxx, list_xxx
- *  builtins        . bf_xxx
+ *  function        . underscore
+ *  structure       . camel case 
+ *  method          . like string_builtin_xxx, list_builtin_xxx
+ *  builtins        . builtin_xxx
  *  macro           . like XXX_XXX
 */
 
@@ -103,9 +103,9 @@ Object        bf_string_format();
 Object        tm_str(Object obj);
 Object        String_join(Object self, Object list);
 void          string_methods_init();
-Data_proto*    get_string_proto();
+Data_proto*   get_string_proto();
 Object        string_iter_new(String* s);
-Object*       string_next(String_iterator* iterator);
+Object*       string_next(StringIterator* iterator);
 
 static Data_proto string_proto;
 /* macros */
@@ -133,12 +133,13 @@ void     list_free(TmList* );
 void     list_clear(TmList* list);
 void     list_methods_init();
 Object   list_iter_new(TmList* list);
-Object*  list_next(Tm_list_iterator* iterator);
+Object*  list_next(TmListIterator* iterator);
 Object   list_add(TmList*, TmList*);
 void     list_del(TmList*list, Object key);
 void     list_insert(TmList*list, int index, Object value);
 int      list_index(TmList*, Object val);
 void     list_append(TmList* list, Object v);
+Object   array_to_list(int n, ...);
 
 /** 
  * list iterator prototype
@@ -157,7 +158,7 @@ TmDict*          dict_init();
 void             dict_free(TmDict* dict);
 int              dict_set0(TmDict* dict, Object key, Object val);
 #define          dict_set(d, k, v) dict_set0(GET_DICT(d), k, v)
-Dict_node*        dict_get_node(TmDict* dict, Object key);
+DictNode*        dict_get_node(TmDict* dict, Object key);
 Object*          dict_get_by_str0(TmDict* dict, char* key);
 void             dict_del(TmDict* dict, Object k);
 void             dict_methods_init();
@@ -285,7 +286,6 @@ Object      tm_get_global(Object globals, Object key);
 Object      tm_take_arg();
 Object      obj_getlocal(int fidx, int lidx);
 Object      obj_getstack(int fidx, int sidx);
-Object      array_to_list(int n, ...);
 TmFrame*    obj_getframe(int fidx);
 Object      tm_getfname(Object func);
 void        tm_setattr(Object a, char* key, Object value);

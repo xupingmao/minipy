@@ -61,7 +61,7 @@ Object class_new(Object clazz){
   TmDict* cl = GET_DICT(clazz);
   Object k,v;
   Object instance = dict_new();
-  Dict_node* nodes = cl->nodes;
+  DictNode* nodes = cl->nodes;
   int i;
   for(i = 0; i < cl->cap; i++) {
       k = nodes[i].key;

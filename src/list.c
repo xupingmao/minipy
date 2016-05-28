@@ -81,6 +81,20 @@ void list_append(TmList* list, Object obj) {
     list->len++;
 }
 
+Object array_to_list(int n, ...) {
+    va_list ap;
+    int i = 0;
+    Object list = list_new(n);
+    va_start(ap, n);
+    for (i = 0; i < n; i++) {
+        Object item = va_arg(ap, Object);
+        obj_append(list, item);
+    }
+    va_end(ap);
+    return list;
+}
+
+
 /**
  insert
  after node at index of *n*
@@ -244,7 +258,7 @@ void list_methods_init() {
 }
 
 void list_iter_mark(Data_object* data) {
-    Tm_list_iterator* iter = (Tm_list_iterator*) data;
+    TmListIterator* iter = (TmListIterator*) data;
     gc_mark_list(iter->list);
 }
 
@@ -252,22 +266,22 @@ Data_proto* get_list_iter_proto() {
     if(!list_iter_proto.init) {
         init_data_proto(&list_iter_proto);
         list_iter_proto.next = list_next;
-        list_iter_proto.data_size = sizeof(Tm_list_iterator);
+        list_iter_proto.data_size = sizeof(TmListIterator);
         list_iter_proto.mark = list_iter_mark;
     }
     return &list_iter_proto;
 }
 
 Object list_iter_new(TmList* list) {
-    Object data = data_new(sizeof(Tm_list_iterator));
-    Tm_list_iterator *iterator = (Tm_list_iterator*) GET_DATA(data);
+    Object data = data_new(sizeof(TmListIterator));
+    TmListIterator *iterator = (TmListIterator*) GET_DATA(data);
     iterator->cur = 0;
     iterator->list = list;
     iterator->proto = get_list_iter_proto();
     return data;
 }
 
-Object* list_next(Tm_list_iterator* iterator) {
+Object* list_next(TmListIterator* iterator) {
     if(iterator->cur >= iterator->list->len) {
         return NULL;
     } else {

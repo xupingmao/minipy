@@ -155,7 +155,6 @@ Object gc_track(Object v) {
         tm_raise("gc_track(), not supported type %d", v.type);
         return v;
     }
-    SET_IDX(v, 0);
     list_append(tm->all, v);
     return v;
 }

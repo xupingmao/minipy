@@ -23,7 +23,9 @@ _convert_dict = {
     "Parser_ctx":"ParserCtx",
     "Ast_node": "AstNode",
     "Asm_context" :"AsmContext",
-    "Encode_ctx": "EncodeCtx"
+    "Encode_ctx": "EncodeCtx",
+    "Dict_node": "DictNode",
+    "Tm_list_iterator": "TmListIterator",
 }
 
 def do_name(line, i):
@@ -65,31 +67,42 @@ def do_skip_str(line, i, end):
 
 def convert (content):
     buf = StringIO()
-
-    for line in content.split("\n"):
-        i = 0
-        newline = ''
-        while i < len(line):
-            c = line[i]
-            if c == '"' or c == "'":
-                str, i = do_skip_str(line, i, c)
-                buf.write(str)
-            elif c.isalpha():
-                newname, i = do_name(line, i)
-                buf.write(newname)
-            else:
-                buf.write(c)
-                i+=1
-        buf.write("\n")
+    i = 0
+    while i < len(content):
+        c = content[i]
+        if c == '"' or c == "'":
+            str, i = do_skip_str(content, i, c)
+            buf.write(str)
+        elif c.isalpha():
+            newname, i = do_name(content, i)
+            buf.write(newname)
+        else:
+            buf.write(c)
+            i+=1
     buf.seek(0)
     return buf.read()
 
+def save_file(name, content):
+    fp = open(name, "w+")
+    fp.write(content)
+    fp.close()
 
-if __name__ == '__main__':
-    if len(sys.argv) == 2:
+
+def do_opt(opt):
+    if opt == "-test":
+        result = convert("this is a test CamelCase camelCase\nHello")
+        print(result)
+    else:
         name = sys.argv[1]
         content = open(name).read()
         result = convert(content)
-        print(result)
+        if content != result:
+            save_file(name + ".bak", content)
+            save_file(name, result)
+
+if __name__ == '__main__':
+    if len(sys.argv) == 2:
+        opt = sys.argv[1]
+        do_opt(opt)
     else:
         print ("usage %s filename" % sys.argv[0])

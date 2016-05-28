@@ -286,7 +286,7 @@ def execfile(path, chdir = True):
 def _assert(exp):
     fidx = vmopt("frame.index")
     info = vmopt("frame.info", fidx-1)
-    if not exp: raise "Assertion_error, " + info.fname + ":" + str(info.lineno)
+    if not exp: raise "AssertionError, " + info.fname + ":" + str(info.lineno)
     
 def __debug__(fidx):
     info = vmopt("frame.info", fidx)

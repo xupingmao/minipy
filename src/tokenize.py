@@ -90,9 +90,9 @@ def clean(s):
 def tokenize(s):
     global T
     s = clean(s)
-    return dotokenize(s)
+    return do_tokenize(s)
         
-def dotokenize(s):
+def do_tokenize(s):
     global T
     T = TData()
     i = 0
@@ -113,7 +113,7 @@ def dotokenize(s):
         elif c == '\\' and s[i+1] == '\n':
             i += 2; T.y+=1; T.yi = i
         elif c == ' ' or c == '\t': i += 1
-        else: compile_error('dotokenize',s, Token('', '', T.f), "unknown token")
+        else: compile_error('do_tokenize',s, Token('', '', T.f), "unknown token")
     indent(0)
     r = T.res
     T = None

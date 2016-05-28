@@ -63,7 +63,7 @@ def run(path, args = None):
 def repl():
     import pyeval
     fpyeval = pyeval.pyeval
-    print("Welcome To Tiny_matrix!!!")
+    print("Welcome To Subpy!!!")
     
     global debug
     debug = 0

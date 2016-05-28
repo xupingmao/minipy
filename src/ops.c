@@ -68,7 +68,7 @@ Object obj_get(Object self, Object k) {
     Object v;
     switch (TM_TYPE(self)) {
     case TYPE_STR: {
-        Dict_node* node;
+        DictNode* node;
         if (TM_TYPE(k) == TYPE_NUM) {
             double d = GET_NUM(k);
             tm_assert_int(d, "string_get");
@@ -86,7 +86,7 @@ Object obj_get(Object self, Object k) {
         break;
     }
     case TYPE_LIST:{
-        Dict_node* node;
+        DictNode* node;
         if (TM_TYPE(k) == TYPE_NUM) {
             return list_get(GET_LIST(self), GET_NUM(k));
         } else if ((node = dict_get_node(GET_DICT(tm->list_proto), k))!=NULL) {
@@ -95,7 +95,7 @@ Object obj_get(Object self, Object k) {
         break;
     }
     case TYPE_DICT:{
-        Dict_node* node;
+        DictNode* node;
         node = dict_get_node(GET_DICT(self), k);
         if (node != NULL) {
             return node->val;
@@ -280,7 +280,7 @@ int obj_in(Object b, Object a) {
         return string_index(GET_STR_OBJ(a), GET_STR_OBJ(b), 0) != -1;
     }
     case TYPE_DICT: {
-        Dict_node* node = dict_get_node(GET_DICT(a), b);
+        DictNode* node = dict_get_node(GET_DICT(a), b);
         if (node == NULL) {
             return 0;
         }
@@ -380,7 +380,7 @@ Object obj_getstack(int fidx, int sidx) {
 }
 
 Object tm_get_global(Object globals, Object okey) {
-    Dict_node* node = dict_get_node(GET_DICT(globals), okey);
+    DictNode* node = dict_get_node(GET_DICT(globals), okey);
     if (node == NULL) {
         node = dict_get_node(GET_DICT(tm->builtins), okey);
         if (node == NULL) {
@@ -427,19 +427,6 @@ Object tm_call_native(int lineno, Object (*fn)(int, va_list), int args, ...) {
     Object ret = fn(args, ap);
     va_end(ap);
     return ret;
-}
-
-Object array_to_list(int n, ...) {
-    va_list ap;
-    int i = 0;
-    Object list = list_new(n);
-    va_start(ap, n);
-    for (i = 0; i < n; i++) {
-        Object item = va_arg(ap, Object);
-        obj_append(list, item);
-    }
-    va_end(ap);
-    return list;
 }
 
 void def_func(Object globals, Object name, Object (*native)()) {
@@ -524,16 +511,3 @@ Object tm_str(Object a) {
     }
     return string_alloc("", 0);
 }
-
-
-
-
-
-
-
-
-
-
-
-
-

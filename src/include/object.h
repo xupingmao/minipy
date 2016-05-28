@@ -47,9 +47,6 @@ typedef union TmValue {
 
 typedef struct Object{
   char type;
-  #if USE_IDX
-  char idx;
-  #endif
   TmValue value;
 }Object;
 
@@ -204,30 +201,30 @@ typedef struct TmList {
   struct Object* nodes;
 }TmList;
 
-typedef struct Tm_list_iterator {
+typedef struct TmListIterator {
     DATA_HEAD
     TmList* list;
     int cur;
-}Tm_list_iterator;
+}TmListIterator;
 
 
 /** 
  * definition for dictionary.
  */
 
-typedef struct Dict_node{
+typedef struct DictNode{
   Object key;
   Object val;
   int hash;
   int used; /* also used for attr index */
-}Dict_node;
+}DictNode;
 
 typedef struct Dictonary {
   int marked;
   int len;
   int cap;
   int extend;
-  struct Dict_node* nodes;
+  struct DictNode* nodes;
 }TmDict;
 
 typedef struct _TmDictIterator {
@@ -252,11 +249,11 @@ typedef struct String {
     char *value;
 } String;
 
-typedef struct String_iterator {
+typedef struct _string_iterator {
     DATA_HEAD
     int cur;
     String* string;
-}String_iterator;
+} StringIterator;
 
 
 /**
@@ -269,15 +266,3 @@ Object* tm_stack_end;
 
 
 #endif /* OBJECT_H_ */
-
-
-
-
-
-
-
-
-
-
-
-
