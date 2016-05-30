@@ -228,8 +228,8 @@ Object list_builtin_remove() {
     return NONE_OBJECT;
 }
 
-Object list_builtin_clone() {
-    Object self = arg_take_obj("list_clone");
+Object list_builtin_copy() {
+    Object self = arg_take_obj("list.copy");
     TmList* list = GET_LIST(self);
     Object _newlist = list_new(list->cap);
     TmList* newlist = GET_LIST(_newlist);
@@ -253,7 +253,7 @@ void list_methods_init() {
     reg_mod_func(tm->list_proto, "index", list_builtin_index);
     reg_mod_func(tm->list_proto, "reverse", list_builtin_reverse);
     reg_mod_func(tm->list_proto, "remove", list_builtin_remove);
-    reg_mod_func(tm->list_proto, "clone", list_builtin_clone);
+    reg_mod_func(tm->list_proto, "copy", list_builtin_copy);
     reg_mod_func(tm->list_proto, "clear", list_builtin_clear);
 }
 
