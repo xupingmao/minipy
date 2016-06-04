@@ -218,11 +218,24 @@ Object dict_builtin_values() {
     return list;
 }
 
+Object dict_builtin_copy() {
+    Object dict = arg_take_dict_obj("dict.copy");
+    Object new_dict = dict_new();
+    int i;
+    for(i = 0; i < GET_DICT(dict)->cap; i++) {
+        if (GET_DICT(dict)->nodes[i].used) {
+            dict_set0(GET_DICT(new_dict), GET_DICT(dict)->nodes[i].key, GET_DICT(dict)->nodes[i].val);
+        }
+    }
+    return new_dict;
+}
+
 void dict_methods_init() {
     tm->dict_proto = dict_new();
     /* build dict class */
     reg_mod_func(tm->dict_proto, "keys", dict_builtin_keys);
     reg_mod_func(tm->dict_proto, "values", dict_builtin_values);
+    reg_mod_func(tm->dict_proto, "copy", dict_builtin_copy);
 }
 
 void dict_iter_mark(Data_object* data) {
