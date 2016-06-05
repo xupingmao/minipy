@@ -114,15 +114,3 @@ if __name__ == "__main__":
     argv = copy(sys.argv)
     del argv[0]
     dissimple(argv)
-
-
-
-
-
-
-
-
-
-
-
-

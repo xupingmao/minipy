@@ -175,7 +175,7 @@ def not_exp(p):
 def cmp_exp(p):
     fnc = item
     fnc(p)
-    while p.token.type in ('>', '<', '==', '!=', '>=', '<=', 'in', 'notin'):
+    while p.token.type in ('>', '<', '==', 'is', '!=', '>=', '<=', 'in', 'notin'):
         t = p.token.type
         p.next()
         fnc(p)

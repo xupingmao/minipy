@@ -85,25 +85,6 @@ def str_join(sep, list):
 def list_join(list, sep):
     return str_join(sep, list)
     
-
-## dict.
-def _dict_update(self, dict):
-    # this will update iterator.
-    for key in dict:
-        self[key] = dict[key]
-    #for key in dict.keys():
-        #self[key] = dict[key]
-    return self
-
-def _dict_copy(self):
-    d = {}
-    for key in self:
-        d[key] = self[key]
-    return d
-    
-add_obj_method("dict", "copy", _dict_copy)
-add_obj_method('dict', 'update', _dict_update)
-
 def _list_copy(self):
     l = []
     for item in self:
@@ -353,15 +334,3 @@ def boot(loadlibs=True):
         else:
             filename = "D:\\temp\\subpy\\python\\libs\\" + ARGV[0]
             execfile(filename, False)
-
-
-
-
-
-
-
-
-
-
-
-

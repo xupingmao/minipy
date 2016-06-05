@@ -204,18 +204,3 @@ if __name__ == "__main__":
     if argc == 2:
         text = load(argv[1])
         pyeval(text, None, True)
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

@@ -18,15 +18,3 @@ void number_format(char* des, Object num){
         sprintf(des, "%g", v);
     }
 }
-
-
-
-
-
-
-
-
-
-
-
-

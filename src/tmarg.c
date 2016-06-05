@@ -54,17 +54,6 @@ int has_arg() {
     return tm->arg_loaded < tm->arg_cnt;
 }
 
-Object get_arg_from_v_m2(int type, const char* fnc) {
-    Object value = get_arg_from_v_m0(fnc);
-    if (type == -1)
-        return value;
-    if (type != value.type)
-        tm_raise("%s:expect type %s, but see %s", fnc, get_type_by_int(type),
-                get_type_by_obj(value));
-    return value;
-}
-
-
 Object arg_take_str_obj(const char* fnc) {
     Object value = get_arg_from_v_m0(fnc);
     if (NOT_STR(value)) {

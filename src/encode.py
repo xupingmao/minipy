@@ -30,6 +30,7 @@ _op_dict = {
     '>=': GTEQ,
     '<=': LTEQ,
     '==': EQEQ,
+    'is': EQEQ,
     '!=': NOTEQ,
     'get':GET
     #'notin' : NOTIN,

@@ -235,15 +235,33 @@ Object string_builtin_split() {
     return list;
 }
 
+Object string_builtin_startswith() {
+    Object self = arg_take_str_obj("str.startswith");
+    Object arg0 = arg_take_str_obj("str.startswith");
+    return tm_number(string_index(GET_STR_OBJ(self), GET_STR_OBJ(arg0), 0) == 0);
+}
+
+Object string_builtin_endswith() {
+    const char* func_name = "str.endswith";
+    Object self = arg_take_str_obj(func_name);
+    Object arg0 = arg_take_str_obj(func_name);
+    int idx = string_index(GET_STR_OBJ(self), GET_STR_OBJ(arg0), 0);
+    if (idx < 0) {
+        return tm_number(0);
+    }
+    return tm_number(idx + tm_len(self) == tm_len(arg0));
+}
 
 void string_methods_init() {
     tm->str_proto = dict_new();
-    reg_mod_func(tm->str_proto, "replace",   string_builtin_replace);
-    reg_mod_func(tm->str_proto, "find",      string_builtin_find);
-    reg_mod_func(tm->str_proto, "substring", string_builtin_substring);
-    reg_mod_func(tm->str_proto, "upper",     string_builtin_upper);
-    reg_mod_func(tm->str_proto, "lower",     string_builtin_lower);
-    reg_mod_func(tm->str_proto, "split",     string_builtin_split);
+    reg_mod_func(tm->str_proto, "replace",    string_builtin_replace);
+    reg_mod_func(tm->str_proto, "find",       string_builtin_find);
+    reg_mod_func(tm->str_proto, "substring",  string_builtin_substring);
+    reg_mod_func(tm->str_proto, "upper",      string_builtin_upper);
+    reg_mod_func(tm->str_proto, "lower",      string_builtin_lower);
+    reg_mod_func(tm->str_proto, "split",      string_builtin_split);
+    reg_mod_func(tm->str_proto, "startswith", string_builtin_startswith);
+    reg_mod_func(tm->str_proto, "endswith",   string_builtin_endswith);
 }
 
 Data_proto* get_string_proto() {
@@ -273,15 +291,3 @@ Object* string_next(StringIterator* iterator) {
     obj = string_chr(iterator->string->value[iterator->cur-1]);
     return &obj;
 }
-
-
-
-
-
-
-
-
-
-
-
-

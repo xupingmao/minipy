@@ -230,12 +230,24 @@ Object dict_builtin_copy() {
     return new_dict;
 }
 
+Object dict_builtin_update() {
+    Object self = arg_take_dict_obj("dict.update");
+    Object other = arg_take_dict_obj("dict.update");
+    int i = 0;
+
+    for (i = 0; i < DICT_LEN(other); i++) {
+        dict_set0(GET_DICT(self), GET_DICT(other)->nodes[i].key, GET_DICT(other)->nodes[i].val);
+    }
+    return self;
+}
+
 void dict_methods_init() {
     tm->dict_proto = dict_new();
     /* build dict class */
     reg_mod_func(tm->dict_proto, "keys", dict_builtin_keys);
     reg_mod_func(tm->dict_proto, "values", dict_builtin_values);
     reg_mod_func(tm->dict_proto, "copy", dict_builtin_copy);
+    reg_mod_func(tm->dict_proto, "update", dict_builtin_update);
 }
 
 void dict_iter_mark(Data_object* data) {
@@ -286,16 +298,3 @@ Object* dict_next(TmDictIterator* iterator) {
     }
     return NULL;
 }
-
-
-
-
-
-
-
-
-
-
-
-
-

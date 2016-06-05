@@ -33,16 +33,3 @@ void tm_raise(char* fmt, ...) {
     va_end(a);
     longjmp(tm->frame->buf, 1);
 }
-
-
-
-
-
-
-
-
-
-
-
-
-

@@ -21,15 +21,3 @@ int uncode32(unsigned char** src) {
     *src += 4;
     return (s[0]<<20) + (s[1]<<16) + (s[2]<<8) + (s[3]);
 }
-
-
-
-
-
-
-
-
-
-
-
-

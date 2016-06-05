@@ -277,20 +277,11 @@ void        obj_set(Object self, Object k, Object v);
 char*       obj_to_sz(Object obj);
 
 Object      tm_str(Object obj);
+int         tm_len(Object obj);
 int         is_true_obj(Object v);
 int         tm_iter(Object self, Object *k);
 void        obj_del(Object self, Object k);
-Object      tm_call(int lineno, Object func, int args, ...);
-Object      obj_append(Object a, Object b);
 Object      tm_get_global(Object globals, Object key);
-Object      tm_take_arg();
-Object      obj_getlocal(int fidx, int lidx);
-Object      obj_getstack(int fidx, int sidx);
-TmFrame*    obj_getframe(int fidx);
-Object      tm_getfname(Object func);
-void        tm_setattr(Object a, char* key, Object value);
-void        def_func(Object globals, Object a, Object(*func)());
-void        def_method(Object dict, Object name, Object(*func)());
 
 // vm functions
 Object call_module_function(char* mod, char* fnc);
@@ -300,6 +291,7 @@ void   reg_builtin_func(char* name, Object (*native)());
 void   reg_mod_attr(char* mod_name,char* attr, Object value);
 int    obj_eq_sz(Object str, const char* value);
 void   tm_raise(char*fmt , ...);
+Object obj_append(Object a, Object item);
 
 // interp functions
 

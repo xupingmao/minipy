@@ -187,14 +187,3 @@ Object get_func_name_obj(Object func) {
   }
   return NONE_OBJECT;
 }
-
-
-
-
-
-
-
-
-
-
-

@@ -109,7 +109,7 @@ Object obj_get(Object self, Object k) {
     case TYPE_DATA:
         return GET_DATA_PROTO(self)->get(GET_DATA(self), k);
     }
-    tm_raise("key_error %o", k);
+    tm_raise("keyError %o", k);
     return NONE_OBJECT;
 }
 
@@ -268,7 +268,9 @@ Object obj_mod(Object a, Object b) {
 }
 
 
-/* a has b */
+/* a has b
+ * b in a
+ */
 int obj_in(Object b, Object a) {
     switch (TM_TYPE(a)) {
     case TYPE_LIST: {
@@ -355,109 +357,32 @@ Object obj_append(Object a, Object item) {
     return a;
 }
 
-TmFrame* obj_getframe(int fidx) {
-    if (fidx < 1 || fidx > FRAMES_COUNT) {
-        tm_raise("obj_getframe:invalid fidx %d", fidx);
-    }
-    return tm->frames + fidx;
-}
-
-Object obj_getlocal(int fidx, int lidx) {
-    TmFrame* f = obj_getframe(fidx);
-    if (lidx < 0 || lidx >= f->maxlocals) {
-        tm_raise("obj_getlocal:invalid lidx %d, maxlocals=%d", lidx, f->maxlocals);
-    }
-    return f->locals[lidx];
-}
-
-Object obj_getstack(int fidx, int sidx) {
-    TmFrame* f = obj_getframe(fidx);
-    int stacksize = f->top - f->stack;
-    if (sidx < 0 || sidx >= stacksize) {
-        tm_raise("obj_getstack:invalid sidx %d, stacksize=%d", sidx, stacksize);
-    }
-    return f->stack[sidx];
-}
-
 Object tm_get_global(Object globals, Object okey) {
     DictNode* node = dict_get_node(GET_DICT(globals), okey);
     if (node == NULL) {
         node = dict_get_node(GET_DICT(tm->builtins), okey);
         if (node == NULL) {
-            tm_raise("Name_error: name %o is not defined", okey);
+            tm_raise("NameError: name %o is not defined", okey);
         }
     }
     return node->val;
 }
 
-Object tm_getfname(Object fnc) {
-    if (NOT_FUNC(fnc)) {
-        tm_raise("tm_getfname expect function");
+int tm_len(Object o) {
+    int len = -1;
+    switch (TM_TYPE(o)) {
+    case TYPE_STR:
+        len = GET_STR_LEN(o);
+    case TYPE_LIST:
+        len = LIST_LEN(o);
+    case TYPE_DICT:
+        len = DICT_LEN(o);
     }
-    return GET_MODULE(GET_FUNCTION(fnc)->mod)->file;
-}
-
-void tm_setattr(Object dict, char* attr, Object value) {
-    dict_set0(GET_DICT(dict), sz_to_string(attr), value);
-}
-
-Object tm_call(int lineno, Object func, int args, ...) {
-    int i = 0;
-    va_list ap;
-    va_start(ap, args);
-    arg_start();
-    for (i = 0; i < args; i++) {
-        arg_push(va_arg(ap, Object));
+    if (len < 0) {
+        tm_raise("tm_len: %o has no attribute len", o);
     }
-    va_end(ap);
-    // tm_printf("at line %d, try to call %o with %d args\n", lineno, get_func_name_obj(func), args);
-    return call_function(func);
+    return len;
 }
-
-Object tm_call_native(int lineno, Object (*fn)(int, va_list), int args, ...) {
-    int i = 0;
-    va_list ap;
-    va_start(ap, args);
-    arg_start();
-    for (i = 0; i < args; i++) {
-        arg_push(va_arg(ap, Object));
-    }
-    va_end(ap);
-    va_start(ap, args);
-    Object ret = fn(args, ap);
-    va_end(ap);
-    return ret;
-}
-
-void def_func(Object globals, Object name, Object (*native)()) {
-    Object func = func_new(NONE_OBJECT, NONE_OBJECT, native);
-    GET_FUNCTION(func)->name = name;
-    obj_set(globals,name, func);
-}
-
-void def_method(Object dict, Object name, Object (*native)()) {
-    Object func = func_new(NONE_OBJECT, NONE_OBJECT, native);
-    Object method = method_new(func, dict);
-    obj_set(dict, name, method);
-}
-
-Object tm_take_arg() {
-    return arg_take_obj("getarg");
-}
-
-void tm_def_mod(char* fname, Object mod) {
-    Object o_name = sz_to_string(fname);
-    obj_set(tm->modules, o_name, mod);
-}
-
-void tm_import_all(Object globals, Object mod_name) {
-    int b_has = obj_in(mod_name, tm->modules);
-    if (b_has) {
-        Object mod_value = obj_get(tm->modules, mod_name);
-        // do something here.
-    }
-}
-
 
 // func Object tm_str(Object a)
 Object tm_str(Object a) {

@@ -174,15 +174,6 @@ Object tm_eval(TmFrame* f) {
         }
         case LOAD_CONSTANT: {
             TM_PUSH(GET_CONST(i));
-            /* predict , eg. SET, GET etc. */
-            /*
-            pc += 3;
-            if (pc[0] == SET) {
-                // need to check whether is a dict. 
-            } else if(pc[0] == GET) {
-                
-            }
-            */
             break;
         }
         
@@ -274,10 +265,6 @@ Object tm_eval(TmFrame* f) {
         case OP_LT: {
             *(top-1) = tm_number(obj_cmp(*(top-1), *top)<0);
             top--;
-            // int flag = obj_cmp(*(top-1), *top) < 0;
-            // top--;
-            // predict
-            // PREDICT_JMP(flag);
             break;
         }
         case LTEQ: {
@@ -469,10 +456,12 @@ Object tm_eval(TmFrame* f) {
         case TM_LINE: { f->lineno = i; break;}
 
         case TM_DEBUG: {
+            #if 0
             Object fdebug = tm_get_global(globals, sz_to_string("__debug__"));
             f->top = top;
             tm_call(0, fdebug, 1, tm_number(tm->frame - tm->frames));        
             break;
+            #endif
         }
 
         default:
@@ -492,15 +481,3 @@ Object tm_eval(TmFrame* f) {
     pop_frame();
     return ret;
 }
-
-
-
-
-
-
-
-
-
-
-
-
