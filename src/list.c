@@ -12,7 +12,6 @@ TmList* untracked_list_new(int cap) {
     }
     list->cap = cap;
     list->nodes = tm_malloc(OBJ_SIZE * list->cap);
-    list->cur = 0;
     return list;
 }
 
@@ -128,12 +127,12 @@ int list_index(TmList* list, Object v) {
     return -1;
 }
 
-Object list_remove(TmList* list, int index) {
+Object _list_del(TmList* list, int index) {
     if (index < 0) {
         index += list->len;
     }
     if (index < 0 || index >= list->len) {
-        tm_raise("list_remove(): index out of range, length=%d, index=%d",
+        tm_raise("_list_del(): index out of range, length=%d, index=%d",
                 list->len, index);
     }
     Object obj = list->nodes[index];
@@ -146,13 +145,13 @@ Object list_remove(TmList* list, int index) {
 }
 
 Object list_pop(TmList* list) {
-    return list_remove(list, -1);
+    return _list_del(list, -1);
 }
 
 void list_del(TmList* list, Object key) {
     tm_assert_type(key, TYPE_NUM, "list.del");
     int idx = GET_NUM(key);
-    list_remove(list, idx);
+    _list_del(list, idx);
 }
 
 Object list_add(TmList* list1, TmList*list2) {
@@ -221,7 +220,7 @@ Object list_builtin_remove() {
     for (i = 0; i < list->len; i++) {
         Object item = list->nodes[i];
         if (obj_equals(item, obj)) {
-            list_remove(list, i);
+            _list_del(list, i);
             return item;
         }
     }
@@ -257,47 +256,29 @@ void list_methods_init() {
     reg_mod_func(tm->list_proto, "clear", list_builtin_clear);
 }
 
-void list_iter_mark(Data_object* data) {
-    TmListIterator* iter = (TmListIterator*) data;
-    gc_mark_list(iter->list);
-}
-
-Data_proto* get_list_iter_proto() {
-    if(!list_iter_proto.init) {
-        init_data_proto(&list_iter_proto);
-        list_iter_proto.next = list_next;
-        list_iter_proto.data_size = sizeof(TmListIterator);
-        list_iter_proto.mark = list_iter_mark;
-    }
-    return &list_iter_proto;
+void list_iter_mark(TmData* data) {
+    gc_mark_list(data->data_ptr);
 }
 
 Object list_iter_new(TmList* list) {
-    Object data = data_new(sizeof(TmListIterator));
-    TmListIterator *iterator = (TmListIterator*) GET_DATA(data);
+    Object data = data_new(0);
+    TmData* iterator = GET_DATA(data);
     iterator->cur = 0;
-    iterator->list = list;
-    iterator->proto = get_list_iter_proto();
+    iterator->end = list->len;
+    iterator->inc = 1;
+    iterator->next = list_next;
+    iterator->mark = list_iter_mark;
+    iterator->data_ptr = list;
     return data;
 }
 
-Object* list_next(TmListIterator* iterator) {
-    if(iterator->cur >= iterator->list->len) {
+Object* list_next(TmData* iterator) {
+    if(iterator->cur >= iterator->end) {
         return NULL;
     } else {
         iterator->cur += 1;
-        return & (iterator->list->nodes[iterator->cur-1]);
+        TmList* list = iterator->data_ptr;
+        iterator->cur_obj = list->nodes[iterator->cur-1];
+        return & iterator->cur_obj;
     }
 }
-
-
-
-
-
-
-
-
-
-
-
-

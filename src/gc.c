@@ -236,7 +236,8 @@ void gc_mark(Object o) {
         if (GET_DATA(o)->marked)
             return;
         GET_DATA(o)->marked = GC_REACHED_SIGN;
-        GET_DATA(o)->proto->mark(GET_DATA(o));
+        GET_DATA(o)->mark(GET_DATA(o));
+        // GET_DATA(o)->proto->mark(GET_DATA(o));
         break;
     default:
         tm_raise("gc_mark(), unknown object type %d", o.type);
@@ -417,35 +418,14 @@ void obj_free(Object o) {
         module_free(o.value.mod);
         break;
     case TYPE_DATA:
-        GET_DATA_PROTO(o)->free(GET_DATA(o));
+        GET_DATA(o)->free(GET_DATA(o));
+        // GET_DATA_PROTO(o)->free(GET_DATA(o));
         break;
     }
 }
 
-Object* base_next(Tm_base_iterator* iterator) {
-    iterator->ret = call_function(iterator->func);
-    if (iterator->ret.type != -1) {
-        return &iterator->ret;
-    } else {
-        return NULL;
-    }
-}
 
-void base_mark(Data_object* data) {
-    gc_mark(((Tm_base_iterator*)data)->func);
-}
-
-Data_proto* get_base_iter_proto() {
-    if(!base_iter_proto.init) {
-        init_data_proto(&base_iter_proto);
-        base_iter_proto.data_size = sizeof(Tm_base_iterator);
-        base_iter_proto.next = base_next;
-        base_iter_proto.mark = base_mark;
-    }
-    return &base_iter_proto;
-}
-
-Object* data_next(Data_object* data) {
+Object* data_next(TmData* data) {
     tm_raise("next is not defined!");
     return NULL;
 }
@@ -464,44 +444,23 @@ Data_proto* get_default_data_proto() {
     return &default_data_proto;
 }
 
-void init_data_proto(Data_proto* proto) {
-    proto->mark = data_mark;
-    proto->free = data_free;
-    proto->get = data_get;
-    proto->set = data_set;
-    proto->next = data_next;
-    proto->str = data_str;
-    proto->init = 1;
-    proto->data_size = sizeof(TmData);
-}
 
-Object data_new(size_t data_size) {
-    Object data;
-    data.type = TYPE_DATA;
-    GET_DATA(data) = tm_malloc(data_size);
-/*    GET_DATA_PROTO(data)->next = data_next;
-    GET_DATA_PROTO(data)->mark = data_mark;
-    GET_DATA_PROTO(data)->free = data_free;
-    GET_DATA_PROTO(data)->get = data_get;
-    GET_DATA_PROTO(data)->set = data_set;*/
-    GET_DATA_PROTO(data) = get_default_data_proto();
-    return gc_track(data);
-}
-
-void data_mark(Data_object* data) {
+void data_mark(TmData* data) {
     /* */
 }
 
 void data_free(TmData* data) {
-    tm_free(data, data->proto->data_size);
+    // printf("data_free: %x\n", data);
+    tm_free(data, sizeof(TmData));
 }
 
 Object data_get(Object self, Object key) {
+    tm_raise("data.get not implemented");
     return NONE_OBJECT;
 }
 
 void data_set(Object self, Object key, Object value) {
-
+    tm_raise("data.set not implemented");
 }
 
 Object data_str(Object self) {
@@ -510,12 +469,27 @@ Object data_str(Object self) {
 
 
 
+Object data_new(size_t data_size) {
+    Object data_obj;
+    data_obj.type = TYPE_DATA;
+    GET_DATA(data_obj) = tm_malloc(sizeof(TmData));
+    TmData* data = GET_DATA(data_obj);
 
+    // printf("data_new: %x\n", data);
 
-
-
-
-
-
-
-
+/*    GET_DATA_PROTO(data)->next = data_next;
+    GET_DATA_PROTO(data)->mark = data_mark;
+    GET_DATA_PROTO(data)->free = data_free;
+    GET_DATA_PROTO(data)->get = data_get;
+    GET_DATA_PROTO(data)->set = data_set;
+    GET_DATA_PROTO(data) = get_default_data_proto();
+*/
+    data->mark = data_mark;
+    data->free = data_free;
+    data->get  = data_get;
+    data->set  = data_set;
+    data->next = data_next;
+    data->str  = data_str;
+    data->data_ptr = NULL;
+    return gc_track(data_obj);
+}

@@ -103,11 +103,9 @@ Object        bf_string_format();
 Object        tm_str(Object obj);
 Object        String_join(Object self, Object list);
 void          string_methods_init();
-Data_proto*   get_string_proto();
 Object        string_iter_new(String* s);
-Object*       string_next(StringIterator* iterator);
+Object*       string_next(TmData* iterator);
 
-static Data_proto string_proto;
 /* macros */
 #define GET_STR(obj) (obj).value.str->value
 #define GET_SZ(obj)  (obj).value.str->value
@@ -133,18 +131,13 @@ void     list_free(TmList* );
 void     list_clear(TmList* list);
 void     list_methods_init();
 Object   list_iter_new(TmList* list);
-Object*  list_next(TmListIterator* iterator);
+Object*  list_next(TmData* iterator);
 Object   list_add(TmList*, TmList*);
 void     list_del(TmList*list, Object key);
 void     list_insert(TmList*list, int index, Object value);
 int      list_index(TmList*, Object val);
 void     list_append(TmList* list, Object v);
 Object   array_to_list(int n, ...);
-
-/** 
- * list iterator prototype
- */
-Data_proto list_iter_proto = { 0 };
 
 /* macros */
 #define LIST_GET(obj, i) list_get(GET_LIST(obj), i)
@@ -171,11 +164,8 @@ Object           dict_keys(TmDict* );
 Object           dict_keys();
 Object           dict_values();
 
-static Data_proto dict_iter_proto;
-
-Data_proto*       get_dict_iter_proto();
 Object           dict_iter_new(TmDict* dict);
-Object*          dict_next(TmDictIterator* iterator);
+Object*          dict_next(TmData* iterator);
 int              dict_set_attr(TmDict* dict, int const_id, Object val);
 int              dict_get_attr(TmDict* dict, int const_id);
 
@@ -347,6 +337,8 @@ Object*   get_builtin(char* key);
 #define GET_DICT(obj) GET_VAL(obj).dict
 #define GET_MODULE(obj) GET_VAL(obj).mod
 #define GET_MOD(obj) GET_VAL(obj).mod
+#define GET_LIST(obj) GET_VAL(obj).list
+
 #define DICT_LEN(obj)  GET_DICT(obj)->len
 #define ptr_addr(ptr) (long) (ptr) / sizeof(char*)
 #define GET_NUM(obj) (obj).value.dv
@@ -412,14 +404,3 @@ Object*   get_builtin(char* key);
 #endif
 
 #define LOG_INFO printf
-
-
-
-
-
-
-
-
-
-
-

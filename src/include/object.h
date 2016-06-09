@@ -35,16 +35,6 @@ typedef union TmValue {
   struct GC_Object*  gc;
 }TmValue;
 
-#define GET_LIST(obj) GET_VAL(obj).list
-
-#define USE_IDX 0
-
-#if USE_IDX
-    #define SET_IDX(obj, v) (obj).idx = (v)
-#else
-    #define SET_IDX(obj, v) /**/
-#endif
-
 typedef struct Object{
   char type;
   TmValue value;
@@ -117,8 +107,8 @@ typedef struct TmVm {
   Object ex;
   Object ex_line;
   Object ex_list;
-
   int ex_index; /* index of frame where exception was thrown */
+
   int frames_init_done;
   TmFrame frames[FRAMES_COUNT];
   TmFrame *frame;
@@ -159,7 +149,7 @@ typedef struct TmVm {
 
 #define DATA_OBJECT_HEAD     \
     int marked;              \
-    size_t data_size;         \
+    size_t data_size;        \
     int init;                \
     void (*mark)();          \
     void (*free)();          \
@@ -176,18 +166,23 @@ typedef struct Data_proto {
     Data_proto* proto;
 
 typedef struct TmData {
-    DATA_HEAD
+    int marked;
+    size_t data_size;
+    
+    long cur;
+    long inc;
+    long end;
+    void *data_ptr;
+    void *cur_ptr;
+    Object cur_obj;
+
+    void   (*mark)();
+    void   (*free)();
+    Object (*str)();
+    Object (*get)();
+    Object* (*next)();
+    void   (*set)();
 }TmData;
-
-typedef struct Data_object {
-  DATA_OBJECT_HEAD
-}Data_object;
-
-typedef struct _Tm_base_iterator {
-    DATA_HEAD
-    Object func;
-  Object ret;
-}Tm_base_iterator;
 
 /** 
  * definition for list
@@ -197,15 +192,8 @@ typedef struct TmList {
   int marked;
   int len;
   int cap;
-  int cur;
   struct Object* nodes;
 }TmList;
-
-typedef struct TmListIterator {
-    DATA_HEAD
-    TmList* list;
-    int cur;
-}TmListIterator;
 
 
 /** 
@@ -227,20 +215,6 @@ typedef struct Dictonary {
   struct DictNode* nodes;
 }TmDict;
 
-typedef struct _TmDictIterator {
-    DATA_HEAD
-    TmDict* dict;
-    int idx;
-} TmDictIterator;
-
-
-/**
- * definition of string
- */
-typedef struct {
-    char *value;
-    int len;
-}Chars;
 
 typedef struct String {
     int marked;
@@ -249,12 +223,15 @@ typedef struct String {
     char *value;
 } String;
 
-typedef struct _string_iterator {
-    DATA_HEAD
-    int cur;
-    String* string;
-} StringIterator;
+/** 
+ * subpy optimization
+ * code cache
+ */
 
+typedef struct {
+  int op;
+  int val;
+} CodeCache;
 
 /**
  * global variables
@@ -262,7 +239,5 @@ typedef struct _string_iterator {
  */ 
 TmVm* tm;
 Object* tm_stack_end;
-
-
 
 #endif /* OBJECT_H_ */

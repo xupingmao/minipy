@@ -140,15 +140,3 @@ Object arg_take_data_obj(const char* fnc) {
 int get_args_count() {
     return tm->arg_cnt;
 }
-
-
-
-
-
-
-
-
-
-
-
-

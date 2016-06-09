@@ -408,7 +408,7 @@ def parse_arg(p):
 
 def parse_def(p):
     p.next()
-    assert_type(p, 'name', 'Def_exception')
+    assert_type(p, 'name', 'DefException')
     func = AstNode("def")
     func.first = p.token
     p.next()
@@ -419,14 +419,14 @@ def parse_def(p):
 
 def parse_class(p):
     p.next()
-    assert_type(p, 'name','Class_exception')
+    assert_type(p, 'name','ClassException')
     clazz = AstNode()
     clazz.type = 'class'
     clazz.first = p.token
     p.next()
     if p.token.type == '(':
         p.next()
-        assert_type(p, 'name', 'Class_exception')
+        assert_type(p, 'name', 'ClassException')
         p.third = p.token
         p.next()
         expect(p, ')')
@@ -597,14 +597,4 @@ if __name__ == "__main__":
     import sys
     tree = parsefile(sys.argv[1])
     print_ast(tree)
-
-
-
-
-
-
-
-
-
-
 

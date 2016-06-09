@@ -249,7 +249,7 @@ Object string_builtin_endswith() {
     if (idx < 0) {
         return tm_number(0);
     }
-    return tm_number(idx + tm_len(self) == tm_len(arg0));
+    return tm_number(idx + tm_len(arg0) == tm_len(self));
 }
 
 void string_methods_init() {
@@ -264,30 +264,30 @@ void string_methods_init() {
     reg_mod_func(tm->str_proto, "endswith",   string_builtin_endswith);
 }
 
-Data_proto* get_string_proto() {
-    if(!string_proto.init) {
-        init_data_proto(&string_proto);
-        string_proto.next = string_next;
-        string_proto.data_size = sizeof(StringIterator);
-    }
-    return &string_proto;
+void string_iter_mark(TmData* data) {
+    ((String*) (data->data_ptr))->marked = 1;
 }
 
-Object string_iter_new(String* str) {
-    Object data = data_new(sizeof(StringIterator));
-    StringIterator* iterator = (StringIterator*) GET_DATA(data);
-    iterator->cur = 0;
-    iterator->string = str;
-    iterator->proto = get_string_proto();
-    return data;
-}
-
-Object* string_next(StringIterator* iterator) {
+Object* string_next(TmData* iterator) {
     static Object obj;
-    if (iterator->cur >= iterator->string->len) {
+    if (iterator->cur >= iterator->end) {
         return NULL;
     }
     iterator->cur += 1;
-    obj = string_chr(iterator->string->value[iterator->cur-1]);
+    String* str = iterator->data_ptr;
+    obj = string_chr(str->value[iterator->cur-1]);
     return &obj;
 }
+
+
+Object string_iter_new(String* str) {
+    Object data = data_new(0);
+    TmData* iterator = GET_DATA(data);
+    iterator->cur  = 0;
+    iterator->end  = str->len;
+    iterator->next = string_next;
+    iterator->mark = string_iter_mark;
+    iterator->data_ptr = str;
+    return data;
+}
+

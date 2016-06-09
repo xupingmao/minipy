@@ -20,12 +20,6 @@ def center(self, num):
     right = int(right)
     left = num - right - len(self)
     return left * ' ' + self + right * ' '
-def startswith(self, tar):
-    return self.find(tar)==0
-def endswith(self, end):
-    idx = self.find(end)
-    if idx < 0: return False
-    return idx + len(end) == len(self)
 def sformat0(args):
     fmt = args[0]
     if len(args) == 1: return fmt
@@ -282,8 +276,6 @@ add_obj_method("str", "format", sformat)
 add_obj_method('str', 'ljust', ljust)
 add_obj_method('str', 'rjust', rjust)
 add_obj_method('str', 'center', center)
-add_obj_method("str", "startswith", startswith)
-add_obj_method('str', 'endswith', endswith)
 add_obj_method('str', 'join', str_join)
 add_obj_method('list', 'join', list_join)
 add_builtin("uncode16", uncode16)
@@ -332,5 +324,5 @@ def boot(loadlibs=True):
         if exists(ARGV[0]):
             execfile(ARGV[0])
         else:
-            filename = "D:\\temp\\subpy\\python\\libs\\" + ARGV[0]
+            filename = "D:\\temp\\subpy\\libs\\" + ARGV[0]
             execfile(filename, False)

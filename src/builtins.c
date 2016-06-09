@@ -443,36 +443,19 @@ Object bf_pow() {
     return tm_number(pow(base, y));
 }
 
-typedef struct Range_iter {
-    DATA_HEAD
-    long cur;
-    long inc;
-    long stop;
-    Object cur_obj;
-}Range_iter;
 
-Object* range_next(Range_iter* data) {
+Object* range_next(TmData* data) {
     long cur = data->cur;
-    if (data->inc > 0 && cur < data->stop) {
+    if (data->inc > 0 && cur < data->end) {
         data->cur += data->inc;
         data->cur_obj = tm_number(cur);
         return &data->cur_obj;
-    } else if (data->inc < 0 && cur > data->stop) {
+    } else if (data->inc < 0 && cur > data->end) {
         data->cur += data->inc;
         data->cur_obj = tm_number(cur);
         return &data->cur_obj;
     }
     return NULL;
-}
-
-static Data_proto range_iter;
-Data_proto* get_range_iter_proto() {
-    if(!range_iter.init) {
-        init_data_proto(&range_iter);
-        range_iter.next = range_next;
-        range_iter.data_size = sizeof(Range_iter);
-    }
-    return &range_iter;
 }
 
 Object bf_range() {
@@ -493,8 +476,8 @@ Object bf_range() {
         break;
     case 3:
         start = (long)arg_take_double(sz_func);
-        end = (long)arg_take_double(sz_func);
-        inc = (long)arg_take_double(sz_func);
+        end   = (long)arg_take_double(sz_func);
+        inc   = (long)arg_take_double(sz_func);
         break;
     default:
         tm_raise("range([n, [ n, [n]]]), but see %d arguments",
@@ -504,12 +487,13 @@ Object bf_range() {
         tm_raise("range(): increment can not be 0!");
     if (inc * (end - start) < 0)
         tm_raise("range(%d, %d, %d): not valid range!", start, end, inc);
-    Object data = data_new(sizeof(Range_iter));
-    Range_iter *iterator = (Range_iter*) GET_DATA(data);
-    iterator->cur = start;
-    iterator->stop = end;
-    iterator->inc = inc;
-    iterator->proto = get_range_iter_proto();
+    Object data = data_new(0);
+    TmData *iterator = GET_DATA(data);
+    iterator->cur  = start;
+    iterator->end  = end;
+    iterator->inc  = inc;
+    iterator->next = range_next;
+
     return data;
 }
 
@@ -671,9 +655,7 @@ Object bf_set_vm_state() {
 
 Object bf_get_const_idx() {
     Object key = arg_take_obj("get_const_idx");
-    SET_IDX(key, 0);
     int i = dict_set(tm->constants, key, NONE_OBJECT);
-    SET_IDX(GET_CONST(i), i);
     return tm_number(i);
 }
 
@@ -875,16 +857,5 @@ void builtins_init() {
     reg_builtin_func("getosname", bf_get_os_name);
     reg_builtin_func("listdir", bf_listdir);
 }
-
-
-
-
-
-
-
-
-
-
-
 
 

@@ -107,7 +107,7 @@ Object obj_get(Object self, Object k) {
     case TYPE_FUNCTION:
         return get_func_attr(GET_FUNCTION(self), k);
     case TYPE_DATA:
-        return GET_DATA_PROTO(self)->get(GET_DATA(self), k);
+        return GET_DATA(self)->get(GET_DATA(self), k);
     }
     tm_raise("keyError %o", k);
     return NONE_OBJECT;
@@ -117,7 +117,6 @@ Object obj_sub(Object a, Object b) {
     if (a.type == b.type) {
         if (a.type == TYPE_NUM) {
             GET_NUM(a) -= GET_NUM(b);
-            SET_IDX(a, 0);
             return a;
         }
     }
@@ -130,7 +129,6 @@ Object obj_add(Object a, Object b) {
         switch (TM_TYPE(a)) {
         case TYPE_NUM:
             GET_NUM(a) += GET_NUM(b);
-            SET_IDX(a, 0);
             return a;
         case TYPE_STR: {
             char* sa = GET_STR(a);
@@ -208,7 +206,6 @@ int obj_cmp(Object a, Object b) {
 Object obj_mul(Object a, Object b) {
     if (a.type == b.type && a.type == TYPE_NUM) {
         GET_NUM(a) *= GET_NUM(b);
-        SET_IDX(a, 0);
         return a;
     }
     if (a.type == TYPE_NUM && b.type == TYPE_STR) {
@@ -242,7 +239,6 @@ Object obj_mul(Object a, Object b) {
 Object obj_div(Object a, Object b) {
     if (a.type == b.type && a.type == TYPE_NUM) {
         GET_NUM(a) /= GET_NUM(b);
-        SET_IDX(a, 0);
         return a;
     }
     tm_raise("obj_div: can not divide %o and %o", a, b);
@@ -324,7 +320,7 @@ Object iter_new(Object collections) {
     switch(TM_TYPE(collections)) {
         case TYPE_LIST: return list_iter_new(GET_LIST(collections));
         case TYPE_DICT: return dict_iter_new(GET_DICT(collections));
-        case TYPE_STR: return string_iter_new(GET_STR_OBJ(collections));
+        case TYPE_STR:  return string_iter_new(GET_STR_OBJ(collections));
         case TYPE_DATA: return collections;
         default: tm_raise("iter_new(): can not create a iterator of %o", collections);
     }
@@ -332,7 +328,7 @@ Object iter_new(Object collections) {
 }
 
 Object* next_ptr(Object iterator) {
-    return GET_DATA_PROTO(iterator)->next(GET_DATA(iterator));
+    return GET_DATA(iterator)->next(GET_DATA(iterator));
 }
 
 void obj_del(Object self, Object k) {
@@ -430,7 +426,7 @@ Object tm_str(Object a) {
     case TYPE_NONE:
         return sz_to_string("None");
     case TYPE_DATA:
-        return GET_DATA_PROTO(a)->str(GET_DATA(a));
+        return GET_DATA(a)->str(GET_DATA(a));
     default:
         tm_raise("str: not supported type %d", a.type);
     }

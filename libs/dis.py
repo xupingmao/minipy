@@ -8,8 +8,8 @@ from tmcode import *
 import sys
 
 global_mod_list = [LOAD_GLOBAL, STORE_GLOBAL, LOAD_CONSTANT, TM_DEF]
-def dis(fname ,constants = ['None']):
-    s = load(fname)
+def dis(code ,constants = ['None']):
+    s = code
     i = 0; l = len(s)
     #constants = ['None']
     while i < l:
@@ -20,9 +20,9 @@ def dis(fname ,constants = ['None']):
             vv = s.substring(i, i + val)
             i += val
         elif op in global_mod_list:
-            print(tmcodes[op], get_const(val))
+            print(tmcodes[op].ljust(20), get_const(val))
         else:
-            print(tmcodes[op], val)
+            print(tmcodes[op].ljust(20), val)
 
 def dis_func(func):
     code = get_func_code(func)
@@ -90,7 +90,10 @@ def main():
     argc = len(ARGV)
     if argc == 2:
         fname = ARGV[1]
-        dis(fname)
+        if fname.endswith(".py"):
+            dis(compilefile(fname))
+        else:
+            dis(load(fname))
     elif argc == 3:
         opt = ARGV[1]
         fname = ARGV[2]
@@ -111,6 +114,6 @@ def copy(collection):
 
 test = None
 if __name__ == "__main__":
-    argv = copy(sys.argv)
-    del argv[0]
-    dissimple(argv)
+    # argv = copy(sys.argv)
+    # del argv[0]
+    main()

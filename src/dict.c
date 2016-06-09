@@ -250,21 +250,10 @@ void dict_methods_init() {
     reg_mod_func(tm->dict_proto, "update", dict_builtin_update);
 }
 
-void dict_iter_mark(Data_object* data) {
-    TmDictIterator* iter = (TmDictIterator*) data;
-    gc_mark_dict(iter->dict);
+void dict_iter_mark(TmData* data) {
+    TmDict* dict = (TmDict*) data->data_ptr;
+    gc_mark_dict(dict);
 }
-
-Data_proto* get_dict_iter_proto() {
-    if(!dict_iter_proto.init) {
-        init_data_proto(&dict_iter_proto);
-        dict_iter_proto.data_size = sizeof(TmDictIterator);
-        dict_iter_proto.next = dict_next;
-        dict_iter_proto.mark = dict_iter_mark;
-    }
-    return &dict_iter_proto;
-}
-
 
 Object dict_iter_new(TmDict* dict) {
     /*
@@ -277,21 +266,25 @@ Object dict_iter_new(TmDict* dict) {
         base_iterator->proto = get_base_iter_proto();
         return data;
     }*/
-    Object data = data_new(sizeof(TmDictIterator));
-    TmDictIterator* iterator = (TmDictIterator*)GET_DATA(data);
-    iterator->dict = dict;
-    iterator->idx = 0;
-    iterator->proto = get_dict_iter_proto();
+    Object data = data_new(0);
+    TmData* iterator = GET_DATA(data);
+    iterator->cur = 0;
+    iterator->end = dict->len;
+    iterator->inc = 1;
+    iterator->data_ptr = dict;
+    iterator->next = dict_next;
+    iterator->mark = dict_iter_mark;
     return data;
 }
 
-Object* dict_next(TmDictIterator* iterator) {
-    if (iterator->idx < iterator->dict->cap) {
+Object* dict_next(TmData* iterator) {
+    TmDict* dict = iterator->data_ptr;
+    if (iterator->cur < dict->cap) {
         int i;
-        for(i = iterator->idx; i < iterator->dict->cap; i++) {
-            if (iterator->dict->nodes[i].used) {
-                iterator->idx = i + 1;
-                return &iterator->dict->nodes[i].key;
+        for(i = iterator->cur; i < dict->cap; i++) {
+            if (dict->nodes[i].used) {
+                iterator->cur = i + 1;
+                return &dict->nodes[i].key;
             }
         }
         return NULL;
