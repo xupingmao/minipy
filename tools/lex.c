@@ -366,16 +366,3 @@ int main(int argc, char* argv[]){
 	lex_free(l);
 	return 0;
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
