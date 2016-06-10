@@ -103,7 +103,7 @@ Object        bf_string_format();
 Object        tm_str(Object obj);
 Object        String_join(Object self, Object list);
 void          string_methods_init();
-Object        string_iter_new(String* s);
+Object        string_iter_new(Object s);
 Object*       string_next(TmData* iterator);
 
 /* macros */
@@ -130,7 +130,7 @@ Object   list_get(TmList* list, int n);
 void     list_free(TmList* );
 void     list_clear(TmList* list);
 void     list_methods_init();
-Object   list_iter_new(TmList* list);
+Object   list_iter_new(Object list);
 Object*  list_next(TmData* iterator);
 Object   list_add(TmList*, TmList*);
 void     list_del(TmList*list, Object key);
@@ -164,7 +164,7 @@ Object           dict_keys(TmDict* );
 Object           dict_keys();
 Object           dict_values();
 
-Object           dict_iter_new(TmDict* dict);
+Object           dict_iter_new(Object dict);
 Object*          dict_next(TmData* iterator);
 int              dict_set_attr(TmDict* dict, int const_id, Object val);
 int              dict_get_attr(TmDict* dict, int const_id);
@@ -192,6 +192,7 @@ Object  arg_take_dict_obj(const char* fnc);
 Object  arg_take_obj(const char* fnc);
 Object  arg_take_data_obj(const char* fnc);
 int     get_args_count() ;
+int     arg_remains();
 void    tm_unget_arg();
 
 

@@ -21,8 +21,12 @@ _opcode_names = [
     'DICT_SET', 'LIST', 'DICT', 'LIST_APPEND',
     'JUMP', 'UP_JUMP', 'POP_JUMP_ON_FALSE', 'JUMP_ON_FALSE', 'JUMP_ON_TRUE',
     #TAGSIZE
-    'TM_UNARRAY', 'TM_ROT', 'TM_DEL', 'TM_FOR', 'TM_NEXT', 'ITER_NEW', 'LOAD_EX',
-    'SETJUMP', 'CALL', 'TM_DEF', 'RETURN', 'LOAD_PARAMS', 'TM_NARG', 'TM_EOF',
+    'UNPACK', 'TM_ROT', 'TM_DEL', 'TM_FOR', 'TM_NEXT', 'ITER_NEW', 'LOAD_EX',
+    'SETJUMP', 'CALL', 'TM_DEF', 'RETURN', 
+
+    'LOAD_PARAMS', 'LD_NARG', "LD_PARG",
+
+    'TM_EOF',
     "CLRJUMP",
     'TM_EOP',
     # mulity assignment, eg. x,y = 1,2

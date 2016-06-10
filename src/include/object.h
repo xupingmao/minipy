@@ -172,8 +172,6 @@ typedef struct TmData {
     long cur;
     long inc;
     long end;
-    void *data_ptr;
-    void *cur_ptr;
     Object cur_obj;
 
     void   (*mark)();
@@ -182,6 +180,9 @@ typedef struct TmData {
     Object (*get)();
     Object* (*next)();
     void   (*set)();
+
+    void* extend_data_ptr;
+    Object data_ptr[1];
 }TmData;
 
 /** 

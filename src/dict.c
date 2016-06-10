@@ -244,18 +244,13 @@ Object dict_builtin_update() {
 void dict_methods_init() {
     tm->dict_proto = dict_new();
     /* build dict class */
-    reg_mod_func(tm->dict_proto, "keys", dict_builtin_keys);
+    reg_mod_func(tm->dict_proto, "keys",   dict_builtin_keys);
     reg_mod_func(tm->dict_proto, "values", dict_builtin_values);
-    reg_mod_func(tm->dict_proto, "copy", dict_builtin_copy);
+    reg_mod_func(tm->dict_proto, "copy",   dict_builtin_copy);
     reg_mod_func(tm->dict_proto, "update", dict_builtin_update);
 }
 
-void dict_iter_mark(TmData* data) {
-    TmDict* dict = (TmDict*) data->data_ptr;
-    gc_mark_dict(dict);
-}
-
-Object dict_iter_new(TmDict* dict) {
+Object dict_iter_new(Object dict) {
     /*
     Object *__iter__ = dict_get_by_str(dict, "__iter__");
     if (__iter__ != NULL) {
@@ -266,19 +261,18 @@ Object dict_iter_new(TmDict* dict) {
         base_iterator->proto = get_base_iter_proto();
         return data;
     }*/
-    Object data = data_new(0);
+    Object data = data_new(1);
     TmData* iterator = GET_DATA(data);
     iterator->cur = 0;
-    iterator->end = dict->len;
+    iterator->end = DICT_LEN(dict);
     iterator->inc = 1;
-    iterator->data_ptr = dict;
+    iterator->data_ptr[0] = dict;
     iterator->next = dict_next;
-    iterator->mark = dict_iter_mark;
     return data;
 }
 
 Object* dict_next(TmData* iterator) {
-    TmDict* dict = iterator->data_ptr;
+    TmDict* dict = GET_DICT(iterator->data_ptr[0]);
     if (iterator->cur < dict->cap) {
         int i;
         for(i = iterator->cur; i < dict->cap; i++) {

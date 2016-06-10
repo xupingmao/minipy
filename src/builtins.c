@@ -497,6 +497,32 @@ Object bf_range() {
     return data;
 }
 
+Object* enumerate_next(TmData* iterator) {
+    Object iter = iterator->data_ptr[0];
+    Object* next_value = next_ptr(iter);
+
+    if (next_value == NULL) {
+        return NULL;
+    } else {
+        int idx = iterator->cur;
+        iterator->cur += 1;
+        iterator->cur_obj = array_to_list(2, tm_number(idx), *next_value);
+        return &iterator->cur_obj;
+    }
+}
+
+Object bf_enumerate() {
+    Object _it = arg_take_obj("enumerate");
+    Object origin_iter = iter_new(_it);
+
+    Object data = data_new(1);
+    TmData* iterator = GET_DATA(data);
+    iterator->cur = 0;
+    iterator->data_ptr[0] = origin_iter;
+    iterator->next = enumerate_next;
+    return data;
+}
+
 Object bf_mmatch() {
     char* str = arg_take_sz("mmatch");
     int start = arg_take_int("mmatch");
@@ -805,30 +831,33 @@ void builtins_init() {
     reg_builtin_func("save", bf_save);
     reg_builtin_func("file_append", bf_file_append);
     reg_builtin_func("remove", bf_remove);
-    reg_builtin_func("print", bf_print);
     reg_builtin_func("write", bf_write);
+    reg_builtin_func("load_module", bf_load_module);
+    reg_builtin_func("gettype", bf_gettype);
+    reg_builtin_func("istype", bf_istype);
+    reg_builtin_func("code8", bf_code8);
+    reg_builtin_func("code16", bf_code16);
+    reg_builtin_func("code32", bf_code32);
+    reg_builtin_func("mmatch", bf_mmatch);
+    reg_builtin_func("newobj", bf_newobj);
+
+    /* python built-in functions */
+    reg_builtin_func("globals", bf_globals);
+    reg_builtin_func("len", bf_len);
+    reg_builtin_func("exit", bf_exit);
     reg_builtin_func("input", bf_input);
     reg_builtin_func("str", bf_str);
     reg_builtin_func("int", bf_int);
     reg_builtin_func("float", bf_float);
-    reg_builtin_func("load_module", bf_load_module);
-    reg_builtin_func("globals", bf_globals);
-    reg_builtin_func("len", bf_len);
-    reg_builtin_func("exit", bf_exit);
-    reg_builtin_func("gettype", bf_gettype);
-    reg_builtin_func("istype", bf_istype);
+    reg_builtin_func("print", bf_print);
     reg_builtin_func("chr", bf_chr);
     reg_builtin_func("ord", bf_ord);
-    reg_builtin_func("code8", bf_code8);
-    reg_builtin_func("code16", bf_code16);
-    reg_builtin_func("code32", bf_code32);
     reg_builtin_func("raise", bf_raise);
     reg_builtin_func("system", bf_system);
     reg_builtin_func("apply", bf_apply);
     reg_builtin_func("pow", bf_pow);
     reg_builtin_func("range", bf_range);
-    reg_builtin_func("mmatch", bf_mmatch);
-    reg_builtin_func("newobj", bf_newobj);
+    reg_builtin_func("enumerate", bf_enumerate);
     reg_builtin_func("random", bf_random);
     
     /* functions which has impact on vm follow camel case */

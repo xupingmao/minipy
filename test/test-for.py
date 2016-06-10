@@ -22,3 +22,6 @@ for key in list:
     
 for key in (1,2,3):
     logging.info('tuple', key)
+
+for k,v in [[1,2], [3,4]]:
+    print(k,v)

@@ -350,8 +350,32 @@ def parse_try(p):
     node.third = p.visit_block()
     p.add(node)
 
+def parse_for_items(p):
+    name = p.token
+    expect(p, "name")
+    name_list = [name]
+    while p.token.type == ",":
+        p.next()
+        name = p.token
+        expect(p, "name")
+        name_list.append(name)
+    expect(p, "in")
+    expr(p)
+    node = AstNode("in")
+    node.first = name_list
+    node.second = p.pop()
+    return node
+
+
 def parse_for(p):
-    parse_for_while(p, 'for')
+    # parse_for_while(p, "for")
+    ast = AstNode("for")
+    p.next()
+    node = parse_for_items(p)
+    ast.first = node
+    expect(p, ':')
+    ast.second = p.visit_block()
+    p.add(ast)
 
 def parse_while(p):
     parse_for_while(p, 'while')

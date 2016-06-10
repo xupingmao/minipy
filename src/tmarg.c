@@ -41,7 +41,7 @@ void _resolve_method_self(TmFunction *fnc) {
     arg_insert(fnc->self);
 }
 
-Object get_arg_from_v_m0(const char* fnc) {
+Object get_arg_from_vm0(const char* fnc) {
     if (tm->arg_loaded >= tm->arg_cnt)
         tm_raise("%s :no argument! total %d, current %d",
                 fnc, tm->arg_cnt, tm->arg_loaded);
@@ -54,8 +54,12 @@ int has_arg() {
     return tm->arg_loaded < tm->arg_cnt;
 }
 
+int arg_remains () {
+    return tm->arg_cnt - tm->arg_loaded;
+}
+
 Object arg_take_str_obj(const char* fnc) {
-    Object value = get_arg_from_v_m0(fnc);
+    Object value = get_arg_from_vm0(fnc);
     if (NOT_STR(value)) {
         tm_raise("%s: expect string but see %s", fnc, get_type_by_obj(value));
     }
@@ -63,7 +67,7 @@ Object arg_take_str_obj(const char* fnc) {
 }
 
 String* arg_take_str_ptr(const char* fnc) {
-    Object value = get_arg_from_v_m0(fnc);
+    Object value = get_arg_from_vm0(fnc);
     if (NOT_STR(value)) {
         tm_raise("%s: expect string but see %s", fnc, get_type_by_obj(value));
     }
@@ -71,7 +75,7 @@ String* arg_take_str_ptr(const char* fnc) {
 }
 
 char* arg_take_sz(const char* fnc) {
-    Object value = get_arg_from_v_m0(fnc);
+    Object value = get_arg_from_vm0(fnc);
     if (NOT_STR(value)) {
         tm_raise("%s: expect string but see %s", fnc, get_type_by_obj(value));
     }
@@ -79,7 +83,7 @@ char* arg_take_sz(const char* fnc) {
 }
 
 Object arg_take_func_obj(const char* fnc) {
-    Object value = get_arg_from_v_m0(fnc);
+    Object value = get_arg_from_vm0(fnc);
     if (NOT_FUNC(value)) {
         tm_raise("%s: expect function but see %s", fnc, get_type_by_obj(value));
     }
@@ -87,7 +91,7 @@ Object arg_take_func_obj(const char* fnc) {
 }
 
 Object arg_take_list_obj(const char* fnc) {
-    Object v = get_arg_from_v_m0(fnc);
+    Object v = get_arg_from_vm0(fnc);
     if (NOT_LIST(v)) {
         tm_raise("%s: expect list but see %s", fnc, get_type_by_obj(v));
     }
@@ -95,7 +99,7 @@ Object arg_take_list_obj(const char* fnc) {
 }
 
 Object arg_take_dict_obj(const char* fnc) {
-    Object v = get_arg_from_v_m0(fnc);
+    Object v = get_arg_from_vm0(fnc);
     if (NOT_DICT(v)) {
         tm_raise("%s: expect dict but see %s", fnc, get_type_by_obj(v));
     }
@@ -103,7 +107,7 @@ Object arg_take_dict_obj(const char* fnc) {
 }
 
 TmList* arg_take_list_ptr(const char* fnc) {
-    Object v = get_arg_from_v_m0(fnc);
+    Object v = get_arg_from_vm0(fnc);
     if (NOT_LIST(v)) {
         tm_raise("%s: expect list but see %s", fnc, get_type_by_obj(v));
     }
@@ -111,7 +115,7 @@ TmList* arg_take_list_ptr(const char* fnc) {
 }
 
 int arg_take_int(const char* fnc) {
-    Object v = get_arg_from_v_m0(fnc);
+    Object v = get_arg_from_vm0(fnc);
     if (TM_TYPE(v) != TYPE_NUM) {
         tm_raise("%s: expect number but see %s", fnc, get_type_by_obj(v));
     }
@@ -119,7 +123,7 @@ int arg_take_int(const char* fnc) {
 }
 
 double arg_take_double(const char* fnc) {
-    Object v = get_arg_from_v_m0(fnc);
+    Object v = get_arg_from_vm0(fnc);
     if (TM_TYPE(v) != TYPE_NUM) {
         tm_raise("%s: expect number but see %s", fnc, get_type_by_obj(v));
     }
@@ -127,11 +131,11 @@ double arg_take_double(const char* fnc) {
 }
 
 Object arg_take_obj(const char* fnc) {
-    return get_arg_from_v_m0(fnc);
+    return get_arg_from_vm0(fnc);
 }
 
 Object arg_take_data_obj(const char* fnc) {
-    Object v = get_arg_from_v_m0(fnc);
+    Object v = get_arg_from_vm0(fnc);
     if (TM_TYPE(v) != TYPE_DATA) {
         tm_raise("%s: expect data but see %s", fnc, get_type_by_obj(v));
     }

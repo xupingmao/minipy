@@ -3,7 +3,7 @@
 Object string_char_new(int c) {
     String* str = tm_malloc(sizeof(String));
     struct Object obj;
-    str->stype = 1;
+    str->stype = 2; // marked as char type;
     str->value = tm_malloc(2);
     str->len = 1;
     str->value[0] = c;
@@ -264,30 +264,24 @@ void string_methods_init() {
     reg_mod_func(tm->str_proto, "endswith",   string_builtin_endswith);
 }
 
-void string_iter_mark(TmData* data) {
-    ((String*) (data->data_ptr))->marked = 1;
-}
-
 Object* string_next(TmData* iterator) {
-    static Object obj;
     if (iterator->cur >= iterator->end) {
         return NULL;
     }
     iterator->cur += 1;
-    String* str = iterator->data_ptr;
-    obj = string_chr(str->value[iterator->cur-1]);
-    return &obj;
+    String* str = GET_STR_OBJ(iterator->data_ptr[0]);
+    iterator->cur_obj = string_chr(str->value[iterator->cur-1]);
+    return &iterator->cur_obj;
 }
 
 
-Object string_iter_new(String* str) {
-    Object data = data_new(0);
+Object string_iter_new(Object str) {
+    Object data = data_new(1);
     TmData* iterator = GET_DATA(data);
     iterator->cur  = 0;
-    iterator->end  = str->len;
+    iterator->end  = GET_STR_LEN(str);
     iterator->next = string_next;
-    iterator->mark = string_iter_mark;
-    iterator->data_ptr = str;
+    iterator->data_ptr[0] = str;
     return data;
 }
 

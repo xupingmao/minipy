@@ -391,6 +391,19 @@ def encode_if(tk):
     encode_item(tk.third)
     emit_tag(end_tag)
     
+def encode_assign_to(item_list, n):
+    if istype(item_list, "list"):
+        if len(item_list) == 1:
+            # do nothing, just one object to assign
+            pass
+        elif n == 1:
+            emit(UNPACK, len(item_list))
+        else:
+            emit(TM_ROT, n)
+        for item in item_list:
+            store(item)
+    else:
+        store(item_list)
     
 def encode_assign(tk):
     if gettype(tk.second) == "list":
@@ -400,15 +413,7 @@ def encode_assign(tk):
     else:
         encode_item(tk.second)
         n = 1
-    if gettype(tk.first) == "list":
-        if n == 1:
-            emit(TM_UNARRAY, len(tk.first))
-        else:
-            emit(TM_ROT, n)
-        for item in tk.first:
-            store(item)
-    else:
-        store(tk.first)
+    encode_assign_to(tk.first, n)
     
 def encode_tuple(tk):
     return encode_item(tk.first) + encode_item(tk.second)
@@ -449,24 +454,17 @@ def encode_call(tk):
     
 def encode_def(tk, in_class = 0):
     emit_def(tk.first)
-    # emit(TM_DEF, 0)
-    # regs = []
-    # emit(0, 0) # filename
-    #regs = emit(0, 0) # regs
-    #func_end  = newtag()
-    #jump(func_end)
-    # emit(0, regs) # regs
-    # loc_num_ins = emit(LOC_NUM, 0)
     push_scope()
     narg = 0
     parg = 0
     varg = 0
+    narg_index = 0
     for item in tk.second:
         def_local(item.first)
         # regs.append(item.first)
         if item.type == 'narg':
             narg = 1
-            emit(TM_NARG)
+            # emit(TM_NARG, index)
             break
         if item.second:
             varg += 1
@@ -474,11 +472,16 @@ def encode_def(tk, in_class = 0):
             store(item.first)
         else:
             parg += 1
+        narg_index += 1
+    line_no = getlineno(tk.first)
+    if line_no != None:
+        emit(TM_LINE, line_no)
     if not narg:
-        line_no = getlineno(tk.first)
-        if line_no != None:
-            emit(TM_LINE, line_no)
         emit(LOAD_PARAMS, parg*256 + varg)
+    elif parg > 0:
+        emit(LD_PARG, parg)
+    if narg:
+        emit(LD_NARG, narg_index)
     encode_item(tk.third)
     emit(TM_EOF)
     #regs[1] = asm_get_regs()
@@ -618,12 +621,18 @@ def encode_for(tk):
     # set for stack
     _begin_tag_list.append(start_tag)
     _end_tag_list.append(end_tag)
+
+    iterator = tk.first.second
+    values   = tk.first.first
+
     ### load index and iterator
-    encode_raw_list(tk.first.second)
+    encode_raw_list(iterator)
     emit(ITER_NEW) # create a iterator
     emit_tag(start_tag)
     jump(end_tag, TM_NEXT)
-    store(tk.first.first)
+    encode_assign_to(values, 1)
+
+    # for-loop body
     encode_item(tk.second)
     jump(start_tag)
     emit_tag(end_tag)

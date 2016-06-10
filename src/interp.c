@@ -124,6 +124,7 @@ Object tm_eval(TmFrame* f) {
     Object cur_fnc = f->fnc;
     Object globals = get_globals(cur_fnc);
     unsigned char* pc = f->pc;
+    const char* func_name_sz = get_func_name_sz(cur_fnc);
 
     Object x, k, v;
     Object ret = NONE_OBJECT;
@@ -342,12 +343,20 @@ Object tm_eval(TmFrame* f) {
             }
             break;
         }
-        case TM_NARG: {
-            Object list = list_new(tm->arg_cnt);
-            for(i = 0; i < tm->arg_cnt; i++) {
-                obj_append(list, tm->arguments[i]);
+        case LD_PARG: {
+            int parg = i;
+            for (i = 0; i < parg; i++) {
+                locals[i] = arg_take_obj(func_name_sz);
             }
-            locals[0] = list;
+            break;
+        }
+        case LD_NARG: {
+            int arg_index = i;
+            Object list = list_new(tm->arg_cnt);
+            while (arg_remains() > 0) {
+                obj_append(list, arg_take_obj(func_name_sz));
+            }
+            locals[arg_index] = list;
             break;
         }
         case ITER_NEW: {
@@ -367,17 +376,9 @@ Object tm_eval(TmFrame* f) {
         }
         case TM_DEF: {
             Object mod = GET_FUNCTION(cur_fnc)->mod;
-            //pc += 3;
-            //Code reg_code = parse_code(pc);
-            //pc += 3;
-            //Code jmp_code = parse_code(pc);
             Object fnc = func_new(mod, NONE_OBJECT, NULL);
             pc = func_resolve(GET_FUNCTION(fnc), pc);
-            // GET_FUNCTION(fnc)->code = pc + 3;
-            // GET_FUNCTION(fnc)->maxlocals = reg_code.val;
-            // GET_FUNCTION(fnc)->maxstack = reg_code.val;
             GET_FUNCTION_NAME(fnc) = GET_CONST(i);
-            // pc += jmp_code.val * 3;
             TM_PUSH(fnc);
             continue;
         }
@@ -395,9 +396,9 @@ Object tm_eval(TmFrame* f) {
             }
             break;
         }
-        case TM_UNARRAY: {
+        case UNPACK: {
             x = TM_POP();
-            tm_assert_type(x, TYPE_LIST, "tm_eval:TM_UNARRAY");
+            tm_assert_type(x, TYPE_LIST, "tm_eval:UNPACK");
             int j;
             for(j = LIST_LEN(x)-1; j >= 0; j--) {
                 TM_PUSH(LIST_GET(x, j));

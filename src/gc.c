@@ -446,12 +446,15 @@ Data_proto* get_default_data_proto() {
 
 
 void data_mark(TmData* data) {
-    /* */
+    int i;
+    for (i = 0; i < data->data_size; i++) {
+        gc_mark(data->data_ptr[i]);
+    }
 }
 
 void data_free(TmData* data) {
     // printf("data_free: %x\n", data);
-    tm_free(data, sizeof(TmData));
+    tm_free(data, sizeof(TmData) + (data->data_size-1) * sizeof(Object));
 }
 
 Object data_get(Object self, Object key) {
@@ -468,11 +471,14 @@ Object data_str(Object self) {
 }
 
 
-
+/** 
+ * data_size is the size of objects contains in the data 
+ */
 Object data_new(size_t data_size) {
     Object data_obj;
     data_obj.type = TYPE_DATA;
-    GET_DATA(data_obj) = tm_malloc(sizeof(TmData));
+    /* there is one slot for default. */
+    GET_DATA(data_obj) = tm_malloc(sizeof(TmData) + (data_size-1) * sizeof(Object));
     TmData* data = GET_DATA(data_obj);
 
     // printf("data_new: %x\n", data);
@@ -490,6 +496,11 @@ Object data_new(size_t data_size) {
     data->set  = data_set;
     data->next = data_next;
     data->str  = data_str;
-    data->data_ptr = NULL;
+    data->data_size = data_size;
+
+    int i = 0;
+    for (i = 0; i < data_size; i++) {
+        data->data_ptr[i] = NONE_OBJECT;
+    }
     return gc_track(data_obj);
 }

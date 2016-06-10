@@ -318,9 +318,9 @@ Object obj_neg(Object o) {
 
 Object iter_new(Object collections) {
     switch(TM_TYPE(collections)) {
-        case TYPE_LIST: return list_iter_new(GET_LIST(collections));
-        case TYPE_DICT: return dict_iter_new(GET_DICT(collections));
-        case TYPE_STR:  return string_iter_new(GET_STR_OBJ(collections));
+        case TYPE_LIST: return list_iter_new(collections);
+        case TYPE_DICT: return dict_iter_new(collections);
+        case TYPE_STR:  return string_iter_new(collections);
         case TYPE_DATA: return collections;
         default: tm_raise("iter_new(): can not create a iterator of %o", collections);
     }

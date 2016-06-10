@@ -165,10 +165,6 @@ Object list_add(TmList* list1, TmList*list2) {
     return newlist;
 }
 
-int List_compute_size(TmList* list){
-    return OBJ_SIZE * list->cap + sizeof(TmList);
-}
-
 // belows are builtin methods
 //
 
@@ -256,19 +252,14 @@ void list_methods_init() {
     reg_mod_func(tm->list_proto, "clear", list_builtin_clear);
 }
 
-void list_iter_mark(TmData* data) {
-    gc_mark_list(data->data_ptr);
-}
-
-Object list_iter_new(TmList* list) {
-    Object data = data_new(0);
+Object list_iter_new(Object list) {
+    Object data = data_new(1);
     TmData* iterator = GET_DATA(data);
     iterator->cur = 0;
-    iterator->end = list->len;
+    iterator->end = LIST_LEN(list);
     iterator->inc = 1;
     iterator->next = list_next;
-    iterator->mark = list_iter_mark;
-    iterator->data_ptr = list;
+    iterator->data_ptr[0] = list;
     return data;
 }
 
@@ -277,7 +268,7 @@ Object* list_next(TmData* iterator) {
         return NULL;
     } else {
         iterator->cur += 1;
-        TmList* list = iterator->data_ptr;
+        TmList* list = GET_LIST(iterator->data_ptr[0]);
         iterator->cur_obj = list->nodes[iterator->cur-1];
         return & iterator->cur_obj;
     }

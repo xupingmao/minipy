@@ -1,5 +1,8 @@
 from io import StringIO
-import sys
+import sys, os
+
+
+_name_list = ["_", "$"]
 
 _blacklist = [
     "FindNextFile",
@@ -19,13 +22,11 @@ _convert_dict = {
     "Tm_module": "TmModule",
     "Tm_frame": "TmFrame",
     "Tm_data": "TmData",
-    "Tm_dict_iterator": "TmDictIterator",
     "Parser_ctx":"ParserCtx",
     "Ast_node": "AstNode",
     "Asm_context" :"AsmContext",
     "Encode_ctx": "EncodeCtx",
     "Dict_node": "DictNode",
-    "Tm_list_iterator": "TmListIterator",
 }
 
 def do_name(line, i):
@@ -33,7 +34,7 @@ def do_name(line, i):
     oldname = ''
     while i < len(line):
         c = line[i]
-        if c.isalnum() or c == '_':
+        if c.isalnum() or c in _name_list:
             oldname += c
             if c.isupper():
                 newname += "_" + c.lower()
@@ -51,7 +52,8 @@ def do_name(line, i):
     return newname, i
 
 def do_skip_str(line, i, end):
-    str = ''
+    str = line[i]
+    i += 1 # skip start char (',")
     while i < len(line):
         c = line[i]
         str += c
@@ -73,7 +75,7 @@ def convert (content):
         if c == '"' or c == "'":
             str, i = do_skip_str(content, i, c)
             buf.write(str)
-        elif c.isalpha():
+        elif c.isalpha() or c in _name_list:
             newname, i = do_name(content, i)
             buf.write(newname)
         else:
@@ -88,21 +90,57 @@ def save_file(name, content):
     fp.close()
 
 
-def do_opt(opt):
-    if opt == "-test":
-        result = convert("this is a test CamelCase camelCase\nHello")
-        print(result)
-    else:
-        name = sys.argv[1]
-        content = open(name).read()
-        result = convert(content)
-        if content != result:
-            save_file(name + ".bak", content)
-            save_file(name, result)
+def do_file(name):
+    name = sys.argv[1]
+    content = open(name).read()
+    result = convert(content)
+    if content != result:
+        save_file(name + ".bak", content)
+        save_file(name, result)
 
+def do_dir(dirname):
+    for root, dirs, files in os.walk(dirname):
+        for f in files:
+            name, ext = os.path.splitext(f)
+            if ext not in ('.py', '.c'):
+                continue
+            abspath = os.path.join(root, f)
+            do_file(abspath)
+        
+def do_test():
+    origin = '''
+    this is a test.
+    I Am A Test (this will not be convert)
+    ClassName will not be converted
+    CONST will not be converted
+    funcName will be converted
+    "stringTest" will not be converted
+    _testName will be converted
+    '''
+    print("origin:")
+    print(origin)
+    
+    result = convert(origin)
+    print("result")
+    print(result)
+            
+def print_usage():
+    print("usage:")
+    print("  %s filename" % sys.argv[0])
+    print("  %s -d dirname" % sys.argv[0])
+            
 if __name__ == '__main__':
     if len(sys.argv) == 2:
         opt = sys.argv[1]
-        do_opt(opt)
-    else:
-        print ("usage %s filename" % sys.argv[0])
+        if opt == "-test":
+            do_test()
+            exit(0)
+        else:
+            do_file(opt)
+            exit(0)
+    elif len(sys.argv) == 3:
+        opt = sys.argv[1]
+        if opt == "-d":
+            do_dir(opt, sys.argv[2])
+            exit(0)
+    print ("usage %s filename" % sys.argv[0])
