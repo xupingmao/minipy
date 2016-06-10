@@ -21,6 +21,7 @@ a subset of python, vm implemented with ANSI C and compiler implemented with Pyt
 2. `tokenize.py` tokenizer modified from tinypy/tokenize
 3. `parse.py` handwrite LL parser
 4. `encode.py` code generator
+5. `setup.py` build bytecodes to c array, saved in `bin.c` by default.
 
 ### vm features
 1. stack based
