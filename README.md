@@ -58,6 +58,6 @@ a subset of python, vm implemented with ANSI C and compiler implemented with Pyt
 2. dis.py dissamble bytecode.
 4. ast.py print abstract syntax tree.
 
+### LISENCE
 
-That's all.
-
+MIT
