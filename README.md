@@ -1,15 +1,15 @@
 <pre>
-       _____________ ____________________________.___.
-      /   _____/    |   \______   \______   \__  |   |
-      \_____  \|    |   /|    |  _/|     ___//   |   |
-      /        \    |  / |    |   \|    |    \____   |
-     /_______  /______/  |______  /|____|    / ______|
-             \/                 \/           \/       
 
+ __    __     __     __   __     __     ______   __  __    
+/\ "-./  \   /\ \   /\ "-.\ \   /\ \   /\  == \ /\ \_\ \   
+\ \ \-./\ \  \ \ \  \ \ \-.  \  \ \ \  \ \  _-/ \ \____ \  
+ \ \_\ \ \_\  \ \_\  \ \_\\"\_\  \ \_\  \ \_\    \/\_____\ 
+  \/_/  \/_/   \/_/   \/_/ \/_/   \/_/   \/_/     \/_____/ 
+                                                           
 </pre>
 
 # subpy
-a subset of python, vm implemented with ANSI C and compiler implemented with Python 3.
+A mini python interpreter, vm implemented with ANSI C and compiler implemented with Python 3.
 
 ## How to start
 `cd src` run `python setup.py gcc` in console(or you may use other c compiler)
