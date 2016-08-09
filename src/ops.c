@@ -432,3 +432,9 @@ Object tm_str(Object a) {
     }
     return string_alloc("", 0);
 }
+
+/** get const id, this will be used to search the const value */
+int get_const_id(Object const_value) {
+    int i = dict_set(tm->constants, const_value, NONE_OBJECT);
+    return i;
+}

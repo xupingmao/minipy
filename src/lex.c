@@ -30,6 +30,7 @@ enum {
     LEX_SUB_EQ,
     LEX_MUL_EQ,
     LEX_DIV_EQ,
+    LEX_MOD_EQ,
 
     LEX_INDENT,
     LEX_DEDENT,
@@ -408,6 +409,8 @@ void lex_read_symbol(LexState* l) {
         case ')': lex_symbol(l, ")"); break;
         case '{': lex_symbol(l, "{"); break;
         case '}': lex_symbol(l, "}"); break;
+        case '[': lex_symbol(l, "["); break;
+        case ']': lex_symbol(l, "]"); break;
         case ',': lex_symbol(l, ","); break;
         case ':': lex_symbol(l, ":"); break;
         case '?': lex_symbol(l, "?"); break;
@@ -415,6 +418,7 @@ void lex_read_symbol(LexState* l) {
         case '-': lex_symbol_maybe_eq(l, "-", LEX_SUB_EQ, "-=");break;
         case '*': lex_symbol_maybe_eq(l, "*", LEX_MUL_EQ, "*=");break;
         case '/': lex_symbol_maybe_eq(l, "/", LEX_DIV_EQ, "/=");break;
+        case '%': lex_symbol_maybe_eq(l, "%", LEX_MOD_EQ, "%=");break;
         case '=': lex_symbol_maybe_eq(l, "=", LEX_EQEQ, "==");break;
         case '>': lex_symbol_maybe_eq(l, ">", LEX_GTEQ, ">=");break;
         case '<': lex_symbol_maybe_eq(l, "<", LEX_LTEQ, "<=");break;

@@ -123,6 +123,10 @@ int tm_init(int argc, char* argv[]) {
     return 0;
 }
 
+/** 
+ * run c function
+ * @param mod_name mocked module name
+ */
 int tm_run_func(int argc, char* argv[], char* mod_name, void(*func)(void)) {
 
     int ret = vm_init(argc, argv);
