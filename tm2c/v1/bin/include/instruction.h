@@ -6,20 +6,6 @@
 #ifndef INSTRUCTION_H_
 #define INSTRUCTION_H_
 
-enum {
-    EOP,
-    NEW_STRING,
-    NEW_NUMBER,
-    OP_IMPORT,
-    ADD,
-    SUB,
-    MUL,
-    DIV,
-    MOD,
-    NEG,
-    MOD
-} OpCodeEnum;
-
 #define NEW_STRING 1
 #define NEW_NUMBER 2
 #define OP_IMPORT 3

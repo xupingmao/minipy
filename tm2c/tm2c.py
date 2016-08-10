@@ -240,11 +240,7 @@ def tm2c(fname, src, prefix=None):
     # print_ast(tree)
     context = Context()
     context.set_fname(prefix)
-    try:
-        visit_item_list(tree, context)
-    except Exception as e:
-        traceback()
-        print_ast(context.item)
+    visit_item_list(tree, context)
     return context.get_code()
     
 if __name__ == "__main__":

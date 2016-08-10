@@ -1,3 +1,4 @@
+from boot import *
 
 def to_code_str(val):
     return '"' + escape(val) + '"'
