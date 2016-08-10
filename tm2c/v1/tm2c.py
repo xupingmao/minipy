@@ -187,7 +187,7 @@ class Generator:
         lines = define_lines + lines
             
         head = "#define TM_NO_BIN 1\n"
-        head += '#include "tm2c.c"\n'
+        head += '#include "../tm2c.c"\n'
         head += "/* DEFINE START */\n"
         # define constants
         for const in env.consts:
@@ -647,5 +647,5 @@ if __name__ == "__main__":
     mod = name.split(".")[0]
     code = tm2c(name, text, mod)
     save("output/" + mod + ".c", code)
-    save("bin/" + mod + ".c", code)
+    # save("bin/" + mod + ".c", code)
 
