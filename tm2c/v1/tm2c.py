@@ -25,7 +25,7 @@ func_not = "obj_not"
 func_neg = "obj_neg"
 func_get = "obj_get"
 func_set = "obj_set"
-func_list = "array_to_list"
+func_list = "argv_to_list"
 func_method = "def_method"
 
 op_bool = [">", ">=", "<", "<+", "==", "!=", "and", "or", "in", "not"]
@@ -71,7 +71,22 @@ class Env:
 
         self.builtin_dict = {
             "print": "bf_print",
-            "str"  : "bf_str"
+            "str"  : "bf_str",
+            "newobj": "bf_newobj",
+            "hasattr": "bf_hasattr",
+            "getattr": "bf_getattr",
+            "gettype": "bf_gettype",
+            "raise" : "bf_raise",
+            "Exception": "bf_Exception",
+            "len": "bf_len",
+            "str": "bf_str",
+            "mmatch": "bf_mmatch",
+            "float": "bf_float",
+            "int": "bf_int",
+            "chr": "bf_chr",
+            "ord": "bf_ord",
+            "load": "bf_load",
+            "save": "bf_save"
         }
     
     def new_scope(self):
@@ -86,10 +101,26 @@ class Env:
         self.func_defines.append(func_define)
         self.func_cnt += 1
         
+    def find_all_func_def(self, tree):
+        py_func_list = []
+        for item in tree:
+            type = item.type
+            if type == "def":
+                name = item.first.val
+                py_func_list.append(name)
+            elif type == "class":
+                name = item.first.val
+                py_func_list.append(name)
+        self.py_func_list = py_func_list
+        return py_func_list
+
     def get_c_func_name(self, name):
         # return self.prefix + "F" + str(self.func_cnt) 
-        if name in self.builtin_dict:
-            return self.builtin_dict[name]
+        if name in self.py_func_list:
+            return self.prefix + name
+        return self.builtin_dict[name] # will raise exception
+
+    def get_c_func_def(self, name):
         return self.prefix + name
 
     def get_mod_name(self):
@@ -326,13 +357,13 @@ def do_for(item, env, indent=0):
     key = do_name(names[0], env);
     init = sformat("%s = iter_new(%s);", temp, iterator)
     init += "\n" + "Object* " + temp_ptr + ";";
-    get_next = "{} = next_ptr({});".format(temp_ptr, temp)
-    head = "while ({} != NULL)".format(temp_ptr)
-    head = get_next + "\n" + head
-    lines = do_block(block, env)
+    get_next = "{} = next_ptr({})".format(temp_ptr, temp)
+    # head = "while ({} != NULL)".format(temp_ptr)
     key_assignment = "{} = *{};".format(keyname, temp_ptr)
+
+    head = "for({}; {} != NULL; {})".format(get_next, temp_ptr, get_next)
+    lines = do_block(block, env)
     lines.insert(0, key_assignment)
-    lines.append(get_next)
     return sformat("%s\n%s %s", init, head, format_block(lines))
 
     
@@ -399,7 +430,7 @@ def do_def(item, env, indent=0, obj=None):
     name = item.first.val
     args = do_getargs(item.second, env, 2)
     lines = args + do_block(item.third, env, 0)
-    cname = env.get_c_func_name(name)
+    cname = env.get_c_func_def(name)
     if obj!=None:
         obj.name = cname
         obj.constname = env.get_const(name)
@@ -628,6 +659,8 @@ def tm2c(fname, src, prefix=None):
     init_main.first = Token("name", "__name__")
     init_main.second = Token("string", "__main__")
     init__name__  = do_item(init_main, env)
+
+    env.find_all_func_def(tree)
 
     lines = do_program(tree, env, 0)
     lines = [init__name__] + lines

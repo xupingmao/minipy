@@ -138,3 +138,16 @@ Object bf_vmopt() {
     }
     return NONE_OBJECT;
 }
+
+Object argv_to_list(int n, ...) {
+    va_list ap;
+    int i = 0;
+    Object list = list_new(n);
+    va_start(ap, n);
+    for (i = 0; i < n; i++) {
+        Object item = va_arg(ap, Object);
+        obj_append(list, item);
+    }
+    va_end(ap);
+    return list;
+}

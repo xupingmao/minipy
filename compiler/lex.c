@@ -3,7 +3,42 @@
  */
 
 
-#include "lex.h"
+#include "include/tm.h"
+
+#define TM_NO_BIN 1
+
+#include "vm.c"
+
+enum {
+
+    LEX_NAME,
+    LEX_NUMBER,
+    LEX_STRING,
+    LEX_ASSIGNMENT,
+    LEX_LPAREN,
+    LEX_RPAREN,
+    LEX_LBRACKET,
+    LEX_RBRACKET,
+    LEX_COMMA,
+
+    LEX_EQEQ,
+    LEX_LTEQ,
+    LEX_GTEQ,
+    LEX_NEQ,
+
+    LEX_ADD_EQ,
+    LEX_SUB_EQ,
+    LEX_MUL_EQ,
+    LEX_DIV_EQ,
+    LEX_MOD_EQ,
+
+    LEX_INDENT,
+    LEX_DEDENT,
+    LEX_UNKNOWN,
+    LEX_EOF,
+    LEX_ERROR
+
+} LexType;
 
 typedef struct LexState{
     char *text;
@@ -84,11 +119,6 @@ LexState* lex_new(char* buf) {
     s->indent = 0;
     memset(s->token_value, 0, sizeof(s->token_value));
     return s;
-}
-
-LexState* lex_load(LexState* l, char* str) {
-    l->text = str;
-    return l;
 }
 
 void lex_free(LexState *l){
@@ -379,6 +409,8 @@ void lex_read_symbol(LexState* l) {
         case ')': lex_symbol(l, ")"); break;
         case '{': lex_symbol(l, "{"); break;
         case '}': lex_symbol(l, "}"); break;
+        case '[': lex_symbol(l, "["); break;
+        case ']': lex_symbol(l, "]"); break;
         case ',': lex_symbol(l, ","); break;
         case ':': lex_symbol(l, ":"); break;
         case '?': lex_symbol(l, "?"); break;
@@ -387,6 +419,7 @@ void lex_read_symbol(LexState* l) {
         case '-': lex_symbol_maybe_eq(l, "-", LEX_SUB_EQ, "-=");break;
         case '*': lex_symbol_maybe_eq(l, "*", LEX_MUL_EQ, "*=");break;
         case '/': lex_symbol_maybe_eq(l, "/", LEX_DIV_EQ, "/=");break;
+        case '%': lex_symbol_maybe_eq(l, "%", LEX_MOD_EQ, "%=");break;
         case '=': lex_symbol_maybe_eq(l, "=", LEX_EQEQ, "==");break;
         case '>': lex_symbol_maybe_eq(l, ">", LEX_GTEQ, ">=");break;
         case '<': lex_symbol_maybe_eq(l, "<", LEX_LTEQ, "<=");break;
