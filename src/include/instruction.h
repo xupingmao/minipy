@@ -15,7 +15,6 @@ enum {
     SUB,
     MUL,
     DIV,
-    MOD,
     NEG,
     MOD
 } OpCodeEnum;

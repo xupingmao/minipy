@@ -1,4 +1,4 @@
-#include "../../../src/vm.c"
+#include "../../src/vm.c"
 
 TmFrame* obj_getframe(int fidx) {
     if (fidx < 1 || fidx > FRAMES_COUNT) {
