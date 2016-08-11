@@ -104,6 +104,11 @@ void* tm_malloc(size_t size) {
         tm_raise("tm_malloc: fail to malloc memory block of size %d", size);
     }
     tm->allocated += size;
+
+#if !PRODUCT
+    tm->max_allocated = max(tm->max_allocated, tm->allocated);
+#endif
+
     return block;
 }
 
@@ -309,10 +314,7 @@ void gc_full() {
 #if GC_DEBUG
     int old = tm->allocated;
 #endif
-
-    if (tm->allocated > tm->max_allocated) {
-        tm->max_allocated = tm->allocated;
-    }
+    tm->max_allocated = max(tm->allocated, tm->max_allocated);
     
     // disable gc.
     if (tm->gc_state == 0) {

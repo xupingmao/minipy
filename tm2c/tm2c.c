@@ -1,3 +1,4 @@
+#include "../src/vm.c"
 
 TmFrame* obj_getframe(int fidx) {
     if (fidx < 1 || fidx > FRAMES_COUNT) {
@@ -47,6 +48,7 @@ Object tm_call(int lineno, Object func, int args, ...) {
     return call_function(func);
 }
 
+/*
 Object tm_call_native(int lineno, Object (*fn)(int, va_list), int args, ...) {
     int i = 0;
     va_list ap;
@@ -59,6 +61,19 @@ Object tm_call_native(int lineno, Object (*fn)(int, va_list), int args, ...) {
     va_start(ap, args);
     Object ret = fn(args, ap);
     va_end(ap);
+    return ret;
+}*/
+
+Object tm_call_native(int lineno, Object (*fn)(), int args, ...) {
+    int i = 0;
+    va_list ap;
+    va_start(ap, args);
+    arg_start();
+    for (i = 0; i < args; i++) {
+        arg_push(va_arg(ap, Object));
+    }
+    va_end(ap);
+    Object ret = fn();
     return ret;
 }
 
@@ -122,4 +137,17 @@ Object bf_vmopt() {
         tm_raise("invalid opt %s", opt);
     }
     return NONE_OBJECT;
+}
+
+Object argv_to_list(int n, ...) {
+    va_list ap;
+    int i = 0;
+    Object list = list_new(n);
+    va_start(ap, n);
+    for (i = 0; i < n; i++) {
+        Object item = va_arg(ap, Object);
+        obj_append(list, item);
+    }
+    va_end(ap);
+    return list;
 }
