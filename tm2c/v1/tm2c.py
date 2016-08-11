@@ -1,6 +1,5 @@
-from parse import *
+from tmparser import *
 import sys
-from tmtokenize import *
 from boot import *
 
 tm_obj = "Object "
@@ -196,6 +195,16 @@ class Generator:
     def __init__(self, env):
         self.env = env
 
+    def gen_c_func_def_list(self):
+        """generate c function def list"""
+        lines = ["/* Function Definition */"]
+        env = self.env
+        for py_func in self.env.py_func_list:
+            line = "Object {}();".format(env.get_c_func_def(py_func))
+            lines.append(line)
+        lines.append("/* Function Definition End */")
+        return "\n".join(lines) + "\n"
+
 
     def process(self, lines):
         
@@ -229,6 +238,8 @@ class Generator:
             head += "Object " + env.get_var_name(var) + ";\n"
         head += "/* DEFINE END */\n\n"
         
+        head += self.gen_c_func_def_list()
+
         # function define.
         for func_define in env.func_defines:
             head += func_define + "\n\n"
@@ -320,7 +331,7 @@ def do_block(list, env, indent=0):
     lines = []
     for exp in list:
         if exp.type == "string": continue
-        line = do_item(exp, env, indent + 2)
+        line = do_item(exp, env)
         if exp.type == "call": line += ";"
         lines.append(line)
     return lines
@@ -336,7 +347,7 @@ def do_if(item, env, indent=0):
         return head + "else" + format_block(do_block(third, env, 2),indent)
     else:
         # lines.append(do_item(third, env, indent))
-        return head + "else " + do_item(third, env, 2)
+        return head + "else " + do_item(third, env)
     return head
 
 def do_for(item, env, indent=0):
@@ -412,7 +423,7 @@ def format_block(lines, indent=0):
         if line != None:
             text += line + "\n"
     # return text + indent * " " + "}\n"
-    return text + "}\n"
+    return text + "}"
     
 def do_getargs(list, env, indent):
     r = []
@@ -425,7 +436,7 @@ def do_getargs(list, env, indent):
         r.append(line)
     return r
     
-def do_def(item, env, indent=0, obj=None):
+def do_def(item, env, obj=None):
     env.new_scope()
     name = item.first.val
     args = do_getargs(item.second, env, 2)
@@ -451,7 +462,7 @@ def do_return(item, env, indent=0):
     else:
         return "return " + ret + ";"
     
-def do_class(item, env, indent=0):
+def do_class(item, env):
     class_define = do_assign(item, env, "dict_new()")
     class_name = do_name(item.first, env)
     obj = newobj()
@@ -460,7 +471,7 @@ def do_class(item, env, indent=0):
         type = class_item.type
         if type == "pass": continue
         assert type == "def"
-        do_def(class_item, env, indent+2, obj)
+        do_def(class_item, env, obj)
         lines.append(sformat("%s(%s,%s,%s);", func_method, class_name, obj.constname, obj.name))
     text = class_define + "\n"
     for line in lines:

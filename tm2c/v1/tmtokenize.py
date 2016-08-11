@@ -62,24 +62,26 @@ SYMBOLS = [
 B_BEGIN = ['[','(','{']
 B_END = [']',')','}']
 
-class TData:
-    def __init__(self):
-        self.y=1
-        self.yi=0
-        self.nl=True
-        self.res=[]
-        self.indent=[0]
-        self.braces=0
-    def add(self,t,v): 
-        if t == 'in':
-            last = self.res.pop()
-            if last.type == 'not':
-                self.res.append(Token('notin', v, self.f))
-            else:
-                self.res.append(last)
-                self.res.append(Token(t,v,self.f))
+def TData():
+    self = newobj()
+    self.y=1
+    self.yi=0
+    self.nl=True
+    self.res=[]
+    self.indent=[0]
+    self.braces=0
+    return self
+
+def add_token(self,t,v): 
+    if t == 'in':
+        last = self.res.pop()
+        if last.type == 'not':
+            self.res.append(Token('notin', v, self.f))
         else:
+            self.res.append(last)
             self.res.append(Token(t,v,self.f))
+    else:
+        self.res.append(Token(t,v,self.f))
 
 def clean(s):
     s = s.replace('\r','')
@@ -119,7 +121,7 @@ def do_tokenize(s):
 
 def do_nl(s,i,l):
     if not T.braces:
-        T.add('nl','nl')
+        add_token(T,'nl','nl')
     i+=1
     T.nl=True
     T.y+=1
@@ -144,12 +146,12 @@ def indent(v):
     if v == T.indent[-1]: pass
     elif v > T.indent[-1]:
         T.indent.append(v)
-        T.add('indent',v)
+        add_token(T,'indent',v)
     elif v < T.indent[-1]:
         n = T.indent.index(v)
         while len(T.indent) > n+1:
             v = T.indent.pop()
-            T.add('dedent',v)
+            add_token(T,'dedent',v)
 
 
 def do_symbol(s,i,l):
@@ -172,7 +174,7 @@ def do_symbol(s,i,l):
     #    v+=c;i+=1
     #    if v in SYMBOLS: symbols.append(v)
     #v = symbols.pop(); n = len(v); i = f+n
-    T.add(v,v)
+    add_token(T,v,v)
     if v in B_BEGIN: T.braces += 1
     if v in B_END: T.braces -= 1
     return i
@@ -189,7 +191,7 @@ def do_number(s,i,l):
             c = s[i]
             if c < '0' or c > '9': break
             v+=c;i+=1
-    T.add('number',float(v))
+    add_token(T,'number',float(v))
     return i
 
 def do_name(s,i,l):
@@ -198,8 +200,8 @@ def do_name(s,i,l):
         c = s[i]
         if (c < 'a' or c > 'z') and (c < 'A' or c > 'Z') and (c < '0' or c > '9') and c != '_': break
         v+=c; i+=1
-    if v in KEYWORDS: T.add(v,v)
-    else: T.add('name',v)
+    if v in KEYWORDS: add_token(T,v,v)
+    else: add_token(T,'name',v)
     return i
 
 def do_string(s,i,l):
@@ -210,7 +212,7 @@ def do_string(s,i,l):
             c = s[i]
             if c == q and s[i+1] == q and s[i+2] == q:
                 i += 3
-                T.add('string',v)
+                add_token(T,'string',v)
                 break
             else:
                 v+=c; i+=1
@@ -228,7 +230,7 @@ def do_string(s,i,l):
                 v+=c;i+=1
             elif c == q:
                 i += 1
-                T.add('string',v)
+                add_token(T,'string',v)
                 break
             else:
                 v+=c;i+=1
@@ -242,7 +244,9 @@ def do_comment(s,i,l):
         value += s[i]
         i += 1
     if value.startswith("@debugger"):
-        T.add("@", "debugger")
+        add_token(T,"@", "debugger")
+    elif value.startswith("@pass"):
+        add_token(T,"@", "pass")
     return i
 
 def _main():

@@ -9,7 +9,6 @@
 #include "function.c"
 #include "interp.c"
 #include "exception.c"
-#include "util.c"
 #include "tmarg.c"
 
 /** do not need to boot from binary **/
@@ -160,16 +159,3 @@ int tm_run_func(int argc, char* argv[], char* mod_name, void(*func)(void)) {
     vm_destroy();
     return 0;
 }
-
-
-
-
-
-
-
-
-
-
-
-
-

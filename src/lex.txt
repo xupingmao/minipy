@@ -1,2 +1,0 @@
-test hello,  
-a = 234 * 34

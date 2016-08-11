@@ -264,21 +264,21 @@ Object obj_mod(Object a, Object b) {
 }
 
 
-/* a has b
- * b in a
+/* parent has child
+ * child in parent
  */
-int obj_in(Object b, Object a) {
-    switch (TM_TYPE(a)) {
+int obj_in(Object child, Object parent) {
+    switch (TM_TYPE(parent)) {
     case TYPE_LIST: {
-        return (list_index(GET_LIST(a), b) != -1);
+        return (list_index(GET_LIST(parent), child) != -1);
     }
     case TYPE_STR: {
-        if (TM_TYPE(b) != TYPE_STR)
+        if (TM_TYPE(child) != TYPE_STR)
             return 0;
-        return string_index(GET_STR_OBJ(a), GET_STR_OBJ(b), 0) != -1;
+        return string_index(GET_STR_OBJ(parent), GET_STR_OBJ(child), 0) != -1;
     }
     case TYPE_DICT: {
-        DictNode* node = dict_get_node(GET_DICT(a), b);
+        DictNode* node = dict_get_node(GET_DICT(parent), child);
         if (node == NULL) {
             return 0;
         }

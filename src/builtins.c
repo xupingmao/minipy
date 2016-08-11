@@ -825,6 +825,30 @@ Object bf_random() {
     return tm_number(val);
 }
 
+Object bf_Exception() {
+    return arg_take_obj("Exception");
+}
+
+Object bf_getattr() {
+    Object self = arg_take_obj("getattr");
+    Object key  = arg_take_obj("getattr");
+    return obj_get(self, key);
+}
+
+Object bf_setattr() {
+    Object self = arg_take_obj("getattr");
+    Object key  = arg_take_obj("getattr");
+    Object val  = arg_take_obj("getattr");
+    obj_set(self, key, val);
+    return NONE_OBJECT;
+}
+
+Object bf_hasattr() {
+    Object self = arg_take_obj("getattr");
+    Object key  = arg_take_obj("getattr");
+    return tm_number(obj_in(self, key));
+}
+
 void builtins_init() {
     reg_builtin_func("load", bf_load);
     reg_builtin_func("save", bf_save);
@@ -858,6 +882,10 @@ void builtins_init() {
     reg_builtin_func("range", bf_range);
     reg_builtin_func("enumerate", bf_enumerate);
     reg_builtin_func("random", bf_random);
+    reg_builtin_func("Exception", bf_Exception);
+    reg_builtin_func("getattr", bf_getattr);
+    reg_builtin_func("setattr", bf_setattr);
+    reg_builtin_func("hasattr", bf_hasattr);
     
     /* functions which has impact on vm follow camel case */
     reg_builtin_func("get_const_idx", bf_get_const_idx);
