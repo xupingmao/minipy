@@ -2,29 +2,26 @@ from tmparser import *
 import sys
 from boot import *
 
-tm_obj = "Object "
-tm_const = "Object const_"
-
-tm_pusharg = "tm_pusharg("
-tm_call = "tm_call("
-
-tm_num = "tm_number("
-tm_str = "string_new("
-tm_get_glo = "tm_get_global("
-tm_define = "def_func"
-
-func_bool = "is_true_obj"
-func_add = "obj_add"
-func_sub = "obj_sub"
-func_mul = "obj_mul"
-func_div = "obj_div"
-func_mod = "obj_mod"
-func_cmp = "obj_cmp"
-func_not = "obj_not"
-func_neg = "obj_neg"
-func_get = "obj_get"
-func_set = "obj_set"
-func_list = "argv_to_list"
+tm_obj      = "Object "
+tm_const    = "Object const_"
+tm_pusharg  = "tm_pusharg("
+tm_call     = "tm_call("
+tm_num      = "tm_number("
+tm_str      = "string_new("
+tm_get_glo  = "tm_get_global"
+tm_define   = "def_func"
+func_bool   = "is_true_obj"
+func_add    = "obj_add"
+func_sub    = "obj_sub"
+func_mul    = "obj_mul"
+func_div    = "obj_div"
+func_mod    = "obj_mod"
+func_cmp    = "obj_cmp"
+func_not    = "obj_not"
+func_neg    = "obj_neg"
+func_get    = "obj_get"
+func_set    = "obj_set"
+func_list   = "argv_to_list"
 func_method = "def_method"
 
 op_bool = [">", ">=", "<", "<+", "==", "!=", "and", "or", "in", "not"]
@@ -297,7 +294,7 @@ def do_name(item, env):
     if env.has_var(item.val):
         return env.get_var_name(item.val)
     item = Token("string", item.val)
-    return tm_get_glo + env.get_globals() + "," + do_const(item, env) + ")"
+    return "{}({},{})".format(tm_get_glo, env.get_globals(), do_const(item, env))
 
 def do_none(item, env):
     return "NONE_OBJECT"

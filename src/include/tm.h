@@ -59,7 +59,7 @@ int uncode16(unsigned char**s);
 
 // gc functions
 #define GC_DEBUG_LIST 0
-void*       tm_malloc( size_t size);
+void*       tm_malloc(size_t size);
 void*       tm_realloc(void* o, size_t osize, size_t nsize);
 void        tm_free(void* o, size_t size);
 void        init_memory();
@@ -69,6 +69,7 @@ void        gc_init();
 Object      gc_track(Object obj);
 void        gc_destroy();
 void        gc_full();
+void        gc_sweep_local();
 Object      bf_get_malloc_info();
 void        gc_mark(Object);
 void        gc_mark_list(TmList*);

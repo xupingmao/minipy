@@ -48,32 +48,40 @@ Object tm_call(int lineno, Object func, int args, ...) {
     return call_function(func);
 }
 
-/*
-Object tm_call_native(int lineno, Object (*fn)(int, va_list), int args, ...) {
-    int i = 0;
-    va_list ap;
-    va_start(ap, args);
-    arg_start();
-    for (i = 0; i < args; i++) {
-        arg_push(va_arg(ap, Object));
-    }
-    va_end(ap);
-    va_start(ap, args);
-    Object ret = fn(args, ap);
-    va_end(ap);
-    return ret;
-}*/
-
+/**
+ * call native function
+ * @param lineno, lineno of the python source code
+ * @param fn, native function
+ * @args, number of arguments
+ * @...,  arguments
+ */
 Object tm_call_native(int lineno, Object (*fn)(), int args, ...) {
     int i = 0;
     va_list ap;
+    Object obj_arg;
     va_start(ap, args);
     arg_start();
     for (i = 0; i < args; i++) {
-        arg_push(va_arg(ap, Object));
+        obj_arg = va_arg(ap, Object);
+        gc_mark(obj_arg);
+        arg_push(obj_arg);
     }
     va_end(ap);
+
+#ifndef LOCAL_SWEEP_OFF
+    TmList* pre_list = tm->local_obj_list;
+    tm->local_obj_list = untracked_list_new(5);
+#endif
+
     Object ret = fn();
+
+#ifndef LOCAL_SWEEP_OFF    
+    gc_mark(ret);
+    gc_sweep_local(); // sweep unused objects in locals.
+    list_free(tm->local_obj_list); // release container
+    tm->local_obj_list = pre_list;
+#endif
+
     return ret;
 }
 

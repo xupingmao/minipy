@@ -294,18 +294,11 @@ add_builtin("assert", _assert)
 add_builtin("__debug__", __debug__)
 add_builtin("require", require)
 
-
-
-def _time():
-    return clock() / 1000
     
 def init_py_libs():
     sys = {}
-    time = {}
     __modules__['sys'] = sys
-    __modules__['time'] = time
     sys.argv = ARGV
-    time.time = _time
     
 LIB_PATH = ''
 def boot(loadlibs=True):

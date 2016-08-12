@@ -135,6 +135,7 @@ typedef struct TmVm {
   int init; /* modules and builtins init */
 
   struct TmList* all;
+  struct TmList* local_obj_list;
   int allocated;
   int max_allocated;
   int gc_threshold;

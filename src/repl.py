@@ -63,7 +63,7 @@ def run(path, args = None):
 def repl():
     import pyeval
     fpyeval = pyeval.pyeval
-    print("Welcome To Subpy!!!")
+    print("Welcome To Minipy!!!")
     
     global debug
     debug = 0

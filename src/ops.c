@@ -49,6 +49,8 @@ int obj_eq_sz(Object obj, const char* value) {
 }
 
 void obj_set(Object self, Object k, Object v) {
+    gc_mark(k);
+    gc_mark(v);
     switch (TM_TYPE(self)) {
     case TYPE_LIST: {
         tm_assert_type(k, TYPE_NUM, "obj_set");

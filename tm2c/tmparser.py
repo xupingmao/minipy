@@ -296,7 +296,7 @@ def call_node(fnc, args):
     node.second = args
     return node
     
-def parse_inner_func(p):
+def parse_builtin_func(p):
     fnc = p.token
     fnc.type = 'name'
     p.next()
@@ -503,26 +503,26 @@ def parse_annotation(p):
     p.add(AstNode("@", token))
     
 stmt_map = {
-    "from": parse_from,
-    "import": parse_import,
-    "def": parse_def,
-    "class": parse_class,
-    "for": parse_for,
-    "while": parse_while,
-    "if": parse_if,
-    "return": parse_return,
-    "raise":parse_inner_func,
-    "assert": parse_inner_func,
-    "break": parse_pass,
-    "continue": parse_pass,
-    "pass": parse_pass,
-    "name": expr,
-    "number": expr,
-    "string": expr,
-    "try": parse_try,
-    "global": parse_global,
-    "del": parse_del,
-    "@":parse_annotation,
+    "from"     : parse_from,
+    "import"   : parse_import,
+    "def"      : parse_def,
+    "class"    : parse_class,
+    "for"      : parse_for,
+    "while"    : parse_while,
+    "if"       : parse_if,
+    "return"   : parse_return,
+    "raise"    : parse_builtin_func,
+    "assert"   : parse_builtin_func,
+    "break"    : parse_pass,
+    "continue" : parse_pass,
+    "pass"     : parse_pass,
+    "name"     : expr,
+    "number"   : expr,
+    "string"   : expr,
+    "try"      : parse_try,
+    "global"   : parse_global,
+    "del"      : parse_del,
+    "@"        : parse_annotation,
 }
 
 

@@ -12,23 +12,67 @@
 #define GC_REACHED_SIGN 1
 #define GC_MARKED(o) (o).value.gc->marked
 
-#define GC_DEBUG 0
 #define GET_CHAR(n) ARRAY_CHARS[n]
 
-#if GC_DEBUG
-void log_debug(char* fmt, ...) {
-    FILE* fp = fopen("gc.log", "a");
+#ifdef GC_DEBUG
+
+static char LOG_BUF[1024 * 10]; // 20K buffer
+
+ /**
+  * logging service
+  * suggested format
+  * TIME|OPT|CURRENT_SIZE|NEW_SIZE|ADDR
+  */
+void LOG(char* fmt, ...) {
     va_list ap;
+    time_t cur_time;
+    char *buffer   = LOG_BUF;
+    int BUF_SIZE   = sizeof(LOG_BUF);
+    int FLUSH_SIZE = BUF_SIZE / 2;
+    char temp_buf[1024];
+
+    memset(temp_buf, 0, sizeof(temp_buf));
     va_start(ap, fmt);
-    vfprintf(fp, fmt, ap);
+
+    time(&cur_time); // init time
+    char* t_str   = ctime(&cur_time);
+    int t_str_len = strlen(t_str);
+    t_str[t_str_len-1] = 0; // remove \n
+
+    sprintf (temp_buf, "%s|", t_str); // print time
+    strcat(buffer, temp_buf);
+
+    vsprintf(temp_buf, fmt,   ap);
+    strcat(buffer, temp_buf);
+    strcat(buffer, "\n");
+
     va_end(ap);
-    fclose(fp);
+
+    if (strlen(buffer) >= FLUSH_SIZE) {
+        FILE* fp = fopen("tm.log", "a");
+        fputs(buffer, fp);
+        fclose(fp);
+        memset(buffer, 0, BUF_SIZE);
+    }
 }
+
+void LOG_END() {
+    FILE* fp = fopen("tm.log", "a");
+    fputs(LOG_BUF, fp);
+    fclose(fp);
+    memset(LOG_BUF, 0, sizeof(LOG_BUF));
+}
+#else
+    #define LOG(fmt, oldsize, newsize, addr) /* LOG */
+    #define LOG_END() /* LOG END */
 #endif
+
+void chars_init();
+void frames_init();
+
 
 
 void gc_init() {
-    int init_size = 100;
     int i;
     
     /* initialize constants */
@@ -44,7 +88,8 @@ void gc_init() {
     tm->gc_threshold = 1024 * 8; // set 8k to see gc process
     tm->gc_state = 1; // enable gc.
 
-    tm->all = untracked_list_new(init_size);
+    tm->all = untracked_list_new(100);
+    tm->local_obj_list = NULL; // object allocated in local scope. which can be sweeped simply.
     tm->list_proto.type = TYPE_NONE;
     tm->dict_proto.type = TYPE_NONE;
     tm->str_proto.type = TYPE_NONE;
@@ -54,21 +99,30 @@ void gc_init() {
     tm->modules = dict_new();
     tm->constants = dict_new();
 
+    /* initialize exception */
     tm->ex_list = list_new(10);
     obj_append(tm->root, tm->ex_list);
+    tm->ex = NONE_OBJECT;
+    tm->ex_line = NONE_OBJECT;
     
-
     /* initialize chars */
-    ARRAY_CHARS = list_new(256);
+    chars_init();
+    
+    /* initialize frames */
+    frames_init();
+}
+
+void chars_init() {
+    int i;
+    ARRAY_CHARS = list_new(256); // init global ARRAY_CHARS
     for (i = 0; i < 256; i++) {
         obj_append(ARRAY_CHARS, string_char_new(i));
     }
     obj_append(tm->root, ARRAY_CHARS);
-    
-    tm->ex = NONE_OBJECT;
-    tm->ex_line = NONE_OBJECT;
-    
-    /* initialize frames */
+}
+
+void frames_init() {
+    int i;
     tm->frames_init_done = 0;
     for (i = 0; i < FRAMES_COUNT; i++) {
         TmFrame* f = tm->frames + i;
@@ -83,7 +137,7 @@ void gc_init() {
     }
     tm->frames_init_done = 1;
     tm->frame = tm->frames;
-    tm_stack_end = tm->stack + STACK_SIZE;
+    tm_stack_end = tm->stack + STACK_SIZE; // set global tm_stack_end
 }
 
 
@@ -96,10 +150,9 @@ void* tm_malloc(size_t size) {
         return NULL;
     }
     block = malloc(size);
-#if GC_DEBUG
-    if (size > 100)
-        log_debug("%d -> %d , +%d\n", tm->allocated, tm->allocated + size, size);
-#endif
+    
+    LOG("malloc|%d|%d|%p", tm->allocated, tm->allocated + size, block);
+
     if (block == NULL) {
         tm_raise("tm_malloc: fail to malloc memory block of size %d", size);
     }
@@ -122,13 +175,9 @@ void* tm_realloc(void* o, size_t osize, size_t nsize) {
 void tm_free(void* o, size_t size) {
     if (o == NULL)
         return;
-#if GC_DEBUG
-    if (size > 100)
-    log_debug("Free %p, %d -> %d , -%d\n",o, tm->allocated, tm->allocated - size, size);
-    if(size<=0) {
-        tm_raise("tm_free: you are free a block of size %d", size);
-    }
-#endif
+
+    LOG("free|%d|%d|%p", tm->allocated, tm->allocated - size, o);
+
     free(o);
     tm->allocated -= size;
 }
@@ -139,28 +188,34 @@ Object gc_track(Object v) {
     case TYPE_NONE:
         return v;
     case TYPE_STR:
-        v.value.str->marked = GC_REACHED_SIGN;
+        v.value.str->marked = 0;
         break;
     case TYPE_LIST:
-        GET_LIST(v)->marked = GC_REACHED_SIGN;
+        GET_LIST(v)->marked = 0;
         break;
     case TYPE_DICT:
-        GET_DICT(v)->marked = GC_REACHED_SIGN;
+        GET_DICT(v)->marked = 0;
         break;
     case TYPE_MODULE:
-        GET_MODULE(v)->marked = GC_REACHED_SIGN;
+        GET_MODULE(v)->marked = 0;
         break;
     case TYPE_FUNCTION:
-        GET_FUNCTION(v)->marked = GC_REACHED_SIGN;
+        GET_FUNCTION(v)->marked = 0;
         break;
     case TYPE_DATA:
-        GET_DATA(v)->marked = GC_REACHED_SIGN;
+        GET_DATA(v)->marked = 0;
         break;
     default:
         tm_raise("gc_track(), not supported type %d", v.type);
         return v;
     }
-    list_append(tm->all, v);
+    if (tm->local_obj_list != NULL) {
+        // if local-obj-sweep is enabled, add this to local list
+        // if the object cant be recycled , move to all.
+        list_append(tm->local_obj_list, v);
+    } else {
+        list_append(tm->all, v);
+    }
     return v;
 }
 
@@ -173,21 +228,8 @@ void gc_mark_list(TmList* list) {
         gc_mark(list->nodes[i]);
     }
 }
-/*
-void gc_mark_dict(TmDict* dict) {
-    if (dict->marked)
-        return;
-    dict->marked = GC_REACHED_SIGN;
-    Dict_node* node = dict->head;
-    while (node != NULL) {
-        gc_mark(node->key);
-        gc_mark(node->val);
-        node = node->next;
-    }
-}
- */
  
- void gc_mark_dict(TmDict* dict) {
+void gc_mark_dict(TmDict* dict) {
     if (dict->marked)
         return;
     dict->marked = GC_REACHED_SIGN;
@@ -266,7 +308,7 @@ void gc_mark_locals_and_stack() {
     }
 }
 
-void gc_wipe() {
+void gc_sweep() {
     int n, i;
 
     TmList* temp = untracked_list_new(200);
@@ -280,6 +322,20 @@ void gc_wipe() {
     }
     list_free(tm->all);
     tm->all = temp;
+}
+
+void gc_sweep_local() {
+    if (tm->local_obj_list != NULL) {
+        int i;
+        TmList* list = tm->local_obj_list;
+        for (i = 0; i < list->len; i++) {
+            if (GC_MARKED(list->nodes[i])==0) {
+                obj_free(list->nodes[i]);
+            } else {
+                list_append(tm->all, list->nodes[i]); // monitor object which cant be recycled
+            }
+        }
+    }
 }
 
 #define MARK(v) \
@@ -339,14 +395,12 @@ void gc_full() {
     gc_mark(tm->ex);
     gc_mark(tm->ex_line);
     
-    /* wipe garbage */
-    gc_wipe();
+    /* sweep garbage */
+    gc_sweep();
     tm->gc_threshold = tm->allocated + tm->allocated / 2;
     t2 = clock();
-#if GC_DEBUG
-    log_debug("full_g_c %d_k => %d_k, elasped time = %ld\n",
-            old / 1024, tm->allocated / 1024, t2 - t1);
-#endif
+
+    LOG("full|%d|%d|%s", old, tm->allocated, "null");
 }
 
 /**
@@ -362,12 +416,14 @@ void gc_destroy() {
     }
 
     list_free(tm->all);
+    gc_sweep_local();
 
 #if !PRODUCT
     if (tm->allocated != 0) {
         printf("\n***memory leak happens***\ntm->allocated=%d\n", tm->allocated);
     }
 #endif
+    LOG_END();
 }
 
 

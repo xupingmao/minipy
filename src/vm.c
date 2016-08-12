@@ -10,6 +10,7 @@
 #include "interp.c"
 #include "exception.c"
 #include "tmarg.c"
+#include "module/time.c"
 
 /** do not need to boot from binary **/
 #ifndef TM_NO_BIN
@@ -88,6 +89,7 @@ int vm_init(int argc, char* argv[]) {
     string_methods_init();
     dict_methods_init();
     builtins_init();
+    time_mod_init();
     
     Object p = list_new(argc);
     for (i = 1; i < argc; i++) {

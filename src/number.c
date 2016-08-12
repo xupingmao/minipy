@@ -14,6 +14,6 @@ void number_format(char* des, Object num){
     if (fabs(v) - fabs((double)(long) v) < 0.000000001) {
         sprintf(des, "%ld", (long) v);
     } else {
-        sprintf(des, "%g", v);
+        sprintf(des, "%lf", v);
     }
 }
