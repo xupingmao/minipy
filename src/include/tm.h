@@ -69,7 +69,7 @@ void        gc_init();
 Object      gc_track(Object obj);
 void        gc_destroy();
 void        gc_full();
-void        gc_sweep_local();
+void        gc_sweep_local(int start);
 Object      bf_get_malloc_info();
 void        gc_mark(Object);
 void        gc_mark_list(TmList*);
@@ -138,6 +138,7 @@ void     list_del(TmList*list, Object key);
 void     list_insert(TmList*list, int index, Object value);
 int      list_index(TmList*, Object val);
 void     list_append(TmList* list, Object v);
+void     list_shorten(TmList* list, int len); // shorten list.
 Object   array_to_list(int n, ...);
 
 /* macros */

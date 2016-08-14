@@ -225,6 +225,12 @@ typedef struct String {
     char *value;
 } String;
 
+typedef struct PtrArray {
+  int len;
+  int cap;
+  Object** elements;
+} PtrArray;
+
 /** 
  * subpy optimization
  * code cache

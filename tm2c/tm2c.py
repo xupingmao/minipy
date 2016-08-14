@@ -2,27 +2,30 @@ from tmparser import *
 import sys
 from boot import *
 
-tm_obj      = "Object "
-tm_const    = "Object const_"
-tm_pusharg  = "tm_pusharg("
-tm_call     = "tm_call("
-tm_num      = "tm_number("
-tm_str      = "string_new("
-tm_get_glo  = "tm_get_global"
-tm_define   = "def_func"
-func_bool   = "is_true_obj"
-func_add    = "obj_add"
-func_sub    = "obj_sub"
-func_mul    = "obj_mul"
-func_div    = "obj_div"
-func_mod    = "obj_mod"
-func_cmp    = "obj_cmp"
-func_not    = "obj_not"
-func_neg    = "obj_neg"
-func_get    = "obj_get"
-func_set    = "obj_set"
-func_list   = "argv_to_list"
-func_method = "def_method"
+tm_obj         = "Object "
+tm_const       = "Object const_"
+tm_pusharg     = "tm_pusharg("
+tm_call        = "tm_call("
+tm_num         = "tm_number("
+tm_str         = "string_new("
+tm_get_glo     = "tm_get_global"
+tm_define      = "def_func"
+func_bool      = "is_true_obj"
+func_add       = "obj_add"
+func_sub       = "obj_sub"
+func_mul       = "obj_mul"
+func_div       = "obj_div"
+func_mod       = "obj_mod"
+func_cmp       = "obj_cmp"
+func_not       = "obj_not"
+func_neg       = "obj_neg"
+func_get       = "obj_get"
+func_set       = "obj_set"
+func_list      = "argv_to_list"
+func_method    = "def_method"
+gc_track_local = "gc_track_local"
+gc_pop_locals  = "gc_pop_locals"
+tm_None        = "NONE_OBJECT"
 
 op_bool = [">", ">=", "<", "<+", "==", "!=", "and", "or", "in", "not"]
 
@@ -60,6 +63,7 @@ class Env:
         self.fname = fname
         self.func_defines = []
         self.func_cnt = 0
+        self.enable_gc = False
         if prefix == None:
             self.prefix = get_valid_code_name(fname) + "_"
         else:
@@ -114,7 +118,9 @@ class Env:
         # return self.prefix + "F" + str(self.func_cnt) 
         if name in self.py_func_list:
             return self.prefix + name
-        return self.builtin_dict[name] # will raise exception
+        elif name in self.builtin_dict:
+            return self.builtin_dict[name]
+        return None
 
     def get_c_func_def(self, name):
         return self.prefix + name
@@ -399,7 +405,11 @@ def get_line_no(item):
 def do_call(item, env):
     if item.first.type == "name":
         name = env.get_c_func_name(item.first.val)
-        fmt = "tm_call_native({}, {}, {} {})"
+        if name:
+            fmt = "tm_call_native({}, {}, {} {})"
+        else:
+            name = do_item(item.first, env)
+            fmt  = "tm_call({},{},{} {})"
     else:
         name = do_item(item.first, env)
         fmt = "tm_call({}, {}, {} {})"
@@ -446,6 +456,17 @@ def do_def(item, env, obj=None):
     vars = ["// " + name]
     for var in locs:
         vars.append("Object " + env.get_var_name(var) + ";")
+
+    vars.append("Object ret = {};".format(tm_None))
+
+    if env.enable_gc:
+        for var in locs:
+            vars.append("{}(&{});".format(gc_track_local, env.get_var_name(var)))
+
+    lines.append("func_end:");
+    if env.enable_gc:
+        lines.append("gc_pop_locals({});".format(len(locs)))
+    lines.append("return ret;")
     # lines = ['puts("enter function %s");'.format(name)] + lines
     func_define = "Object " + cname + "() " + format_block(vars+lines, 0)
     env.exit_scope(func_define)
@@ -453,11 +474,14 @@ def do_def(item, env, obj=None):
         tm_define, env.get_globals(), env.get_const(name), cname)
     
 def do_return(item, env, indent=0):
+    # free tracked locals
     ret = do_item(item.first, env, 0)
     if ret == "":
-        return "return NONE_OBJECT;"
+        # return line + "return NONE_OBJECT;"
+        return "goto func_end;";
     else:
-        return "return " + ret + ";"
+        # return line + "return " + ret + ";"
+        return "ret = {};\ngoto func_end;".format(ret)
     
 def do_class(item, env):
     class_define = do_assign(item, env, "dict_new()")

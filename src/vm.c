@@ -131,6 +131,7 @@ int tm_init(int argc, char* argv[]) {
 int tm_run_func(int argc, char* argv[], char* mod_name, void(*func)(void)) {
 
     int ret = vm_init(argc, argv);
+    tm->local_obj_list = untracked_list_new(100);
     if (ret != 0) { 
         return ret;
     }
@@ -152,6 +153,7 @@ int tm_run_func(int argc, char* argv[], char* mod_name, void(*func)(void)) {
         func();
         tm->gc_state = 1;
         printf("tm->max_allocated = %d\n", tm->max_allocated);
+        fgetc(stdin);
 
     } else if (code == 1){
         traceback();

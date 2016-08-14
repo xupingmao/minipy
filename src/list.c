@@ -154,6 +154,11 @@ void list_del(TmList* list, Object key) {
     _list_del(list, idx);
 }
 
+void list_shorten(TmList* list, int len) {
+    if (len > list->len) return;
+    list->len = len;
+}
+
 Object list_add(TmList* list1, TmList*list2) {
     int newl = list1->len + list2->len;
     Object newlist = list_new(newl);

@@ -54,32 +54,53 @@ Object tm_call(int lineno, Object func, int args, ...) {
  * @param fn, native function
  * @args, number of arguments
  * @...,  arguments
+ * 
+ * eg. add('test', wrapper(1))
+ *  --> tm_call_native(add, 'test', tm_call_native(wrapper, 1), tm_call_native(wrapper, 2))
+ *  <==> t1 = tm_call_native(wrapper, 1)  <local> = ['test', 1, 2]
+ *       t1 = tm_call_native(wrapper, 2)  <local> = ['test', 1, 2]
+ *       tm_call_native(add, t1, t2)      <local> = ['test', 1, 2]
  */
 Object tm_call_native(int lineno, Object (*fn)(), int args, ...) {
     int i = 0;
     va_list ap;
     Object obj_arg;
+
     va_start(ap, args);
     arg_start();
     for (i = 0; i < args; i++) {
         obj_arg = va_arg(ap, Object);
         gc_mark(obj_arg);
+/*
+#ifndef LOCAL_SWEEP_OFF
+        // track local vars
+        // number/None also tracked for the pop
+        gc_track_local(tm->local_obj_list, obj_arg); 
+#endif
+*/
         arg_push(obj_arg);
     }
     va_end(ap);
 
 #ifndef LOCAL_SWEEP_OFF
-    TmList* pre_list = tm->local_obj_list;
-    tm->local_obj_list = untracked_list_new(5);
+    int size = tm->local_obj_list->len;
 #endif
 
     Object ret = fn();
 
+/*
+#ifndef LOCAL_SWEEP_OFF
+    gc_local_track(tm->local_obj_list, ret);
+
+    for (i = 0; i < args; i++) {
+        gc_local_pop(tm->local_obj_list); // pop out local vars
+    }
+#endif
+*/
 #ifndef LOCAL_SWEEP_OFF    
     gc_mark(ret);
-    gc_sweep_local(); // sweep unused objects in locals.
-    list_free(tm->local_obj_list); // release container
-    tm->local_obj_list = pre_list;
+    gc_sweep_local(size); // sweep unused objects in locals.
+    list_shorten(tm->local_obj_list, size); // restore list
 #endif
 
     return ret;
@@ -104,6 +125,12 @@ Object tm_take_arg() {
 void tm_def_mod(char* fname, Object mod) {
     Object o_name = sz_to_string(fname);
     obj_set(tm->modules, o_name, mod);
+}
+
+Object tm_import(Object globals, Object mod_name) {
+    Object mod = obj_get(tm->modules, mod_name);
+    obj_set(globals, mod_name, mod);
+    return mod;
 }
 
 void tm_import_all(Object globals, Object mod_name) {

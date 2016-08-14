@@ -219,6 +219,57 @@ Object gc_track(Object v) {
     return v;
 }
 
+/*
+ not implemented yet.
+ 
+PtrArray* gc_ptr_array_new() {
+    PtrArray* arr = tm_malloc(sizeof(PtrArray));
+    arr->cap = 100;
+    arr->len = 0;
+    arr->elements = tm_malloc(sizeof(Object*) * arr->cap);
+    return arr;
+}
+
+void gc_ptr_array_pop(PtrArray* arr) {
+    if (arr->len <= 0) return;
+    arr->elements[arr->len-1] = NULL;
+    arr->len -= 1;
+}
+
+void gc_ptr_array_check(PtrArray* arr) {
+    if (arr->len == arr->cap) {
+        int old_cap = arr->cap;
+        arr->cap += arr->cap / 2 + 1;
+        arr->elements = tm_realloc(arr->elements, sizeof(Object*) * old_cap, sizeof(Object*) * arr->cap);
+    }
+}
+
+void gc_ptr_array_append(PtrArray* arr, Object* obj) {
+    gc_ptr_array_check(arr);
+    arr->elements[arr->len] = obj;
+    arr->len += 1;
+}
+
+void gc_ptr_array_free(PtrArray* arr) {
+    tm_free(arr->elements, sizeof(Object*) * arr->cap);
+    tm_free(arr, sizeof(PtrArray));
+}
+
+void gc_track_local(Object* local) {
+    // gc_ptr_array_append(tm->local_obj_list, local);
+}
+
+void gc_pop_local() {
+    // gc_ptr_array_pop(tm->local_obj_list);
+}
+
+void gc_pop_locals(int n) {
+    while (--n >= 0) {
+        gc_pop_local();
+    }
+}
+
+*/
 void gc_mark_list(TmList* list) {
     if (list->marked)
         return;
@@ -324,11 +375,11 @@ void gc_sweep() {
     tm->all = temp;
 }
 
-void gc_sweep_local() {
+void gc_sweep_local(int start) {
     if (tm->local_obj_list != NULL) {
         int i;
         TmList* list = tm->local_obj_list;
-        for (i = 0; i < list->len; i++) {
+        for (i = start; i < list->len; i++) {
             if (GC_MARKED(list->nodes[i])==0) {
                 obj_free(list->nodes[i]);
             } else {
@@ -411,12 +462,20 @@ void gc_full() {
 void gc_destroy() {
     TmList* all = tm->all;
     int i;
+
+    // sweep local first, as some objects are in local_obj_list
+    gc_sweep_local(0);
+
     for (i = 0; i < all->len; i++) {
         obj_free(all->nodes[i]);
     }
 
     list_free(tm->all);
-    gc_sweep_local();
+    
+
+    if (tm->local_obj_list != NULL) {
+        list_free(tm->local_obj_list);
+    }
 
 #if !PRODUCT
     if (tm->allocated != 0) {

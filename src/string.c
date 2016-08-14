@@ -277,6 +277,33 @@ Object string_builtin_endswith() {
     return tm_number(idx + tm_len(arg0) == tm_len(self));
 }
 
+Object string_builtin_format() {
+    const char* func_name = "str.format";
+    Object self = arg_take_str_obj(func_name);
+    Object fmt  = arg_take_str_obj(func_name);
+    Object nstr = string_alloc("", 0);
+    int i = 0;
+    int start   = 0;
+    for (i = 0; i < self.value.str->len; i++) {
+        char c = self.value.str->value[i];
+        if (c == '}') {
+            if (start == 1) {
+                Object obj = arg_take_obj(func_name);
+                string_append_obj(nstr, obj);
+                start = 0;
+            } else {
+                string_append_char(nstr, c);
+            }
+        } else if (c == '{') {
+            start = 1;
+        } else {
+            start = 0;
+            string_append_char(nstr, c);
+        }
+    }
+    return nstr;
+}
+
 void string_methods_init() {
     tm->str_proto = dict_new();
     reg_mod_func(tm->str_proto, "replace",    string_builtin_replace);
@@ -287,6 +314,7 @@ void string_methods_init() {
     reg_mod_func(tm->str_proto, "split",      string_builtin_split);
     reg_mod_func(tm->str_proto, "startswith", string_builtin_startswith);
     reg_mod_func(tm->str_proto, "endswith",   string_builtin_endswith);
+    reg_mod_func(tm->str_proto, "format",     string_builtin_format);
 }
 
 Object* string_next(TmData* iterator) {
