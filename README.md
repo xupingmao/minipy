@@ -53,6 +53,26 @@ A mini python interpreter, vm implemented with ANSI C and compiler implemented w
 6. None, NoneType object.
 7. data, data are other data structure such as iterator.
 
+### tm2c
+convert python code to c code, still in development.
+
+#### features
+1. function defintion and call.
+2. builtin object call.
+3. import builtin modules
+4. all operators except `<<`, `>>`, `^`, `&`, `~`, `**`, `//`
+
+#### TODO
+1. class support
+2. gc support
+
+#### how to use it
+1. cd `tm2c`
+2. put your python file in `tests`, like `tests/test.py`
+3. run `python tm2c.py tests/test.py`
+4. you will find a new file in `output/test.c` if there is no error occurs.
+5. cd `output`, run `gcc test.c -o test`, you can get a executable file `test`, ^_^
+
 ### tools
 1. repl.py repl mode
 2. dis.py dissamble bytecode.
