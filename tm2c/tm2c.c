@@ -70,14 +70,6 @@ Object tm_call_native(int lineno, Object (*fn)(), int args, ...) {
     arg_start();
     for (i = 0; i < args; i++) {
         obj_arg = va_arg(ap, Object);
-        gc_mark(obj_arg);
-/*
-#ifndef LOCAL_SWEEP_OFF
-        // track local vars
-        // number/None also tracked for the pop
-        gc_track_local(tm->local_obj_list, obj_arg); 
-#endif
-*/
         arg_push(obj_arg);
     }
     va_end(ap);
@@ -98,6 +90,14 @@ Object tm_call_native(int lineno, Object (*fn)(), int args, ...) {
 #endif
 */
 #ifndef LOCAL_SWEEP_OFF    
+    // mark all possible relation.
+    va_start(ap, args);
+    for (i = 0; i < args; i++) {
+        obj_arg = va_arg(ap, Object);
+        gc_mark(obj_arg);
+    }
+    va_end(ap);
+
     gc_mark(ret);
     gc_sweep_local(size); // sweep unused objects in locals.
     list_shorten(tm->local_obj_list, size); // restore list

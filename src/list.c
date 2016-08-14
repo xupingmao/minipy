@@ -76,6 +76,7 @@ void _list_check(TmList* list) {
 
 void list_append(TmList* list, Object obj) {
     _list_check(list);
+    gc_mark_single(obj); // mark obj as used.
     list->nodes[list->len] = obj;
     list->len++;
 }
@@ -100,6 +101,7 @@ Object array_to_list(int n, ...) {
  */
 void list_insert(TmList* list, int n, Object obj) {
     _list_check(list);
+    gc_mark_single(obj);
     if (n < 0)
         n += list->len;
     if (n < list->len || n < 0) {

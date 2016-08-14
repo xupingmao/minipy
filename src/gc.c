@@ -302,6 +302,13 @@ void gc_mark_func(TmFunction* func) {
     gc_mark(func->name);
 }
 
+void gc_mark_single(Object o) {
+    if (o.type == TYPE_NUM || o.type == TYPE_NONE) {
+        return;
+    }
+    GC_MARKED(o) = 1;
+}
+
 void gc_mark(Object o) {
     if (o.type == TYPE_NUM || o.type == TYPE_NONE)
         return;

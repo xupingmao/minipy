@@ -72,6 +72,7 @@ void        gc_full();
 void        gc_sweep_local(int start);
 Object      bf_get_malloc_info();
 void        gc_mark(Object);
+void        gc_mark_single(Object);
 void        gc_mark_list(TmList*);
 void        gc_mark_dict(TmDict*);
 

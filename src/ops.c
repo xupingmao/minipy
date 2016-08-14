@@ -49,8 +49,8 @@ int obj_eq_sz(Object obj, const char* value) {
 }
 
 void obj_set(Object self, Object k, Object v) {
-    gc_mark(k); // used between gc scan
-    gc_mark(v); 
+    gc_mark_single(k); // used between gc scan
+    gc_mark_single(v); // only need to mark single.
     switch (TM_TYPE(self)) {
     case TYPE_LIST: {
         tm_assert_type(k, TYPE_NUM, "obj_set");
