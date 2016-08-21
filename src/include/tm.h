@@ -159,15 +159,16 @@ Object           dict_new();
 TmDict*          dict_init();
 void             dict_free(TmDict* dict);
 int              dict_set0(TmDict* dict, Object key, Object val);
-#define          dict_set(d, k, v) dict_set0(GET_DICT(d), k, v)
 DictNode*        dict_get_node(TmDict* dict, Object key);
 Object*          dict_get_by_str0(TmDict* dict, char* key);
 void             dict_del(TmDict* dict, Object k);
 void             dict_methods_init();
 void             dict_set_by_str0(TmDict* dict, char* key, Object val);
-#define          dict_set_by_str(dict, key, val) dict_set_by_str0(GET_DICT(dict), key, val)
-#define          dict_get_by_str(dict, key) dict_get_by_str0(GET_DICT(dict), key)
 Object           dict_keys(TmDict* );
+
+#define          dict_set(d, k, v)                dict_set0(GET_DICT(d), k, v)
+#define          dict_set_by_str(dict, key, val)  dict_set_by_str0(GET_DICT(dict), key, val)
+#define          dict_get_by_str(dict, key)       dict_get_by_str0(GET_DICT(dict), key)
 
 /** dict methods **/
 Object           dict_keys();

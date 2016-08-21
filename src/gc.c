@@ -1,5 +1,9 @@
 #include "include/tm.h"
 
+#ifdef GC_DEBUG
+    #include "debug.c"
+#endif
+
 /**
  * 1. mark all allocated object to be unused (0);
  * 2. mark objects can be reached from `root` to be used (1);
@@ -8,11 +12,7 @@
  * 
  */
 
-#define GC_CONSTANS_LEN 10
-#define GC_REACHED_SIGN 1
-#define GC_MARKED(o) (o).value.gc->marked
 
-#define GET_CHAR(n) ARRAY_CHARS[n]
 
 enum {
     GC_INIT,
@@ -21,6 +21,8 @@ enum {
 } GcState;
 
 #ifdef GC_DEBUG
+// logs can redirected to file
+#define WRITE_LOG_FILE 0
 
 static char LOG_BUF[1024 * 10]; // 20K buffer
 
@@ -49,10 +51,27 @@ int check_log_level(int level) {
     return 0;
 }
 
-void LOG_INIT() {
-    FILE* fp = fopen("tm.log", "w");
-    // fputs("*****LOG INIT*****\n", fp);
-    fclose(fp);
+void DEBUG_INIT() {
+    if (WRITE_LOG_FILE) {
+        FILE* fp = fopen("tm.log", "w");
+        // fputs("*****LOG INIT*****\n", fp);
+        fclose(fp);
+    }
+
+    /** init debug map */
+    debug_init();
+}
+
+void DEBUG_MALLOC(void* ptr) {
+    debug_malloc(ptr);
+}
+
+void DEBUG_FREE(void*ptr) {
+    debug_free(ptr);
+}
+
+void DEBUG_FREE2(void*ptr, Object o) {
+    debug_free2(ptr, o);
 }
 
  /**
@@ -98,7 +117,7 @@ void LOG(int level, char* fmt, ...) {
 
     va_end(ap);
 
-    if (strlen(buffer) >= FLUSH_SIZE) {
+    if (WRITE_LOG_FILE && strlen(buffer) >= FLUSH_SIZE) {
         FILE* fp = fopen("tm.log", "a");
         fputs(buffer, fp);
         fclose(fp);
@@ -111,19 +130,33 @@ void LOG(int level, char* fmt, ...) {
  * @since 2016-08-16
  */
 void LOG_END() {
-    FILE* fp = fopen("tm.log", "a");
-    fputs(LOG_BUF, fp);
-    fclose(fp);
-    memset(LOG_BUF, 0, sizeof(LOG_BUF));
+
+    if (WRITE_LOG_FILE) {
+        FILE* fp = fopen("tm.log", "a");
+        fputs(LOG_BUF, fp);
+        fclose(fp);
+        memset(LOG_BUF, 0, sizeof(LOG_BUF));
+    }
+
+    debug_destroy();
 }
 #else
-    #define LOG_INIT() /* LOG INIT */
+    #define DEBUG_INIT() /* DEBUG_INIT */
     #define LOG(level, fmt, oldsize, newsize, addr) /* LOG */
     #define LOG_END() /* LOG END */
+    #define DEBUG_MALLOC(ptr) /* DEBUG_MALLOC */
+    #define DEBUG_FREE(ptr) /* DEBUG_FREE */
+    #define DEBUG_FREE2(ptr,o) /* DEBUG_FREE2 */
 #endif
 
 void chars_init();
 void frames_init();
+
+#define GC_CONSTANS_LEN 10
+#define GC_REACHED_SIGN 1
+#define GC_MARKED(o) (o).value.gc->marked
+
+#define GET_CHAR(n) ARRAY_CHARS[n]
 
 
 /**
@@ -170,7 +203,7 @@ void gc_init() {
     /* initialize frames */
     frames_init();
 
-    LOG_INIT();
+    DEBUG_INIT();
 }
 
 void chars_init() {
@@ -212,6 +245,7 @@ void* tm_malloc(size_t size) {
     }
     block = malloc(size);
     
+    DEBUG_MALLOC(block);
     LOG(LEVEL_INFO,"malloc,%d,%d,%p", tm->allocated, tm->allocated + size, block);
 
     if (block == NULL) {
@@ -238,7 +272,6 @@ void tm_free(void* o, size_t size) {
         return;
 
     LOG(LEVEL_INFO, "free,%d,%d,%p", tm->allocated, tm->allocated - size, o);
-
     free(o);
     tm->allocated -= size;
 }
@@ -524,6 +557,7 @@ void gc_native_call_sweep(Object ret) {
     LOG(LEVEL_ERROR, "local_len,%d,%d,%d", tm->local_obj_list->len, 0,0);
     
     /* mark all objects to be unused */
+    /* mark tm->all is enough */
     for (i = 0; i < tm->all->len; i++) {
         GC_MARKED(tm->all->nodes[i]) = 0;
     }
@@ -535,11 +569,6 @@ void gc_native_call_sweep(Object ret) {
     }
     // tm_print(get_tm_local_list());
 
-    tm->local_obj_list->marked = 0;
-    for (i = 0; i < tm->local_obj_list->len; i++) {
-        GC_MARKED(tm->local_obj_list->nodes[i]) = 0;
-    }
-    
     /* mark protoes */
     gc_mark(tm->list_proto);
     gc_mark(tm->dict_proto);
@@ -552,6 +581,7 @@ void gc_native_call_sweep(Object ret) {
     gc_mark(tm->ex);
     gc_mark(tm->ex_line);
     
+    tm->local_obj_list->marked = 0;
     gc_mark_list(tm->local_obj_list);
     /* sweep garbage */
     gc_sweep();
@@ -665,19 +695,14 @@ void gc_destroy() {
     TmList* all = tm->all;
     int i;
 
-    // sweep local first, as some objects are in local_obj_list
-    // gc_sweep_local(0);
-
-    // gc_move_local(); // move uniq list to tm->all
     tm->gc_state = GC_STATE_DESTROY; // end
-
 
     for (i = 0; i < all->len; i++) {
         obj_free(all->nodes[i]);
     }
 
     if (tm->local_obj_list != NULL) {
-        list_free(tm->local_obj_list);
+        list_free(tm->local_obj_list); // free local_obj_list
     }
     
     list_free(tm->all);
@@ -738,13 +763,15 @@ void obj_free(Object o) {
     #ifdef GC_DEBUG
         if (tm->gc_state != GC_STATE_DESTROY){
             switch(TM_TYPE(o)) {
-                case TYPE_STR:  LOG(LEVEL_ERROR, "delete,str,%d,%p",    GET_STR_LEN(o), GET_STR_OBJ(o)); break;
-                case TYPE_LIST: LOG(LEVEL_ERROR, "delete,list,%d,%p",   LIST_LEN(o), GET_LIST(o));    break;
-                case TYPE_DICT: LOG(LEVEL_ERROR, "delete,dict,%d,%p",   DICT_LEN(o), GET_DICT(o));    break;
-                case TYPE_FUNCTION: LOG(LEVEL_ERROR, "delete,function,0,%p", GET_FUNCTION(o), 0);     break;
-                default:        LOG(LEVEL_ERROR, "delete,unknown,%d,%d", TM_TYPE(o), 0); break;
+                case TYPE_STR:  LOG(LEVEL_INFO, "delete,str,%d,%p",    GET_STR_LEN(o), GET_STR_OBJ(o)); break;
+                case TYPE_LIST: LOG(LEVEL_INFO, "delete,list,%d,%p",   LIST_LEN(o), GET_LIST(o));    break;
+                case TYPE_DICT: LOG(LEVEL_INFO, "delete,dict,%d,%p",   DICT_LEN(o), GET_DICT(o));    break;
+                case TYPE_FUNCTION: LOG(LEVEL_INFO, "delete,function,0,%p", GET_FUNCTION(o), 0);     break;
+                default:        LOG(LEVEL_INFO, "delete,unknown,%d,%d", TM_TYPE(o), 0); break;
             }
         }
+
+        DEBUG_FREE2(GET_PTR(o), o);
     #endif
 
     switch (TM_TYPE(o)) {

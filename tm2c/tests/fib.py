@@ -1,4 +1,5 @@
 import time
+import sys
 time = time.time
 
 def fib(n):
@@ -7,7 +8,7 @@ def fib(n):
     return fib(n-1) + fib(n-2)
 
 def main():
-    sn = input("n=")
+    sn = sys.argv[1]
     n = int(sn)
     t1 = time()
     print(fib(n))
