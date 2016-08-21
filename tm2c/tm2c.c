@@ -124,8 +124,11 @@ Object tm_call_native(Object (*fn)(), int args, ...) {
     // list_shorten(tm->local_obj_list, size); // restore list
     gc_restore_local_obj_list(size);
 
+    /* return value must be added to tm->local_obj_list */
+    gc_local_add(ret);
+
     if (tm->allocated > tm->gc_threshold) {
-        gc_native_call_sweep(ret); // find and sweep the garbage
+        gc_native_call_sweep(); // find and sweep the garbage
     }
 
     // gc can be done here
@@ -166,7 +169,9 @@ Object tm_call_native_debug(int lineno, char* func_name, Object (*fn)(), int arg
     // if (size != tm->local_obj_list->len) {
         // if size changed, there must be new allocated objects
         gc_restore_local_obj_list(size);
-        gc_native_call_sweep(ret); // check whether need full gc.
+
+        gc_local_add(ret);
+        gc_native_call_sweep(); // check whether need full gc.
     // }
 
     // tm_inspect_obj(get_tm_local_list());

@@ -77,7 +77,7 @@ void        gc_mark_single(Object);
 void        gc_mark_list(TmList*);
 void        gc_mark_dict(TmDict*);
 void        gc_restore_local_obj_list(int size);
-void        gc_native_call_sweep(Object);
+void        gc_native_call_sweep();
 
 #if 0
     #define PRINT_OBJ_GC_INFO_START() int _gc_old = tm->allocated;

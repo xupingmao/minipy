@@ -5,6 +5,7 @@
 DEF_MAP(Smap, void*, int);
 
 static Smap *debug_map = NULL;
+static Smap *debug_protect_map = NULL;
 static int debug_steps = 0;
 static int leaks_count = 0;
 /**
@@ -34,7 +35,24 @@ void debug_destroy() {
         debug_summary();
         Smap_free(debug_map);
     }
+    if (debug_protect_map != NULL) {
+        Smap_free(debug_protect_map);
+    }
     debug_map = NULL;
+}
+
+/**
+ * protect a object by adding it to protect_map
+ * @since 2016-08-21
+ */
+void debug_protect(Object o) {
+    if (TM_TYPE(o) == TYPE_NUM || TM_TYPE(o) == TYPE_NONE) {
+        return;
+    }
+    if (debug_protect_map == NULL) {
+        debug_protect_map = Smap_new();
+    }
+    Smap_set(debug_protect_map, GET_PTR(o), 1);
 }
 
 /**

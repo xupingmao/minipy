@@ -539,12 +539,20 @@ Object get_tm_local_list() {
     return obj;
 }
 
+void gc_local_add(Object ret) {
+    if (TM_TYPE(ret) != TYPE_NONE && TM_TYPE(ret) != TYPE_NUM) {
+        // arguments is already in prev-call-stack
+        // ret must be added to prev-call-stack
+        list_append(tm->local_obj_list, ret); // move ret value to tm->local_obj_list
+    }
+}
+
 /**
  * sweep garbage after native function call is ended.
  * @author xupingmao
  * @since 2016-08-19
  */
-void gc_native_call_sweep(Object ret) {
+void gc_native_call_sweep() {
     int i;
     long t1, t2;
     t1 = clock();
@@ -560,12 +568,6 @@ void gc_native_call_sweep(Object ret) {
     /* mark tm->all is enough */
     for (i = 0; i < tm->all->len; i++) {
         GC_MARKED(tm->all->nodes[i]) = 0;
-    }
-
-    if (TM_TYPE(ret) != TYPE_NONE && TM_TYPE(ret) != TYPE_NUM) {
-        // arguments is already in prev-call-stack
-        // ret must be added to prev-call-stack
-        list_append(tm->local_obj_list, ret); // move ret value to tm->local_obj_list
     }
     // tm_print(get_tm_local_list());
 
