@@ -101,6 +101,9 @@ typedef struct _tm_jmp_buf tm_jmp_buf;
 typedef struct TmVm {
   char* version;
   int debug;
+
+  int argc;
+  char** argv;
   
   int exit_code; /* function call exit code, to recognize exceptions */
 

@@ -18,9 +18,16 @@ Object bf_time_time() {
     #endif
 }
 
+Object bf_time_ctime() {
+    time_t rawtime;
+    time(&rawtime);
+    char* ct = ctime(&rawtime); // ct ends with \n
+    return string_alloc(ct, strlen(ct)-1);
+}
+
 void time_mod_init() {
     Object time_mod = dict_new();
-    reg_mod_func(time_mod, "time", bf_time_time);
-
+    reg_mod_func(time_mod, "time",  bf_time_time);
+    reg_mod_func(time_mod, "ctime", bf_time_ctime);
     dict_set_by_str(tm->modules, "time", time_mod);
 }

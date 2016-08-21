@@ -11,6 +11,7 @@
 #include "exception.c"
 #include "tmarg.c"
 #include "module/time.c"
+#include "module/sys.c"
 
 /** do not need to boot from binary **/
 #ifndef TM_NO_BIN
@@ -75,6 +76,9 @@ int vm_init(int argc, char* argv[]) {
     // init gc
     gc_init();
 
+    tm->argc = argc;
+    tm->argv = argv;
+
     /* set module boot */
     Object boot = dict_new();
     dict_set_by_str(tm->modules, "boot", boot);
@@ -90,13 +94,8 @@ int vm_init(int argc, char* argv[]) {
     dict_methods_init();
     builtins_init();
     time_mod_init();
-    
-    Object p = list_new(argc);
-    for (i = 1; i < argc; i++) {
-        Object arg = string_new(argv[i]);
-        obj_append(p, arg);
-    }
-    dict_set_by_str(tm->builtins, "ARGV", p);
+    sys_mod_init();
+
     return 0;
 }
 

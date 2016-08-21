@@ -295,27 +295,23 @@ add_builtin("__debug__", __debug__)
 add_builtin("require", require)
 
     
-def init_py_libs():
-    sys = {}
-    __modules__['sys'] = sys
-    sys.argv = ARGV
-    
 LIB_PATH = ''
 def boot(loadlibs=True):
     from tokenize import *
     from encode import *
     from repl import *
+    import sys
     global LIB_PATH
-    argc = len(ARGV)
+    argv = sys.argv
+    argc = len(argv)
     pathes = split_path(getcwd())
     pathes.append("libs")
     LIB_PATH = join_path(pathes)
-    init_py_libs()
     if argc == 0:
         repl()
     else:
-        if exists(ARGV[0]):
-            execfile(ARGV[0])
+        if exists(argv[0]):
+            execfile(argv[0])
         else:
-            filename = "D:\\temp\\subpy\\libs\\" + ARGV[0]
+            filename = "D:\\temp\\subpy\\libs\\" + argv[0]
             execfile(filename, False)
