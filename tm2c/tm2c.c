@@ -47,6 +47,15 @@ Object tm_call(Object func, int args, ...) {
     // tm_printf("at line %d, try to call %o with %d args\n", lineno, get_func_name_obj(func), args);
     // *self* will be resolved in call_function
     Object ret;
+    if (IS_DICT(func)) {
+        ret = class_new(func);
+        Object *_fnc = dict_get_by_str(ret, "__init__");
+        if (_fnc != NULL) {
+            func = *_fnc;
+        }
+        return ret;
+    }
+
     if (IS_FUNC(func)) {
         resolve_method_self(func);
         /* call native */
@@ -55,14 +64,8 @@ Object tm_call(Object func, int args, ...) {
         } else {
             tm_raise("can not call py function from tm2c");
         }
-    } else if (IS_DICT(func)) {
-        ret = class_new(func);
-        Object *_fnc = dict_get_by_str(ret, "__init__");
-        if (_fnc != NULL) {
-            call_function(*_fnc);
-        }
-        return ret;
-    }
+    } 
+
     tm_raise("File %o, line=%d: call_function:invalid object %o", GET_FUNCTION_FILE(tm->frame->fnc), 
         tm->frame->lineno, func);
     return NONE_OBJECT;
@@ -274,21 +277,16 @@ Object argv_to_dict(int n, ...) {
 int tm_run_func(int argc, char* argv[], char* mod_name, Object (*func)(void)) {
     int ret = vm_init(argc, argv);
     int i;
-    tm->local_obj_list = untracked_list_new(100);
     if (ret != 0) { 
         return ret;
     }
+    tm->local_obj_list = untracked_list_new(100);
     /* use first frame */
     int code = setjmp(tm->frames->buf);
     if (code == 0) {
-        
-        // 
-        Object *_argv = dict_get_by_str(tm->builtins, "ARGV");
-        if (_argv == NULL) {
-            tm_raise("ARGV is not defined!");
-        }
-        Object argv = *_argv;
-        list_insert(GET_LIST(argv), 0, string_new(mod_name));
+        Object *sys  = dict_get_by_str(tm->modules, "sys");
+        Object *_argv = dict_get_by_str(*sys, "argv");
+        list_insert(GET_LIST(*_argv), 0, string_new(mod_name));
 
         tm->gc_state = 0;
         tm_call_native(func,0);

@@ -253,11 +253,14 @@ def do_comment(T, s,i,l):
     return i
 
 def _main():
-    if len(ARGV) != 2:
-        print("error arguments, arguments = ", ARGV)
+    import sys
+    argv = sys.argv
+    if len(argv) != 2:
+        print("error arguments, arguments = ", argv)
         return
-    fname = ARGV[1]
-    print("try to tokenize file ", fname)
+    print(argv)
+    fname = argv[1]
+    print("try to tokenize file", fname)
     content = load(fname)
     list = tokenize(content)
     for i in list:

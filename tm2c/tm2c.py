@@ -813,7 +813,7 @@ def get_opt(argv):
     opt.record_line = False
     for arg in argv:
         if arg[0] == '-':
-            key = argv[1:]
+            key = arg[1:]
             setattr(opt, key, True)
         else:
             opt.name = arg

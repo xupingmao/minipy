@@ -542,7 +542,7 @@ Object* range_next(TmData* data) {
     return NULL;
 }
 
-Object bf_range() {
+Object bf_xrange() {
     long start = 0;
     long end = 0;
     int inc;
@@ -579,6 +579,10 @@ Object bf_range() {
     iterator->next = range_next;
 
     return data;
+}
+
+Object bf_range() {
+    return bf_xrange();
 }
 
 Object* enumerate_next(TmData* iterator) {
@@ -971,7 +975,8 @@ void builtins_init() {
     reg_builtin_func("system", bf_system);
     reg_builtin_func("apply", bf_apply);
     reg_builtin_func("pow", bf_pow);
-    reg_builtin_func("range", bf_range);
+    reg_builtin_func("range",  bf_range);
+    reg_builtin_func("xrange", bf_xrange);
     reg_builtin_func("enumerate", bf_enumerate);
     reg_builtin_func("random", bf_random);
     reg_builtin_func("Exception", bf_Exception);
