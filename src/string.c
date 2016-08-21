@@ -70,6 +70,12 @@ Object string_alloc(char *s, int size) {
     return gc_track(v);
 }
 
+Object string_const(char* s) {
+    Object str_obj = string_new(s);
+    int i = dict_set(tm->constants, str_obj, NONE_OBJECT);
+    return str_obj;
+}
+
 Object string_chr(int n) {
     return list_get(GET_LIST(ARRAY_CHARS), n);
 }
@@ -103,7 +109,7 @@ Object string_append_char(Object string, char c) {
         str->value = tm_realloc(str->value, str->len+1, str->len+2);
     } else {
         // static string, must malloc a new memory
-        str->value = tm_malloc(2);
+        str->value = tm_malloc(str->len+2);
     }
     str->value[str->len] = c;
     str->value[str->len+1] = '\0';
@@ -280,7 +286,7 @@ Object string_builtin_endswith() {
 Object string_builtin_format() {
     const char* func_name = "str.format";
     Object self = arg_take_str_obj(func_name);
-    Object fmt  = arg_take_str_obj(func_name);
+    // Object fmt  = arg_take_str_obj(func_name);
     Object nstr = string_alloc("", 0);
     int i = 0;
     int start   = 0;

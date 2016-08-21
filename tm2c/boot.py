@@ -8,6 +8,44 @@ ARGV = sys.argv
 argv = sys.argv
 system = os.system
 
+def _repl_print(p, maxlen = 40, n = 0, depth = 2):
+    if depth <= 0:
+        print("...")
+        return
+    if gettype(p) == 'dict':
+        if depth == 1:
+            printf("%s{...}\n", n * ' ')
+            return
+        print("{")
+        for key in p:
+            printf(' '*(n+1)+str(key))
+            printf(":")
+            repl_print(p[key], n+1, depth-1)
+        print(' '*n+"}")
+    elif gettype(p) == 'list':
+        if depth == 1:
+            printf("%s[...]\n", n * ' ')
+            return
+        printf("%s[\n", n * ' ')
+        for item in p:
+            #printf((n+1) * ' ')
+            repl_print(item, n+1, depth-1)
+            #printf(",")
+        printf('%s]\n', n * ' ')
+    elif gettype(p) == "string":
+        printf(' ' * n)
+        if len(p) > maxlen:
+            p = p.substring(0, maxlen)
+            p += '...'
+        p = escape(p)
+        printf("\"%s\"\n", p)
+    else:
+        printf(' '*n)
+        print(p)
+
+def repl_print(p, n, depth):
+    return _repl_print(p, 40, n, depth)
+
 def mmatch(s, i, v):
     return s[i:i+len(v)] == v
 # import loadlib
@@ -32,12 +70,23 @@ def copy(src, des):
 def sformat(fmt, *v):
     return fmt % tuple(v)
     
-class Obj:
+class Obj(dict):
+    
+    def __setattr__(self, k, v):
+        self[k] = v
+
+    def __getattr__(self, k):
+        return self.get(k)
+
+class Tk:
     pass
+
+    def __str__(self):
+        return str(self.__dict__)
 
 # newobj
 def newobj():
-    return Obj()
+    return Tk()
 
 def add_builtin(name, func):
     if isinstance(__builtins__, dict):

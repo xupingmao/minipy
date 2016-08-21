@@ -35,7 +35,7 @@ void tm_setattr(Object dict, char* attr, Object value) {
     dict_set0(GET_DICT(dict), sz_to_string(attr), value);
 }
 
-Object tm_call(int lineno, Object func, int args, ...) {
+Object tm_call(Object func, int args, ...) {
     int i = 0;
     va_list ap;
     va_start(ap, args);
@@ -45,12 +45,31 @@ Object tm_call(int lineno, Object func, int args, ...) {
     }
     va_end(ap);
     // tm_printf("at line %d, try to call %o with %d args\n", lineno, get_func_name_obj(func), args);
-    return call_function(func);
+    // *self* will be resolved in call_function
+    Object ret;
+    if (IS_FUNC(func)) {
+        resolve_method_self(func);
+        /* call native */
+        if (GET_FUNCTION(func)->native != NULL) {
+            return GET_FUNCTION(func)->native();
+        } else {
+            tm_raise("can not call py function from tm2c");
+        }
+    } else if (IS_DICT(func)) {
+        ret = class_new(func);
+        Object *_fnc = dict_get_by_str(ret, "__init__");
+        if (_fnc != NULL) {
+            call_function(*_fnc);
+        }
+        return ret;
+    }
+    tm_raise("File %o, line=%d: call_function:invalid object %o", GET_FUNCTION_FILE(tm->frame->fnc), 
+        tm->frame->lineno, func);
+    return NONE_OBJECT;
 }
 
 /**
  * call native function
- * @param lineno, lineno of the python source code
  * @param fn, native function
  * @args, number of arguments
  * @...,  arguments
@@ -61,7 +80,7 @@ Object tm_call(int lineno, Object func, int args, ...) {
  *       t1 = tm_call_native(wrapper, 2)  <local> = ['test', 1, 2]
  *       tm_call_native(add, t1, t2)      <local> = ['test', 1, 2]
  */
-Object tm_call_native(int lineno, Object (*fn)(), int args, ...) {
+Object tm_call_native(Object (*fn)(), int args, ...) {
     int i = 0;
     va_list ap;
     Object obj_arg;
@@ -75,34 +94,72 @@ Object tm_call_native(int lineno, Object (*fn)(), int args, ...) {
     va_end(ap);
 
 #ifndef LOCAL_SWEEP_OFF
-    int size = tm->local_obj_list->len;
+    // record the length to restore
+    int size = tm->local_obj_list->len; 
 #endif
 
-    Object ret = fn();
+    Object ret = fn(); // execute native function
 
-/*
-#ifndef LOCAL_SWEEP_OFF
-    gc_local_track(tm->local_obj_list, ret);
-
-    for (i = 0; i < args; i++) {
-        gc_local_pop(tm->local_obj_list); // pop out local vars
-    }
-#endif
-*/
 #ifndef LOCAL_SWEEP_OFF    
     // mark all possible relation.
+    // va_start(ap, args);
+    // for (i = 0; i < args; i++) {
+    //     obj_arg = va_arg(ap, Object);
+    //     gc_mark(obj_arg);
+    // }
+    // va_end(ap);
+
+    // gc_mark(ret);
+    // gc_sweep_local(size); // sweep unused objects in locals.
+    // list_shorten(tm->local_obj_list, size); // restore list
+    gc_restore_local_obj_list(size);
+
+    if (tm->allocated > tm->gc_threshold) {
+        gc_native_call_sweep(ret); // find and sweep the garbage
+    }
+
+    // gc can be done here
+    // all locals are in local_obj_list
+    // so active objects are objects in local_obj_list and objects can be reached by root.
+    // and there is no need to mark set operation.
+#endif
+
+    return ret;
+}
+
+/**
+ * call native function with debug info
+ * @param lineno current lineno in python file
+ * @param func_name function name
+ */
+Object tm_call_native_debug(int lineno, char* func_name, Object (*fn)(), int args, ...) {
+    int i = 0;
+    va_list ap;
+    Object obj_arg;
+
+    tm->frame->lineno = lineno;
+    LOG(LEVEL_ERROR, "call,%d,%s,start", lineno, func_name, 0);
     va_start(ap, args);
+    arg_start();
     for (i = 0; i < args; i++) {
         obj_arg = va_arg(ap, Object);
-        gc_mark(obj_arg);
+        arg_push(obj_arg);
     }
     va_end(ap);
 
-    gc_mark(ret);
-    gc_sweep_local(size); // sweep unused objects in locals.
-    list_shorten(tm->local_obj_list, size); // restore list
-#endif
+    // tm_inspect_obj(get_tm_local_list());
 
+    // record the length to restore
+    int size = tm->local_obj_list->len; 
+    Object ret = fn(); // execute native function
+    LOG(LEVEL_ERROR, "call,%d,%s,end", lineno, func_name, 0);
+    // if (size != tm->local_obj_list->len) {
+        // if size changed, there must be new allocated objects
+        gc_restore_local_obj_list(size);
+        gc_native_call_sweep(ret); // check whether need full gc.
+    // }
+
+    // tm_inspect_obj(get_tm_local_list());
     return ret;
 }
 
@@ -112,7 +169,7 @@ void def_func(Object globals, Object name, Object (*native)()) {
     obj_set(globals,name, func);
 }
 
-void def_method(Object dict, Object name, Object (*native)()) {
+void def_native_method(Object dict, Object name, Object (*native)()) {
     Object func = func_new(NONE_OBJECT, NONE_OBJECT, native);
     Object method = method_new(func, dict);
     obj_set(dict, name, method);
@@ -174,6 +231,10 @@ Object bf_vmopt() {
     return NONE_OBJECT;
 }
 
+/**
+ * convert argv to list
+ * @param n arguments count
+ */
 Object argv_to_list(int n, ...) {
     va_list ap;
     int i = 0;
@@ -185,4 +246,63 @@ Object argv_to_list(int n, ...) {
     }
     va_end(ap);
     return list;
+}
+
+/**
+ * convert argv to dict
+ * @param n arguments count
+ */
+Object argv_to_dict(int n, ...) {
+    va_list ap;
+    int i = 0;
+    Object dict = dict_new();
+    va_start(ap, n);
+    for (i = 0; i < n; i+=2) {
+        Object key = va_arg(ap, Object);
+        Object val = va_arg(ap, Object);
+        obj_set(dict, key, val);
+    }
+    va_end(ap);
+    return dict;
+}
+
+
+/** 
+ * run c function
+ * @param mod_name mocked module name
+ */
+int tm_run_func(int argc, char* argv[], char* mod_name, Object (*func)(void)) {
+    int ret = vm_init(argc, argv);
+    int i;
+    tm->local_obj_list = untracked_list_new(100);
+    if (ret != 0) { 
+        return ret;
+    }
+    /* use first frame */
+    int code = setjmp(tm->frames->buf);
+    if (code == 0) {
+        
+        // 
+        Object *_argv = dict_get_by_str(tm->builtins, "ARGV");
+        if (_argv == NULL) {
+            tm_raise("ARGV is not defined!");
+        }
+        Object argv = *_argv;
+        list_insert(GET_LIST(argv), 0, string_new(mod_name));
+
+        tm->gc_state = 0;
+        tm_call_native(func,0);
+        gc_full();
+        tm->gc_state = 1;
+        // printf("tm->max_allocated = %d\n", tm->max_allocated);
+        // printf("tm->allocated = %d\n", tm->allocated);
+        // fgetc(stdin);
+
+    } else if (code == 1){
+        traceback();
+    } else if (code == 2){
+        
+    }
+    vm_destroy();
+    return 0;
 }

@@ -1,11 +1,13 @@
 *.pyc
 *.exe
 *.out
+*.tpc
+*.log
 bin.c
 .DS_Store
 tm.exe
 tm0.exe
 tinypy.exe
 __pycache__
-*.tpc
 tinypy-1.1/
+tm2c/output/

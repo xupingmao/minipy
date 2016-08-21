@@ -272,7 +272,7 @@ def __debug__(fidx):
         repl_print(vmopt("frame.local", fidx, i))
     input("continue")
     
-add_obj_method("str", "format", sformat)
+# add_obj_method("str", "format", sformat)
 add_obj_method('str', 'ljust', ljust)
 add_obj_method('str', 'rjust', rjust)
 add_obj_method('str', 'center', center)

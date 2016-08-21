@@ -351,11 +351,11 @@ def parse_for_items(p):
     name = p.token
     expect(p, "name")
     name_list = [name]
-    while p.token.type == ",":
-        p.next()
-        name = p.token
-        expect(p, "name")
-        name_list.append(name)
+    # while p.token.type == ",":
+    #     p.next()
+    #     name = p.token
+    #     expect(p, "name")
+    #     name_list.append(name)
     expect(p, "in")
     expr(p)
     node = AstNode("in")
@@ -367,6 +367,7 @@ def parse_for_items(p):
 def parse_for(p):
     # parse_for_while(p, "for")
     ast = AstNode("for")
+    ast.pos = p.token.pos
     p.next()
     node = parse_for_items(p)
     ast.first = node
@@ -603,13 +604,31 @@ def print_ast(tree, n=0):
         print("     ")
     return print_ast_obj(tree, n)
 
+TYPE_MAP = {
+    ">" : "gt",
+    ">=": "ge",
+    "<" : "lt",
+    "<=": "le",
+    "==": "eqeq",
+    "!=": "noteq",
+    "=" : "mov"
+}
+
+def get_type(type):
+    if type in TYPE_MAP:
+        return TYPE_MAP[type]
+    return type
+
 def xml_obj(type, val):
+    type = get_type(type)
     return "<" + type + ">" + str(val) + "</" + type + ">"
 
 def xml_start(type):
+    type = get_type(type)
     return "<" + type + ">"
 
 def xml_end(type):
+    type = get_type(type)
     return "</" + type + ">"
 
 def print_xml_obj(tree, n=0):
@@ -632,8 +651,10 @@ def print_xml_obj(tree, n=0):
     print(" " *n, xml_end(tree.type))
 
 def print_xml_list(tree, n=0):
+    print(" " * (n+2) + "<list>")
     for item in tree:
-        print_xml_obj(item, n+2)
+        print_xml(item, n+4)
+    print(" " * (n+2) + "</list>")
 
 def print_xml(tree, n=0):
     if istype(tree, "list"):

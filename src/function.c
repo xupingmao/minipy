@@ -76,9 +76,7 @@ Object class_new(Object clazz){
 
 void func_free(TmFunction* func){
   // the references will be tracked by gc collecter
-  GC_LOG_START(func, "function");
   tm_free(func, sizeof(TmFunction));
-  GC_LOG_END(func, "function");
 }
 
 Object module_new(Object file , Object name, Object code){

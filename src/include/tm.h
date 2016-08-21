@@ -72,9 +72,12 @@ void        gc_full();
 void        gc_sweep_local(int start);
 Object      bf_get_malloc_info();
 void        gc_mark(Object);
+void        gc_unmark(Object);
 void        gc_mark_single(Object);
 void        gc_mark_list(TmList*);
 void        gc_mark_dict(TmDict*);
+void        gc_restore_local_obj_list(int size);
+void        gc_native_call_sweep(Object);
 
 #if 0
     #define PRINT_OBJ_GC_INFO_START() int _gc_old = tm->allocated;
@@ -98,6 +101,7 @@ Object        string_chr(int n); // get a char from char_list.
 Object        string_alloc(char* s, int size);
 #define       sz_to_string(s) string_alloc(s, -1)
 #define       string_new(s) string_alloc(s, strlen(s))
+Object        string_const(char*);
 void          string_free(String*);
 int           string_equals(String*s0, String*s1);
 Object        string_substring(String* str, int start, int end) ;
@@ -116,8 +120,10 @@ Object*       string_next(TmData* iterator);
 
 
 // number functions
-Object tm_number(double v);
-void   number_format(char* des, Object num);
+Object     tm_number(double v);
+void       number_format(char* des, Object num);
+double     number_value(Object num);
+long long  long_value(Object num);
 
 /**
  * list functions
@@ -233,17 +239,17 @@ Object           get_func_name_obj(Object func);
  */
 static Data_proto base_iter_proto;
 
-Object     data_new(size_t size);
-void       data_mark();
-void       data_free();
-void       data_set(Object, Object, Object);
-Object     data_get(Object, Object);
-Object     data_str(Object self);
-void       obj_free(Object o);
-Object     obj_new(int type, void* value);
+Object      data_new(size_t size);
+void        data_mark();
+void        data_free();
+void        data_set(Object, Object, Object);
+Object      data_get(Object, Object);
+Object      data_str(Object self);
+void        obj_free(Object o);
+Object      obj_new(int type, void* value);
 Data_proto  default_data_proto;
 Data_proto* get_default_data_proto();
-void       init_data_proto(Data_proto* proto);
+void        init_data_proto(Data_proto* proto);
 
 
 
@@ -317,6 +323,7 @@ void      tm_println(Object v);
 Object    tm_format_va_list(char* fmt, va_list ap, int appendln);
 Object    tm_format(char*fmt, ...);
 Object    tm_type(Object o);
+void      tm_inspect_obj(Object o);
 void      tm_printf(char* fmt, ...);
 /* avoid '\0' in char array, which will be regarded as end by c lang */
 /* Chars     Object_info(char*,Object,int); */
@@ -331,11 +338,14 @@ Object    blt__add_type_method();
 void      builtins_init();
 Object*   get_builtin(char* key);
 
+// tm2c
+// Object    tm_call_native_debug(int lineno, char* func_name, Object(*fn)(), int args, ...);
 
 // macros
 #define strequals(a, b) a == b || strcmp(a,b) == 0
 
 #define GET_VAL(obj) (obj).value
+#define GET_PTR(obj) (obj).value.ptr
 #define GET_DATA(obj) (obj).value.data
 #define GET_DATA_PROTO(obj) (obj).value.data->proto
 #define GET_DICT(obj) GET_VAL(obj).dict
@@ -344,6 +354,7 @@ Object*   get_builtin(char* key);
 #define GET_LIST(obj) GET_VAL(obj).list
 
 #define DICT_LEN(obj)  GET_DICT(obj)->len
+#define DICT_NODES(obj) GET_DICT(obj)->nodes
 #define ptr_addr(ptr) (long) (ptr) / sizeof(char*)
 #define GET_NUM(obj) (obj).value.dv
 
@@ -357,6 +368,7 @@ Object*   get_builtin(char* key);
 #define IS_DATA(obj)   TM_TYPE(obj) == TYPE_DATA
 #define IS_NATIVE(obj) GET_FUNCTION(obj)->native != NULL
 
+#define NOT_NONE(obj) TM_TYPE(obj) != TYPE_NONE
 #define NOT_LIST(obj) TM_TYPE(obj) != TYPE_LIST
 #define NOT_DICT(obj) TM_TYPE(obj) != TYPE_DICT
 #define NOT_FUNC(obj) TM_TYPE(obj) != TYPE_FUNCTION

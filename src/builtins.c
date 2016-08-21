@@ -36,6 +36,29 @@ void tm_putchar(int c){
     }
 }
 
+void tm_inspect_char(int c) {
+    static char hex[] = {
+        '0','1','2','3','4','5','6','7',
+        '8','9','A','B','C','D','E','F'
+    };
+
+    if (isprint(c)) {
+        putchar(c);
+    } else if (c == '\b') {
+        putchar('\b');
+    } else if (c == '\n') {
+        printf("\\n");
+    } else if (c == '\t') {
+        printf("\\t");
+    } else if(c=='\r'){
+        /* output nothing */
+    } else {
+        int c0 = (c & 0xf0) >> 4;
+        int c1 = c & 0x0f;
+        printf("0x%c%c", hex[c0], hex[c1]);
+    }
+}
+
 void tm_print(Object o) {
     Object str = tm_str(o);
     int i;
@@ -49,6 +72,68 @@ void tm_println(Object o) {
     puts("");
 }
 
+void tm_inspect_obj0(Object o, int padding) {
+    int i;
+    const int max_len = 20;
+    while (--padding>=0) {
+        printf(" ");
+    }
+    char buf[128];
+    switch(TM_TYPE(o)) {
+        case TYPE_NUM: 
+            number_format(buf, o);
+            printf("%s\n", buf);
+            break;
+        case TYPE_NONE:
+            printf("None\n");
+            break;
+        case TYPE_STR:
+            printf("<string len=%d value=", GET_STR_LEN(o));
+            for (i = 0; i < GET_STR_LEN(o) && i <= max_len; i++) {
+                tm_inspect_char(GET_STR(o)[i]);
+            }
+            printf(">\n");
+            break;
+        case TYPE_FUNCTION:
+            func_format(buf, GET_FUNCTION(o));
+            printf("%s\n", buf);
+            break;
+        case TYPE_DATA:
+            printf("<data %p>\n", GET_DATA(o));
+            break;
+        case TYPE_DICT:
+            printf("<dict len=%d %p>\n", DICT_LEN(o), GET_DICT(o));
+            break;
+        case TYPE_LIST:
+            printf("<list len=%d %p>\n", LIST_LEN(o), GET_LIST(o));
+            break;
+        default:
+            printf("<unknown %d>\n", TM_TYPE(o));
+    }
+}
+
+void tm_inspect_obj(Object o) {
+    int i;
+    switch(TM_TYPE(o)) {
+        case TYPE_LIST:
+            printf("[\n");
+            for (i = 0; i < LIST_LEN(o); i++) {
+                tm_inspect_obj0(LIST_NODES(o)[i], 2);
+            }
+            printf("]\n");
+            break;
+        case TYPE_DICT:
+            printf("{\n");
+            for (i = 0; i < DICT_LEN(o); i++) {
+                tm_inspect_obj0(DICT_NODES(o)[i].key, 2);
+                tm_inspect_obj0(DICT_NODES(o)[i].val, 4);
+            }
+            printf("}\n");
+            break;
+        default:
+            tm_inspect_obj0(o, 0);
+    }
+}
 
 
 /**
@@ -849,6 +934,13 @@ Object bf_hasattr() {
     return tm_number(obj_in(self, key));
 }
 
+Object bf_get_tm_local_list() {
+    Object obj;
+    TM_TYPE(obj) = TYPE_LIST;
+    GET_LIST(obj) = tm->local_obj_list;
+    return obj;
+}
+
 void builtins_init() {
     reg_builtin_func("load", bf_load);
     reg_builtin_func("save", bf_save);
@@ -896,6 +988,7 @@ void builtins_init() {
     reg_builtin_func("inspect_ptr", bf_inspect_ptr);
     reg_builtin_func("get_current_frame", bf_get_current_frame);
     reg_builtin_func("get_vm_info", bf_get_vm_info);
+    reg_builtin_func("get_tm_local_list", bf_get_tm_local_list);
     reg_builtin_func("traceback", bf_traceback);
 
     reg_builtin_func("clock", bf_clock);

@@ -11,7 +11,7 @@ def findpos(token):
     if not hasattr(token, 'pos'):
         if hasattr(token, "first"):
             return findpos(token.first)
-        print(token)
+        # print(token)
         return [0,0]
     return token.pos
 # @param s, src
@@ -32,7 +32,7 @@ def find_error_line(s, pos):
 
 def print_token(token):
     for key in token:
-        print(key, token[key])
+        # print(key, token[key])
         if gettype(token[key]) == "dict":
             print_token(token[key])
     
@@ -41,9 +41,10 @@ def compile_error(ctx, s, token, e_msg = ""):
         # print_token(token)
         pos = findpos(token)
         r = find_error_line(s, pos)
-        raise Exception('Error at '+ctx+':\n'+r + e_msg)
+        print('Error at '+ctx+':\n'+r + str(e_msg))
     else:
-        raise Exception(e_msg)
+        print(e_msg)
+    exit(0)
     #raise
 
 ISYMBOLS = '-=[];,./!%*()+{}:<>@^$'
@@ -88,12 +89,10 @@ def clean(s):
     return s
 
 def tokenize(s):
-    global T
     s = clean(s)
     return do_tokenize(s)
         
 def do_tokenize(s):
-    global T
     T = TData()
     i = 0
     l = len(s)
@@ -102,24 +101,26 @@ def do_tokenize(s):
         T.f = [T.y,i-T.yi+1]
         if T.nl: 
             T.nl = False
-            i = do_indent(s,i,l)
-        elif c == '\n': i = do_nl(s,i,l)
-        elif c in ISYMBOLS: i = do_symbol(s,i,l)
-        elif c >= '0' and c <= '9': i = do_number(s,i,l)
+            i = do_indent(T, s,i,l)
+        elif c == '\n': i = do_nl(T, s,i,l)
+        elif c in ISYMBOLS: i = do_symbol(T, s,i,l)
+        elif c >= '0' and c <= '9': 
+            i = do_number(T,s,i)
         elif (c >= 'a' and c <= 'z') or \
-            (c >= 'A' and c <= 'Z') or c == '_':  i = do_name(s,i,l)
-        elif c=='"' or c=="'": i = do_string(s,i,l)
-        elif c=='#': i = do_comment(s,i,l)
+            (c >= 'A' and c <= 'Z') or c == '_': 
+            i = do_name(T,s,i)
+        elif c=='"' or c=="'": i = do_string(T,s,i,l)
+        elif c=='#': i = do_comment(T,s,i,l)
         elif c == '\\' and s[i+1] == '\n':
             i += 2; T.y+=1; T.yi = i
         elif c == ' ' or c == '\t': i += 1
         else: compile_error('do_tokenize',s, Token('', '', T.f), "unknown token")
-    indent(0)
+    indent(T, 0)
     r = T.res
     T = None
     return r
 
-def do_nl(s,i,l):
+def do_nl(T, s,i,l):
     if not T.braces:
         add_token(T,'nl','nl')
     i+=1
@@ -128,7 +129,7 @@ def do_nl(s,i,l):
     T.yi=i
     return i
 
-def do_indent(s,i,l):
+def do_indent(T, s,i,l):
     v = 0
     while i<l:
         c = s[i]
@@ -139,10 +140,10 @@ def do_indent(s,i,l):
     # skip blank line or comment line.
     # i >= l means reaching EOF, which do not need to indent or dedent
     if not T.braces and c != '\n' and c != '#' and i < l:
-        indent(v)
+        indent(T, v)
     return i
 
-def indent(v):
+def indent(T, v):
     if v == T.indent[-1]: pass
     elif v > T.indent[-1]:
         T.indent.append(v)
@@ -154,7 +155,7 @@ def indent(v):
             add_token(T,'dedent',v)
 
 
-def do_symbol(s,i,l):
+def do_symbol(T, s,i,l):
     # symbols = []
     # v,f,i = s[i],i,i+1
     # v=s[i];f=i;i+=1
@@ -179,7 +180,8 @@ def do_symbol(s,i,l):
     if v in B_END: T.braces -= 1
     return i
 
-def do_number(s,i,l):
+def do_number(T, s,i):
+    l = len(s)
     v=s[i];i+=1;c=None
     while i<l:
         c = s[i]
@@ -194,7 +196,8 @@ def do_number(s,i,l):
     add_token(T,'number',float(v))
     return i
 
-def do_name(s,i,l):
+def do_name(T, s,i):
+    l = len(s)
     v=s[i];i+=1
     while i<l:
         c = s[i]
@@ -204,7 +207,7 @@ def do_name(s,i,l):
     else: add_token(T,'name',v)
     return i
 
-def do_string(s,i,l):
+def do_string(T, s,i,l):
     v = ''; q=s[i]; i+=1
     if (l-i) >= 5 and s[i] == q and s[i+1] == q: # """
         i += 2
@@ -236,7 +239,7 @@ def do_string(s,i,l):
                 v+=c;i+=1
     return i
 
-def do_comment(s,i,l):
+def do_comment(T, s,i,l):
     i += 1
     value = ""
     while i<l:

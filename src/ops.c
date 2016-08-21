@@ -19,6 +19,8 @@ const char* get_type_by_int(int type) {
         return "function";
     case TYPE_DICT:
         return "dict";
+    case TYPE_DATA:
+        return "data";
     case TYPE_NONE:
         return "none";
     }
@@ -49,8 +51,8 @@ int obj_eq_sz(Object obj, const char* value) {
 }
 
 void obj_set(Object self, Object k, Object v) {
-    gc_mark_single(k); // used between gc scan
-    gc_mark_single(v); // only need to mark single.
+    // gc_mark_single(k); // used between gc scan
+    // gc_mark_single(v); // only need to mark single.
     switch (TM_TYPE(self)) {
     case TYPE_LIST: {
         tm_assert_type(k, TYPE_NUM, "obj_set");
@@ -181,7 +183,11 @@ int obj_equals(Object a, Object b){
         case TYPE_NONE:return 1;
         case TYPE_DICT:return GET_DICT(a) == GET_DICT(b);
         case TYPE_FUNCTION: return GET_FUNCTION(a) == GET_FUNCTION(b);
-        default: tm_raise("equals(): not supported type %d", a.type);
+        default: {
+            const char* ltype = get_type_by_obj(a);
+            const char* rtype = get_type_by_obj(b);
+            tm_raise("equals(): not supported type %d:%s and %d:%s", TM_TYPE(a), ltype, TM_TYPE(b), rtype);
+        } 
     }
     return 0;
 }
@@ -289,6 +295,11 @@ int obj_in(Object child, Object parent) {
     }
     return 0;
 }
+
+int obj_not_in(Object child, Object parent) {
+    return !obj_in(child, parent);
+}
+
 int is_true_obj(Object v) {
     switch (TM_TYPE(v)) {
     case TYPE_NUM:

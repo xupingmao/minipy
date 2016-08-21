@@ -17,3 +17,11 @@ void number_format(char* des, Object num){
         sprintf(des, "%lf", v);
     }
 }
+
+double number_value(Object num) {
+    return GET_NUM(num);
+}
+
+long long long_value(Object num) {
+    return (long long) GET_NUM(num);
+}

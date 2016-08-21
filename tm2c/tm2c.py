@@ -2,35 +2,38 @@ from tmparser import *
 import sys
 from boot import *
 
-tm_obj         = "Object "
-tm_const       = "Object const_"
-tm_pusharg     = "tm_pusharg("
-tm_call        = "tm_call("
-tm_num         = "tm_number("
-tm_str         = "string_new("
-tm_get_glo     = "tm_get_global"
-tm_define      = "def_func"
-func_bool      = "is_true_obj"
-func_add       = "obj_add"
-func_sub       = "obj_sub"
-func_mul       = "obj_mul"
-func_div       = "obj_div"
-func_mod       = "obj_mod"
-func_cmp       = "obj_cmp"
-func_not       = "obj_not"
-func_neg       = "obj_neg"
-func_get       = "obj_get"
-func_set       = "obj_set"
-func_list      = "argv_to_list"
-func_method    = "def_method"
-gc_track_local = "gc_track_local"
-gc_pop_locals  = "gc_pop_locals"
-tm_None        = "NONE_OBJECT"
+tm_obj               = "Object "
+tm_const             = "Object const_"
+tm_pusharg           = "tm_pusharg("
+tm_call              = "tm_call("
+tm_num               = "tm_number("
+tm_str               = "string_const"
+tm_get_glo           = "tm_get_global"
+tm_define            = "def_func"
+def_native_method    = "def_native_method"
+tm_call_native       = "tm_call_native"
+arg_insert           = "arg_insert"
+func_bool            = "is_true_obj"
+func_add             = "obj_add"
+func_sub             = "obj_sub"
+func_mul             = "obj_mul"
+func_div             = "obj_div"
+func_mod             = "obj_mod"
+func_cmp             = "obj_cmp"
+func_not             = "obj_not"
+func_neg             = "obj_neg"
+func_get             = "obj_get"
+func_set             = "obj_set"
+func_list            = "argv_to_list"
+func_method          = "def_method"
+gc_track_local       = "gc_track_local"
+gc_pop_locals        = "gc_pop_locals"
+tm_None              = "NONE_OBJECT"
 
-op_bool = [">", ">=", "<", "<+", "==", "!=", "and", "or", "in", "not"]
+op_bool = [">", ">=", "<", "<+", "==", "!=", "and", "or", "in", "not", "notin"]
 
 def escape(text):
-    if gettype(text) != 'string':
+    if not istype(text, "string"):
         raise "<function escape> expect a string"
     des = ""
     for c in text:
@@ -43,6 +46,14 @@ def escape(text):
         else:des+=c
     return des
 
+def get_string_def(value):
+    return '"' + escape(str(value)) + '"'
+
+def build_native_call(func, *args):
+    if len(args) == 0:
+        return "{}({},0);".format(tm_call_native, func)
+    else:
+        return "{}({},{},{});".format(tm_call_native, func, len(args), ",".join(args))
         
 class Scope:
     def __init__(self, prev):
@@ -55,7 +66,7 @@ class Scope:
             self.g_vars.append(name)
         
 class Env:
-    def __init__(self, fname, prefix = None):
+    def __init__(self, fname, option, prefix = None):
         self.consts = []
         self.scope = Scope(None)
         self.global_scope = self.scope
@@ -63,7 +74,10 @@ class Env:
         self.fname = fname
         self.func_defines = []
         self.func_cnt = 0
-        self.enable_gc = False
+        self.enable_gc = option.enable_gc
+        self.debug = option.debug
+        self.record_line = option.record_line
+        self.include_list = []
         if prefix == None:
             self.prefix = get_valid_code_name(fname) + "_"
         else:
@@ -78,15 +92,16 @@ class Env:
             "gettype": "bf_gettype",
             "raise" : "bf_raise",
             "Exception": "bf_Exception",
-            "len": "bf_len",
-            "str": "bf_str",
-            "mmatch": "bf_mmatch",
-            "float": "bf_float",
-            "int": "bf_int",
-            "chr": "bf_chr",
-            "ord": "bf_ord",
-            "load": "bf_load",
-            "save": "bf_save"
+            "len":       "bf_len",
+            "str":       "bf_str",
+            "mmatch":    "bf_mmatch",
+            "float":     "bf_float",
+            "int":       "bf_int",
+            "chr":       "bf_chr",
+            "ord":       "bf_ord",
+            "load":      "bf_load",
+            "save":      "bf_save",
+            "get_tm_local_list": "bf_get_tm_local_list",
         }
     
     def new_scope(self):
@@ -109,12 +124,20 @@ class Env:
                 name = item.first.val
                 py_func_list.append(name)
             elif type == "class":
-                name = item.first.val
-                py_func_list.append(name)
+                self.find_class_func_def(item, py_func_list)
         self.py_func_list = py_func_list
         return py_func_list
 
-    def get_c_func_name(self, name):
+    def find_class_func_def(self, item, func_list):
+        clz_name = item.first.val
+        body = item.second
+        for func_def in body:
+            if func_def.type == "def":
+                name = func_def.first.val
+                func_list.append(clz_name+"_"+name)
+        func_list.append(clz_name)
+
+    def get_native_func_name(self, name):
         # return self.prefix + "F" + str(self.func_cnt) 
         if name in self.py_func_list:
             return self.prefix + name
@@ -166,8 +189,11 @@ class Env:
         else:
             self.scope.vars.append(name)
 
-    def def_global_var(self, name):
+    def add_global_var(self, name):
         self.scope.add_global_var(name)
+
+    def add_include(self, name):
+        self.include_list.append(name)
 
     def is_global_var(self, name):
         return self.scope == self.global_scope or \
@@ -188,10 +214,11 @@ class AstNode:
         self.first = first
         self.second = second
 
+def get_py_func_name_str(item):
+    return item.first.val
 
-
-def get_string_def(value):
-    return '"' + escape(str(value)) + '"'
+def set_py_func_name(item, name):
+    item.first.val = name
 
 class Generator:
 
@@ -223,7 +250,7 @@ class Generator:
             if gettype(const) == "number":
                 body = "tm_number(" + str(const) + ");"
             elif gettype(const) == "string":
-                body = "string_new(" + get_string_def(str(const)) + ');'
+                body = "{}({});".format(tm_str, get_string_def(str(const)))
             define_lines.append(h+body)
         define_lines.append("tm_def_mod(\"{}\", {});".format(env.get_mod_name(), env.get_globals()))
             
@@ -232,6 +259,12 @@ class Generator:
         head = "#define TM_NO_BIN 1\n"
         head += '#include "../tm2c.c"\n'
         head += "/* DEFINE START */\n"
+
+        # include list
+
+        for include in env.include_list:
+            head += '#include "{}.c"\n'.format(include)
+
         # define constants
         for const in env.consts:
             head += "Object " + env.get_const(const) + ";\n";
@@ -248,11 +281,11 @@ class Generator:
             head += func_define + "\n\n"
         
         # global 
-        head += "void " + env.prefix + "main(){\n"
-        code =  head + "\n".join(lines)+"\n}\n"
+        head += "Object " + env.prefix + "Iinit(){\n"
+        code =  head + "\n".join(lines)+"\nreturn NONE_OBJECT;\n}\n"
 
         # main entry
-        code += sformat("\nint main(int argc, char* argv[]) {\ntm_run_func(argc, argv, \"%s\", %smain);\n}\n", env.get_mod_name(), env.prefix)
+        code += sformat("\nint main(int argc, char* argv[]) {\ntm_run_func(argc, argv, \"%s\", %sIinit);\n}\n", env.get_mod_name(), env.prefix)
         self.code = code
 
     def get_code(self):
@@ -269,7 +302,7 @@ def new_temp(env):
 def do_assign(item, env, right = None):
     left = item.first
     if istype(left, "list"):
-        raise "multi-assignment not implemented"
+        raise Exception("multi-assignment not implemented")
     if right == None:
         right = do_item(item.second, env)
     if left.type == 'name':
@@ -284,11 +317,13 @@ def do_assign(item, env, right = None):
     elif left.type == ",":
         return "// not implemented"
     elif left.type == "get":
-        print("assign get")
-        return sformat("%s(%s,%s,%s);", func_set, do_name(left.first, env), do_const(left.second, env), right)
+        lfirst = do_item(left.first, env)
+        lsecond = do_item(left.second, env)
+        return sformat("%s(%s,%s,%s);", func_set, lfirst, lsecond, right)
     elif left.type == "attr":
-        lfirst = Token("string", left.first.val)
-        return sformat("%s(%s,%s,%s);", func_set, do_name(lfirst,env), do_const(left.second,env), right)
+        # lfirst = Token("string", left.first.val)
+        lfirst = do_item(left.first, env)
+        return sformat("%s(%s,%s,%s);", func_set, lfirst, do_const(left.second,env), right)
 
 def do_const(item, env):
     val = item.val
@@ -297,6 +332,7 @@ def do_const(item, env):
     return env.get_const(val) # "const_" + str(env.consts.index(val))
     
 def do_name(item, env):
+    """return name as variable"""
     if env.has_var(item.val):
         return env.get_var_name(item.val)
     item = Token("string", item.val)
@@ -304,7 +340,19 @@ def do_name(item, env):
 
 def do_none(item, env):
     return "NONE_OBJECT"
-    
+
+def do_list0(v, env):
+    newlist = []
+    cnt = 0
+    for item in v:
+        code = do_item(item, env)
+        newlist.append(code)
+        cnt = len(newlist)
+    if cnt == 0:
+        return sformat("%s(0)", func_list)
+    else:
+        return sformat("%s(%s,%s)", func_list, cnt, ",".join(newlist)) 
+
 def do_list(item, env):
     v = item.first
     cnt = 0
@@ -313,10 +361,7 @@ def do_list(item, env):
         return sformat("%s(0)", func_list)
     newlist = []
     if istype(v, "list"):
-        for item in v:
-            code = do_item(item, env)
-            newlist.append(code)
-        cnt = len(newlist)
+        return do_list0(v, env)
     else:
         newlist.append(do_item(v, env))
         cnt = 1
@@ -325,6 +370,17 @@ def do_list(item, env):
     else:
         return sformat("%s(%s,%s)", func_list, cnt, ",".join(newlist)) 
     
+def do_dict(item, env):
+    nodes = item.first
+    nodes_str = ""
+    for node in nodes:
+        k = node[0]
+        v = node[1]
+        nodes_str += "," + do_item(k, env)
+        nodes_str += "," + do_item(v, env)
+
+    return "{}({} {})".format("argv_to_dict", int(len(nodes)/2), nodes_str)
+
 def do_bool(item, env):
     if item.type in op_bool:
         return do_item(item, env)
@@ -336,7 +392,13 @@ def do_block(list, env, indent=0):
         if exp.type == "string": continue
         line = do_item(exp, env)
         if exp.type == "call": line += ";"
-        lines.append(line)
+        if env.record_line:
+            lineno = get_line_no(exp)
+            code_line = env.origin_lines[lineno-1]
+            code = 'printf("%s\\n", {});'.format(get_string_def(code_line))
+            lines.append(code)
+        if line is not None:
+            lines.append(line)
     return lines
     
 def do_if(item, env, indent=0):
@@ -401,18 +463,25 @@ def get_line_no(item):
         return item.pos[0]
     elif hasattr(item, "first"):
         return get_line_no(item.first)
+    else:
+        return -1
     
 def do_call(item, env):
     if item.first.type == "name":
-        name = env.get_c_func_name(item.first.val)
+        name = env.get_native_func_name(item.first.val)
         if name:
-            fmt = "tm_call_native({}, {}, {} {})"
+            if env.debug:
+                py_func_name = item.first.val
+                fmt = "tm_call_native_debug({}, " + get_string_def(py_func_name) + ",{} {})"
+                # fmt = "tm_call_native_debug({}, {}, {} {})"
+            else:
+                fmt = "tm_call_native({}, {} {})"
         else:
             name = do_item(item.first, env)
-            fmt  = "tm_call({},{},{} {})"
+            fmt  = "tm_call({},{} {})"
     else:
         name = do_item(item.first, env)
-        fmt = "tm_call({}, {}, {} {})"
+        fmt = "tm_call({}, {} {})"
     if item.second == None:
         n = 0
     elif istype(item.second, "list"):
@@ -421,7 +490,7 @@ def do_call(item, env):
         n = 1
     args = do_args(item.second, env)
     # tm_call(lineno, func, nargs, args)
-    return fmt.format(get_line_no(item), name, n, args)
+    return fmt.format(name, n, args)
     # return tm_call + name + "," + + "," + str(n) + args + ")"
     
 def format_block(lines, indent=0):
@@ -470,7 +539,7 @@ def do_def(item, env, obj=None):
     # lines = ['puts("enter function %s");'.format(name)] + lines
     func_define = "Object " + cname + "() " + format_block(vars+lines, 0)
     env.exit_scope(func_define)
-    return sformat("%s(%s,%s, %s);", 
+    return sformat("%s(%s,%s,%s);", 
         tm_define, env.get_globals(), env.get_const(name), cname)
     
 def do_return(item, env, indent=0):
@@ -486,18 +555,39 @@ def do_return(item, env, indent=0):
 def do_class(item, env):
     class_define = do_assign(item, env, "dict_new()")
     class_name = do_name(item.first, env)
+    clz_name_str = item.first.val
     obj = newobj()
     lines = []
+    env.new_scope()
+    lines.append("Object d = dict_new();");
+    init_func = None
+
     for class_item in item.second:
         type = class_item.type
         if type == "pass": continue
         assert type == "def"
-        do_def(class_item, env, obj)
-        lines.append(sformat("%s(%s,%s,%s);", func_method, class_name, obj.constname, obj.name))
-    text = class_define + "\n"
-    for line in lines:
-        text += line + "\n"
-    return text
+        def_name = get_py_func_name_str(class_item)
+        method_name = clz_name_str + "_" + def_name
+        set_py_func_name(class_item, method_name)
+        if def_name == "__init__":
+            init_func = env.get_c_func_def(method_name)
+        do_def(class_item, env)
+        constname = env.get_const(def_name)
+        # lines.append(sformat("%s(%s,%s,%s);", func_method, class_name, constname, env.get_c_func_def(def_name)))
+        lines.append("{}(d, {}, {});".format(def_native_method, constname, env.get_c_func_def(method_name)))
+
+    if init_func != None:
+        lines.append("{}(d);".format(arg_insert))
+        lines.append("{}();".format(init_func))
+
+    lines.append("return d;");
+    class_def = "Object {} () {} ".format(env.get_c_func_def(clz_name_str), format_block(lines))
+    env.exit_scope(class_def);
+
+    # text = class_define + "\n"
+    # for line in lines:
+    #     text += line + "\n"
+    return "{}({},{},{});".format(tm_define, env.get_globals(), env.get_const(clz_name_str), env.get_c_func_def(clz_name_str))
     
 def do_op(item, env, func):
     return func + "(" + do_item(item.first, env) + "," + do_item(item.second, env) + ")";
@@ -547,6 +637,9 @@ def do_not(item, env):
         return "!is_true_obj(" + value + ")"
     return sformat("!(%s)", value)
 
+def do_notin(item, env):
+    return do_op(item, env, "obj_not_in")
+
 def do_neg(item, env):
     return sformat("%s(%s)", func_neg, do_item(item.first, env))
     
@@ -560,7 +653,9 @@ def do_attr(item, env):
     return do_op(item, env, func_get)
 
 def do_in(item, env):
+    # TODO a in a,b,c
     return do_op(item, env, "obj_in")
+
     
 def do_inplace_op(item, env, op):
     item2 = AstNode(op, item.first, item.second)
@@ -589,11 +684,14 @@ def do_import(item, env):
 
 def do_from(item, env):
     mod = do_const(item.first, env)
+    # modname = item.first.val
+    # env.add_include(modname)
+    # return build_native_call(modname+"_Iinit")
     return "tm_import_all({}, {});".format(env.get_globals(), mod)    
 
 def do_global(item, env):
     g_name = item.first.val
-    env.def_global_var(g_name)
+    env.add_global_var(g_name)
     # name = do_const(item.first, env)
     code = "// global " + g_name
     # code += "obj_set(%s, %s, NONE_OBJECT);".format(env.get_globals(), name)
@@ -619,6 +717,7 @@ _handlers = {
     "name": do_name,
     "None": do_none,
     "list": do_list,
+    "dict": do_dict,
     "=": do_assign,
     "+": do_add,
     "-": do_sub,
@@ -639,6 +738,7 @@ _handlers = {
     "or": do_or,
     "and": do_and,
     "not": do_not,
+    "notin" : do_notin,
     "neg": do_neg,
     "call": do_call,
     "get": do_get,
@@ -656,6 +756,8 @@ def do_item(item, env, indent = 0):
     env.token = item
     if item == None:
         return ""
+    if istype(item, "list"):
+        return do_list0(item, env);
     if not hasattr(item, "type"):
         repl_print(item, 1, 4)
         raise
@@ -675,17 +777,20 @@ def do_program(tree, env, indent):
     except Exception as e:
         # repl_print(tree, 2, 5)
         # print_ast(tree)
+        # import pdb
+        # pdb.set_trace()
         compile_error(env.fname, env.src, env.token, e)
 
-def tm2c(fname, src, prefix=None):
+def tm2c(fname, src, option, prefix=None):
     tree = parse(src)
     # repl_print(tree, 0, 5)
     #env = {"vars": [], "consts": [], "funcs": [], "globals":[]}
     words = fname.split(".")
     mod_name = words[0]
     # mod_name = fname.substring(0, len(fname)-3)
-    env = Env(fname, prefix)
+    env = Env(fname, option, prefix)
     env.src = src
+    env.origin_lines = src.split("\n")
 
     init_main = AstNode("=")
     init_main.first = Token("name", "__name__")
@@ -700,17 +805,33 @@ def tm2c(fname, src, prefix=None):
     generator = Generator(env)
     generator.process(lines)
     return generator.get_code()
+
+def get_opt(argv):
+    opt = newobj()
+    opt.enable_gc = False
+    opt.debug = False
+    opt.record_line = False
+    for arg in argv:
+        if arg[0] == '-':
+            key = argv[1:]
+            setattr(opt, key, True)
+        else:
+            opt.name = arg
+            break
+    return opt
     
 if __name__ == "__main__":
-    name = sys.argv[1]
+    # name = sys.argv[1]
     # path = "../test/tm2c/" + name
+    opt = get_opt(sys.argv[1:])
+    name = opt.name
     path = name
     text = load(path)
     pathes = path.split('/')
     if len(pathes) > 1:
         name = pathes[-1]
     mod = name.split(".")[0]
-    code = tm2c(name, text, mod)
+    code = tm2c(name, text, opt, mod)
     save("output/" + mod + ".c", code)
     # save("bin/" + mod + ".c", code)
 

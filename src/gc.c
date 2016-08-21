@@ -14,22 +14,63 @@
 
 #define GET_CHAR(n) ARRAY_CHARS[n]
 
+enum {
+    GC_INIT,
+    GC_WORKING,
+    GC_STATE_DESTROY
+} GcState;
+
 #ifdef GC_DEBUG
 
 static char LOG_BUF[1024 * 10]; // 20K buffer
+
+enum {
+    LEVEL_DEBUG,
+    LEVEL_INFO, 
+    LEVEL_ERROR,
+    LEVEL_FATAL,
+} LogLevel;
+
+// debug, info, error, fatal
+static int gc_log_level = LEVEL_ERROR;
+static long long gc_log_count = 0;
+
+
+int check_log_level(int level) {
+    if (gc_log_level == LEVEL_FATAL) {
+        return 1;
+    } else if (gc_log_level == LEVEL_ERROR) {
+        return level == LEVEL_ERROR || level == LEVEL_FATAL;
+    } else if (gc_log_level == LEVEL_INFO) {
+        return level != LEVEL_DEBUG;
+    } else if (gc_log_level == LEVEL_DEBUG) {
+        return level == LEVEL_DEBUG;
+    }
+    return 0;
+}
+
+void LOG_INIT() {
+    FILE* fp = fopen("tm.log", "w");
+    // fputs("*****LOG INIT*****\n", fp);
+    fclose(fp);
+}
 
  /**
   * logging service
   * suggested format
   * TIME|OPT|CURRENT_SIZE|NEW_SIZE|ADDR
   */
-void LOG(char* fmt, ...) {
+void LOG(int level, char* fmt, ...) {
     va_list ap;
     time_t cur_time;
     char *buffer   = LOG_BUF;
     int BUF_SIZE   = sizeof(LOG_BUF);
     int FLUSH_SIZE = BUF_SIZE / 2;
     char temp_buf[1024];
+
+    if (!check_log_level(level)) {
+        return;
+    }
 
     memset(temp_buf, 0, sizeof(temp_buf));
     va_start(ap, fmt);
@@ -39,12 +80,21 @@ void LOG(char* fmt, ...) {
     int t_str_len = strlen(t_str);
     t_str[t_str_len-1] = 0; // remove \n
 
-    sprintf (temp_buf, "%s|", t_str); // print time
+    sprintf (temp_buf, "%s,", t_str); // print time
     strcat(buffer, temp_buf);
 
-    vsprintf(temp_buf, fmt,   ap);
+    vsprintf(temp_buf, fmt, ap);
+
+    char count_buf[20];
+    sprintf(count_buf, ",%d", gc_log_count);
+    gc_log_count += 1;
+
+    strcat(temp_buf, count_buf);
+    strcat(temp_buf, "\n");
+
+    fputs(temp_buf, stdout); // print to stdout
+
     strcat(buffer, temp_buf);
-    strcat(buffer, "\n");
 
     va_end(ap);
 
@@ -56,6 +106,10 @@ void LOG(char* fmt, ...) {
     }
 }
 
+/**
+ * flush log
+ * @since 2016-08-16
+ */
 void LOG_END() {
     FILE* fp = fopen("tm.log", "a");
     fputs(LOG_BUF, fp);
@@ -63,7 +117,8 @@ void LOG_END() {
     memset(LOG_BUF, 0, sizeof(LOG_BUF));
 }
 #else
-    #define LOG(fmt, oldsize, newsize, addr) /* LOG */
+    #define LOG_INIT() /* LOG INIT */
+    #define LOG(level, fmt, oldsize, newsize, addr) /* LOG */
     #define LOG_END() /* LOG END */
 #endif
 
@@ -71,7 +126,10 @@ void chars_init();
 void frames_init();
 
 
-
+/**
+ * init garbage collector
+ * @since ?
+ */
 void gc_init() {
     int i;
     
@@ -90,6 +148,7 @@ void gc_init() {
 
     tm->all = untracked_list_new(100);
     tm->local_obj_list = NULL; // object allocated in local scope. which can be sweeped simply.
+    // tm->gc_deleted = NULL;
     tm->list_proto.type = TYPE_NONE;
     tm->dict_proto.type = TYPE_NONE;
     tm->str_proto.type = TYPE_NONE;
@@ -110,6 +169,8 @@ void gc_init() {
     
     /* initialize frames */
     frames_init();
+
+    LOG_INIT();
 }
 
 void chars_init() {
@@ -151,7 +212,7 @@ void* tm_malloc(size_t size) {
     }
     block = malloc(size);
     
-    LOG("malloc|%d|%d|%p", tm->allocated, tm->allocated + size, block);
+    LOG(LEVEL_INFO,"malloc,%d,%d,%p", tm->allocated, tm->allocated + size, block);
 
     if (block == NULL) {
         tm_raise("tm_malloc: fail to malloc memory block of size %d", size);
@@ -176,7 +237,7 @@ void tm_free(void* o, size_t size) {
     if (o == NULL)
         return;
 
-    LOG("free|%d|%d|%p", tm->allocated, tm->allocated - size, o);
+    LOG(LEVEL_INFO, "free,%d,%d,%p", tm->allocated, tm->allocated - size, o);
 
     free(o);
     tm->allocated -= size;
@@ -213,9 +274,9 @@ Object gc_track(Object v) {
         // if local-obj-sweep is enabled, add this to local list
         // if the object cant be recycled , move to all.
         list_append(tm->local_obj_list, v);
-    } else {
-        list_append(tm->all, v);
     }
+    
+    list_append(tm->all, v);
     return v;
 }
 
@@ -349,6 +410,12 @@ void gc_mark(Object o) {
     }
 }
 
+void gc_unmark(Object o) {
+    if (o.type == TYPE_NUM || o.type == TYPE_NONE)
+        return;
+    GC_MARKED(o) = 0;
+}
+
 void gc_mark_locals_and_stack() {
     TmFrame* f;
     for(f = tm->frames + 1; f <= tm->frame; f++) {
@@ -366,22 +433,42 @@ void gc_mark_locals_and_stack() {
     }
 }
 
+/**
+ * sweep unmarked objects in tm->all
+ * @since ?
+ * @modified 2016-08-20
+ */
 void gc_sweep() {
     int n, i;
 
+    LOG(LEVEL_ERROR, "sweep,%d,0,start", tm->all->len, 0, 0);
     TmList* temp = untracked_list_new(200);
     TmList* all = tm->all;
+
     for (i = 0; i < all->len; i++) {
         if (GC_MARKED(tm->all->nodes[i])) {
             list_append(temp, all->nodes[i]);
         } else {
             obj_free(all->nodes[i]);
+            // list_append(temp, all->nodes[i]);
         }
     }
     list_free(tm->all);
     tm->all = temp;
+
+    LOG(LEVEL_ERROR, "sweep,%d,0,end", tm->all->len, 0,0);
 }
 
+/**
+ * @deprecated
+ * sweep object not used in frame-local
+ * <code>
+ *    z = new string('test');
+ *    k = new string('kkkk');
+ *    return k; // z will be deleted
+ * </code>
+ * @since 2016-08-19
+ */
 void gc_sweep_local(int start) {
     if (tm->local_obj_list != NULL) {
         int i;
@@ -394,6 +481,86 @@ void gc_sweep_local(int start) {
             }
         }
     }
+}
+
+/**
+ * restore tm->local_obj_list to `size`
+ * move extra objects to tm->all
+ * @since 2016-08-19
+ */
+void gc_restore_local_obj_list(int size) {
+    int i;
+    /*
+    for (i = size; i < tm->local_obj_list->len; i++) {
+        Object obj = tm->local_obj_list->nodes[i];
+        list_append(tm->all, obj); // move objects in current frame to tm->all
+    }
+    */
+    list_shorten(tm->local_obj_list, size);
+}
+
+Object get_tm_local_list() {
+    Object obj;
+    TM_TYPE(obj) = TYPE_LIST;
+    GET_LIST(obj) = tm->local_obj_list;
+    return obj;
+}
+
+/**
+ * sweep garbage after native function call is ended.
+ * @author xupingmao
+ * @since 2016-08-19
+ */
+void gc_native_call_sweep(Object ret) {
+    int i;
+    long t1, t2;
+    t1 = clock();
+#if GC_DEBUG
+    int old = tm->allocated;
+#endif
+    tm->max_allocated = max(tm->allocated, tm->max_allocated);
+    LOG(LEVEL_ERROR, "nativefull,%d,%d,start", tm->allocated, tm->max_allocated, 0);
+    LOG(LEVEL_ERROR, "all_len,%d,%d,%d", tm->all->len, 0, 0);
+    LOG(LEVEL_ERROR, "local_len,%d,%d,%d", tm->local_obj_list->len, 0,0);
+    
+    /* mark all objects to be unused */
+    for (i = 0; i < tm->all->len; i++) {
+        GC_MARKED(tm->all->nodes[i]) = 0;
+    }
+
+    if (TM_TYPE(ret) != TYPE_NONE && TM_TYPE(ret) != TYPE_NUM) {
+        // arguments is already in prev-call-stack
+        // ret must be added to prev-call-stack
+        list_append(tm->local_obj_list, ret); // move ret value to tm->local_obj_list
+    }
+    // tm_print(get_tm_local_list());
+
+    tm->local_obj_list->marked = 0;
+    for (i = 0; i < tm->local_obj_list->len; i++) {
+        GC_MARKED(tm->local_obj_list->nodes[i]) = 0;
+    }
+    
+    /* mark protoes */
+    gc_mark(tm->list_proto);
+    gc_mark(tm->dict_proto);
+    gc_mark(tm->str_proto);
+    gc_mark(tm->builtins);
+    gc_mark(tm->modules);
+    gc_mark(tm->constants);
+    
+    gc_mark(tm->root);
+    gc_mark(tm->ex);
+    gc_mark(tm->ex_line);
+    
+    gc_mark_list(tm->local_obj_list);
+    /* sweep garbage */
+    gc_sweep();
+    tm->gc_threshold = tm->allocated + tm->allocated / 2;
+    t2 = clock();
+
+    LOG(LEVEL_ERROR, "nativefull,%d,%d,end", old, tm->allocated, "null");
+    LOG(LEVEL_ERROR, "all_len,%d,%d,%d", tm->all->len, 0, 0);
+    LOG(LEVEL_ERROR, "local_len,%d,%d,%d", tm->local_obj_list->len, 0,0);
 }
 
 #define MARK(v) \
@@ -458,7 +625,35 @@ void gc_full() {
     tm->gc_threshold = tm->allocated + tm->allocated / 2;
     t2 = clock();
 
-    LOG("full|%d|%d|%s", old, tm->allocated, "null");
+    LOG(LEVEL_ERROR, "full,%d,%d,%s", old, tm->allocated, "null");
+}
+
+int gc_contains(TmList* list, Object obj) {
+    int i;
+    for (i = 0; i < list->len; i++) {
+        if (GET_PTR(list->nodes[i]) == GET_PTR(obj)) {
+            return 1;
+        }
+    }
+    return 0;
+}
+
+/**
+ * move local object to tm->all
+ * note that there may be duplication in local_obj_list
+ * @since 2016-08-20
+ */
+void gc_move_local() {
+    if (tm->local_obj_list == NULL) {
+        return;
+    }
+    int i;
+    for (i = 0; i < tm->local_obj_list->len; i++) {
+        Object obj = tm->local_obj_list->nodes[i];
+        if (!gc_contains(tm->all, obj)) {
+            list_append(tm->all, obj);
+        }
+    }
 }
 
 /**
@@ -471,28 +666,37 @@ void gc_destroy() {
     int i;
 
     // sweep local first, as some objects are in local_obj_list
-    gc_sweep_local(0);
+    // gc_sweep_local(0);
+
+    // gc_move_local(); // move uniq list to tm->all
+    tm->gc_state = GC_STATE_DESTROY; // end
+
 
     for (i = 0; i < all->len; i++) {
         obj_free(all->nodes[i]);
     }
 
-    list_free(tm->all);
-    
-
     if (tm->local_obj_list != NULL) {
         list_free(tm->local_obj_list);
     }
+    
+    list_free(tm->all);
 
 #if !PRODUCT
     if (tm->allocated != 0) {
         printf("\n***memory leak happens***\ntm->allocated=%d\n", tm->allocated);
     }
 #endif
-    LOG_END();
+    LOG_END(); // flush the LOG_BUF to file.
 }
 
 
+/**
+ * create new object
+ * @param type object type
+ * @value object pointer
+ * @since ?
+ */
 Object obj_new(int type, void * value) {
     Object o;
     TM_TYPE(o) = type;
@@ -523,8 +727,26 @@ Object obj_new(int type, void * value) {
     return o;
 }
 
-
+/**
+ * free a object
+ * @since ?
+ */
 void obj_free(Object o) {
+
+    // LOG(LEVEL_ERROR, "delete,start,%d,%d", TM_TYPE(o), 0);
+
+    #ifdef GC_DEBUG
+        if (tm->gc_state != GC_STATE_DESTROY){
+            switch(TM_TYPE(o)) {
+                case TYPE_STR:  LOG(LEVEL_ERROR, "delete,str,%d,%p",    GET_STR_LEN(o), GET_STR_OBJ(o)); break;
+                case TYPE_LIST: LOG(LEVEL_ERROR, "delete,list,%d,%p",   LIST_LEN(o), GET_LIST(o));    break;
+                case TYPE_DICT: LOG(LEVEL_ERROR, "delete,dict,%d,%p",   DICT_LEN(o), GET_DICT(o));    break;
+                case TYPE_FUNCTION: LOG(LEVEL_ERROR, "delete,function,0,%p", GET_FUNCTION(o), 0);     break;
+                default:        LOG(LEVEL_ERROR, "delete,unknown,%d,%d", TM_TYPE(o), 0); break;
+            }
+        }
+    #endif
+
     switch (TM_TYPE(o)) {
     case TYPE_STR:
         string_free(GET_STR_OBJ(o));
