@@ -44,12 +44,18 @@ ValType* MapType##_get(MapType* map, KeyType key) {   \
         return &map->values[i];                \
     }                                          \
 }                                              \
+void MapType##_checksize(MapType* map)  {      \
+    if (map->len == map->cap) {                \
+        int oldcap = map->cap;                 \
+        map->cap += 10;                        \
+        map->keys   = realloc(map->keys,   sizeof(KeyType) * map->cap); \
+        map->values = realloc(map->values, sizeof(ValType) * map->cap); \
+    }                                                                   \
+}                                                                       \
 void MapType##_set(MapType* map, KeyType key, ValType value) {          \
     int i = MapType##_index(map, key);                                  \
     if (i < 0) {                                                        \
-        map->cap += 10;                                                 \
-        map->keys = realloc(map->keys, sizeof(KeyType) * map->cap);     \
-        map->values = realloc(map->values, sizeof(ValType) * map->cap); \
+        MapType##_checksize(map);                                       \
         map->keys[map->len] = key;                                      \
         map->values[map->len] = value;                                  \
         map->len += 1;                                                  \

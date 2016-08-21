@@ -62,7 +62,7 @@ void _list_check(TmList* list) {
         if (ocap < 10) {
             newsize = ocap + 2;
         } else {
-            newsize = ocap / 2 + ocap;
+            newsize = ocap / 2 + ocap + 1;
         }
         /*int newsize = list->cap * 3 / 2 + 1;*/
         list->nodes = tm_realloc(list->nodes, OBJ_SIZE * ocap,
