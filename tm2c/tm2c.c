@@ -52,15 +52,17 @@ Object tm_call(Object func, int args, ...) {
         Object *_fnc = dict_get_by_str(ret, "__init__");
         if (_fnc != NULL) {
             func = *_fnc;
+        } else {
+            goto tm_call_end;
         }
-        return ret;
     }
 
     if (IS_FUNC(func)) {
         resolve_method_self(func);
         /* call native */
         if (GET_FUNCTION(func)->native != NULL) {
-            return GET_FUNCTION(func)->native();
+            ret = GET_FUNCTION(func)->native();
+            goto tm_call_end;
         } else {
             tm_raise("can not call py function from tm2c");
         }
@@ -68,7 +70,12 @@ Object tm_call(Object func, int args, ...) {
 
     tm_raise("File %o, line=%d: call_function:invalid object %o", GET_FUNCTION_FILE(tm->frame->fnc), 
         tm->frame->lineno, func);
-    return NONE_OBJECT;
+
+    tm_call_end:
+    if (TM_TYPE(ret) != TYPE_NONE && TM_TYPE(ret) != TYPE_NUM) {
+        list_append(tm->local_obj_list, ret);
+    }
+    return ret;
 }
 
 /**
