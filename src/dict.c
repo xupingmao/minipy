@@ -23,6 +23,10 @@ int hash_sz(unsigned char* s, int len) {
     return abs(hash);
 }
 
+/**
+ * simple hash function for dict, not used yet.
+ * @since 2015-?
+ */
 int Dict_hash(Object key) {
     switch(TM_TYPE(key)) {
     case TYPE_STR:return hash_sz((unsigned char*) GET_STR(key), GET_STR_LEN(key));
@@ -32,7 +36,10 @@ int Dict_hash(Object key) {
     return 0;
 }
 
-
+/**
+ * init dictionary
+ * @since 2015-?
+ */
 TmDict* dict_init(){
     int i;
     TmDict * dict = tm_malloc(sizeof(TmDict));
@@ -82,6 +89,10 @@ void dict_check(TmDict* dict){
     tm_free(temp, osize * sizeof(DictNode));
 }
 
+/**
+ * free dict object
+ * @since 2015-?
+ */
 void dict_free(TmDict* dict){
     PRINT_OBJ_GC_INFO_START();
     tm_free(dict->nodes, (dict->cap) * sizeof(DictNode));
@@ -89,6 +100,10 @@ void dict_free(TmDict* dict){
     PRINT_OBJ_GC_INFO_END("dict", dict);
 }
 
+/**
+ * find a free entry to put dict node
+ * @since 2015-?
+ */
 int findfreepos(TmDict* dict) {
     int i;
     for(i = 0; i < dict->cap; i++) {
@@ -241,6 +256,10 @@ Object dict_builtin_update() {
     return self;
 }
 
+/**
+ * init dict methods
+ * @since 2015-?
+ */
 void dict_methods_init() {
     tm->dict_proto = dict_new();
     /* build dict class */
@@ -250,6 +269,10 @@ void dict_methods_init() {
     reg_mod_func(tm->dict_proto, "update", dict_builtin_update);
 }
 
+/**
+ * create a dict iterator from dict object
+ * @since 2016-?
+ */
 Object dict_iter_new(Object dict) {
     /*
     Object *__iter__ = dict_get_by_str(dict, "__iter__");
@@ -271,6 +294,10 @@ Object dict_iter_new(Object dict) {
     return data;
 }
 
+/**
+ * get next node pointer
+ * @since 2015-?
+ */
 Object* dict_next(TmData* iterator) {
     TmDict* dict = GET_DICT(iterator->data_ptr[0]);
     if (iterator->cur < dict->cap) {

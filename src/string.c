@@ -25,6 +25,10 @@ int uncode32(unsigned char** src) {
 }
 /* encode/decode end */
 
+/**
+ * allocate a new string of length 1
+ * @since 2015-?
+ */
 Object string_char_new(int c) {
     String* str = tm_malloc(sizeof(String));
     struct Object obj;
@@ -70,10 +74,14 @@ Object string_alloc(char *s, int size) {
     return gc_track(v);
 }
 
+/**
+ * create a new string and put it to tm->constants
+ * @since 2016-08-22
+ */
 Object string_const(char* s) {
     Object str_obj = string_new(s);
     int i = dict_set(tm->constants, str_obj, NONE_OBJECT);
-    return str_obj;
+    return DICT_NODES(tm->constants)[i].val;
 }
 
 Object string_chr(int n) {

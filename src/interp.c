@@ -198,7 +198,7 @@ Object tm_eval(TmFrame* f) {
             if (idx == -1) {
                 idx = dict_get_attr(GET_DICT(tm->builtins), i);
                 if (idx == -1) {
-                    tm_raise("Name_error: name %o is not defined", GET_CONST(i));
+                    tm_raise("NameError: name %o is not defined", GET_CONST(i));
                 } else {
                     Object value = GET_DICT(tm->builtins)->nodes[idx].val;
                     // OPTIMIZE
@@ -335,7 +335,7 @@ Object tm_eval(TmFrame* f) {
             int parg = pc[1];
             int varg = pc[2];
             if (tm->arg_cnt < parg || tm->arg_cnt > parg + varg) {
-                tm_raise("Arg_error,parg=%d,varg=%d,given=%d", 
+                tm_raise("ArgError,parg=%d,varg=%d,given=%d", 
                     parg, varg, tm->arg_cnt);
             }
             for(i = 0; i < tm->arg_cnt; i++){
