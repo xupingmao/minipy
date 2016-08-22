@@ -258,9 +258,7 @@ def _main():
     if len(argv) != 2:
         print("error arguments, arguments = ", argv)
         return
-    print(argv)
     fname = argv[1]
-    print("try to tokenize file", fname)
     content = load(fname)
     list = tokenize(content)
     for i in list:

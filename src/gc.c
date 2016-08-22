@@ -276,6 +276,12 @@ void tm_free(void* o, size_t size) {
     tm->allocated -= size;
 }
 
+/**
+ * tracking allocated object
+ * @since 2014-??
+ * @modified 2016-08-20
+ * add to tm->local_obj_list, which will be assumed like frame-locals
+ */
 Object gc_track(Object v) {
     switch (v.type) {
     case TYPE_NUM:
@@ -313,57 +319,6 @@ Object gc_track(Object v) {
     return v;
 }
 
-/*
- not implemented yet.
- 
-PtrArray* gc_ptr_array_new() {
-    PtrArray* arr = tm_malloc(sizeof(PtrArray));
-    arr->cap = 100;
-    arr->len = 0;
-    arr->elements = tm_malloc(sizeof(Object*) * arr->cap);
-    return arr;
-}
-
-void gc_ptr_array_pop(PtrArray* arr) {
-    if (arr->len <= 0) return;
-    arr->elements[arr->len-1] = NULL;
-    arr->len -= 1;
-}
-
-void gc_ptr_array_check(PtrArray* arr) {
-    if (arr->len == arr->cap) {
-        int old_cap = arr->cap;
-        arr->cap += arr->cap / 2 + 1;
-        arr->elements = tm_realloc(arr->elements, sizeof(Object*) * old_cap, sizeof(Object*) * arr->cap);
-    }
-}
-
-void gc_ptr_array_append(PtrArray* arr, Object* obj) {
-    gc_ptr_array_check(arr);
-    arr->elements[arr->len] = obj;
-    arr->len += 1;
-}
-
-void gc_ptr_array_free(PtrArray* arr) {
-    tm_free(arr->elements, sizeof(Object*) * arr->cap);
-    tm_free(arr, sizeof(PtrArray));
-}
-
-void gc_track_local(Object* local) {
-    // gc_ptr_array_append(tm->local_obj_list, local);
-}
-
-void gc_pop_local() {
-    // gc_ptr_array_pop(tm->local_obj_list);
-}
-
-void gc_pop_locals(int n) {
-    while (--n >= 0) {
-        gc_pop_local();
-    }
-}
-
-*/
 void gc_mark_list(TmList* list) {
     if (list->marked)
         return;
@@ -396,6 +351,10 @@ void gc_mark_func(TmFunction* func) {
     gc_mark(func->name);
 }
 
+/**
+ * mark object only once, not cursively
+ * @since 2016-08-21
+ */
 void gc_mark_single(Object o) {
     if (o.type == TYPE_NUM || o.type == TYPE_NONE) {
         return;
@@ -403,6 +362,10 @@ void gc_mark_single(Object o) {
     GC_MARKED(o) = 1;
 }
 
+/**
+ * mark object as used
+ * @since 2014-??
+ */
 void gc_mark(Object o) {
     if (o.type == TYPE_NUM || o.type == TYPE_NONE)
         return;
@@ -449,6 +412,10 @@ void gc_unmark(Object o) {
     GC_MARKED(o) = 0;
 }
 
+/**
+ * mark objects in frame-local and frame-stack
+ * @since 2015-??
+ */
 void gc_mark_locals_and_stack() {
     TmFrame* f;
     for(f = tm->frames + 1; f <= tm->frame; f++) {
@@ -532,6 +499,11 @@ void gc_restore_local_obj_list(int size) {
     list_shorten(tm->local_obj_list, size);
 }
 
+#ifdef GC_DEBUG
+/**
+ * get tm->local_obj_list as object
+ * @since 2016-08-22
+ */
 Object get_tm_local_list() {
     Object obj;
     TM_TYPE(obj) = TYPE_LIST;
@@ -539,6 +511,12 @@ Object get_tm_local_list() {
     return obj;
 }
 
+#endif
+
+/**
+ * add return value to tm->local_obj_list
+ * @since 2016-08-22
+ */
 void gc_local_add(Object ret) {
     if (TM_TYPE(ret) != TYPE_NONE && TM_TYPE(ret) != TYPE_NUM) {
         // arguments is already in prev-call-stack

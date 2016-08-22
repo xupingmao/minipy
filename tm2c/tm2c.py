@@ -66,7 +66,7 @@ class Scope:
             self.g_vars.append(name)
         
 class Env:
-    def __init__(self, fname, option, prefix = None):
+    def __init__(self, fname, option):
         self.consts = []
         self.scope = Scope(None)
         self.global_scope = self.scope
@@ -77,11 +77,13 @@ class Env:
         self.enable_gc = option.enable_gc
         self.debug = option.debug
         self.record_line = option.record_line
+        self.is_module = option.is_module
         self.include_list = []
-        if prefix == None:
-            self.prefix = get_valid_code_name(fname) + "_"
+        if option.prefix == None:
+            name = fname.split(".")[0]
+            self.prefix = get_valid_code_name(name) + "_"
         else:
-            self.prefix = get_valid_code_name(prefix) + "_"
+            self.prefix = option.prefix + "_"
 
         self.builtin_dict = {
             "print": "bf_print",
@@ -224,6 +226,7 @@ class Generator:
 
     def __init__(self, env):
         self.env = env
+        self.is_module = env.is_module
 
     def gen_c_func_def_list(self):
         """generate c function def list"""
@@ -281,11 +284,12 @@ class Generator:
             head += func_define + "\n\n"
         
         # global 
-        head += "Object " + env.prefix + "Iinit(){\n"
+        head += "Object " + env.prefix + "0(){\n"
         code =  head + "\n".join(lines)+"\nreturn NONE_OBJECT;\n}\n"
 
-        # main entry
-        code += sformat("\nint main(int argc, char* argv[]) {\ntm_run_func(argc, argv, \"%s\", %sIinit);\n}\n", env.get_mod_name(), env.prefix)
+        if not self.is_module:
+            # main entry
+            code += sformat("\nint main(int argc, char* argv[]) {\ntm_run_func(argc, argv, \"%s\", %s0);\n}\n", env.get_mod_name(), env.prefix)
         self.code = code
 
     def get_code(self):
@@ -781,14 +785,14 @@ def do_program(tree, env, indent):
         # pdb.set_trace()
         compile_error(env.fname, env.src, env.token, e)
 
-def tm2c(fname, src, option, prefix=None):
+def tm2c(fname, src, option):
     tree = parse(src)
     # repl_print(tree, 0, 5)
     #env = {"vars": [], "consts": [], "funcs": [], "globals":[]}
     words = fname.split(".")
     mod_name = words[0]
     # mod_name = fname.substring(0, len(fname)-3)
-    env = Env(fname, option, prefix)
+    env = Env(fname, option)
     env.src = src
     env.origin_lines = src.split("\n")
 
@@ -811,8 +815,12 @@ def get_opt(argv):
     opt.enable_gc = False
     opt.debug = False
     opt.record_line = False
+    opt.prefix = None
+    opt.is_module = False ## if this is true, will not generate main function
     for arg in argv:
-        if arg[0] == '-':
+        if arg.startswith("-prefix="):
+            opt.prefix = arg.split("=")[1]
+        elif arg[0] == '-':
             key = arg[1:]
             setattr(opt, key, True)
         else:
@@ -831,7 +839,7 @@ if __name__ == "__main__":
     if len(pathes) > 1:
         name = pathes[-1]
     mod = name.split(".")[0]
-    code = tm2c(name, text, opt, mod)
+    code = tm2c(name, text, opt)
     save("output/" + mod + ".c", code)
     # save("bin/" + mod + ".c", code)
 
