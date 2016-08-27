@@ -14,6 +14,8 @@
 #include "module/sys.c"
 #include "module/math.c"
 
+// #include "tmtokenize.c"
+
 /** do not need to boot from binary **/
 #ifndef TM_NO_BIN
     #include "bin.c"
@@ -124,6 +126,7 @@ int vm_init(int argc, char* argv[]) {
     time_mod_init();
     sys_mod_init();
     math_mod_init();
+    // tmtokenize_init();
 
     return 0;
 }
@@ -145,6 +148,9 @@ int tm_init(int argc, char* argv[]) {
     if (ret != 0) { 
         return ret;
     }
+    // enable local object tracking.
+    tm->local_obj_list = untracked_list_new(100);
+
     /* use first frame */
     int code = setjmp(tm->frames->buf);
     if (code == 0) {

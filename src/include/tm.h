@@ -294,6 +294,7 @@ void   reg_mod_attr(char* mod_name,char* attr, Object value);
 int    obj_eq_sz(Object str, const char* value);
 void   tm_raise(char*fmt , ...);
 Object obj_append(Object a, Object item);
+void   vm_destroy();
 
 // interp functions
 

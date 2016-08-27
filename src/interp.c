@@ -234,7 +234,7 @@ Object tm_eval(TmFrame* f) {
         }
         case LIST: {
             TM_PUSH(list_new(2));
-            FRAME_CHECK_GC();
+            // FRAME_CHECK_GC();
             break;
         }
         case LIST_APPEND:
@@ -252,7 +252,7 @@ Object tm_eval(TmFrame* f) {
             break;
         case DICT: {
             TM_PUSH(dict_new());
-            FRAME_CHECK_GC();
+            // FRAME_CHECK_GC();
             break;
         }
         TM_OP(ADD, obj_add)
@@ -326,9 +326,23 @@ Object tm_eval(TmFrame* f) {
             #if INTERP_DB
                 printf("call %s\n", get_func_name_sz(func));
             #endif
-            TM_PUSH(call_function(func));
+
+            // save local object list
+            int size = tm->local_obj_list->len;
+
+            Object r = call_function(func);
+
+            // restore local object list
+            gc_restore_local_obj_list(size);
+            // mark return value if needed.
+            gc_local_add(ret);
+            // check gc
+            gc_check_native_call();
+
+            TM_PUSH(r);
+            // TM_PUSH(call_function(func));
             tm->frame = f;
-            FRAME_CHECK_GC();
+            // FRAME_CHECK_GC();
             break;
         }
         case LOAD_PARAMS: {
