@@ -330,16 +330,16 @@ Object tm_eval(TmFrame* f) {
             // save local object list
             int size = tm->local_obj_list->len;
 
-            Object r = call_function(func);
+            x = call_function(func);
 
             // restore local object list
             gc_restore_local_obj_list(size);
             // mark return value if needed.
-            gc_local_add(ret);
+            gc_local_add(x);
             // check gc
             gc_check_native_call();
 
-            TM_PUSH(r);
+            TM_PUSH(x);
             // TM_PUSH(call_function(func));
             tm->frame = f;
             // FRAME_CHECK_GC();
