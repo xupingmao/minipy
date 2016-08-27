@@ -12,22 +12,33 @@
 #include "tmarg.c"
 #include "module/time.c"
 #include "module/sys.c"
+#include "module/math.c"
 
 /** do not need to boot from binary **/
 #ifndef TM_NO_BIN
     #include "bin.c"
 #endif
     
+/**
+ * register module function
+ * @param mod, module object, dict
+ */
 void reg_mod_func(Object mod, char* name, Object (*native)()) {
     Object func = func_new(NONE_OBJECT, NONE_OBJECT, native);
     GET_FUNCTION(func)->name = sz_to_string(name);
     obj_set(mod,GET_FUNCTION(func)->name, func);
 }
 
+/**
+ * register built-in function
+ */
 void reg_builtin_func(char* name, Object (*native)()) {
     reg_mod_func(tm->builtins, name, native);
 }
 
+/**
+ * load module
+ */
 void load_module(Object name, Object code) {
     Object mod = module_new(name, name, code);
     Object fnc = func_new(mod, NONE_OBJECT, NULL);
@@ -36,6 +47,11 @@ void load_module(Object name, Object code) {
     call_function(fnc);
 }
 
+/**
+ * call function of module
+ * @param mod, module name
+ * @param sz_fnc, function name
+ */
 int call_mod_func(char* mod, char* sz_fnc) {
     Object m = obj_get(tm->modules, string_new(mod));
     Object fnc = obj_get(m, string_new(sz_fnc));
@@ -44,6 +60,12 @@ int call_mod_func(char* mod, char* sz_fnc) {
     return 0;
 }
 
+/**
+ * load bytecode binary
+ * format:
+ *  [4bytes:files count]
+ *   files: [4bytes:bytes length][bytes]
+ */
 int load_binary() {
 #ifdef TM_NO_BIN
     return 0;
@@ -63,6 +85,12 @@ int load_binary() {
 #endif
 }
 
+/**
+ * init virtual machine
+ * built-in objects
+ * built-in functions
+ * built-in modules
+ */
 int vm_init(int argc, char* argv[]) {
     
     int i;
@@ -95,15 +123,23 @@ int vm_init(int argc, char* argv[]) {
     builtins_init();
     time_mod_init();
     sys_mod_init();
+    math_mod_init();
 
     return 0;
 }
 
+/**
+ * destroy virtual machine
+ * destroy goes with init
+ */
 void vm_destroy() {
     gc_destroy();
     free(tm);
 }
 
+/**
+ * init vm and load bytecode binary
+ */
 int tm_init(int argc, char* argv[]) {
     int ret = vm_init(argc, argv);
     if (ret != 0) { 

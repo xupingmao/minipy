@@ -91,10 +91,7 @@ Object tm_call_native(Object (*fn)(), int args, ...) {
 
     /* return value must be added to tm->local_obj_list */
     gc_local_add(ret);
-
-    if (tm->allocated > tm->gc_threshold) {
-        gc_native_call_sweep(); // find and sweep the garbage
-    }
+    gc_check_native_call();
 
     // gc can be done here
     // all locals are in local_obj_list
@@ -103,6 +100,15 @@ Object tm_call_native(Object (*fn)(), int args, ...) {
 #endif
 
     return ret;
+}
+
+Object tm_call_native_0(Object (*fn)()) {
+    arg_start();
+    int size = tm->local_obj_list->len;
+    Object ret = fn();
+    gc_restore_local_obj_list(size);
+    gc_local_add(ret);
+    gc_check_native_call();
 }
 
 /**

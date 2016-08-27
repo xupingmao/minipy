@@ -1,4 +1,3 @@
-from io import StringIO
 import sys, os
 
 
@@ -68,21 +67,20 @@ def do_skip_str(line, i, end):
     return str, i
 
 def convert (content):
-    buf = StringIO()
+    buf = []
     i = 0
     while i < len(content):
         c = content[i]
         if c == '"' or c == "'":
             str, i = do_skip_str(content, i, c)
-            buf.write(str)
+            buf.append(str)
         elif c.isalpha() or c in _name_list:
             newname, i = do_name(content, i)
-            buf.write(newname)
+            buf.append(newname)
         else:
-            buf.write(c)
+            buf.append(c)
             i+=1
-    buf.seek(0)
-    return buf.read()
+    return "".join(buf)
 
 def save_file(name, content):
     fp = open(name, "w+")

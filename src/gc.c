@@ -7,9 +7,9 @@
 /**
  * 1. mark all allocated object to be unused (0);
  * 2. mark objects can be reached from `root` to be used (1);
- * 3. mark objects can be reached from `frames` to be used (1);
- * 4. release objects which are marked unused (0).
- * 
+ * 3. [at runtime] mark objects can be reached from `frames` to be used (1);
+ * 4. [at native call] mark objects in tm->local_obj_list to be used(1);
+ * 5. release objects which are marked unused (0).
  */
 
 
@@ -522,6 +522,16 @@ void gc_local_add(Object ret) {
         // arguments is already in prev-call-stack
         // ret must be added to prev-call-stack
         list_append(tm->local_obj_list, ret); // move ret value to tm->local_obj_list
+    }
+}
+
+/**
+ * check whether need to do sweep during native call
+ * @since 2016-08-23
+ */
+void gc_check_native_call() {
+    if (tm->allocated > tm->gc_threshold) {
+        gc_native_call_sweep(); // find and sweep the garbage
     }
 }
 
