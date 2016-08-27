@@ -81,7 +81,7 @@ Object string_alloc(char *s, int size) {
 Object string_const(char* s) {
     Object str_obj = string_new(s);
     int i = dict_set(tm->constants, str_obj, NONE_OBJECT);
-    return DICT_NODES(tm->constants)[i].val;
+    return DICT_NODES(tm->constants)[i].key;
 }
 
 Object string_chr(int n) {

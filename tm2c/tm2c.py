@@ -12,6 +12,9 @@ tm_get_glo           = "tm_get_global"
 tm_define            = "def_func"
 def_native_method    = "def_native_method"
 tm_call_native       = "tm_call_native"
+tm_call_native_0     = "tm_call_native_0"
+tm_call_native_1     = "tm_call_native_1"
+tm_call_native_2     = "tm_call_native_2"
 arg_insert           = "arg_insert"
 func_bool            = "is_true_obj"
 func_add             = "obj_add"
@@ -51,7 +54,11 @@ def get_string_def(value):
 
 def build_native_call(func, *args):
     if len(args) == 0:
-        return "{}({},0);".format(tm_call_native, func)
+        return "{}({});".format(tm_call_native_0, func)
+    elif len(args) == 1:
+        return "{}({},{});".format(tm_call_native_1, func, ",".join(args))
+    elif len(args) == 2:
+        return "{}({},{});".format(tm_call_native_2, func, ",".join(args))
     else:
         return "{}({},{},{});".format(tm_call_native, func, len(args), ",".join(args))
         
@@ -72,6 +79,7 @@ class Env:
         self.global_scope = self.scope
         self.indent = 0
         self.fname = fname
+        self.mod_name = fname.split(".")[0]
         self.func_defines = []
         self.func_cnt = 0
         self.enable_gc = option.enable_gc
@@ -151,7 +159,7 @@ class Env:
         return self.prefix + name
 
     def get_mod_name(self):
-        return self.fname
+        return self.mod_name
             
     def get_const(self, val):
         if val not in self.consts:
@@ -458,7 +466,7 @@ def do_args(item, env):
     elif istype(item, "list"):
         args = "";
         for i in item:
-            args += ", " + do_item(i, env)
+            args += "," + do_item(i, env)
         return args
     return "," + do_item(item, env)
 
@@ -593,6 +601,13 @@ def do_class(item, env):
     #     text += line + "\n"
     return "{}({},{},{});".format(tm_define, env.get_globals(), env.get_const(clz_name_str), env.get_c_func_def(clz_name_str))
     
+
+def do_try(item, env):
+    # ignore except block
+    body = item.first
+    lines = do_block(body, env)
+    return "\n".join(lines)
+
 def do_op(item, env, func):
     return func + "(" + do_item(item.first, env) + "," + do_item(item.second, env) + ")";
 
@@ -708,12 +723,13 @@ def do_continue(item, env):
     return "continue;"
 
 _handlers = {
-    "if": do_if,
-    "while": do_while,
-    "def": do_def,
+    "if":     do_if,
+    "while":  do_while,
+    "def":    do_def,
     "return": do_return,
-    "class": do_class,
-    "for": do_for,
+    "class":  do_class,
+    "for":    do_for,
+    "try":    do_try,
 
     # items
     "number": do_const,
@@ -810,14 +826,30 @@ def tm2c(fname, src, option):
     generator.process(lines)
     return generator.get_code()
 
-def get_opt(argv):
+def print_help():
+    print("Usage")
+    print("   python tm2c.py [options] filename")
+    print()
+    print("1/0 options")
+    print("  -h(elp)      : print help information")
+    print("  -debug       : add debug information")
+    print("  -record_line : record line information")
+    print("  -is_module   : compile to c module without main entry")
+    print()
+    print("K/V options")
+    print("  -prefix      : set c source prefix")
+
+def get_opt(options):
     opt = newobj()
     opt.enable_gc = False
     opt.debug = False
     opt.record_line = False
     opt.prefix = None
     opt.is_module = False ## if this is true, will not generate main function
-    for arg in argv:
+    if len(options) == 1 and options[0] in ["-help", "--help", "-h", "--h"]:
+        print_help();
+        sys.exit(0);
+    for arg in options:
         if arg.startswith("-prefix="):
             opt.prefix = arg.split("=")[1]
         elif arg[0] == '-':

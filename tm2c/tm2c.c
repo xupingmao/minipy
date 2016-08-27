@@ -1,3 +1,5 @@
+#ifndef TM2C_C
+#define TM2C_C
 #include "../src/vm.c"
 
 Object tm_call(Object func, int args, ...) {
@@ -37,9 +39,7 @@ Object tm_call(Object func, int args, ...) {
         tm->frame->lineno, func);
 
     tm_call_end:
-    if (TM_TYPE(ret) != TYPE_NONE && TM_TYPE(ret) != TYPE_NUM) {
-        list_append(tm->local_obj_list, ret);
-    }
+    gc_local_add(ret);
     return ret;
 }
 
@@ -102,8 +102,33 @@ Object tm_call_native(Object (*fn)(), int args, ...) {
     return ret;
 }
 
+/**
+ * optimization for tm_call_native
+ * @since 2016-08-27
+ */
 Object tm_call_native_0(Object (*fn)()) {
     arg_start();
+    int size = tm->local_obj_list->len;
+    Object ret = fn();
+    gc_restore_local_obj_list(size);
+    gc_local_add(ret);
+    gc_check_native_call();
+}
+
+Object tm_call_native_1(Object (*fn)(), Object arg1) {
+    arg_start();
+    arg_push(arg1);
+    int size = tm->local_obj_list->len;
+    Object ret = fn();
+    gc_restore_local_obj_list(size);
+    gc_local_add(ret);
+    gc_check_native_call();
+}
+
+Object tm_call_native_2(Object (*fn)(), Object arg1, Object arg2) {
+    arg_start();
+    arg_push(arg1);
+    arg_push(arg2);
     int size = tm->local_obj_list->len;
     Object ret = fn();
     gc_restore_local_obj_list(size);
@@ -181,6 +206,7 @@ void tm_import_all(Object globals, Object mod_name) {
     if (b_has) {
         Object mod_value = obj_get(tm->modules, mod_name);
         // do something here.
+        tm_call_native_2(dict_builtin_update, globals, mod_value);
     }
 }
 
@@ -238,10 +264,8 @@ int tm_run_func(int argc, char* argv[], char* mod_name, Object (*func)(void)) {
         Object *_argv = dict_get_by_str(*sys, "argv");
         list_insert(GET_LIST(*_argv), 0, string_new(mod_name));
 
-        tm->gc_state = 0;
         tm_call_native(func,0);
         gc_full();
-        tm->gc_state = 1;
         // printf("tm->max_allocated = %d\n", tm->max_allocated);
         // printf("tm->allocated = %d\n", tm->allocated);
         // fgetc(stdin);
@@ -254,3 +278,5 @@ int tm_run_func(int argc, char* argv[], char* mod_name, Object (*func)(void)) {
     vm_destroy();
     return 0;
 }
+
+#endif /* TM2C_C */
