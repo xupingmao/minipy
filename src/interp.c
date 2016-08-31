@@ -103,7 +103,7 @@ TmFrame* push_frame(Object fnc) {
 
 
 #define PREDICT_JMP(flag) \
-    if (!flag && pc[3] == POP_JUMP_ON_FALSE) { \
+    if (!flag && pc[3] == OP_POP_JUMP_ON_FALSE) { \
         top--;\
         pc += 3; \
         i = (pc[1] << 8) | pc[2]; \
@@ -141,7 +141,7 @@ Object tm_eval(TmFrame* f) {
         #endif    
         switch (pc[0]) {
 
-        case NEW_NUMBER: {
+        case OP_NUMBER: {
             double d = atof((char*)pc + 3);
             pc += i;
             v = tm_number(d);
@@ -150,7 +150,7 @@ Object tm_eval(TmFrame* f) {
             break;
         }
 
-        case NEW_STRING: {
+        case OP_STRING: {
             v = string_alloc((char*)pc + 3, i);
             pc += i;
             /* obj_append(tm->constants,v); */
@@ -173,26 +173,26 @@ Object tm_eval(TmFrame* f) {
             call_function(import_func);
             break;
         }
-        case LOAD_CONSTANT: {
+        case OP_CONSTANT: {
             TM_PUSH(GET_CONST(i));
             break;
         }
         
-        case LOAD_NONE: {
+        case OP_NONE: {
             TM_PUSH(NONE_OBJECT);
             break;
         }
 
-        case LOAD_LOCAL: {
+        case OP_LOAD_LOCAL: {
             TM_PUSH(locals[i]);
             break;
         }
 
-        case STORE_LOCAL:
+        case OP_STORE_LOCAL:
             locals[i] = TM_POP();
             break;
 
-        case LOAD_GLOBAL: {
+        case OP_LOAD_GLOBAL: {
             /* tm_printf("load global %o\n", GET_CONST(i)); */
             int idx = dict_get_attr(GET_DICT(globals), i);
             if (idx == -1) {
@@ -205,70 +205,70 @@ Object tm_eval(TmFrame* f) {
                     // set the builtin to `globals()`
                     obj_set(globals, GET_CONST(i), value);
                     idx = dict_get_attr(GET_DICT(globals), i);
-                    pc[0] = FAST_LD_GLO;
+                    pc[0] = OP_FAST_LD_GLO;
                     code16(pc+1, idx);
                     // OPTIMIZE END
                     TM_PUSH(value);
                 }
             } else {
                 TM_PUSH(GET_DICT(globals)->nodes[idx].val);
-                pc[0] = FAST_LD_GLO;
+                pc[0] = OP_FAST_LD_GLO;
                 code16(pc+1, idx);
             }
             break;
         }
-        case STORE_GLOBAL: {
+        case OP_STORE_GLOBAL: {
             x = TM_POP();
             int idx = dict_set_attr(GET_DICT(globals), i, x);
-            pc[0] = FAST_ST_GLO;
+            pc[0] = OP_FAST_ST_GLO;
             code16(pc+1, idx);
             break;
         }
-        case FAST_LD_GLO: {
+        case OP_FAST_LD_GLO: {
             TM_PUSH(GET_DICT(globals)->nodes[i].val);
             break;
         }
-        case FAST_ST_GLO: {
+        case OP_FAST_ST_GLO: {
             GET_DICT(globals)->nodes[i].val = TM_POP();
             break;
         }
-        case LIST: {
+        case OP_LIST: {
             TM_PUSH(list_new(2));
             // FRAME_CHECK_GC();
             break;
         }
-        case LIST_APPEND:
+        case OP_APPEND:
             v = TM_POP();
             x = TM_TOP();
             tm_assert_type(x, TYPE_LIST, "tm_eval: LIST_APPEND");
             list_append(GET_LIST(x), v);
             break;
-        case DICT_SET:
+        case OP_DICT_SET:
             v = TM_POP();
             k = TM_POP();
             x = TM_TOP();
             tm_assert_type(x, TYPE_DICT, "tm_eval: DICT_SET");
             obj_set(x, k, v);
             break;
-        case DICT: {
+        case OP_DICT: {
             TM_PUSH(dict_new());
             // FRAME_CHECK_GC();
             break;
         }
-        TM_OP(ADD, obj_add)
-        TM_OP(SUB, obj_sub)
-        TM_OP(MUL, obj_mul)
-        TM_OP(DIV, obj_div)
-        TM_OP(MOD, obj_mod)
-        TM_OP(GET, obj_get)
-        case EQEQ: { *(top-1) = tm_number(obj_equals(*(top-1), *top)); top--; break; }
-        case NOTEQ: { *(top-1) = tm_number(!obj_equals(*(top-1), *top)); top--; break; }
+        TM_OP(OP_ADD, obj_add)
+        TM_OP(OP_SUB, obj_sub)
+        TM_OP(OP_MUL, obj_mul)
+        TM_OP(OP_DIV, obj_div)
+        TM_OP(OP_MOD, obj_mod)
+        TM_OP(OP_GET, obj_get)
+        case OP_EQEQ: { *(top-1) = tm_number(obj_equals(*(top-1), *top)); top--; break; }
+        case OP_NOTEQ: { *(top-1) = tm_number(!obj_equals(*(top-1), *top)); top--; break; }
         case OP_LT: {
             *(top-1) = tm_number(obj_cmp(*(top-1), *top)<0);
             top--;
             break;
         }
-        case LTEQ: {
+        case OP_LTEQ: {
             *(top-1) = tm_number(obj_cmp(*(top-1), *top)<=0);
             top--;
             break;
@@ -278,7 +278,7 @@ Object tm_eval(TmFrame* f) {
             top--;
             break;
         }
-        case GTEQ: {
+        case OP_GTEQ: {
             *(top-1) = tm_number(obj_cmp(*(top-1), *top)>=0);
             top--;
             break;
@@ -288,21 +288,21 @@ Object tm_eval(TmFrame* f) {
             top--;
             break;
         }
-        case AND: {
+        case OP_AND: {
             *(top-1) = tm_number(is_true_obj(*(top-1)) && is_true_obj(*top));
             top--;
             break;
         }
-        case OR: {
+        case OP_OR: {
             *(top-1) = tm_number(is_true_obj(*(top-1)) || is_true_obj(*top));
             top--;
             break;
         }
-        case NOT:{
+        case OP_NOT:{
             *top = tm_number(!is_true_obj(*top));
             break;
         }
-        case SET:
+        case OP_SET:
             k = TM_POP();
             x = TM_POP();
             v = TM_POP();
@@ -311,14 +311,14 @@ Object tm_eval(TmFrame* f) {
             #endif
             obj_set(x, k, v);
             break;
-        case POP: {
+        case OP_POP: {
             top--;
             break;
         }
-        case NEG:
+        case OP_NEG:
             TM_TOP() = obj_neg(TM_TOP());
             break;
-        case CALL: {
+        case OP_CALL: {
             f->top = top;
             top -= i;
             arg_set_arguments(top + 1, i);
@@ -345,7 +345,7 @@ Object tm_eval(TmFrame* f) {
             // FRAME_CHECK_GC();
             break;
         }
-        case LOAD_PARAMS: {
+        case OP_LOAD_PARAMS: {
             int parg = pc[1];
             int varg = pc[2];
             if (tm->arg_cnt < parg || tm->arg_cnt > parg + varg) {
@@ -357,14 +357,14 @@ Object tm_eval(TmFrame* f) {
             }
             break;
         }
-        case LD_PARG: {
+        case OP_LOAD_PARG: {
             int parg = i;
             for (i = 0; i < parg; i++) {
                 locals[i] = arg_take_obj(func_name_sz);
             }
             break;
         }
-        case LD_NARG: {
+        case OP_LOAD_NARG: {
             int arg_index = i;
             Object list = list_new(tm->arg_cnt);
             while (arg_remains() > 0) {
@@ -373,11 +373,11 @@ Object tm_eval(TmFrame* f) {
             locals[arg_index] = list;
             break;
         }
-        case ITER_NEW: {
+        case OP_ITER: {
             *top = iter_new(*top);
             break;
         }
-        case TM_NEXT: {
+        case OP_NEXT: {
             Object *next = next_ptr(*top);
             if (next != NULL) {
                 TM_PUSH(*next);
@@ -388,7 +388,7 @@ Object tm_eval(TmFrame* f) {
             }
             break;
         }
-        case TM_DEF: {
+        case OP_DEF: {
             Object mod = GET_FUNCTION(cur_fnc)->mod;
             Object fnc = func_new(mod, NONE_OBJECT, NULL);
             pc = func_resolve(GET_FUNCTION(fnc), pc);
@@ -396,11 +396,11 @@ Object tm_eval(TmFrame* f) {
             TM_PUSH(fnc);
             continue;
         }
-        case RETURN: {
+        case OP_RETURN: {
             ret = TM_POP();
             goto end;
         }
-        case TM_ROT: {
+        case OP_ROT: {
             int half = i / 2;
             int j;
             for (j = 0; j < half; j++) {
@@ -410,7 +410,7 @@ Object tm_eval(TmFrame* f) {
             }
             break;
         }
-        case UNPACK: {
+        case OP_UNPACK: {
             x = TM_POP();
             tm_assert_type(x, TYPE_LIST, "tm_eval:UNPACK");
             int j;
@@ -420,14 +420,14 @@ Object tm_eval(TmFrame* f) {
             break;
         }
 
-        case TM_DEL: {
+        case OP_DEL: {
             k = TM_POP();
             x = TM_POP();
             obj_del(x, k);
             break;
         }
 
-        case POP_JUMP_ON_FALSE: {
+        case OP_POP_JUMP_ON_FALSE: {
             if (!is_true_obj(TM_POP())) {
                 pc += i * 3;
                 continue;
@@ -435,7 +435,7 @@ Object tm_eval(TmFrame* f) {
             break;
         }
 
-        case JUMP_ON_TRUE: {
+        case OP_JUMP_ON_TRUE: {
             if (is_true_obj(TM_TOP())) {
                 pc += i * 3;
                 continue;
@@ -443,7 +443,7 @@ Object tm_eval(TmFrame* f) {
             break;
         }
 
-        case JUMP_ON_FALSE: {
+        case OP_JUMP_ON_FALSE: {
             if (!is_true_obj(TM_TOP())) {
                 pc += i * 3;
                 continue;
@@ -451,26 +451,26 @@ Object tm_eval(TmFrame* f) {
             break;
         }
 
-        case UP_JUMP:
+        case OP_UP_JUMP:
             pc -= i * 3;
             continue;
 
-        case JUMP:
+        case OP_JUMP:
             pc += i * 3;
             continue;
 
-        case TM_EOP:
-        case TM_EOF: {
+        case OP_EOP:
+        case OP_EOF: {
            ret = NONE_OBJECT;
            goto end;
         }
 
-        case LOAD_EX: { top = f->last_top; TM_PUSH(tm->ex); break; }
-        case SETJUMP: { f->last_top = top; f->jmp = pc + i * 3; break; }
-        case CLRJUMP: { f->jmp = NULL; break;}
-        case TM_LINE: { f->lineno = i; break;}
+        case OP_LOAD_EX: { top = f->last_top; TM_PUSH(tm->ex); break; }
+        case OP_SETJUMP: { f->last_top = top; f->jmp = pc + i * 3; break; }
+        case OP_CLR_JUMP: { f->jmp = NULL; break;}
+        case OP_LINE: { f->lineno = i; break;}
 
-        case TM_DEBUG: {
+        case OP_DEBUG: {
             #if 0
             Object fdebug = tm_get_global(globals, sz_to_string("__debug__"));
             f->top = top;

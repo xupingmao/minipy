@@ -1,4 +1,4 @@
-_PRINT_STR_LEN = 40
+__p_r_i_n_t__s_t_r__l_e_n = 40
 import encode
 
 compilefile = encode.compilefile
@@ -29,8 +29,8 @@ def repl_print(p, n = 0, depth = 2):
         printf('%s]\n', n * ' ')
     elif gettype(p) == "string":
         printf(' ' * n)
-        if len(p) > _PRINT_STR_LEN:
-            p = p.substring(0, _PRINT_STR_LEN)
+        if len(p) > __p_r_i_n_t__s_t_r__l_e_n:
+            p = p.substring(0, __p_r_i_n_t__s_t_r__l_e_n)
             p += '...'
         p = escape(p)
         printf("\"%s\"\n", p)

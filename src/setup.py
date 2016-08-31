@@ -78,10 +78,10 @@ def build_const_code():
     b = ''
     for i in range(get_const_len()):
         v = get_const(i)
-        t = chr(NEW_STRING)
-        if gettype(v) == 'number':t = chr(NEW_NUMBER); v = str(v)
+        t = chr(OP_STRING)
+        if gettype(v) == 'number':t = chr(OP_NUMBER); v = str(v)
         b+=t+code16(len(v))+v
-    return b+code8(TM_EOP)+code16(0)
+    return b+code8(OP_EOP)+code16(0)
 
 def build_one(cc):
     ccompiler = cc

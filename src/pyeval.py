@@ -33,25 +33,25 @@ def _op_in(a,b):
 def _op_del(a,b):
     del a[b]
 op_dict = {
-    ADD: _op_add,
-    SUB: _op_sub,
-    DIV: _op_div,
-    MUL: _op_mul,
-    MOD: _op_mod,
-    GET: _op_get,
+    OP_ADD: _op_add,
+    OP_SUB: _op_sub,
+    OP_DIV: _op_div,
+    OP_MUL: _op_mul,
+    OP_MOD: _op_mod,
+    OP_GET: _op_get,
     OP_LT: _op_lt,
     OP_GT: _op_gt,
-    LTEQ: _op_lteq,
-    GTEQ: _op_gteq,
-    EQEQ: _op_eq,
-    NOTEQ: _op_ne,
+    OP_LTEQ: _op_lteq,
+    OP_GTEQ: _op_gteq,
+    OP_EQEQ: _op_eq,
+    OP_NOTEQ: _op_ne,
     OP_IN: _op_in,
-    TM_DEL: _op_del
+    OP_DEL: _op_del
 }
 
 op_skip = {
-    TM_LINE: "TM_LINE",
-    SETJUMP: "SETJUMP"
+    OP_LINE: "TM_LINE",
+    OP_SETJUMP: "SETJUMP"
 }
 
 class Env:
@@ -80,18 +80,18 @@ def pyeval(src, glo_vars = None, debug = False):
         if debug:
             print(' ' * 10, cyc, tmcodes[op], v)
         cyc += 1
-        if op == LOAD_CONSTANT:
+        if op == OP_CONSTANT:
             r = get_const(v)
             stack.append(r)
             if debug:
                 print(' ' * 30, '<==' + str(r))
-        elif op == LOAD_LOCAL:
+        elif op == OP_LOAD_LOCAL:
             r = loc_vars[v]
             stack.append(r)
-        elif op == STORE_LOCAL:
+        elif op == OP_STORE_LOCAL:
             r = stack.pop()
             loc_vars[v] = r
-        elif op == LOAD_GLOBAL:
+        elif op == OP_LOAD_GLOBAL:
             name = get_const(v)
             if debug:
                 print(' ' * 30, '<==' + name)
@@ -100,7 +100,7 @@ def pyeval(src, glo_vars = None, debug = False):
             else:
                 r = __builtins__[name]
             stack.append(r)
-        elif op == STORE_GLOBAL:
+        elif op == OP_STORE_GLOBAL:
             name = get_const(v)
             if debug:
                 print(' '* 30, '==>' + name)
@@ -119,9 +119,9 @@ def pyeval(src, glo_vars = None, debug = False):
             x = stack.pop()
             r = op_dict[op](x,y)
             stack.append(r)
-        elif op == POP:
+        elif op == OP_POP:
             r = stack.pop()
-        elif op == CALL:
+        elif op == OP_CALL:
             args = []
             i = 0
             while i < v:
@@ -130,45 +130,45 @@ def pyeval(src, glo_vars = None, debug = False):
             args.reverse()
             r = apply(stack.pop(), args)
             stack.append(r)
-        elif op == LIST:
+        elif op == OP_LIST:
             r = []
             stack.append(r)
-        elif op == LIST_APPEND:
+        elif op == OP_APPEND:
             x = stack.pop()
             r = stack[-1]
             r.append(x)
-        elif op == DICT:
+        elif op == OP_DICT:
             r = {}
             stack.append(r)
-        elif op == SET:
+        elif op == OP_SET:
             k = stack.pop()
             r = stack.pop()
             v = stack.pop()
             r[k] = x
-        elif op == DICT_SET:
+        elif op == OP_DICT_SET:
             v = stack.pop()
             k = stack.pop()
             r = stack[-1]
             r[k] = v
-        elif op == TM_EOP:
+        elif op == OP_EOP:
             pass
-        elif op == LOAD_NONE:
+        elif op == OP_NONE:
             r = None
             stack.append(r)
-        elif op == UP_JUMP:
+        elif op == OP_UP_JUMP:
             idx -= v
             continue
-        elif op == ITER_NEW:
+        elif op == OP_ITER:
             r = iter(stack.pop())
             stack.append(r)
-        elif op == TM_NEXT:
+        elif op == OP_NEXT:
             try:
                 r = next(stack[-1])
                 stack.append(r)
             except Exception as e:
                 print(e)
                 idx += v
-        elif op == UNPACK:
+        elif op == OP_UNPACK:
             collection = stack.pop()
             if len(collection) != v:
                 raise("TM_UNARRAY expect length %s but see %s".format(v, len(collection)))
@@ -177,13 +177,13 @@ def pyeval(src, glo_vars = None, debug = False):
                 stack.append(x)
         elif op in op_skip:
             pass
-        elif op == POP_JUMP_ON_FALSE:
+        elif op == OP_POP_JUMP_ON_FALSE:
             r = stack.pop()
             if not r:
                 idx += v
                 r = None
                 continue
-        elif op == TM_ROT:
+        elif op == OP_ROT:
             i = 0
             lst = []
             while i < v:

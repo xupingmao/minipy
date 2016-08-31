@@ -10,32 +10,32 @@ cheader = '''/*
 ctail = "\n#endif\n\n"
 
 _opcode_names = [
-    'NEW_STRING', 'NEW_NUMBER',
+    'OP_STRING', 'OP_NUMBER',
     "OP_IMPORT",
-    'ADD', 'SUB', 'MUL', 'DIV', 'MOD', 'NEG',
-    'NOT', 'OP_GT', 'OP_LT', 'GTEQ', 'LTEQ', 'EQEQ', 'NOTEQ', 'OP_IN', 'NOTIN',
-    'AND', 'OR', 'SET', 'GET',
-    'LOAD_NONE', 'STORE_LOCAL', 'STORE_GLOBAL', 'LOAD_LOCAL', 'LOAD_GLOBAL', 'LOAD_CONSTANT',
+    'OP_ADD', 'OP_SUB', 'OP_MUL', 'OP_DIV', 'OP_MOD', 'OP_NEG',
+    'OP_NOT', 'OP_GT', 'OP_LT', 'OP_GTEQ', 'OP_LTEQ', 'OP_EQEQ', 'OP_NOTEQ', 'OP_IN', 'OP_NOTIN',
+    'OP_AND', 'OP_OR', 'OP_SET', 'OP_GET',
+    'OP_NONE', 'OP_STORE_LOCAL', 'OP_STORE_GLOBAL', 'OP_LOAD_LOCAL', 'OP_LOAD_GLOBAL', 'OP_CONSTANT',
     #'LOAD_GLOBALS', 
-    'POP', 
-    'DICT_SET', 'LIST', 'DICT', 'LIST_APPEND',
-    'JUMP', 'UP_JUMP', 'POP_JUMP_ON_FALSE', 'JUMP_ON_FALSE', 'JUMP_ON_TRUE',
+    'OP_POP', 
+    'OP_DICT_SET', 'OP_LIST', 'OP_DICT', 'OP_APPEND',
+    'OP_JUMP', 'OP_UP_JUMP', 'OP_POP_JUMP_ON_FALSE', 'OP_JUMP_ON_FALSE', 'OP_JUMP_ON_TRUE',
     #TAGSIZE
-    'UNPACK', 'TM_ROT', 'TM_DEL', 'TM_FOR', 'TM_NEXT', 'ITER_NEW', 'LOAD_EX',
-    'SETJUMP', 'CALL', 'TM_DEF', 'RETURN', 
+    'OP_UNPACK', 'OP_ROT', 'OP_DEL', 'OP_FOR', 'OP_NEXT', 'OP_ITER', 'OP_LOAD_EX',
+    'OP_SETJUMP', 'OP_CALL', 'OP_DEF', 'OP_RETURN', 
 
-    'LOAD_PARAMS', 'LD_NARG', "LD_PARG",
+    'OP_LOAD_PARAMS', 'OP_LOAD_NARG', "OP_LOAD_PARG",
 
-    'TM_EOF',
-    "CLRJUMP",
-    'TM_EOP',
+    'OP_EOF',
+    "OP_CLR_JUMP",
+    'OP_EOP',
     # mulity assignment, eg. x,y = 1,2
-    'TM_DEBUG',
-    'TM_LINE',
-    'TAG', 
+    'OP_DEBUG',
+    'OP_LINE',
+    'OP_TAG', 
     # instructions for vm to optimize.
-    'FAST_ST_GLO',
-    'FAST_LD_GLO',
+    'OP_FAST_ST_GLO',
+    'OP_FAST_LD_GLO',
     # unused instructions
     #'LT_JUMP_ON_FALSE', 
     #'GT_JUMP_ON_FALSE',

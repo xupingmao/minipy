@@ -3,11 +3,13 @@ import sys, os
 
 _name_list = ["_", "$"]
 
+## windows API
 _blacklist = [
     "FindNextFile",
     "dwFileAttributes",
     "cFileName",
-    "FindFirstFile"
+    "FindFirstFile",
+    "wMilliseconds"
 ]
 
 _convert_dict = {
@@ -46,7 +48,7 @@ def do_name(line, i):
         return oldname, i 
     if oldname in _convert_dict:
         return _convert_dict[oldname], i
-    if oldname[0].isupper():
+    if oldname[0].isupper() or oldname[0] == "_" or oldname[0] == "$":
         return oldname, i
     return newname, i
 
@@ -88,23 +90,35 @@ def save_file(name, content):
     fp.close()
 
 
-def do_file(name):
-    name = sys.argv[1]
+def do_file(name, mapping = None):
+    """note that mapping will be added to global _convert_dict"""
     content = open(name).read()
+
+    if mapping:
+        _convert_dict.update(mapping) # apply mapping
+
     result = convert(content)
     if content != result:
         save_file(name + ".bak", content)
         save_file(name, result)
 
-def do_dir(dirname):
+def do_dir(dirname, mapping = None):
     for root, dirs, files in os.walk(dirname):
         for f in files:
             name, ext = os.path.splitext(f)
             if ext not in ('.py', '.c'):
                 continue
             abspath = os.path.join(root, f)
-            do_file(abspath)
+            do_file(abspath, mapping)
         
+
+def do_format(name, mapping = None):
+    if os.path.isdir(name):
+        do_dir(name, mapping)
+    else:
+        do_file(name, mapping)
+
+
 def do_test():
     origin = '''
     this is a test.
@@ -124,21 +138,35 @@ def do_test():
             
 def print_usage():
     print("usage:")
-    print("  %s filename" % sys.argv[0])
-    print("  %s -d dirname" % sys.argv[0])
+    print("  -test\n\trun test\n")
+    print("  filename\n\tformat file\n")
+    print("  -d dirname\n\tformat files in directory\n")
+    print("  file/directory oldname newname\n\tformat files with mapping <oldname> to <newname>\n")
             
-if __name__ == '__main__':
-    if len(sys.argv) == 2:
-        opt = sys.argv[1]
+
+def main(argv):
+    argc = len(argv)
+    if argc == 2:
+        opt = argv[1]
         if opt == "-test":
             do_test()
             exit(0)
         else:
             do_file(opt)
             exit(0)
-    elif len(sys.argv) == 3:
-        opt = sys.argv[1]
+    elif argc == 3:
+        opt = argv[1]
         if opt == "-d":
-            do_dir(opt, sys.argv[2])
+            do_dir(opt, argv[2])
             exit(0)
-    print ("usage %s filename" % sys.argv[0])
+    elif argc == 4:
+        filename = argv[1]
+        oldname  = argv[2]
+        newname  = argv[3]
+        do_format(filename, {oldname : newname})
+    else:
+        print_usage()
+
+if __name__ == '__main__':
+    main(sys.argv)
+    

@@ -11,18 +11,18 @@ unsigned char* func_resolve(TmFunction* fnc, unsigned char* pc) {
     while (1) {
         int op = READ_BYTE(s);
         int val = READ_SHORT(s);
-        if (op == NEW_STRING || op == NEW_NUMBER) {
+        if (op == OP_STRING || op == OP_NUMBER) {
             s += val;
-        } else if (op == LOAD_LOCAL || op == STORE_LOCAL) {
+        } else if (op == OP_LOAD_LOCAL || op == OP_STORE_LOCAL) {
             maxlocals = max(val, maxlocals);
-        } else if (op == SETJUMP) {
+        } else if (op == OP_SETJUMP) {
             fnc->modifier = 1;
-        } else if(op == TM_EOF){
+        } else if(op == OP_EOF){
             defs--;
             if (defs == 0) break;
-        } else if(op == TM_EOP) {
+        } else if(op == OP_EOP) {
             break;
-        } else if(op == TM_DEF) {
+        } else if(op == OP_DEF) {
             defs++;
         }
     }
@@ -116,10 +116,10 @@ Object func_get_code(TmFunction* func) {
     }
     unsigned char* code = func->code;
     int len = 0;
-    while (code[len] != TM_EOF) {
+    while (code[len] != OP_EOF) {
         len += 3;
     }
-    len += 3; /* TM_EOF */
+    len += 3; /* OP_EOF */
     return string_alloc((char*)code, len);
 }
 

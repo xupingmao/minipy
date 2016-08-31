@@ -676,17 +676,6 @@ Object bf_time0() {
     return tm_number(time(0));
 }
 
-Object bf_sleep() {
-    int i = 0;
-    int t = arg_take_int("sleep");
-#ifdef _WINDOWS_H
-    Sleep(t);
-#else
-    sleep(t);
-#endif
-    return NONE_OBJECT;
-}
-
 Object bf_add_obj_method() {
     static const char* sz_func = "add_obj_method";
     Object type = arg_take_str_obj(sz_func);
@@ -1071,7 +1060,6 @@ void builtins_init() {
     reg_builtin_func("read_file", bf_read_file);
     reg_builtin_func("iter", bf_iter);
     reg_builtin_func("next", bf_next);
-    reg_builtin_func("sleep", bf_sleep);
     
     reg_builtin_func("exists", bf_exists);
     reg_builtin_func("stat", bf_stat);

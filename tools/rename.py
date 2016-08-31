@@ -50,16 +50,3 @@ if __name__ == "__main__":
         print("usage: %s oldname newname" % sys.argv[0])
         print("    or %s -clean" % argv[0])
     
-
-
-
-
-
-
-
-
-
-
-
-
-
