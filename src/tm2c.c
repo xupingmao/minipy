@@ -1,6 +1,5 @@
 #ifndef TM2C_C
 #define TM2C_C
-#include "../src/vm.c"
 
 Object tm_call(Object func, int args, ...) {
     int i = 0;
@@ -87,11 +86,11 @@ Object tm_call_native(Object (*fn)(), int args, ...) {
     // gc_mark(ret);
     // gc_sweep_local(size); // sweep unused objects in locals.
     // list_shorten(tm->local_obj_list, size); // restore list
-    gc_restore_local_obj_list(size);
+    // gc_restore_local_obj_list(size);
 
     /* return value must be added to tm->local_obj_list */
-    gc_local_add(ret);
-    gc_check_native_call();
+    // gc_local_add(ret);
+    gc_check_native_call(size, ret);
 
     // gc can be done here
     // all locals are in local_obj_list
@@ -110,9 +109,7 @@ Object tm_call_native_0(Object (*fn)()) {
     arg_start();
     int size = tm->local_obj_list->len;
     Object ret = fn();
-    gc_restore_local_obj_list(size);
-    gc_local_add(ret);
-    gc_check_native_call();
+    gc_check_native_call(size, ret);
 }
 
 Object tm_call_native_1(Object (*fn)(), Object arg1) {
@@ -120,9 +117,7 @@ Object tm_call_native_1(Object (*fn)(), Object arg1) {
     arg_push(arg1);
     int size = tm->local_obj_list->len;
     Object ret = fn();
-    gc_restore_local_obj_list(size);
-    gc_local_add(ret);
-    gc_check_native_call();
+    gc_check_native_call(size, ret);
 }
 
 Object tm_call_native_2(Object (*fn)(), Object arg1, Object arg2) {
@@ -131,9 +126,7 @@ Object tm_call_native_2(Object (*fn)(), Object arg1, Object arg2) {
     arg_push(arg2);
     int size = tm->local_obj_list->len;
     Object ret = fn();
-    gc_restore_local_obj_list(size);
-    gc_local_add(ret);
-    gc_check_native_call();
+    gc_check_native_call(size, ret);
 }
 
 /**
@@ -164,10 +157,7 @@ Object tm_call_native_debug(int lineno, char* func_name, Object (*fn)(), int arg
     LOG(LEVEL_ERROR, "call,%d,%s,end", lineno, func_name, 0);
     // if (size != tm->local_obj_list->len) {
         // if size changed, there must be new allocated objects
-        gc_restore_local_obj_list(size);
-
-        gc_local_add(ret);
-        gc_native_call_sweep(); // check whether need full gc.
+        gc_native_call_sweep(size, ret); // check whether need full gc.
     // }
 
     // tm_inspect_obj(get_tm_local_list());

@@ -333,11 +333,9 @@ Object tm_eval(TmFrame* f) {
             x = call_function(func);
 
             // restore local object list
-            gc_restore_local_obj_list(size);
             // mark return value if needed.
-            gc_local_add(x);
             // check gc
-            gc_check_native_call();
+            gc_check_native_call(size, x);
 
             TM_PUSH(x);
             // TM_PUSH(call_function(func));

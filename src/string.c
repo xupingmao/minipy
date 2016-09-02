@@ -42,6 +42,10 @@ Object string_char_new(int c) {
     return gc_track(obj);
 }
 
+/**
+ * allocate new string
+ * use constant char if size <= 0
+ */
 Object string_alloc(char *s, int size) {
     String* str = tm_malloc(sizeof(String));
     Object v;

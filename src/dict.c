@@ -182,8 +182,8 @@ Object* dict_get_by_str0(TmDict* dict, char* key) {
     int i;
     DictNode* nodes = dict->nodes;
     for (i = 0; i < dict->cap; i++) {
-        if (nodes[i].used && TM_TYPE(nodes[i].key) == TYPE_STR && 
-            strcmp(GET_STR(nodes[i].key), key) == 0) {
+        if (nodes[i].used && IS_STR(nodes[i].key)
+                && strcmp(GET_STR(nodes[i].key), key) == 0) {
             return &nodes[i].val;
         }
     } 

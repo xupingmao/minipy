@@ -1,5 +1,9 @@
 #include "include/tm.h"
 
+/**
+ * check function's byte code
+ * @return the ending pointer of the func
+ */
 unsigned char* func_resolve(TmFunction* fnc, unsigned char* pc) {
     int maxlocals = -1;
     int maxstack = 0;

@@ -529,7 +529,11 @@ void gc_local_add(Object ret) {
  * check whether need to do sweep during native call
  * @since 2016-08-23
  */
-void gc_check_native_call() {
+void gc_check_native_call(int size, Object ret) {
+    
+    gc_restore_local_obj_list(size);
+    /* return value must be added to tm->local_obj_list */
+    gc_local_add(ret);
     if (tm->allocated > tm->gc_threshold) {
         gc_native_call_sweep(); // find and sweep the garbage
     }

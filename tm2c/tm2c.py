@@ -26,6 +26,7 @@ func_cmp             = "obj_cmp"
 func_not             = "obj_not"
 func_neg             = "obj_neg"
 func_get             = "obj_get"
+func_get_attr        = "tm2c_get"
 func_set             = "obj_set"
 func_list            = "argv_to_list"
 func_method          = "def_method"
@@ -34,6 +35,27 @@ gc_pop_locals        = "gc_pop_locals"
 tm_None              = "NONE_OBJECT"
 
 op_bool = [">", ">=", "<", "<+", "==", "!=", "and", "or", "in", "not", "notin"]
+
+BUILTIN_FUNC_MAPPING = {
+    "print":     "bf_print",
+    "str"  :     "bf_str",
+    "newobj":    "bf_newobj",
+    "hasattr":   "bf_hasattr",
+    "getattr":   "bf_getattr",
+    "gettype":   "bf_gettype",
+    "raise" :    "bf_raise",
+    "Exception": "bf_Exception",
+    "len":       "bf_len",
+    "str":       "bf_str",
+    "mmatch":    "bf_mmatch",
+    "float":     "bf_float",
+    "int":       "bf_int",
+    "chr":       "bf_chr",
+    "ord":       "bf_ord",
+    "load":      "bf_load",
+    "save":      "bf_save",
+    "get_tm_local_list": "bf_get_tm_local_list",
+}
 
 def escape(text):
     if not istype(text, "string"):
@@ -62,6 +84,16 @@ def build_native_call(func, *args):
     else:
         return "{}({},{},{});".format(tm_call_native, func, len(args), ",".join(args))
         
+
+def is_string_token(token):
+    return token.type == "string"
+
+def is_name_token(token):
+    return token.type == "name"
+
+def is_attr_token(token):
+    return token.type == "name" or token.type == "string"
+
 class Scope:
     def __init__(self, prev):
         self.vars = []
@@ -86,6 +118,8 @@ class Env:
         self.debug = option.debug
         self.record_line = option.record_line
         self.is_module = option.is_module
+        self.multi_line = option.multi_line
+        self.readable = option.readable
         self.include_list = []
         if option.prefix == None:
             name = fname.split(".")[0]
@@ -93,26 +127,7 @@ class Env:
         else:
             self.prefix = option.prefix + "_"
 
-        self.builtin_dict = {
-            "print": "bf_print",
-            "str"  : "bf_str",
-            "newobj": "bf_newobj",
-            "hasattr": "bf_hasattr",
-            "getattr": "bf_getattr",
-            "gettype": "bf_gettype",
-            "raise" : "bf_raise",
-            "Exception": "bf_Exception",
-            "len":       "bf_len",
-            "str":       "bf_str",
-            "mmatch":    "bf_mmatch",
-            "float":     "bf_float",
-            "int":       "bf_int",
-            "chr":       "bf_chr",
-            "ord":       "bf_ord",
-            "load":      "bf_load",
-            "save":      "bf_save",
-            "get_tm_local_list": "bf_get_tm_local_list",
-        }
+        self.builtin_dict = BUILTIN_FUNC_MAPPING
     
     def new_scope(self):
         scope = Scope(self.scope)
@@ -162,7 +177,20 @@ class Env:
         return self.mod_name
             
     def get_const(self, val):
-        if val not in self.consts:
+        if self.readable:
+            if istype(val, "string"):
+                return "S({})".format(get_string_def(val))
+            elif istype(val, "number"):
+                return "N({})".format(val)
+            elif val == None:
+                return "NONE_OBJECT"
+            elif val == True:
+                return "TRUE_OBJECT"
+            elif val == False:
+                return "FALSE_OBJECT"
+            else:
+                return "U({})".format(val)
+        elif val not in self.consts:
             self.consts.append(val)
         return self.prefix+ "C" + str(self.consts.index(val))
         
@@ -230,6 +258,37 @@ def get_py_func_name_str(item):
 def set_py_func_name(item, name):
     item.first.val = name
 
+
+def gen_constants_def(env):
+    """generate constants definition"""
+    if env.readable:
+        return "Object " + env.get_globals() + ";\n"
+
+    head = ""
+    for const in env.consts:
+        head += "Object " + env.get_const(const) + ";\n";
+    head += "Object " + env.get_globals() + ";\n"
+    return head
+
+def gen_constants_init(env):
+    """generate constants init"""
+    define_lines = []
+    # assign constants
+    # define_lines.append("  " + env.get_globals() + "=dict_new();");
+    define_lines.append(env.get_globals() + "=dict_new();")
+    
+    if env.readable:
+        return define_lines
+
+    for const in env.consts:
+        h = env.get_const(const) + "="
+        if gettype(const) == "number":
+            body = "tm_number(" + str(const) + ");"
+        elif gettype(const) == "string":
+            body = "{}({});".format(tm_str, get_string_def(str(const)))
+        define_lines.append(h+body)
+    return define_lines
+
 class Generator:
 
     def __init__(self, env):
@@ -251,35 +310,26 @@ class Generator:
         
         env = self.env
         define_lines = []
-        # assign constants
-        # define_lines.append("  " + env.get_globals() + "=dict_new();");
-        define_lines.append(env.get_globals() + "=dict_new();")
-        
 
-        for const in env.consts:
-            h = env.get_const(const) + "="
-            if gettype(const) == "number":
-                body = "tm_number(" + str(const) + ");"
-            elif gettype(const) == "string":
-                body = "{}({});".format(tm_str, get_string_def(str(const)))
-            define_lines.append(h+body)
+        define_lines = gen_constants_init(env)
+
         define_lines.append("tm_def_mod(\"{}\", {});".format(env.get_mod_name(), env.get_globals()))
             
         lines = define_lines + lines
             
         head = "#define TM_NO_BIN 1\n"
-        head += '#include "../tm2c.c"\n'
+        head += '#include "../../src/vm.c"\n'
+        head += '#include "../../src/tm2c.c"\n'
+        head += "#define S string_new\n"
+        head += "#define N tm_number\n"
         head += "/* DEFINE START */\n"
 
         # include list
-
         for include in env.include_list:
             head += '#include "{}.c"\n'.format(include)
 
         # define constants
-        for const in env.consts:
-            head += "Object " + env.get_const(const) + ";\n";
-        head += "Object " + env.get_globals() + ";\n"
+        head += gen_constants_def(env)
         # do vars
         for var in env.locals():
             head += "Object " + env.get_var_name(var) + ";\n"
@@ -363,7 +413,10 @@ def do_list0(v, env):
     if cnt == 0:
         return sformat("%s(0)", func_list)
     else:
-        return sformat("%s(%s,%s)", func_list, cnt, ",".join(newlist)) 
+        if env.multi_line:
+            return "{}({},{})".format(func_list, cnt, ",\n  ".join(newlist))
+        else:
+            return sformat("%s(%s,%s)", func_list, cnt, ",".join(newlist)) 
 
 def do_list(item, env):
     v = item.first
@@ -384,12 +437,19 @@ def do_list(item, env):
     
 def do_dict(item, env):
     nodes = item.first
-    nodes_str = ""
+    nodes_list = []
     for node in nodes:
         k = node[0]
         v = node[1]
-        nodes_str += "," + do_item(k, env)
-        nodes_str += "," + do_item(v, env)
+        node = do_item(k, env) + "," + do_item(v, env)
+        nodes_list.append(node)
+        # nodes_str += "," + do_item(k, env)
+        # nodes_str += "," + do_item(v, env)
+
+    if env.multi_line:
+        nodes_str = ",\n  ".join(nodes_list)
+    else:
+        nodes_str = ",".join(nodes_list)
 
     return "{}({} {})".format("argv_to_dict", int(len(nodes)/2), nodes_str)
 
@@ -612,10 +672,19 @@ def do_op(item, env, func):
     return func + "(" + do_item(item.first, env) + "," + do_item(item.second, env) + ")";
 
 def do_or(item, env):
-    return "(" + do_item(item.first, env) + "||" + do_item(item.second, env) + ")"
+    if env.multi_line:
+        op_str = "\n  ||"
+    else:
+        op_str = "||"
+    return "(" + do_item(item.first, env) + op_str + do_item(item.second, env) + ")"
     
 def do_and(item, env):
-    return "(" + do_item(item.first, env) + "&&" + do_item(item.second, env) + ")"
+    if env.multi_line:
+        op_str = "\n  &&"
+    else:
+        op_str = "&&"
+    return "(" + do_item(item.first, env) + op_str + do_item(item.second, env) + ")"
+
     
 def do_mul(item, env):
     return do_op(item, env, func_mul)
@@ -663,13 +732,16 @@ def do_neg(item, env):
     return sformat("%s(%s)", func_neg, do_item(item.first, env))
     
 def do_get(item, env):
+    # this need more works and will add more API
+    # we can do it by improve the performance of string_new method.
+    # if env.readable:
+    #     if is_attr_token(item.second):
+    #         return '{}({},{})'.format(func_get_attr, do_item(item.first, env), get_string_def(item.second.val))
     return do_op(item, env, func_get)
     
 def do_attr(item, env):
-    second = item.second
-    item.second = Token("string", second.val)
-    item.second.pos = second.pos
-    return do_op(item, env, func_get)
+    item.second.type = "string" # handle attr as string
+    return do_get(item, env)
 
 def do_in(item, env):
     # TODO a in a,b,c
@@ -835,6 +907,7 @@ def print_help():
     print("  -debug       : add debug information")
     print("  -record_line : record line information")
     print("  -is_module   : compile to c module without main entry")
+    print("  -readable    : generate more reabale c file")
     print()
     print("K/V options")
     print("  -prefix      : set c source prefix")
@@ -845,7 +918,9 @@ def get_opt(options):
     opt.debug = False
     opt.record_line = False
     opt.prefix = None
+    opt.multi_line = True ## generate list/dict of multi-line style
     opt.is_module = False ## if this is true, will not generate main function
+    opt.readable = False ## generate readable C file
     if len(options) == 1 and options[0] in ["-help", "--help", "-h", "--h"]:
         print_help();
         sys.exit(0);
