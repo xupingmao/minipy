@@ -33,6 +33,7 @@ func_method          = "def_method"
 gc_track_local       = "gc_track_local"
 gc_pop_locals        = "gc_pop_locals"
 tm_None              = "NONE_OBJECT"
+FUNC_GET_NUM         = "GET_NUM"
 
 op_bool = [">", ">=", "<", "<+", "==", "!=", "and", "or", "in", "not", "notin"]
 
@@ -68,6 +69,7 @@ def escape(text):
         elif c == '\\':des += '\\\\'
         elif c == '\"':des += '\\"'
         elif c == '\0':des += '\\0'
+        elif c == '\t':des += '\\t'
         else:des+=c
     return des
 
@@ -90,6 +92,9 @@ def is_string_token(token):
 
 def is_name_token(token):
     return token.type == "name"
+
+def is_number_token(token):
+    return token.type == "number"
 
 def is_attr_token(token):
     return token.type == "name" or token.type == "string"
@@ -397,8 +402,12 @@ def do_name(item, env):
     """return name as variable"""
     if env.has_var(item.val):
         return env.get_var_name(item.val)
-    item = Token("string", item.val)
-    return "{}({},{})".format(tm_get_glo, env.get_globals(), do_const(item, env))
+    # item = Token("string", item.val)
+    # return "{}({},{})".format(tm_get_glo, env.get_globals(), do_const(item, env))
+    # return do_get(item, env)
+
+    # get gloabl variable
+    return "{}({},{})".format(func_get_attr, env.get_globals(), get_string_def(item.val))
 
 def do_none(item, env):
     return "NONE_OBJECT"
@@ -668,7 +677,19 @@ def do_try(item, env):
     lines = do_block(body, env)
     return "\n".join(lines)
 
-def do_op(item, env, func):
+def do_op(item, env, func, number_op=None):
+    """ generate operation code of C
+        this function will do optimization to number operator
+    """
+    if env.readable and number_op is not None:
+        if is_number_token(item.first):
+            left = str(item.first.val)
+            right = "{}({})".format(FUNC_GET_NUM, do_item(item.second, env))
+            return left + number_op + right
+        elif is_number_token(item.second):
+            left = "{}({})".format(FUNC_GET_NUM, do_item(item.first, env))
+            right = str(item.second.val)
+            return left + number_op + right
     return func + "(" + do_item(item.first, env) + "," + do_item(item.second, env) + ")";
 
 def do_or(item, env):
@@ -714,10 +735,10 @@ def do_ge(item, env):
     return do_op(item, env, func_cmp) + ">=0"
 
 def do_ne(item, env):
-    return "(" + do_op(item, env, "!obj_equals") + ")"
+    return "(" + do_op(item, env, "!obj_equals", "!=") + ")"
     
 def do_eq(item, env):
-    return do_op(item, env, "obj_equals")
+    return do_op(item, env, "obj_equals", "==")
     
 def do_not(item, env):
     value = do_item(item.first, env)
@@ -732,11 +753,9 @@ def do_neg(item, env):
     return sformat("%s(%s)", func_neg, do_item(item.first, env))
     
 def do_get(item, env):
-    # this need more works and will add more API
-    # we can do it by improve the performance of string_new method.
-    # if env.readable:
-    #     if is_attr_token(item.second):
-    #         return '{}({},{})'.format(func_get_attr, do_item(item.first, env), get_string_def(item.second.val))
+    if env.readable:
+        if is_string_token(item.second):
+            return '{}({},{})'.format(func_get_attr, do_item(item.first, env), get_string_def(item.second.val))
     return do_op(item, env, func_get)
     
 def do_attr(item, env):
@@ -912,8 +931,14 @@ def print_help():
     print("K/V options")
     print("  -prefix      : set c source prefix")
 
+class CmdOption:
+    pass
+
 def get_opt(options):
-    opt = newobj()
+    if len(options) == 0:
+        print_help()
+        exit(1);
+    opt = CmdOption()
     opt.enable_gc = False
     opt.debug = False
     opt.record_line = False

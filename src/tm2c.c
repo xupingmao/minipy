@@ -269,4 +269,27 @@ int tm_run_func(int argc, char* argv[], char* mod_name, Object (*func)(void)) {
     return 0;
 }
 
+/**
+ * get attribute by char array
+ * @since 2016-09-02
+ */
+Object tm2c_get(Object obj, char* key) {
+    Object obj_key = string_new(key);
+    return obj_get(obj, obj_key);
+}
+
+/**
+ * get attribute by char array
+ * @since 2016-09-02
+ */
+void tm2c_set(Object obj, char* key, Object value) {
+    Object obj_key = string_new(key);
+    obj_set(obj, obj_key, value);
+}
+
+// float tm2c_numval(Object num) {
+//     return GET_NUM(num);
+// }
+
+
 #endif /* TM2C_C */
