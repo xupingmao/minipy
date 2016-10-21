@@ -110,14 +110,3 @@ register-based win!
 
 ### 实际测试结果
 
-2016.04.03
-```
-global 
-stack-based (optimized) : 500
-reg-based               : 2000
-
-local
-stack-based : 400
-reg-based   : 10000
-```
-unbelievable!
