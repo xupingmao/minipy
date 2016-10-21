@@ -2,7 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "../src/include/map.h"
+#include "../../src/include/map.h"
 
 DEF_MAP(Map, int, int)
 
