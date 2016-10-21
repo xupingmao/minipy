@@ -26,9 +26,10 @@ A mini python interpreter, vm implemented with ANSI C and compiler implemented w
 ### vm features
 1. stack based
 2. bytecode defined in `src/tmcode.py`
-3. exception handling implemented with setjmp
+3. exception handling implemented with setjmp/longjmp
 4. C function and python function.
 5. exception can be tracked by lineno and handled.
+6. mark-sweep garbage collection
 
 ### vm hierarchy
 1. `vm.c` entry
