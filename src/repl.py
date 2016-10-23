@@ -1,4 +1,4 @@
-__p_r_i_n_t__s_t_r__l_e_n = 40
+PRINT_STR_LEN = 40
 import encode
 
 compilefile = encode.compilefile
@@ -29,8 +29,8 @@ def repl_print(p, n = 0, depth = 2):
         printf('%s]\n', n * ' ')
     elif gettype(p) == "string":
         printf(' ' * n)
-        if len(p) > __p_r_i_n_t__s_t_r__l_e_n:
-            p = p.substring(0, __p_r_i_n_t__s_t_r__l_e_n)
+        if len(p) > PRINT_STR_LEN:
+            p = p.substring(0, PRINT_STR_LEN)
             p += '...'
         p = escape(p)
         printf("\"%s\"\n", p)
@@ -60,10 +60,25 @@ def run(path, args = None):
     load_module(path, compilefile(path))
     ARGV = bak_argv
     
+def print_help():
+    print ()
+    print ("to run a python file")
+    print (" - minipy filename")
+    print ()
+    print ("built-in variables")
+    print (" - __builtins__  built-in functions")
+    print (" - __modules__   avaliable modules")
+    print ()
+    print ("Print exit to quit")
+    print ()
+    
+    
+    
 def repl():
     import pyeval
     fpyeval = pyeval.pyeval
     print("Welcome To Minipy!!!")
+    print("Try 'help' for more information, 'exit' to quit")
     
     global debug
     debug = 0
@@ -78,6 +93,9 @@ def repl():
             try:
                 if x == 'exit':
                     break
+                if x == 'help':
+                    print_help()
+                    continue
                 if 'debug' not in g:
                     g['debug'] = 0
                 v = fpyeval(x, g, g['debug'])
