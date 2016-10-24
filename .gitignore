@@ -1,10 +1,11 @@
 *.pyc
-*.exe
 *.out
 *.tpc
 *.log
 bin.c
 .DS_Store
+*.exe
+!/dist/*.exe
 tm.exe
 tm0.exe
 tinypy.exe
