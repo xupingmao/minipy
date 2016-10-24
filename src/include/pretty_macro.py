@@ -3,6 +3,7 @@ import sys
 def find_max_len(lines):
     max_len = 0;
     for line in lines:
+        line = line.rstrip(" \\")
         l = len(line)
         if l > max_len:
             max_len = l
@@ -19,8 +20,7 @@ def pretty(text):
             print (line)
             continue
             
-        if line.endswith("\\"):
-            line = line.strip("\\")
+        line = line.rstrip(" \\")
         line = line.ljust(max_len) + "\\"
         print(line)
 

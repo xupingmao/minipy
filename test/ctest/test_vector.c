@@ -37,12 +37,18 @@ int main(int argc, char const *argv[])
     
     print_vec(int_vec);
     
+    ASSERT (int_vec->len == 7);
+    
     IntVector_set(int_vec, 2, 10);
     
     ASSERT (*IntVector_get(int_vec, 2) == 10);
     
     IntVector_push(int_vec, 54);
     ASSERT (*IntVector_pop(int_vec) == 54);
+    
+    IntVector_clear(int_vec);
+    
+    ASSERT (int_vec->len == 0);
     
     IntVector_free(int_vec);
     return 0;
