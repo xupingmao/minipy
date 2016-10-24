@@ -89,6 +89,8 @@ Object string_const(char* s) {
 }
 
 Object string_chr(int n) {
+    // use static str_pool to optimize
+    // TODO, need handle GC problems
     return list_get(GET_LIST(ARRAY_CHARS), n);
 }
 

@@ -67,36 +67,12 @@ Object tm_call_native(Object (*fn)(), int args, ...) {
     }
     va_end(ap);
 
-#ifndef LOCAL_SWEEP_OFF
     // record the length to restore
     int size = tm->local_obj_list->len; 
-#endif
 
     Object ret = fn(); // execute native function
 
-#ifndef LOCAL_SWEEP_OFF    
-    // mark all possible relation.
-    // va_start(ap, args);
-    // for (i = 0; i < args; i++) {
-    //     obj_arg = va_arg(ap, Object);
-    //     gc_mark(obj_arg);
-    // }
-    // va_end(ap);
-
-    // gc_mark(ret);
-    // gc_sweep_local(size); // sweep unused objects in locals.
-    // list_shorten(tm->local_obj_list, size); // restore list
-    // gc_restore_local_obj_list(size);
-
-    /* return value must be added to tm->local_obj_list */
-    // gc_local_add(ret);
     gc_check_native_call(size, ret);
-
-    // gc can be done here
-    // all locals are in local_obj_list
-    // so active objects are objects in local_obj_list and objects can be reached by root.
-    // and there is no need to mark set operation.
-#endif
 
     return ret;
 }
