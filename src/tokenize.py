@@ -2,11 +2,13 @@
 if "tm" not in globals():
     from boot import *
 
-class Token:
-    def __init__(self, type='symbol',val=None,pos=None):
-        self.pos=pos
-        self.type=type
-        self.val=val
+# keep Token as a pure function
+def Token(type='symbol',val=None,pos=None):
+    self = newobj()
+    self.pos=pos
+    self.type=type
+    self.val=val
+    return self
 
 def findpos(token):
     if not hasattr(token, 'pos'):
