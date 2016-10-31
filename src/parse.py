@@ -121,6 +121,16 @@ def baseitem(p):
 def expr(p):
     return exp(p, '=')
 
+    
+#  Assignment = Lvalue AssignOp Rvalue
+#  Lvalue     = Object (Call|Attr)* Attr
+#  Object     = Name | Number | String | True | False | None
+#  Value      = Object (Call|Attr)*
+#  Rvalue     = Value (Op Value)*
+#  Attr       = ('.' Name) | ('[' Rvalue ']')
+#  Call       = '(' ArgList ')'
+#  AssignOp   = '=' 
+#  Op         = '+' | '-'
 def exp(p, level):
     if level == '=':
         exp(p, ',')
@@ -157,42 +167,36 @@ def exp(p, level):
             add_op(p, 'and')
     elif level == 'not':
         if p.token.type == 'not':
-            p.next()
-            exp(p, 'not')
-            node = AstNode('not')
-            node.first = p.pop()
-            p.add(node)
+            while p.token.type == 'not':
+                p.next()
+                exp(p, 'not')
+                node = AstNode('not')
+                node.first = p.pop()
+                p.add(node)
         else:
-            cmp_exp(p)
-
-def cmp_exp(p):
-    fnc = item
-    fnc(p)
-    while p.token.type in ('>', '<', '==', 'is', '!=', '>=', '<=', 'in', 'notin'):
-        t = p.token.type
-        p.next()
+            exp(p, 'cmp')
+    elif level == 'cmp':
+        exp(p, '+-')
+        while p.token.type in ('>', '<', '==', 'is', '!=', '>=', '<=', 'in', 'notin'):
+            t = p.token.type
+            p.next()
+            exp(p, '+-')
+            add_op(p, t)
+    elif level == '+-':
+        exp(p, 'factor')
+        while p.token.type in ('+', '-'):
+            t = p.token.type
+            p.next()
+            exp(p, 'factor')
+            add_op(p, t)
+    elif level == 'factor':
+        fnc = call_or_get_exp
         fnc(p)
-        add_op(p, t)
-
-def item(p):
-    fnc = item2
-    fnc(p)
-    while p.token.type in ('+', '-'):
-        t = p.token.type
-        p.next()
-        fnc(p)
-        add_op(p, t)
-
-
-def item2(p):
-    fnc = call_or_get_exp
-    fnc(p)
-    while p.token.type in ('*','/', '%'):
-        t = p.token.type
-        p.next()
-        fnc(p)
-        add_op(p, t)
-
+        while p.token.type in ('*','/', '%'):
+            t = p.token.type
+            p.next()
+            fnc(p)
+            add_op(p, t)
 
 def call_or_get_exp(p):
     if p.token.type == '-':
@@ -497,6 +501,9 @@ def parse_annotation(p):
     p.next()
     p.add(AstNode("@", token))
     
+def parse_skip(p):
+    p.next()
+    
 stmt_map = {
     "from": parse_from,
     "import": parse_import,
@@ -517,6 +524,7 @@ stmt_map = {
     "try": parse_try,
     "global": parse_global,
     "del": parse_del,
+    ';': parse_skip,
     "@":parse_annotation,
 }
 
@@ -540,7 +548,6 @@ def parse_block(p):
     else:
         parse_stm(p)
         while p.token.type == ';':
-            while p.token.type == ';':p.next()
             if p.token.type in ('nl', 'eof'):break
             else:parse_stm(p)
         skip_nl(p)

@@ -1,6 +1,7 @@
 from encode import *
 from boot import *
 from tmcode import *
+import sys
 
 def code_str(s):
     return code32(len(s))+s
@@ -104,6 +105,7 @@ def build_tm2c(cc):
     build(ccompiler, libs, "initbin.c")
     
 def main():
+    ARGV = sys.argv
     argc = len(ARGV)
     if argc == 2:
         cc = ARGV[1]

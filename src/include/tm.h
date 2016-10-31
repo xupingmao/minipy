@@ -22,10 +22,6 @@
 #define USE_NON_PARAM 1
 #define RAISE_DEBUG 0
 
-#ifdef _WIN32
-#define TM_NT 1
-#endif
-
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>

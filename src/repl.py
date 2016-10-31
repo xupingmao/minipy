@@ -69,7 +69,7 @@ def print_help():
     print (" - __builtins__  built-in functions")
     print (" - __modules__   avaliable modules")
     print ()
-    print ("Print exit to quit")
+    print ("input exit to quit")
     print ()
     
     

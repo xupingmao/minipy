@@ -4,7 +4,7 @@
 #include <errno.h>
 #include <time.h>
 
-#ifdef TM_NT
+#ifdef _WIN32
     #include <windows.h>
 #else
     #include <unistd.h>
@@ -473,6 +473,9 @@ Object bf_file_append() {
     return NONE_OBJECT;
 }
 
+//============
+// remove file
+//============
 Object bf_remove(){
     Object fname = arg_take_str_obj("remove");
     int flag = remove(GET_STR(fname));
@@ -660,7 +663,7 @@ Object bf_get_vm_info() {
 }
 
 long tm_clock() {
-#ifdef TM_NT
+#ifdef _WIN32
     return clock();
 #else
     return (double)clock()/1000;
