@@ -92,7 +92,7 @@ def baseitem(p):
             p.next()
             node.first = None
         else:
-            comma_exp(p)
+            exp(p, ',')
             expect(p, ']')
             node.first = p.pop()
         p.add(node)
@@ -105,9 +105,9 @@ def baseitem(p):
         node = AstNode('dict')
         items = []
         while p.token.type != '}':
-            or_exp(p)
+            exp(p, 'or')
             expect(p, ':')
-            or_exp(p)
+            exp(p, 'or')
             v = p.pop()
             k = p.pop()
             items.append([k,v])
@@ -117,60 +117,53 @@ def baseitem(p):
         expect(p, '}')
         node.first = items
         p.add(node)
-            
-def assign_exp(p):
-    fnc = comma_exp
-    fnc(p)
-    if p.token.type in ('=', '+=', '-=', '*=', '/=', '%='):
-        t = p.token.type
-        p.next()
-        fnc(p)
-        add_op(p, t)
 
+def expr(p):
+    return exp(p, '=')
 
-def comma_exp(p):
-    fnc = or_exp
-    fnc(p)
-    while p.token.type == ',':
-        p.next()
-        if p.token.type == ']':
-            break # for list
-        fnc(p)
-        # add_op(p, ',')
-        b = p.pop()
-        a = p.pop()
-        if gettype(a)=="list":
-            a.append(b)
-            p.add(a)
+def exp(p, level):
+    if level == '=':
+        exp(p, ',')
+        if p.token.type in ('=', '+=', '-=', '*=', '/=', '%='):
+            t = p.token.type
+            p.next()
+            exp(p, ',')
+            add_op(p, t)
+    elif level == ',':
+        exp(p, 'or')
+        while p.token.type == ',':
+            p.next()
+            if p.token.type == ']':
+                break # for list
+            exp(p, 'or')
+            b = p.pop()
+            a = p.pop()
+            if gettype(a)=="list":
+                a.append(b)
+                p.add(a)
+            else:
+                p.add([a,b])
+    elif level == 'or':
+        exp(p, 'and')
+        while p.token.type == 'or':
+            p.next()
+            exp(p, 'and')
+            add_op(p, 'or')
+    elif level == 'and':
+        exp(p, 'not')
+        while p.token.type == 'and':
+            p.next()
+            exp(p, 'not')
+            add_op(p, 'and')
+    elif level == 'not':
+        if p.token.type == 'not':
+            p.next()
+            exp(p, 'not')
+            node = AstNode('not')
+            node.first = p.pop()
+            p.add(node)
         else:
-            p.add([a,b])
-        
-def or_exp(p):
-    fnc = and_exp
-    fnc(p)
-    while p.token.type == 'or':
-        p.next()
-        fnc(p)
-        add_op(p, 'or')
-
-def and_exp(p):
-    fnc = not_exp
-    fnc(p)
-    while p.token.type == 'and':
-        p.next()
-        fnc(p)
-        add_op(p, 'and')
-
-def not_exp(p):
-    fnc = cmp_exp
-    if p.token.type == 'not':
-        p.next()
-        not_exp(p)
-        node = AstNode('not')
-        node.first = p.pop()
-        p.add(node)
-    else:
-        fnc(p)
+            cmp_exp(p)
 
 def cmp_exp(p):
     fnc = item
@@ -222,7 +215,7 @@ def call_or_get_exp(p):
                     p.next()
                     node.second = None
                 else:
-                    comma_exp(p)
+                    exp(p, ',')
                     expect(p, ')')
                     node.second = p.pop()
                 p.add(node)
@@ -234,7 +227,6 @@ def call_or_get_exp(p):
                 node.first = a
                 node.second = b
                 p.add(node)
-expr = assign_exp
 
 def _get_path(obj):
     t = obj.type
@@ -306,7 +298,7 @@ def parse_inner_func(p):
     if p.token.type == 'nl':
         args = None
     else:
-        comma_exp(p)
+        exp(p, ',')
         args = p.pop()
     p.add(call_node(fnc, args))
 

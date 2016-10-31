@@ -797,21 +797,6 @@ Object* data_next(TmData* data) {
     return NULL;
 }
 
-Data_proto* get_default_data_proto() {
-    if(!default_data_proto.init) {
-        default_data_proto.init = 1;
-        default_data_proto.mark = data_mark;
-        default_data_proto.free = data_free;
-        default_data_proto.next = data_next;
-        default_data_proto.get = data_get;
-        default_data_proto.set = data_set;
-        default_data_proto.str = data_str;
-        default_data_proto.data_size = sizeof(Data_proto);
-    }
-    return &default_data_proto;
-}
-
-
 void data_mark(TmData* data) {
     int i;
     for (i = 0; i < data->data_size; i++) {
@@ -848,15 +833,6 @@ Object data_new(size_t data_size) {
     GET_DATA(data_obj) = tm_malloc(sizeof(TmData) + (data_size-1) * sizeof(Object));
     TmData* data = GET_DATA(data_obj);
 
-    // printf("data_new: %x\n", data);
-
-/*    GET_DATA_PROTO(data)->next = data_next;
-    GET_DATA_PROTO(data)->mark = data_mark;
-    GET_DATA_PROTO(data)->free = data_free;
-    GET_DATA_PROTO(data)->get = data_get;
-    GET_DATA_PROTO(data)->set = data_set;
-    GET_DATA_PROTO(data) = get_default_data_proto();
-*/
     data->mark = data_mark;
     data->free = data_free;
     data->get  = data_get;

@@ -2,12 +2,11 @@
 if "tm" not in globals():
     from boot import *
 
-def Token(type='symbol',val=None,pos=None):
-    o = newobj()
-    o.pos=pos
-    o.type=type
-    o.val=val
-    return o
+class Token:
+    def __init__(self, type='symbol',val=None,pos=None):
+        self.pos=pos
+        self.type=type
+        self.val=val
 
 def findpos(token):
     if not hasattr(token, 'pos'):
@@ -16,6 +15,7 @@ def findpos(token):
         print(token)
         return [0,0]
     return token.pos
+
 # @param s, src
 # @param pos, position
 def find_error_line(s, pos):
