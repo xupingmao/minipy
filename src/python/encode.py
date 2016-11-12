@@ -800,6 +800,7 @@ def split_instr(instr):
         list.append([ord(op), v])
     return list
     
+# TM_TEST
 def main():
     if len(ARGV) < 2:pass
     elif len(ARGV) == 2:
@@ -819,14 +820,5 @@ def main():
 if __name__ == "__main__":
     main()
 
-
-
-
-
-
-
-
-
-
-
+# TM_TEST_END
 

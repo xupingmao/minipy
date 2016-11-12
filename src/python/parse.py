@@ -570,6 +570,7 @@ def parse(content):
         compile_error("parse", content, p.token, str(e))
         raise(e)
 
+# TM_TEST
 def print_ast_obj(tree, n=0):
     if tree == None:
         return
@@ -620,4 +621,6 @@ if __name__ == "__main__":
     import sys
     tree = parsefile(sys.argv[1])
     print_ast(tree)
+
+# TM_TEST_END
 

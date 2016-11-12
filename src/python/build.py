@@ -1,3 +1,5 @@
+#!python
+
 from encode import *
 from boot import *
 from tmcode import *
@@ -13,17 +15,28 @@ class Lib:
     def __init__(self, name, path):
         self.name = name
         self.path = path
-
-def build(cc="tcc", libs=None, dst_path = "../bin.c"):
-    dest_code = ""
-    if libs == None:
-        libs = [
+        
+__libs = [
             Lib("init", "init.py"),
             Lib("tokenize", "tokenize.py"), 
             Lib("parse", "parse.py"), 
             Lib("tmcode", "tmcode.py"),
-            Lib("encode", "encode.py")
+            Lib("encode", "encode.py"),
+            Lib("pyeval", "pyeval.py"),
+            Lib("repl", "repl.py"),
         ]
+
+__compiler_files = [
+    Lib("boot", "boot.py"),
+    Lib("tokenize", "tokenize.py"),
+    Lib("parse", "parse.py"),
+    Lib("encode", "encode.py"),
+]
+        
+def build(cc="tcc", libs=None, dst_path = "../bin.c"):
+    dest_code = ""
+    if libs == None:
+        libs = __libs
     mod_len = code32(len(libs)+1) # constants
     if not exists(dst_path):
         dst_mtime = -1
@@ -44,10 +57,12 @@ def build(cc="tcc", libs=None, dst_path = "../bin.c"):
                 raise
             dest_code += code_str(obj.name)+code_str(code)
         code = mod_len + code_str("constants") + code_str(build_const_code()) + dest_code
+        print("generate bin.c ...")
         save(dst_path, "unsigned char bin[] = {\n" + str_to_chars(code)+'\n};\n')
     else:
         print("file not modified, bye")
         return
+    print("generate instruction.h ...")
     export_clang_define("../include/instruction.h", "tmcode.py")
     print("build successfull!")
     """
@@ -88,17 +103,9 @@ def build_const_code():
         b+=t+code16(len(v))+v
     return b+code8(OP_EOP)+code16(0)
 
-def build_one(cc="gcc"):
+def build_cfiles(cc="gcc"):
     ccompiler = cc
-    libs = [
-            Lib("init", "init.py"),
-            Lib("tokenize", "tokenize.py"), 
-            Lib("parse", "parse.py"), 
-            Lib("tmcode", "tmcode.py"),
-            Lib("encode", "encode.py"),
-            Lib("pyeval", "pyeval.py"),
-            Lib("repl", "repl.py"),
-        ]
+    libs = __libs
     build(ccompiler, libs)
 
 def build_tm2c(cc):
@@ -106,8 +113,45 @@ def build_tm2c(cc):
     libs = [ Lib("init", "init.py") ]
     build(ccompiler, libs, "initbin.c")
     
-def main():
-    build_one()
+def build_single_py():
+    lines = []
     
+    for lib in __compiler_files:
+        path = lib.path
+        fp = open(path)
+        state = 1
+        for line in fp.readlines():
+            if "# TM_TEST_END" in line:
+                state = 1
+                continue
+            if "# TM_TEST" in line:
+                # 测试内容
+                state = 0
+                continue
+            if state == 1:
+                # 正常内容
+                lines.append(line)
+    result = "".join(lines)
+    
+    save("compiler.py", result)
+    
+def print_usage():
+    print("build.py          -- build `bin.c` and `instruction.h`")
+    print("build.py compiler -- build a standalone compiler")
+    
+def main():
+    argc = len(sys.argv)
+    argv = sys.argv
+    if argc == 1:
+        build_cfiles()
+        return
+    elif argc == 2:
+        arg1 = argv[1]
+        # build a standalone compiler
+        if arg1 == "compiler":
+            build_single_py()
+            return
+    print_usage()
+            
 if __name__ == '__main__':
     main()
