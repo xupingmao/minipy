@@ -24,7 +24,7 @@ In `/src/python`
 2. `tokenize.py` tokenizer modified from tinypy/tokenize
 3. `parse.py` handwrite LL parser
 4. `encode.py` code generator
-5. `setup.py` build bytecodes to c array, saved in `bin.c` by default.
+5. `build.py` build compiler to c files, saved in `bin.c` and `instructions.h`.
 
 ### vm features
 1. stack based
