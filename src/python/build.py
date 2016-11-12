@@ -2,6 +2,9 @@ from encode import *
 from boot import *
 from tmcode import *
 import sys
+import os
+
+chdir = os.chdir
 
 def code_str(s):
     return code32(len(s))+s
@@ -11,7 +14,7 @@ class Lib:
         self.name = name
         self.path = path
 
-def build(cc="tcc", libs=None, dst_path = "bin.c"):
+def build(cc="tcc", libs=None, dst_path = "../bin.c"):
     dest_code = ""
     if libs == None:
         libs = [
@@ -21,11 +24,6 @@ def build(cc="tcc", libs=None, dst_path = "bin.c"):
             Lib("tmcode", "tmcode.py"),
             Lib("encode", "encode.py")
         ]
-        #Lib("builtins", "builtins.py"),
-        #Lib("dis", "dis.py"),
-        #Lib("printast", "printast.py"),
-        #Lib("repl", "repl.py"),
-        #Lib("pyeval", "pyeval.py")]
     mod_len = code32(len(libs)+1) # constants
     if not exists(dst_path):
         dst_mtime = -1
@@ -47,7 +45,12 @@ def build(cc="tcc", libs=None, dst_path = "bin.c"):
             dest_code += code_str(obj.name)+code_str(code)
         code = mod_len + code_str("constants") + code_str(build_const_code()) + dest_code
         save(dst_path, "unsigned char bin[] = {\n" + str_to_chars(code)+'\n};\n')
-    export_clang_define("include/instruction.h", "tmcode.py")
+    else:
+        print("file not modified, bye")
+        return
+    export_clang_define("../include/instruction.h", "tmcode.py")
+    print("build successfull!")
+    """
     if cc != None:
         # tm itself
         if "tm" in globals():
@@ -64,6 +67,7 @@ def build(cc="tcc", libs=None, dst_path = "bin.c"):
                 cmd = cc + " -o tm.exe main.c -lm"
         system(cmd)
         #remove("../bin.c")
+    """
     
 def str_to_chars(code):
     dest = ''
@@ -84,7 +88,7 @@ def build_const_code():
         b+=t+code16(len(v))+v
     return b+code8(OP_EOP)+code16(0)
 
-def build_one(cc):
+def build_one(cc="gcc"):
     ccompiler = cc
     libs = [
             Lib("init", "init.py"),
@@ -94,8 +98,6 @@ def build_one(cc):
             Lib("encode", "encode.py"),
             Lib("pyeval", "pyeval.py"),
             Lib("repl", "repl.py"),
-            #Lib("dis.py", "dis.py"),
-            #Lib("printast.py", "printast.py")
         ]
     build(ccompiler, libs)
 
@@ -105,17 +107,7 @@ def build_tm2c(cc):
     build(ccompiler, libs, "initbin.c")
     
 def main():
-    ARGV = sys.argv
-    argc = len(ARGV)
-    if argc == 2:
-        cc = ARGV[1]
-        build_one(cc)
-    elif argc == 3 and ARGV[1] == "-init":
-        cc = ARGV[2]
-        build_tm2c(cc)
-    else:
-        printf("usage: %s [ccompiler]\n" + 
-               "       %s -init [ccompiler]\n" , ARGV[0], ARGV[0])
+    build_one()
     
 if __name__ == '__main__':
     main()

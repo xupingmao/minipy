@@ -1,5 +1,6 @@
 
 if "tm" not in globals():
+    # need some tool from python to bootstrap
     from boot import *
 
 # keep Token as a pure function
