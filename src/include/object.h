@@ -105,6 +105,9 @@ typedef struct TmVm {
   int argc;
   char** argv;
   
+  /* compiled code */
+  unsigned char * code;
+  
   int exit_code; /* function call exit code, to recognize exceptions */
 
   Object ex;

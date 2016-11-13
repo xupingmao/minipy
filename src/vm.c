@@ -16,11 +16,6 @@
 
 // #include "tmtokenize.c"
 
-/** do not need to boot from binary **/
-#ifndef TM_NO_BIN
-    #include "bin.c"
-#endif
-    
 /**
  * register module function
  * @param mod, module object, dict
@@ -69,10 +64,11 @@ int call_mod_func(char* mod, char* sz_fnc) {
  *   files: [4bytes:bytes length][bytes]
  */
 int load_binary() {
-#ifdef TM_NO_BIN
-    return 0;
-#else
-    unsigned char* text = bin;
+    unsigned char* text = tm->code; /* code to initialize the vm */
+    if (text == NULL) {
+        /* no bootstrap code */
+        return 1;
+    }
     int count = uncode32(&text);
     int i;for(i = 0; i < count; i++) {
         int name_len = uncode32(&text);
@@ -84,7 +80,6 @@ int load_binary() {
         load_module(name, code);
     }
     return 1;
-#endif
 }
 
 /**
@@ -108,6 +103,7 @@ int vm_init(int argc, char* argv[]) {
 
     tm->argc = argc;
     tm->argv = argv;
+    tm->code = NULL;
 
     /* set module boot */
     Object boot = dict_new();
@@ -141,15 +137,15 @@ void vm_destroy() {
 }
 
 /**
- * init vm and load bytecode binary
+ * run vm with specified code;
+ * @since 2016-11-13
  */
-int tm_init(int argc, char* argv[]) {
+int tm_run(int argc, char* argv[], unsigned char* code) {
     int ret = vm_init(argc, argv);
     if (ret != 0) { 
         return ret;
     }
-    // enable local object tracking.
-    // tm->local_obj_list = untracked_list_new(100);
+    tm->code = code;
 
     /* use first frame */
     int code = setjmp(tm->frames->buf);
