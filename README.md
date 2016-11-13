@@ -12,16 +12,19 @@
 A mini python interpreter, vm implemented with ANSI C and compiler implemented with Python 3.
 
 ## How to start
-`cd src` run `python setup.py gcc` in console(or you may use other c compiler)
+`cd src` run `make` or `gcc main.c -o minipy` in console(or you may use other c compiler)
 
 ## features
 
 ### compiler
+
+In `/src/python`
+
 1. `tmcode.py` bytecode definition
 2. `tokenize.py` tokenizer modified from tinypy/tokenize
 3. `parse.py` handwrite LL parser
 4. `encode.py` code generator
-5. `setup.py` build bytecodes to c array, saved in `bin.c` by default.
+5. `build.py` build compiler to c files, saved in `bin.c` and `instructions.h`.
 
 ### vm features
 1. stack based
