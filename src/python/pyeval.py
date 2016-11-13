@@ -50,8 +50,9 @@ op_dict = {
 }
 
 op_skip = {
-    OP_LINE: "TM_LINE",
-    OP_SETJUMP: "SETJUMP"
+    OP_LINE:    "OP_LINE",
+    OP_SETJUMP: "OP_SETJUMP",
+    OP_FILE:    "OP_FILE",
 }
 
 class Env:
@@ -67,7 +68,7 @@ def pyeval(src, glo_vars = None, debug = False):
     glo_vars = glo_vars or {}
     env = Env(glo_vars)
     glo_vars['globals'] = env.globals
-    code = compile(src)
+    code = compile(src, "<shell>")
     ins_list = split_instr(code)
     # print(ins_list)
     loc_vars = []

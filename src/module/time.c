@@ -36,10 +36,21 @@ Object bf_time_sleep() {
     return NONE_OBJECT;
 }
 
+Object bf_time_asctime() {
+    time_t rawtime;
+    struct tm* timeinfo;
+    
+    time(&rawtime);
+    timeinfo = localtime ( &rawtime );
+    char* ct = asctime(timeinfo); // ct ends with \n
+    return string_alloc(ct, strlen(ct)-1);
+}
+
 void time_mod_init() {
     Object time_mod = dict_new();
     reg_mod_func(time_mod, "time",  bf_time_time);
     reg_mod_func(time_mod, "ctime", bf_time_ctime);
     reg_mod_func(time_mod, "sleep", bf_time_sleep);
+    reg_mod_func(time_mod, "asctime", bf_time_asctime);
     dict_set_by_str(tm->modules, "time", time_mod);
 }

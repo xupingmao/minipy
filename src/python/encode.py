@@ -774,11 +774,13 @@ class EncodeCtx:
     def __init__(self, src):
         self.src = src
 
-def compile(src, des = None):
+def compile(src, filename, des = None):
     global _ctx
     # lock here
     asm_init()
     _ctx = EncodeCtx(src)
+    name_id = get_const_idx(filename.split(".")[0])
+    emit(OP_FILE, name_id)
     encode(src)
     _ctx = None
     code = gen_code()
@@ -786,8 +788,8 @@ def compile(src, des = None):
     if des: save(des, code)
     return code
 
-def compilefile(file, des = None):
-    return compile(load(file), des)
+def compilefile(filename, des = None):
+    return compile(load(filename), filename, des)
 
 def split_instr(instr):
     size = len(instr)
@@ -815,7 +817,7 @@ def main():
             print(tmcodes[item[0]], item[1])
         # repl_print(code, 0, 3)
     elif len(ARGV) == 3:
-        compile(ARGV[1], ARGV[2])
+        compile(ARGV[1], "#test", ARGV[2])
 
 if __name__ == "__main__":
     main()

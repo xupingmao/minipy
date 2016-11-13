@@ -476,6 +476,11 @@ Object tm_eval(TmFrame* f) {
             break;
             #endif
         }
+        
+        case OP_FILE: {
+            // module name here.
+            break;
+        }
 
         default:
             tm_raise("BAD INSTRUCTION, %d\n  globals() = \n%o", pc[0],

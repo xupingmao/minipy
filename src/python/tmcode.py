@@ -36,6 +36,7 @@ _opcode_names = [
     # instructions for vm to optimize.
     'OP_FAST_ST_GLO',
     'OP_FAST_LD_GLO',
+    'OP_FILE',
     # unused instructions
     #'LT_JUMP_ON_FALSE', 
     #'GT_JUMP_ON_FALSE',
