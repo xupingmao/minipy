@@ -1,4 +1,5 @@
 #include "include/tm.h"
+#include "log.c"
 
 #ifdef GC_DEBUG
     #include "debug.c"
@@ -11,143 +12,6 @@
  * 4. [at native call] mark objects in tm->local_obj_list to be used(1);
  * 5. release objects which are marked unused (0).
  */
-
-
-
-enum {
-    GC_INIT,
-    GC_WORKING,
-    GC_STATE_DESTROY
-} GcState;
-
-#ifdef GC_DEBUG
-// logs can redirected to file
-#define WRITE_LOG_FILE 0
-
-static char LOG_BUF[1024 * 10]; // 20K buffer
-
-enum {
-    LEVEL_DEBUG,
-    LEVEL_INFO, 
-    LEVEL_ERROR,
-    LEVEL_FATAL,
-} LogLevel;
-
-// debug, info, error, fatal
-static int gc_log_level = LEVEL_ERROR;
-static long long gc_log_count = 0;
-
-
-int check_log_level(int level) {
-    if (gc_log_level == LEVEL_FATAL) {
-        return 1;
-    } else if (gc_log_level == LEVEL_ERROR) {
-        return level == LEVEL_ERROR || level == LEVEL_FATAL;
-    } else if (gc_log_level == LEVEL_INFO) {
-        return level != LEVEL_DEBUG;
-    } else if (gc_log_level == LEVEL_DEBUG) {
-        return level == LEVEL_DEBUG;
-    }
-    return 0;
-}
-
-void DEBUG_INIT() {
-    if (WRITE_LOG_FILE) {
-        FILE* fp = fopen("tm.log", "w");
-        // fputs("*****LOG INIT*****\n", fp);
-        fclose(fp);
-    }
-
-    /** init debug map */
-    debug_init();
-}
-
-void DEBUG_MALLOC(void* ptr) {
-    debug_malloc(ptr);
-}
-
-void DEBUG_FREE(void*ptr) {
-    debug_free(ptr);
-}
-
-void DEBUG_FREE2(void*ptr, Object o) {
-    debug_free2(ptr, o);
-}
-
- /**
-  * logging service
-  * suggested format
-  * TIME|OPT|CURRENT_SIZE|NEW_SIZE|ADDR
-  */
-void LOG(int level, char* fmt, ...) {
-    va_list ap;
-    time_t cur_time;
-    char *buffer   = LOG_BUF;
-    int BUF_SIZE   = sizeof(LOG_BUF);
-    int FLUSH_SIZE = BUF_SIZE / 2;
-    char temp_buf[1024];
-
-    if (!check_log_level(level)) {
-        return;
-    }
-
-    memset(temp_buf, 0, sizeof(temp_buf));
-    va_start(ap, fmt);
-
-    time(&cur_time); // init time
-    char* t_str   = ctime(&cur_time);
-    int t_str_len = strlen(t_str);
-    t_str[t_str_len-1] = 0; // remove \n
-
-    sprintf (temp_buf, "%s,", t_str); // print time
-    strcat(buffer, temp_buf);
-
-    vsprintf(temp_buf, fmt, ap);
-
-    char count_buf[20];
-    sprintf(count_buf, ",%d", gc_log_count);
-    gc_log_count += 1;
-
-    strcat(temp_buf, count_buf);
-    strcat(temp_buf, "\n");
-
-    fputs(temp_buf, stdout); // print to stdout
-
-    strcat(buffer, temp_buf);
-
-    va_end(ap);
-
-    if (WRITE_LOG_FILE && strlen(buffer) >= FLUSH_SIZE) {
-        FILE* fp = fopen("tm.log", "a");
-        fputs(buffer, fp);
-        fclose(fp);
-        memset(buffer, 0, BUF_SIZE);
-    }
-}
-
-/**
- * flush log
- * @since 2016-08-16
- */
-void LOG_END() {
-
-    if (WRITE_LOG_FILE) {
-        FILE* fp = fopen("tm.log", "a");
-        fputs(LOG_BUF, fp);
-        fclose(fp);
-        memset(LOG_BUF, 0, sizeof(LOG_BUF));
-    }
-
-    debug_destroy();
-}
-#else
-    #define DEBUG_INIT() /* DEBUG_INIT */
-    #define LOG(level, fmt, oldsize, newsize, addr) /* LOG */
-    #define LOG_END() /* LOG END */
-    #define DEBUG_MALLOC(ptr) /* DEBUG_MALLOC */
-    #define DEBUG_FREE(ptr) /* DEBUG_FREE */
-    #define DEBUG_FREE2(ptr,o) /* DEBUG_FREE2 */
-#endif
 
 void chars_init();
 void frames_init();
@@ -202,8 +66,6 @@ void gc_init() {
     
     /* initialize frames */
     frames_init();
-
-    DEBUG_INIT();
 }
 
 void chars_init() {
@@ -231,7 +93,7 @@ void frames_init() {
     }
     tm->frames_init_done = 1;
     tm->frame = tm->frames;
-    tm_stack_end = tm->stack + STACK_SIZE; // set global tm_stack_end
+    tm->stack_end = tm->stack + STACK_SIZE; // set global tm_stack_end
 }
 
 
@@ -246,16 +108,13 @@ void* tm_malloc(size_t size) {
     block = malloc(size);
     
     DEBUG_MALLOC(block);
-    LOG(LEVEL_INFO,"malloc,%d,%d,%p", tm->allocated, tm->allocated + size, block);
+    log_info("malloc,%d,%d,%p", tm->allocated, tm->allocated + size, block);
 
     if (block == NULL) {
         tm_raise("tm_malloc: fail to malloc memory block of size %d", size);
     }
     tm->allocated += size;
-
-#if !PRODUCT
     tm->max_allocated = max(tm->max_allocated, tm->allocated);
-#endif
 
     return block;
 }
@@ -271,7 +130,7 @@ void tm_free(void* o, size_t size) {
     if (o == NULL)
         return;
 
-    LOG(LEVEL_INFO, "free,%d,%d,%p", tm->allocated, tm->allocated - size, o);
+    log_info("free,%d,%d,%p", tm->allocated, tm->allocated - size, o);
     free(o);
     tm->allocated -= size;
 }
@@ -440,8 +299,10 @@ void gc_mark_locals_and_stack() {
  */
 void gc_sweep() {
     int n, i;
+    
+    int deleted_cnt = 0;
 
-    LOG(LEVEL_ERROR, "sweep,%d,0,start", tm->all->len, 0, 0);
+    log_info("sweep,%d,0,start", tm->all->len);
     TmList* temp = untracked_list_new(200);
     TmList* all = tm->all;
 
@@ -450,13 +311,15 @@ void gc_sweep() {
             list_append(temp, all->nodes[i]);
         } else {
             obj_free(all->nodes[i]);
+            deleted_cnt+=1;
             // list_append(temp, all->nodes[i]);
         }
     }
     list_free(tm->all);
     tm->all = temp;
-
-    LOG(LEVEL_ERROR, "sweep,%d,0,end", tm->all->len, 0,0);
+    
+    log_info("deleted_cnt: %d", deleted_cnt);
+    log_info("sweep,%d,0,end", tm->all->len);
 }
 
 /**
@@ -616,9 +479,8 @@ void gc_full() {
     int i;
     long t1, t2;
     t1 = clock();
-#if GC_DEBUG
+
     int old = tm->allocated;
-#endif
     tm->max_allocated = max(tm->allocated, tm->max_allocated);
     
     // disable gc.
@@ -648,8 +510,8 @@ void gc_full() {
     gc_sweep();
     tm->gc_threshold = tm->allocated + tm->allocated / 2;
     t2 = clock();
-
-    LOG(LEVEL_ERROR, "full,%d,%d,%s", old, tm->allocated, "null");
+    
+    log_info("full,old:%d,now:%d", old, tm->allocated);
 }
 
 int gc_contains(TmList* list, Object obj) {
@@ -688,6 +550,16 @@ void gc_move_local() {
 void gc_destroy() {
     TmList* all = tm->all;
     int i;
+    
+    // TM_TEST
+    log_info("destroy gc ...");
+    log_info("max allocated memory: %d K", tm->max_allocated / 1024);
+    log_info("current all->len: %d", tm->all->len);
+    if (tm->local_obj_list) {
+        log_info("current local_obj_list->len: %d", tm->local_obj_list->len);
+    }
+    // TM_TEST_END
+    
 
     tm->gc_state = GC_STATE_DESTROY; // end
 
@@ -701,12 +573,10 @@ void gc_destroy() {
     
     list_free(tm->all);
 
-#if !PRODUCT
     if (tm->allocated != 0) {
-        printf("\n***memory leak happens***\ntm->allocated=%d\n", tm->allocated);
+        log_error("***memory leak happens***", tm->allocated);
+        log_error("tm->allocated=%d", tm->allocated);
     }
-#endif
-    LOG_END(); // flush the LOG_BUF to file.
 }
 
 

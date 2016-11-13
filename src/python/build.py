@@ -4,9 +4,6 @@ from encode import *
 from boot import *
 from tmcode import *
 import sys
-import os
-
-chdir = os.chdir
 
 def code_str(s):
     return code32(len(s))+s

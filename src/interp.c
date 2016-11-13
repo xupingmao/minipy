@@ -234,7 +234,7 @@ Object tm_eval(TmFrame* f) {
         }
         case OP_LIST: {
             TM_PUSH(list_new(2));
-            // FRAME_CHECK_GC();
+            FRAME_CHECK_GC();
             break;
         }
         case OP_APPEND:
@@ -252,7 +252,7 @@ Object tm_eval(TmFrame* f) {
             break;
         case OP_DICT: {
             TM_PUSH(dict_new());
-            // FRAME_CHECK_GC();
+            FRAME_CHECK_GC();
             break;
         }
         TM_OP(OP_ADD, obj_add)
@@ -328,19 +328,19 @@ Object tm_eval(TmFrame* f) {
             #endif
 
             // save local object list
-            int size = tm->local_obj_list->len;
+            // int size = tm->local_obj_list->len;
 
             x = call_function(func);
 
             // restore local object list
             // mark return value if needed.
             // check gc
-            gc_check_native_call(size, x);
+            // gc_check_native_call(size, x);
 
             TM_PUSH(x);
             // TM_PUSH(call_function(func));
             tm->frame = f;
-            // FRAME_CHECK_GC();
+            FRAME_CHECK_GC();
             break;
         }
         case OP_LOAD_PARAMS: {

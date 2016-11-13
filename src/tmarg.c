@@ -4,10 +4,10 @@
 // 
 
 
-// =======================================
-// reset argument list
-// call this function before set argument
-// =======================================
+/**
+ * reset argument list
+ * call this function before set argument
+ */
 void arg_start() {
     tm->arguments = tm->internal_arg_stack;
     tm->arg_loaded = 0;

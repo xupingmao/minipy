@@ -149,7 +149,7 @@ int tm_init(int argc, char* argv[]) {
         return ret;
     }
     // enable local object tracking.
-    tm->local_obj_list = untracked_list_new(100);
+    // tm->local_obj_list = untracked_list_new(100);
 
     /* use first frame */
     int code = setjmp(tm->frames->buf);

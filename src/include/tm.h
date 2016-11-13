@@ -18,7 +18,6 @@
 #define PRINT_INS_CONST 0
 #define EVAL_DEBUG 1
 #define DEBUG_INS 1
-#define LOG_LEVEL 1
 #define USE_NON_PARAM 1
 #define RAISE_DEBUG 0
 
@@ -299,7 +298,7 @@ typedef struct _Function_define {
     int len;
 } Function_define;
 
-#define  TM_PUSH(x) *(++top) = (x); if(top > tm_stack_end) tm_raise("stack overflow");
+#define  TM_PUSH(x) *(++top) = (x); if(top > tm->stack_end) tm_raise("stack overflow");
 #define  TM_POP() *(top--)
 #define  TM_TOP() (*top)
 #define  GET_CONST(i) GET_DICT(tm->constants)->nodes[i].key

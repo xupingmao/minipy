@@ -116,8 +116,10 @@ typedef struct TmVm {
   TmFrame frames[FRAMES_COUNT];
   TmFrame *frame;
   
+  Object *stack_end;
   Object stack[STACK_SIZE];
   Object internal_arg_stack[MAX_ARG_COUNT];
+  
   /* Object *top; */
   Object *arguments;
   
@@ -249,6 +251,5 @@ typedef struct {
  *
  */ 
 TmVm* tm;
-Object* tm_stack_end;
 
 #endif /* OBJECT_H_ */
