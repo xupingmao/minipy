@@ -172,14 +172,6 @@ def do_symbol(s,i,l):
             break
     if v == None:
         raise "invalid symbol"
-    #if v in SYMBOLS: symbols.append(v)
-    #while i<l:
-    #    c = s[i]
-    #    if c not in ISYMBOLS: break
-    #    # v,i = v+c,i+1
-    #    v+=c;i+=1
-    #    if v in SYMBOLS: symbols.append(v)
-    #v = symbols.pop(); n = len(v); i = f+n
     T.add(v,v)
     if v in B_BEGIN: T.braces += 1
     if v in B_END: T.braces -= 1

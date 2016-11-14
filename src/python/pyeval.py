@@ -79,13 +79,14 @@ def pyeval(src, glo_vars = None, debug = False):
     while idx < len(ins_list):
         op,v = ins_list[idx]
         if debug:
-            print(' ' * 10, cyc, tmcodes[op], v)
+            line = str(cyc).ljust(5) + tmcodes[op].ljust(20) + str(v).ljust(20)
+            # print(line)
         cyc += 1
         if op == OP_CONSTANT:
             r = get_const(v)
             stack.append(r)
             if debug:
-                print(' ' * 30, '<==' + str(r))
+                line += '<==' + str(r)
         elif op == OP_LOAD_LOCAL:
             r = loc_vars[v]
             stack.append(r)
@@ -95,7 +96,7 @@ def pyeval(src, glo_vars = None, debug = False):
         elif op == OP_LOAD_GLOBAL:
             name = get_const(v)
             if debug:
-                print(' ' * 30, '<==' + name)
+                line += '<==' + name
             if name in glo_vars:
                 r = glo_vars[name]
             else:
@@ -104,7 +105,7 @@ def pyeval(src, glo_vars = None, debug = False):
         elif op == OP_STORE_GLOBAL:
             name = get_const(v)
             if debug:
-                print(' '* 30, '==>' + name)
+                line += '==>' + name
             r = stack.pop()
             glo_vars[name] = r
         elif op == OP_IMPORT:
@@ -196,6 +197,9 @@ def pyeval(src, glo_vars = None, debug = False):
             r = None
         else:
             raise(sformat("unknown handled code %s:\"%s\"\n", op, tmcodes[op]))
+        
+        if debug:
+            print(line)
         idx += 1
     return r
 

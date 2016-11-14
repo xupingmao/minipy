@@ -322,134 +322,6 @@ void gc_sweep() {
     log_info("sweep,%d,0,end", tm->all->len);
 }
 
-/**
- * @deprecated
- * sweep object not used in frame-local
- * <code>
- *    z = new string('test');
- *    k = new string('kkkk');
- *    return k; // z will be deleted
- * </code>
- * @since 2016-08-19
- */
-void gc_sweep_local(int start) {
-    if (tm->local_obj_list != NULL) {
-        int i;
-        TmList* list = tm->local_obj_list;
-        for (i = start; i < list->len; i++) {
-            if (GC_MARKED(list->nodes[i])==0) {
-                obj_free(list->nodes[i]);
-            } else {
-                list_append(tm->all, list->nodes[i]); // monitor object which cant be recycled
-            }
-        }
-    }
-}
-
-/**
- * restore tm->local_obj_list to `size`
- * move extra objects to tm->all
- * @since 2016-08-19
- */
-void gc_restore_local_obj_list(int size) {
-    int i;
-    /*
-    for (i = size; i < tm->local_obj_list->len; i++) {
-        Object obj = tm->local_obj_list->nodes[i];
-        list_append(tm->all, obj); // move objects in current frame to tm->all
-    }
-    */
-    list_shorten(tm->local_obj_list, size);
-}
-
-#ifdef GC_DEBUG
-/**
- * get tm->local_obj_list as object
- * @since 2016-08-22
- */
-Object get_tm_local_list() {
-    Object obj;
-    TM_TYPE(obj) = TYPE_LIST;
-    GET_LIST(obj) = tm->local_obj_list;
-    return obj;
-}
-
-#endif
-
-/**
- * add return value to tm->local_obj_list
- * @since 2016-08-22
- */
-void gc_local_add(Object ret) {
-    if (TM_TYPE(ret) != TYPE_NONE && TM_TYPE(ret) != TYPE_NUM) {
-        // arguments is already in prev-call-stack
-        // ret must be added to prev-call-stack
-        list_append(tm->local_obj_list, ret); // move ret value to tm->local_obj_list
-    }
-}
-
-/**
- * check whether need to do sweep during native call
- * @since 2016-08-23
- */
-void gc_check_native_call(int size, Object ret) {
-    
-    gc_restore_local_obj_list(size);
-    /* return value must be added to tm->local_obj_list */
-    gc_local_add(ret);
-    if (tm->allocated > tm->gc_threshold) {
-        gc_native_call_sweep(); // find and sweep the garbage
-    }
-}
-
-/**
- * sweep garbage after native function call is ended.
- * @author xupingmao
- * @since 2016-08-19
- */
-void gc_native_call_sweep() {
-    int i;
-    long t1, t2;
-    t1 = clock();
-#if GC_DEBUG
-    int old = tm->allocated;
-#endif
-    tm->max_allocated = max(tm->allocated, tm->max_allocated);
-    LOG(LEVEL_ERROR, "nativefull,%d,%d,start", tm->allocated, tm->max_allocated, 0);
-    LOG(LEVEL_ERROR, "all_len,%d,%d,%d", tm->all->len, 0, 0);
-    LOG(LEVEL_ERROR, "local_len,%d,%d,%d", tm->local_obj_list->len, 0,0);
-    
-    /* mark all objects to be unused */
-    /* mark tm->all is enough */
-    for (i = 0; i < tm->all->len; i++) {
-        GC_MARKED(tm->all->nodes[i]) = 0;
-    }
-    // tm_print(get_tm_local_list());
-
-    /* mark protoes */
-    gc_mark(tm->list_proto);
-    gc_mark(tm->dict_proto);
-    gc_mark(tm->str_proto);
-    gc_mark(tm->builtins);
-    gc_mark(tm->modules);
-    gc_mark(tm->constants);
-    
-    gc_mark(tm->root);
-    gc_mark(tm->ex);
-    gc_mark(tm->ex_line);
-    
-    tm->local_obj_list->marked = 0;
-    gc_mark_list(tm->local_obj_list);
-    /* sweep garbage */
-    gc_sweep();
-    tm->gc_threshold = tm->allocated + tm->allocated / 2;
-    t2 = clock();
-
-    LOG(LEVEL_ERROR, "nativefull,%d,%d,end", old, tm->allocated, "null");
-    LOG(LEVEL_ERROR, "all_len,%d,%d,%d", tm->all->len, 0, 0);
-    LOG(LEVEL_ERROR, "local_len,%d,%d,%d", tm->local_obj_list->len, 0,0);
-}
-
 #define MARK(v) \
     switch( v.type ){  \
     case TYPE_STR: \
@@ -512,34 +384,6 @@ void gc_full() {
     t2 = clock();
     
     log_info("full,old:%d,now:%d", old, tm->allocated);
-}
-
-int gc_contains(TmList* list, Object obj) {
-    int i;
-    for (i = 0; i < list->len; i++) {
-        if (GET_PTR(list->nodes[i]) == GET_PTR(obj)) {
-            return 1;
-        }
-    }
-    return 0;
-}
-
-/**
- * move local object to tm->all
- * note that there may be duplication in local_obj_list
- * @since 2016-08-20
- */
-void gc_move_local() {
-    if (tm->local_obj_list == NULL) {
-        return;
-    }
-    int i;
-    for (i = 0; i < tm->local_obj_list->len; i++) {
-        Object obj = tm->local_obj_list->nodes[i];
-        if (!gc_contains(tm->all, obj)) {
-            list_append(tm->all, obj);
-        }
-    }
 }
 
 /**
@@ -621,23 +465,6 @@ Object obj_new(int type, void * value) {
  * @since ?
  */
 void obj_free(Object o) {
-
-    // LOG(LEVEL_ERROR, "delete,start,%d,%d", TM_TYPE(o), 0);
-
-    #ifdef GC_DEBUG
-        if (tm->gc_state != GC_STATE_DESTROY){
-            switch(TM_TYPE(o)) {
-                case TYPE_STR:  LOG(LEVEL_INFO, "delete,str,%d,%p",    GET_STR_LEN(o), GET_STR_OBJ(o)); break;
-                case TYPE_LIST: LOG(LEVEL_INFO, "delete,list,%d,%p",   LIST_LEN(o), GET_LIST(o));    break;
-                case TYPE_DICT: LOG(LEVEL_INFO, "delete,dict,%d,%p",   DICT_LEN(o), GET_DICT(o));    break;
-                case TYPE_FUNCTION: LOG(LEVEL_INFO, "delete,function,0,%p", GET_FUNCTION(o), 0);     break;
-                default:        LOG(LEVEL_INFO, "delete,unknown,%d,%d", TM_TYPE(o), 0); break;
-            }
-        }
-
-        DEBUG_FREE2(GET_PTR(o), o);
-    #endif
-
     switch (TM_TYPE(o)) {
     case TYPE_STR:
         string_free(GET_STR_OBJ(o));
