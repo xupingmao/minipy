@@ -86,7 +86,10 @@ def pyeval(src, glo_vars = None, debug = False):
             r = get_const(v)
             stack.append(r)
             if debug:
-                line += '<==' + str(r)
+                if istype(r,"string"):
+                    line+='"' + r + '"'
+                else:
+                    line += str(r)
         elif op == OP_LOAD_LOCAL:
             r = loc_vars[v]
             stack.append(r)
@@ -96,7 +99,7 @@ def pyeval(src, glo_vars = None, debug = False):
         elif op == OP_LOAD_GLOBAL:
             name = get_const(v)
             if debug:
-                line += '<==' + name
+                line += name
             if name in glo_vars:
                 r = glo_vars[name]
             else:
@@ -105,7 +108,7 @@ def pyeval(src, glo_vars = None, debug = False):
         elif op == OP_STORE_GLOBAL:
             name = get_const(v)
             if debug:
-                line += '==>' + name
+                line += name
             r = stack.pop()
             glo_vars[name] = r
         elif op == OP_IMPORT:
@@ -159,6 +162,11 @@ def pyeval(src, glo_vars = None, debug = False):
             stack.append(r)
         elif op == OP_UP_JUMP:
             idx -= v
+            if debug: print(line)
+            continue
+        elif op == OP_JUMP:
+            idx += v
+            if debug: print(line)
             continue
         elif op == OP_ITER:
             r = iter(stack.pop())
@@ -184,6 +192,7 @@ def pyeval(src, glo_vars = None, debug = False):
             if not r:
                 idx += v
                 r = None
+                if debug: print(line)
                 continue
         elif op == OP_ROT:
             i = 0
