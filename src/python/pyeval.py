@@ -79,7 +79,7 @@ def pyeval(src, glo_vars = None, debug = False):
     while idx < len(ins_list):
         op,v = ins_list[idx]
         if debug:
-            line = str(cyc).ljust(5) + tmcodes[op].ljust(20) + str(v).ljust(20)
+            line = str(cyc).ljust(5) + tmcodes[op].ljust(22) + str(v).ljust(20)
             # print(line)
         cyc += 1
         if op == OP_CONSTANT:

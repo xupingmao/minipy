@@ -2,7 +2,7 @@
 cc = gcc
 
 all: minipy
-	$(cc) -lm -o minipy main.c
+	$(cc) -o minipy main.c -lm
 
 minipy :
 
