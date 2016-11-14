@@ -87,8 +87,6 @@ def str_to_chars(code):
     for i in range(len(code)):
         if i != 0:
             dest += ','
-        if (i+1) % width == 0:
-            dest += '\n'
         dest += str(ord(code[i]))
     return dest
 
