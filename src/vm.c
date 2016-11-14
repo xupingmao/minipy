@@ -140,12 +140,12 @@ void vm_destroy() {
  * run vm with specified code;
  * @since 2016-11-13
  */
-int tm_run(int argc, char* argv[], unsigned char* code) {
+int tm_run(int argc, char* argv[], unsigned char* init_code) {
     int ret = vm_init(argc, argv);
     if (ret != 0) { 
         return ret;
     }
-    tm->code = code;
+    tm->code = init_code;
 
     /* use first frame */
     int code = setjmp(tm->frames->buf);
