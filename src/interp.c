@@ -51,6 +51,22 @@ Object call_function(Object func) {
     return NONE_OBJECT;
 }
 
+/**
+ * @since 2016-11-15
+ */
+void tm_import(Object globals, Object modname, Object attribute) {
+    Object modules;
+    if (obj_in(modname, globals)) {
+        modules = obj_get(globals, modname);
+    } else {
+        // compile and import
+    }
+    if (NOT_NONE(attribute)) {
+        // set attribute
+    } else {
+        // update globals
+    }
+}
 
 void pop_frame() {
     tm->frame --;
@@ -160,17 +176,22 @@ Object tm_eval(TmFrame* f) {
         }
 
         case OP_IMPORT: {
+            // TODO
+            // tm_import(globals)
             Object import_func = tm_get_global(globals, sz_to_string("_import"));
+            
+            // module, attribute
             arg_start();
             arg_push(globals);
             if (i == 1) {
-                arg_push(TM_POP());
+                arg_push(TM_POP()); // arg1
             } else {
                 Object b = TM_POP();
                 Object a = TM_POP();
                 arg_push(a);
                 arg_push(b);
             }
+            // tm_import(globals, modname, attribute);
             call_function(import_func);
             break;
         }

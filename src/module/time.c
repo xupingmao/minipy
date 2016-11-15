@@ -18,6 +18,15 @@ Object bf_time_time() {
     #endif
 }
 
+Object bf_time_clock() {
+#ifdef _WIN32
+    return tm_number((double)clock());
+#else
+    return tm_number((double)clock()/1000);
+#endif
+}
+
+
 Object bf_time_ctime() {
     time_t rawtime;
     time(&rawtime);
@@ -49,6 +58,7 @@ Object bf_time_asctime() {
 void time_mod_init() {
     Object time_mod = dict_new();
     reg_mod_func(time_mod, "time",  bf_time_time);
+    reg_mod_func(time_mod, "clock", bf_time_clock);
     reg_mod_func(time_mod, "ctime", bf_time_ctime);
     reg_mod_func(time_mod, "sleep", bf_time_sleep);
     reg_mod_func(time_mod, "asctime", bf_time_asctime);

@@ -113,17 +113,13 @@ int vm_init(int argc, char* argv[]) {
     dict_set_by_str(tm->builtins, "True", tm_number(1));
     dict_set_by_str(tm->builtins, "False", tm_number(0));
     dict_set_by_str(tm->builtins, "__builtins__", tm->builtins);
-    dict_set_by_str(tm->builtins, "__modules__", tm->modules);
+    dict_set_by_str(tm->builtins, "__modules__",  tm->modules);
     
     list_methods_init();
     string_methods_init();
     dict_methods_init();
     builtins_init();
-    time_mod_init();
-    sys_mod_init();
-    math_mod_init();
-    // tmtokenize_init();
-
+    
     return 0;
 }
 
@@ -150,6 +146,11 @@ int tm_run(int argc, char* argv[], unsigned char* init_code) {
     /* use first frame */
     int code = setjmp(tm->frames->buf);
     if (code == 0) {
+        /* init modules */
+        time_mod_init();
+        sys_mod_init();
+        math_mod_init();
+    
         load_binary();
         call_mod_func("init", "boot");
     } else if (code == 1){

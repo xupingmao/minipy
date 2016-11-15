@@ -670,15 +670,6 @@ long tm_clock() {
 #endif
 }
 
-
-Object bf_clock() {
-    return tm_number(tm_clock());
-}
-
-Object bf_time0() {
-    return tm_number(time(0));
-}
-
 Object bf_add_obj_method() {
     static const char* sz_func = "add_obj_method";
     Object type = arg_take_str_obj(sz_func);
@@ -1057,8 +1048,6 @@ void builtins_init() {
     reg_builtin_func("vmopt", bf_vmopt);
     reg_builtin_func("traceback", bf_traceback);
 
-    reg_builtin_func("clock", bf_clock);
-    reg_builtin_func("time0", bf_time0);
     reg_builtin_func("add_obj_method", bf_add_obj_method);
     reg_builtin_func("read_file", bf_read_file);
     reg_builtin_func("iter", bf_iter);

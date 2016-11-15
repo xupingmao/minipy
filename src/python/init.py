@@ -241,11 +241,12 @@ def join_path(path_list):
 def resolvepath(path):
     if not ('/' in path or '\\' in path):
         return path
+    import os
     fs1 = split_path(getcwd())
     fs2 = split_path(path)
     fname = fs2.pop()
     parent = join_path(fs1+fs2)
-    chdir(parent)
+    os.chdir(parent)
     return fname
     
 def execfile(path, chdir = True):
