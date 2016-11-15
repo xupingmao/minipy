@@ -54,7 +54,7 @@ def compile_error(ctx, s, token, e_msg = ""):
         raise Exception(e_msg)
     #raise
 
-ISYMBOLS = '-=[];,./!%*()+{}:<>@^$'
+_ISYMBOLS = '-=[];,./!%*()+{}:<>@^'
 KEYWORDS = [
     'as','def','class', 'return','pass','and','or','not','in','import',
     'is','while','break','for','continue','if','else','elif','try',
@@ -67,8 +67,8 @@ SYMBOLS = [
     # "@",
     #,'&', '|','!','@','^','$'
     ]
-B_BEGIN = ['[','(','{']
-B_END = [']',')','}']
+_B_BEGIN = ['[','(','{']
+_END = [']',')','}']
 
 class TData:
     def __init__(self):
@@ -110,10 +110,10 @@ def do_tokenize(s):
             T.nl = False
             i = do_indent(s,i,l)
         elif c == '\n': i = do_nl(s,i,l)
-        elif c in ISYMBOLS: i = do_symbol(s,i,l)
+        elif c in _ISYMBOLS: i = do_symbol(s,i,l)
         elif c >= '0' and c <= '9': i = do_number(s,i,l)
         elif (c >= 'a' and c <= 'z') or \
-            (c >= 'A' and c <= 'Z') or c == '_':  i = do_name(s,i,l)
+            (c >= 'A' and c <= 'Z') or c in '_$':  i = do_name(s,i,l)
         elif c=='"' or c=="'": i = do_string(s,i,l)
         elif c=='#': i = do_comment(s,i,l)
         elif c == '\\' and s[i+1] == '\n':
@@ -173,8 +173,8 @@ def do_symbol(s,i,l):
     if v == None:
         raise "invalid symbol"
     T.add(v,v)
-    if v in B_BEGIN: T.braces += 1
-    if v in B_END: T.braces -= 1
+    if v in _B_BEGIN: T.braces += 1
+    if v in _END: T.braces -= 1
     return i
 
 def do_number(s,i,l):
@@ -196,8 +196,9 @@ def do_name(s,i,l):
     v=s[i];i+=1
     while i<l:
         c = s[i]
-        if (c < 'a' or c > 'z') and (c < 'A' or c > 'Z') and (c < '0' or c > '9') and c != '_': break
-        v+=c; i+=1
+        if (c < 'a' or c > 'z') and (c < 'A' or c > 'Z') and (c < '0' or c > '9') and c not in '$_': break
+        v+=c
+        i+=1
     if v in KEYWORDS: T.add(v,v)
     else: T.add('name',v)
     return i

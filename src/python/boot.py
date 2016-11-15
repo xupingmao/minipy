@@ -79,8 +79,8 @@ class Obj(dict):
         return self.get(k)
 
 class Tk:
-    pass
-
+    def __repr__(self):
+        return str(self.__dict__)
     def __str__(self):
         return str(self.__dict__)
 

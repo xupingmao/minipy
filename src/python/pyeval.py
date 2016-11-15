@@ -185,6 +185,10 @@ def pyeval(src, glo_vars = None, debug = False):
             collection.reverse()
             for x in collection:
                 stack.append(x)
+        elif op == OP_APPLY:
+            args = stack.pop()
+            fnc = stack.pop()
+            r = fnc(*args)
         elif op in op_skip:
             pass
         elif op == OP_POP_JUMP_ON_FALSE:

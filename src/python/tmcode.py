@@ -18,11 +18,17 @@ _opcode_names = [
     'OP_NONE', 'OP_STORE_LOCAL', 'OP_STORE_GLOBAL', 'OP_LOAD_LOCAL', 'OP_LOAD_GLOBAL', 'OP_CONSTANT',
     #'LOAD_GLOBALS', 
     'OP_POP', 
-    'OP_DICT_SET', 'OP_LIST', 'OP_DICT', 'OP_APPEND',
+    'OP_DICT_SET',
+    'OP_LIST', 'OP_DICT', 
+    'OP_APPEND',
     'OP_JUMP', 'OP_UP_JUMP', 'OP_POP_JUMP_ON_FALSE', 'OP_JUMP_ON_FALSE', 'OP_JUMP_ON_TRUE',
     #TAGSIZE
     'OP_UNPACK', 'OP_ROT', 'OP_DEL', 'OP_FOR', 'OP_NEXT', 'OP_ITER', 'OP_LOAD_EX',
-    'OP_SETJUMP', 'OP_CALL', 'OP_DEF', 'OP_RETURN', 
+    'OP_SETJUMP', 
+    
+    'OP_CALL', 
+    'OP_APPLY', # apply(a, b)
+    'OP_DEF', 'OP_RETURN', 
 
     'OP_LOAD_PARAMS', 'OP_LOAD_NARG', "OP_LOAD_PARG",
 

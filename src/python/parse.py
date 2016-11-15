@@ -121,38 +121,36 @@ def baseitem(p):
 def expr(p):
     return exp(p, '=')
 
-    
-#  Assignment = Lvalue AssignOp Rvalue
-#  Lvalue     = Object (Call|Attr)* Attr
-#  Object     = Name | Number | String | True | False | None
-#  Value      = Object (Call|Attr)*
-#  Rvalue     = Value (Op Value)*
+#  This is not LL grammar
+#  Assignment = Lvalue '=' Rvalue
+#  Lvalue     = Name | (Rvalue Attr)
+#  Object     = Name | Number | String | True | False | None | '(' Rvalue ')'
+#  Rvalue     = Expression
 #  Attr       = ('.' Name) | ('[' Rvalue ']')
-#  Call       = '(' ArgList ')'
-#  AssignOp   = '=' 
-#  Op         = '+' | '-'
+#  Expression = CommaExp ( ',' CommaExp)*
+#  CommaExp   = OrExp ('or' OrExp)*
 def exp(p, level):
     if level == '=':
-        exp(p, ',')
+        exp(p, ',') # lvalue will be checked at compile phase
         if p.token.type in ('=', '+=', '-=', '*=', '/=', '%='):
             t = p.token.type
             p.next()
             exp(p, ',')
             add_op(p, t)
-    elif level == ',':
+    elif level == ',' or level == 'rvalue':
         exp(p, 'or')
+        values = None
         while p.token.type == ',':
+            if values == None:
+                values = [p.pop()]
             p.next()
             if p.token.type == ']':
                 break # for list
             exp(p, 'or')
-            b = p.pop()
-            a = p.pop()
-            if gettype(a)=="list":
-                a.append(b)
-                p.add(a)
-            else:
-                p.add([a,b])
+            next_value = p.pop()
+            values.append(next_value)
+        if values != None:
+            p.add(values)
     elif level == 'or':
         exp(p, 'and')
         while p.token.type == 'or':
@@ -198,6 +196,32 @@ def exp(p, level):
             fnc(p)
             add_op(p, t)
 
+def parse_arg_list(p):
+    node = AstNode('call', p.pop()) # name
+    if p.token.type == ')':
+        p.next()
+        node.second = None
+        return node
+    args = []
+    while p.token.type != ')':
+        if p.token.type == '*':
+            p.next()
+            exp(p, 'or')
+            arg = p.pop()
+            args.append(arg)
+            node.type = "apply"
+            break # just support one star-arg now
+        else:
+            exp(p, 'or')
+            arg = p.pop()
+            args.append(arg)
+            if p.token.type == ',':
+                p.next() # skip ,
+    expect(p, ')')
+    node.second = args # argument-list
+    # print(args[0].pos[0])
+    return node
+                    
 def call_or_get_exp(p):
     if p.token.type == '-':
         p.next()
@@ -214,17 +238,10 @@ def call_or_get_exp(p):
                 expect(p, ']')
                 add_op(p, 'get')
             elif t == '(':
-                node = AstNode('call', p.pop())
-                if p.token.type == ')':
-                    p.next()
-                    node.second = None
-                else:
-                    exp(p, ',')
-                    expect(p, ')')
-                    node.second = p.pop()
+                node = parse_arg_list(p)
                 p.add(node)
             else:
-                baseitem(p)
+                baseitem(p) # dot
                 b = p.pop()
                 a = p.pop()
                 node = AstNode('attr')
@@ -386,7 +403,7 @@ def parse_for_while(p, type):
     ast.second = p.visit_block()
     p.add(ast)
 
-def parse_arg(p):
+def parse_arg_def(p):
     expect(p, '(')
     if p.token.type == ')':
         p.next()
@@ -432,7 +449,7 @@ def parse_def(p):
     func = AstNode("def")
     func.first = p.token
     p.next()
-    func.second = parse_arg(p)
+    func.second = parse_arg_def(p)
     expect(p, ':')
     func.third = p.visit_block()
     p.add(func)

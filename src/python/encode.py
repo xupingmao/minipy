@@ -450,6 +450,11 @@ def encode_call(tk):
     else:
         n = encode_item(tk.second)
     emit(OP_CALL, n)
+    
+def encode_apply(tk):
+    encode_item(tk.first)
+    encode_item(tk.second)
+    emit(OP_APPLY)
 
     
 def encode_def(tk, in_class = 0):
@@ -702,6 +707,7 @@ _encode_dict = {
     ',': encode_tuple,
     'dict': encode_dict,
     'call': encode_call,
+    'apply': encode_apply,
     'neg': encode_neg,
     'not': encode_not,
     'list':encode_list,

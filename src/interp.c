@@ -119,10 +119,11 @@ TmFrame* push_frame(Object fnc) {
 ** @return evaluated value.
 */
 Object tm_eval(TmFrame* f) {
-    Object* locals = f->locals;
-    Object* top = f->stack;
-    Object cur_fnc = f->fnc;
-    Object globals = get_globals(cur_fnc);
+    Object* locals    = f->locals;
+    Object* top       = f->stack;
+    Object cur_fnc    = f->fnc;
+    Object globals    = get_globals(cur_fnc);
+    // TODO use code cache to replace unsigned char*
     unsigned char* pc = f->pc;
     const char* func_name_sz = get_func_name_sz(cur_fnc);
 
@@ -240,7 +241,7 @@ Object tm_eval(TmFrame* f) {
         case OP_APPEND:
             v = TM_POP();
             x = TM_TOP();
-            tm_assert_type(x, TYPE_LIST, "tm_eval: LIST_APPEND");
+            tm_assert_type(x, TYPE_LIST, "tm_eval: OP_APPEND");
             list_append(GET_LIST(x), v);
             break;
         case OP_DICT_SET:
@@ -327,18 +328,22 @@ Object tm_eval(TmFrame* f) {
                 printf("call %s\n", get_func_name_sz(func));
             #endif
 
-            // save local object list
-            // int size = tm->local_obj_list->len;
-
             x = call_function(func);
-
-            // restore local object list
-            // mark return value if needed.
-            // check gc
-            // gc_check_native_call(size, x);
-
             TM_PUSH(x);
             // TM_PUSH(call_function(func));
+            tm->frame = f;
+            FRAME_CHECK_GC();
+            break;
+        }
+        
+        case OP_APPLY: {
+            f->top = top;
+            Object args = TM_POP();
+            tm_assert_type(args, TYPE_LIST, "tm_eval: OP_APPLY");
+            arg_set_arguments(LIST_NODES(args), LIST_LEN(args));
+            Object func = TM_POP();
+            x = call_function(func);
+            TM_PUSH(x);
             tm->frame = f;
             FRAME_CHECK_GC();
             break;
