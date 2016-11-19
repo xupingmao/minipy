@@ -117,6 +117,56 @@ Object obj_get(Object self, Object k) {
     return NONE_OBJECT;
 }
 
+/**
+ * slice string/list
+ * string.slice(a,b) [a,b), b is not included
+ * string.slice(0,-1) = string.slice(0,len(string))
+ * @since 2016-11-19
+ * <code>
+ * 'test'.slice(0,1) = 't'
+ * 'test'.slice(0,-1) = 'test'
+ * </code>
+ */
+Object obj_slice(Object self, Object first, Object second) {
+    int start = GET_NUM(first);
+    int end = GET_NUM(second);
+    Object ret = NONE_OBJECT;
+    
+    if (IS_STR(self)) {
+        int length = GET_STR_LEN(self);
+        start = start >= 0 ? start : start + length + 1;
+        end   = end   >= 0 ? end   : end   + length + 1;
+        if (start < 0 || start > length) {
+            start = 0;
+        } 
+        if (end < 0 || end > length) {
+            end = length; // do not overflow;
+        } 
+        if (end <= start) {
+            return string_alloc("", 0);
+        }
+        return string_alloc(GET_STR(self) + start, end - start);
+    } else if (IS_LIST(self)) {
+        int length = LIST_LEN(self);
+        start = start > 0 ? start : start + length + 1;
+        end   = end   > 0 ? end   : end   + length + 1;
+        if (start < 0 || start > length) {
+            start = 0;
+        } 
+        if (end < 0 || end > length) {
+            end = length;
+        } 
+        int i = 0;
+        ret = list_new(end - start);
+        for (i = start; i < end ; i++) {
+            obj_append(ret, LIST_GET(self, i));
+        }
+    } else {
+        tm_raise("slice not implemented for type %s", get_type_by_int(self.type));
+    }
+    return ret;
+}
+
 Object obj_sub(Object a, Object b) {
     if (a.type == b.type) {
         if (a.type == TYPE_NUM) {

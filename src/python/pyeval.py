@@ -189,6 +189,12 @@ def pyeval(src, glo_vars = None, debug = False):
             args = stack.pop()
             fnc = stack.pop()
             r = fnc(*args)
+        elif op == OP_SLICE:
+            second = stack.pop()
+            first = stack.pop()
+            obj = stack.pop()
+            r = obj[first:second]
+            stack.append(r)
         elif op in op_skip:
             pass
         elif op == OP_POP_JUMP_ON_FALSE:

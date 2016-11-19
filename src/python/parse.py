@@ -55,7 +55,7 @@ class ParserCtx:
 
 def expect(ctx, v):
     if ctx.token.type != v:
-        compile_error("parse", ctx.src, ctx.token, "expect " + v)
+        compile_error("parse", ctx.src, ctx.token, "expect " + v + " but now is " + ctx.token.type)
     ctx.next()
 
 def add_op(p, v):
@@ -232,15 +232,38 @@ def call_or_get_exp(p):
         baseitem(p)
         while p.token.type in ('.','(','['):
             t = p.token.type
-            p.next()
             if t == '[':
-                expr(p)
+                p.next()
+                first = p.pop()
+                second = None
+                third = None
+                if p.token.type == ':':
+                    second = Token("number", 0, p.token.pos)
+                else:
+                    exp(p, "or")
+                    second = p.pop()
+                # handler the second slice parameter
+                if p.token.type == ':':
+                    p.next()
+                    if p.token.type == ']':
+                        third = Token("number", -1, p.token.pos) # end
+                    else:
+                        exp(p, 'or')
+                        third = p.pop()
                 expect(p, ']')
-                add_op(p, 'get')
+                if third == None:
+                    node = AstNode("get", first, second)
+                    p.add(node)
+                else:
+                    node = AstNode("slice", first, second)
+                    node.third = third
+                    p.add(node)
             elif t == '(':
+                p.next()
                 node = parse_arg_list(p)
                 p.add(node)
             else:
+                p.next()
                 baseitem(p) # dot
                 b = p.pop()
                 a = p.pop()

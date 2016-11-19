@@ -93,8 +93,6 @@ struct _tm_jmp_buf {
     TmFrame* f;
 };
 
-typedef struct _tm_jmp_buf tm_jmp_buf;
-
 #define FRAMES_COUNT 128
 #define MAX_ARG_COUNT 10
 #define STACK_SIZE 2048
@@ -148,7 +146,6 @@ typedef struct TmVm {
   int max_allocated;
   int gc_threshold;
   int gc_state;
-
 }TmVm;
 
 /** 

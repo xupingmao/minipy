@@ -692,6 +692,12 @@ def encode_attr(tk):
     encode_item(tk.second)
     emit(OP_GET)
     
+def encode_slice(tk):
+    encode_item(tk.first)
+    encode_item(tk.second)
+    encode_item(tk.third)
+    emit(OP_SLICE)
+    
 def encode_in(tk):
     encode_item(tk.first)
     if gettype(tk.second) == 'list' and is_const_list(tk.second):
@@ -734,6 +740,7 @@ _encode_dict = {
     'pass':do_nothing,
     'notin':encode_notin,
     'attr':encode_attr,
+    'slice': encode_slice,
     'in': encode_in,
     '@':encode_annotation,
 }

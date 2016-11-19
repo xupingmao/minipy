@@ -283,6 +283,12 @@ Object tm_eval(TmFrame* f) {
         TM_OP(OP_DIV, obj_div)
         TM_OP(OP_MOD, obj_mod)
         TM_OP(OP_GET, obj_get)
+        case OP_SLICE: {
+            Object second = TM_POP();
+            Object first = TM_POP();
+            *top = obj_slice(*top, first, second);
+            break;
+        }
         case OP_EQEQ: { *(top-1) = tm_number(obj_equals(*(top-1), *top)); top--; break; }
         case OP_NOTEQ: { *(top-1) = tm_number(!obj_equals(*(top-1), *top)); top--; break; }
         case OP_LT: {

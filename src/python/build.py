@@ -51,7 +51,7 @@ def build(cc="tcc", libs=None, dst_path = "../bin.c"):
                 code = compilefile(obj.path)
             except Exception as e:
                 print("parse file", obj.path, "failed")
-                raise
+                raise(e)
             dest_code += code_str(obj.name)+code_str(code)
         code = mod_len + code_str("constants") + code_str(build_const_code()) + dest_code
         print("generate bin.c ...")
