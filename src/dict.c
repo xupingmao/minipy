@@ -333,3 +333,12 @@ void tm_setattr(Object obj, char* key, Object value) {
     Object obj_key = string_new(key);
     obj_set(obj, obj_key, value);
 }
+
+int tm_hasattr(Object obj, char* key) {
+    Object obj_key = string_const(key);
+    DictNode* node = dict_get_node(GET_DICT(obj), obj_key);
+    if (node == NULL) {
+        return 0;
+    }
+    return 1;
+}

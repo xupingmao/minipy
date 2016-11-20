@@ -314,17 +314,11 @@ Object bf_load_module() {
     const char* sz_fnc = "load_module";
     Object file = arg_take_str_obj(sz_fnc);
     Object code = arg_take_str_obj(sz_fnc);
-    Object mod;
+    Object name = NONE_OBJECT;
     if (get_args_count() == 3) {
-        mod = module_new(file, arg_take_str_obj(sz_fnc), code);
-    } else {
-        mod = module_new(file, file, code);
+        name = arg_take_str_obj(sz_fnc);
     }
-    Object fnc = func_new(mod, NONE_OBJECT, NULL);
-    GET_FUNCTION(fnc)->code = (unsigned char*) GET_STR(code);
-    GET_FUNCTION(fnc)->name = string_new("#main");
-    call_function(fnc);
-    return GET_MODULE(mod)->globals;
+    return tm_load_module(file, name, code);
 }
 
 

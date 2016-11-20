@@ -302,6 +302,7 @@ typedef struct _Function_define {
 #define  GET_CONST(i) GET_DICT(tm->constants)->nodes[i].key
 Object   call_unsafe(Object fnc);
 Object   call_function(Object func);
+Object   tm_load_module(Object filename, Object code, Object name);
 Object   tm_eval(TmFrame*);
 TmFrame* push_frame(Object fnc);
 void     pop_frame();
@@ -332,6 +333,10 @@ Object    bf_print();
 Object    blt__add_type_method();
 void      builtins_init();
 Object*   get_builtin(char* key);
+
+
+// vm.c
+Object    call_mod_func(char* modname, char* funcname);
 
 // tm2c
 // Object    tm_call_native_debug(int lineno, char* func_name, Object(*fn)(), int args, ...);

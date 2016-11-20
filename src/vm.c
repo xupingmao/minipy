@@ -50,12 +50,11 @@ void load_module(Object name, Object code) {
  * @param mod, module name
  * @param sz_fnc, function name
  */
-int call_mod_func(char* mod, char* sz_fnc) {
+Object call_mod_func(char* mod, char* sz_fnc) {
     Object m = obj_get(tm->modules, string_new(mod));
     Object fnc = obj_get(m, string_new(sz_fnc));
     arg_start();
-    call_function(fnc);
-    return 0;
+    return call_function(fnc);
 }
 
 /**
@@ -154,7 +153,14 @@ int tm_run(int argc, char* argv[], unsigned char* init_code) {
         os_mod_init();
     
         load_binary();
-        call_mod_func("init", "boot");
+        
+        if (tm_hasattr(tm->modules, "init")) {
+            call_mod_func("init", "boot");
+        } else if (tm_hasattr(tm->modules, "main")) {
+            // adjust sys.argv
+            
+            call_mod_func("main", "_main");
+        }
     } else if (code == 1){
         traceback();
     } else if (code == 2){

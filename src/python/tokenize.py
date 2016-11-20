@@ -1,11 +1,11 @@
 
 # TM_TEST
-if "tm" not in globals():
+try:
+    _ = tm
+except:
     # need some tool from python to bootstrap
     from boot import *
-# TM_TEST_END
 
-    
 # keep Token as a pure function
 def Token(type='symbol',val=None,pos=None):
     self = newobj()
@@ -248,6 +248,8 @@ def do_comment(s,i,l):
 
 # TM_TEST
 def _main():
+    import sys
+    ARGV = sys.argv
     if len(ARGV) != 2:
         print("error arguments, arguments = ", ARGV)
         return

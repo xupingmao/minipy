@@ -52,19 +52,46 @@ Object call_function(Object func) {
 }
 
 /**
+ * @since 2016-11-20
+ */
+Object tm_load_module(Object file, Object code, Object name) {
+    Object mod = module_new(file, name, code);
+    Object fnc = func_new(mod, NONE_OBJECT, NULL);
+    GET_FUNCTION(fnc)->code = (unsigned char*) GET_STR(code);
+    GET_FUNCTION(fnc)->name = string_new("#main");
+    call_function(fnc);
+    return GET_MODULE(mod)->globals;
+}
+
+/**
  * @since 2016-11-15
  */
-void tm_import(Object globals, Object modname, Object attribute) {
-    Object modules;
-    if (obj_in(modname, globals)) {
-        modules = obj_get(globals, modname);
+void tm_import(Object globals, Object modname, Object attr) {
+    Object mod;
+    if (obj_in(modname, tm->modules)) {
+        mod = obj_get(tm->modules, modname);
     } else {
         // compile and import
+        Object ext = string_const(".py");
+        Object filename = obj_add(modname, ext);
+        Object code = call_mod_func("encode", "compilefile");
+        mod = tm_load_module(filename, modname, code);
     }
-    if (NOT_NONE(attribute)) {
-        // set attribute
+    Object star = string_const("*");
+    if (obj_equals(attr, star)) {
+        // set all attribute
+        int i;
+        for (i = 0; i < DICT_LEN(mod); i++) {
+            DictNode node = DICT_NODES(mod)[i];
+            // TODO filter attr starts with _
+            obj_set(globals, node.key, node.val);
+        }
+    } else if (IS_NONE(attr)) {
+        obj_set(globals, modname, mod);
     } else {
-        // update globals
+        // get one attribute;
+        Object v = obj_get(mod, attr);
+        obj_set(globals, attr, v);
     }
 }
 
@@ -178,21 +205,26 @@ Object tm_eval(TmFrame* f) {
         case OP_IMPORT: {
             // TODO
             // tm_import(globals)
-            Object import_func = tm_get_global(globals, sz_to_string("_import"));
+            // Object import_func = tm_get_global(globals, sz_to_string("_import"));
             
+            // tm_import(globals, modname, )
             // module, attribute
-            arg_start();
-            arg_push(globals);
+            // arg_start();
+            // arg_push(globals);
+            Object modname, attr;
+            
             if (i == 1) {
-                arg_push(TM_POP()); // arg1
+                modname = TM_POP();
+                attr = NONE_OBJECT;
+                // arg_push(TM_POP()); // arg1
             } else {
-                Object b = TM_POP();
-                Object a = TM_POP();
-                arg_push(a);
-                arg_push(b);
+                attr = TM_POP();
+                modname = TM_POP();
+                // arg_push(a);
+                // arg_push(b);
             }
-            // tm_import(globals, modname, attribute);
-            call_function(import_func);
+            tm_import(globals, modname, attr);
+            // all_function(import_func);
             break;
         }
         case OP_CONSTANT: {

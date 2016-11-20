@@ -158,6 +158,30 @@ def print_usage():
     print("build.py          -- build `bin.c` and `instruction.h`")
     print("build.py compiler -- build a standalone compiler")
     
+def build_mini_c(pyfilename):
+    out = []
+    if exists("vm.c"):
+        text = load("vm.c")
+    else:
+        text = build_single_c("../vm.c")
+    code = compilefile(pyfilename)
+    dest_code = code_str("main") + code_str(code)
+    mod_len = code32(2)
+    code = mod_len + code_str("constants") + code_str(build_const_code()) + dest_code
+    c_array_def = "unsigned char bin[] = {\n" + str_to_chars(code) + "\n};\n";
+    text += "\n" + c_array_def
+    
+    text += '''
+int main(int argc, char *argv[])
+{
+    /* start vm with bin */
+    return tm_run(argc, argv, bin);
+}
+    '''
+    return text
+    
+    
+    
 def main():
     argc = len(sys.argv)
     argv = sys.argv
@@ -175,6 +199,10 @@ def main():
         arg2 = argv[2]
         if arg1 == "-c":
             text = build_single_c(arg2)
+            print(text)
+            return
+        elif arg1 == "-mc":
+            text = build_mini_c(arg2)
             print(text)
             return
     print_usage()
