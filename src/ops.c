@@ -35,7 +35,8 @@ void tm_assert_type(Object o, int type, char* msg) {
 }
 
 void tm_assert_int(double value, char* msg) {
-    if (value != (int) value) {
+    /* (int)(-1.2) = -1 */
+    if (value - floor(value) > 0.000001) {
         tm_raise("%s require int", msg);
     }
 }
@@ -70,7 +71,6 @@ Object obj_get(Object self, Object k) {
         DictNode* node;
         if (TM_TYPE(k) == TYPE_NUM) {
             double d = GET_NUM(k);
-            tm_assert_int(d, "string_get");
             int n = d;
             if (n < 0) {
                 n += GET_STR_LEN(self);

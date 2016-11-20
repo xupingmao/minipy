@@ -122,7 +122,8 @@ def copy(src, des):
     save(des, bin)
     
 def mtime(fname):
-    obj = stat(fname)
+    import os
+    obj = os.stat(fname)
     return obj.st_mtime
 
 '''
@@ -302,10 +303,11 @@ def boot(loadlibs=True):
     from encode import *
     from repl import *
     import sys
+    import os
     global LIB_PATH
     argv = sys.argv
     argc = len(argv)
-    pathes = split_path(getcwd())
+    pathes = split_path(os.getcwd())
     pathes.append("libs")
     LIB_PATH = join_path(pathes)
     if argc == 0:

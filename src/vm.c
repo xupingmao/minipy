@@ -13,6 +13,7 @@
 #include "module/time.c"
 #include "module/sys.c"
 #include "module/math.c"
+#include "module/os.c"
 
 // #include "tmtokenize.c"
 
@@ -150,6 +151,7 @@ int tm_run(int argc, char* argv[], unsigned char* init_code) {
         time_mod_init();
         sys_mod_init();
         math_mod_init();
+        os_mod_init();
     
         load_binary();
         call_mod_func("init", "boot");
