@@ -146,7 +146,12 @@ typedef struct TmVm {
   int max_allocated;
   int gc_threshold;
   int gc_state;
-}TmVm;
+  
+  /* constants */
+  Object _TRUE;
+  Object _FALSE;
+  
+} TmVm;
 
 /** 
  * definition for data
@@ -248,7 +253,7 @@ typedef struct {
 
 /**
  * global variables
- *
+ * only one.
  */ 
 TmVm* tm;
 

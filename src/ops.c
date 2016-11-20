@@ -7,7 +7,7 @@
     return _num;
 
 
-const char* get_type_by_int(int type) {
+const char* tm_type(int type) {
     switch (type) {
     case TYPE_STR:
         return "string";
@@ -27,15 +27,10 @@ const char* get_type_by_int(int type) {
     return "unknown";
 }
 
-const char* get_type_by_obj(Object obj) {
-    return get_type_by_int(TM_TYPE(obj));
-}
-
-
 void tm_assert_type(Object o, int type, char* msg) {
     if (TM_TYPE(o) != type) {
         tm_raise("%s, expect %s but see %s", msg, 
-            get_type_by_int(type), get_type_by_obj(o));
+            tm_type(type), tm_type(o.type));
     }
 }
 
@@ -162,7 +157,7 @@ Object obj_slice(Object self, Object first, Object second) {
             obj_append(ret, LIST_GET(self, i));
         }
     } else {
-        tm_raise("slice not implemented for type %s", get_type_by_int(self.type));
+        tm_raise("slice not implemented for type %s", tm_type(self.type));
     }
     return ret;
 }
@@ -234,8 +229,8 @@ int obj_equals(Object a, Object b){
         case TYPE_DICT:return GET_DICT(a) == GET_DICT(b);
         case TYPE_FUNCTION: return GET_FUNCTION(a) == GET_FUNCTION(b);
         default: {
-            const char* ltype = get_type_by_obj(a);
-            const char* rtype = get_type_by_obj(b);
+            const char* ltype = tm_type(a.type);
+            const char* rtype = tm_type(b.type);
             tm_raise("equals(): not supported type %d:%s and %d:%s", TM_TYPE(a), ltype, TM_TYPE(b), rtype);
         } 
     }
@@ -405,7 +400,7 @@ void obj_del(Object self, Object k) {
             break;
         }
         default:
-            tm_raise("obj_del: not supported type %s", get_type_by_obj(self));
+            tm_raise("obj_del: not supported type %s", tm_type(self.type));
     }
 }
 

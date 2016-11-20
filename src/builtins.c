@@ -733,9 +733,9 @@ Object bf_exists(){
     Object _fname = arg_take_str_obj("exists");
     char* fname = GET_STR(_fname);
     FILE*fp = fopen(fname, "rb");
-    if(fp == NULL) return NUMBER_FALSE;
+    if(fp == NULL) return tm->_FALSE;
     fclose(fp);
-    return NUMBER_TRUE;
+    return tm->_TRUE;
 }
 
 Object bf_stat(){
@@ -873,12 +873,6 @@ Object bf_hasattr() {
     Object key  = arg_take_obj("getattr");
     return tm_number(obj_in(self, key));
 }
-
-
-void tm_setattr(Object dict, char* attr, Object value) {
-    dict_set0(GET_DICT(dict), sz_to_string(attr), value);
-}
-
 
 void builtins_init() {
     reg_builtin_func("load", bf_load);

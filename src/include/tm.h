@@ -8,8 +8,10 @@
  *  function        . underscore
  *  structure       . camel case 
  *  method          . like string_builtin_xxx, list_builtin_xxx
- *  builtins        . builtin_xxx
  *  macro           . like XXX_XXX
+ *  function(used by C)  - tm_xxx  - like tm_get(Object a, const char* key)
+ *  function(used by vm) - tmV_xxx - like Object tmV_fnc(Object a, Object b)
+ *  built-in function    - bf_xxx
 */
 
 /* #pragma pack(4) */
@@ -37,10 +39,7 @@ typedef char instruction;
 #include "object.h"
 #define OBJ_SIZE sizeof(Object)
 
-Object NUMBER_TRUE;
-Object NUMBER_FALSE;
 Object NONE_OBJECT;
-Object UNDEF;
 Object ARRAY_CHARS;
 
 #include "instruction.h"
@@ -254,8 +253,7 @@ void        init_data_proto(Data_proto* proto);
  *  general object operation
  *  some tools
  */
-const char* get_type_by_int(int type);
-const char* get_type_by_obj(Object obj);
+const char* tm_type(int type);
 void        obj_set(Object self, Object key, Object value);
 Object      obj_get(Object self, Object key);
 Object      obj_add(Object a, Object b);
@@ -267,9 +265,9 @@ Object      obj_neg(Object o) ;
 int         obj_in(Object key, Object collection);
 int         obj_equals(Object a, Object b);
 int         obj_cmp(Object a, Object b);
+Object      obj_slice(Object self, Object first, Object second);
 Object*     next_ptr(Object iterator);
 Object      iter_new(Object collections);
-Object      obj_get(Object self, Object k);
 void        obj_set(Object self, Object k, Object v);
 char*       obj_to_sz(Object obj);
 
@@ -320,7 +318,6 @@ void      tm_print(Object v);
 void      tm_println(Object v);
 Object    tm_format_va_list(char* fmt, va_list ap, int appendln);
 Object    tm_format(char*fmt, ...);
-Object    tm_type(Object o);
 void      tm_inspect_obj(Object o);
 void      tm_printf(char* fmt, ...);
 /* avoid '\0' in char array, which will be regarded as end by c lang */

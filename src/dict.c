@@ -312,3 +312,24 @@ Object* dict_next(TmData* iterator) {
     }
     return NULL;
 }
+
+
+/**
+ * get attribute by char array
+ * @since 2016-09-02
+ */
+Object tm_getattr(Object obj, char* key) {
+    // TODO optimize string find
+    Object obj_key = string_new(key);
+    return obj_get(obj, obj_key);
+}
+
+
+/**
+ * get attribute by char array
+ * @since 2016-09-02
+ */
+void tm_setattr(Object obj, char* key, Object value) {
+    Object obj_key = string_new(key);
+    obj_set(obj, obj_key, value);
+}

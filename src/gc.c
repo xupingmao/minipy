@@ -31,10 +31,9 @@ void gc_init() {
     int i;
     
     /* initialize constants */
-    NUMBER_TRUE = tm_number(1);
-    NUMBER_FALSE = tm_number(0);
+    tm->_TRUE  = tm_number(1);
+    tm->_FALSE = tm_number(0);
     NONE_OBJECT.type = TYPE_NONE;
-    UNDEF.type = -1;
     
     tm->init = 0;
     tm->debug = 0;
