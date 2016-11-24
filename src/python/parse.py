@@ -3,6 +3,39 @@ from tokenize import *
 if "tm" not in globals():
     from boot import *
 
+'''
+
+Parsing Expression Grammar
+
+grammar = stmt+
+
+stmt = 'import' name
+    | 'from' name 'import' ('*' | name)
+    
+    | 'if' - exp ':' ('elif' exp ':' block )* ('else' block)?
+    | 'while' - exp ':' block
+    | 'for' - exp 'in' - exp ':' - block
+    | 'continue' - ';'?
+    | 'break' - ';'?
+    | 'pass' - ';'?
+    
+    | 'def' - name '(' - (parg)* (varg)* ')' - ':' - block
+    | 'class' - name ':' block
+    | 'return' - exp? ';'?
+    
+    | 'assert' - exp ';'?
+    | 'raise'  - exp ';'?
+    | 'global' - name ';'?
+    | 'del' - exp ';'?
+    
+    | 'try' - ':' - block 'except' - (name 'as' name)? ':' block
+    | exp '=' - exp ';'?
+    | exp ';'?
+
+-    = [\t ]*    
+name = < [a-zA-Z_] [a-zA-Z_0-9]* > -
+    
+'''
 
 _stm_end_list = ['nl', 'dedent']
 _skip_op = ['nl', ';']

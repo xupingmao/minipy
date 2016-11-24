@@ -64,6 +64,64 @@ Object tm_load_module(Object file, Object code, Object name) {
 }
 
 /**
+ * @since 2016-11-24
+ * TODO gc problem
+ */
+void tm_loadcode(char* code) {
+    char* s = code;
+    char buf[1024];
+    int error = 0;
+    char* error_msg = NULL;
+    
+    while (*s != 0) {
+        // read opcode
+        int op = 0;
+        /* isdigit -- ctype.h */
+        while (isdigit(*s)) {
+            op = op * 10 + (*s-'0');
+            s++;
+        }
+        if (*s=='#') {
+            s++;
+        } else {
+            // opcode ended or error
+            break;
+            error = 1;
+        }
+        
+        int i = 0;
+        // load string
+        for (i = 0;*s != 0 && *s != '\n' && *s != '\r'; s++, i++) {
+            if (*s=='\\') {
+                s++;
+                switch(*s) {
+                    case '\\': buf[i] = '\\'; break;
+                    case 'n' : buf[i] = '\n'; break;
+                    case 'r' : buf[i] = '\r'; break;
+                    case 't' : buf[i] = '\t'; break;
+                    default:
+                        buf[i] = *(s-1);
+                        buf[i+1] = *s;
+                        i++;
+                }
+            } else {
+                buf[i] = *s;
+            }
+        }
+        buf[i] = '\0';
+        
+        // skip \r\n
+        while (*s=='\r' || *s=='\n') {
+            s++;
+        }
+    }
+    
+    if (error) {
+        tm_raise("invalid code");
+    }
+}
+
+/**
  * @since 2016-11-15
  */
 void tm_import(Object globals, Object modname, Object attr) {
@@ -83,8 +141,11 @@ void tm_import(Object globals, Object modname, Object attr) {
         int i;
         for (i = 0; i < DICT_LEN(mod); i++) {
             DictNode node = DICT_NODES(mod)[i];
-            // TODO filter attr starts with _
-            obj_set(globals, node.key, node.val);
+            // filter attr starts with _
+            Object key = node.key;
+            if (IS_STR(key) && GET_STR(key)[0] != '_') {
+                obj_set(globals, node.key, node.val);
+            }
         }
     } else if (IS_NONE(attr)) {
         obj_set(globals, modname, mod);
