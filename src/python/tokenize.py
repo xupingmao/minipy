@@ -112,8 +112,7 @@ def do_tokenize(s):
         elif c == '\n': i = do_nl(s,i,l)
         elif c in _ISYMBOLS: i = do_symbol(s,i,l)
         elif c >= '0' and c <= '9': i = do_number(s,i,l)
-        elif (c >= 'a' and c <= 'z') or \
-            (c >= 'A' and c <= 'Z') or c in '_$':  i = do_name(s,i,l)
+        elif is_name_begin(c):  i = do_name(s,i,l)
         elif c=='"' or c=="'": i = do_string(s,i,l)
         elif c=='#': i = do_comment(s,i,l)
         elif c == '\\' and s[i+1] == '\n':
@@ -192,11 +191,17 @@ def do_number(s,i,l):
     T.add('number',float(v))
     return i
 
+def is_name_begin(c):
+    return (c>='a' and c<='z') or (c>='A' and c<='Z') or (c in '_%')
+    
+def is_name(c):
+    return (c>='a' and c<='z') or (c>='A' and c<='Z') or (c in '_%') or (c>='0' and c<='9')
+    
 def do_name(s,i,l):
     v=s[i];i+=1
     while i<l:
         c = s[i]
-        if (c < 'a' or c > 'z') and (c < 'A' or c > 'Z') and (c < '0' or c > '9') and c not in '$_': break
+        if not is_name(c): break
         v+=c
         i+=1
     if v in KEYWORDS: T.add(v,v)

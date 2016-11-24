@@ -75,7 +75,7 @@ void tm_loadcode(char* code) {
     
     while (*s != 0) {
         /* must begin with opcode */
-        if (!isdigit(s)) {
+        if (!isdigit(*s)) {
             error = 1;
             break;
         }
