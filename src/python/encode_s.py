@@ -803,10 +803,10 @@ def _compile(src, filename, des = None):
 
 def compile_escape(s):
     s = str(s)
+    s = s.replace("\\", "\\\\")
     s = s.replace("\r", "")
-    s = s.replace("#", "\\#")
     s = s.replace("\n", "\\n")
-    s = s.replace("\"", "0\\12")
+    s = s.replace("\"", "0\\\"")
     return s
     
 def compile(src, filename, des = None):
@@ -821,7 +821,7 @@ def compile(src, filename, des = None):
     code = join_code()
     dest = ''
     for item in code:
-        # there is no # in CJK
+        # there is no # in CJK charsets, so it is better to split the sequence
         dest += str(item[0]) + '#' + compile_escape(item[1])+'\\\n'
     return "char* bin = \"" + dest + "\""
     

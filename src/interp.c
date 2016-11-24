@@ -65,7 +65,7 @@ Object tm_load_module(Object file, Object code, Object name) {
 
 /**
  * @since 2016-11-24
- * TODO gc problem
+ * TODO gc problem, still save string to constants dict?
  */
 void tm_loadcode(char* code) {
     char* s = code;
@@ -74,6 +74,11 @@ void tm_loadcode(char* code) {
     char* error_msg = NULL;
     
     while (*s != 0) {
+        /* must begin with opcode */
+        if (!isdigit(s)) {
+            error = 1;
+            break;
+        }
         // read opcode
         int op = 0;
         /* isdigit -- ctype.h */
@@ -111,7 +116,7 @@ void tm_loadcode(char* code) {
         buf[i] = '\0';
         
         // skip \r\n
-        while (*s=='\r' || *s=='\n') {
+        while (*s=='\r' || *s=='\n' || *s == ' ' || *s=='\t') {
             s++;
         }
     }
