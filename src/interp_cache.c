@@ -254,6 +254,8 @@ TmFrame* push_frame(Object fnc) {
         *top = tm_number(flag); \
     }
 
+
+/** use cache */
 /** 
 ** evaluate byte code.
 ** @param f: Frame
@@ -265,7 +267,7 @@ Object tm_eval(TmFrame* f) {
     Object cur_fnc    = f->fnc;
     Object globals    = get_globals(cur_fnc);
     // TODO use code cache to replace unsigned char*
-    unsigned char* pc = f->pc;
+    TmCodeCache* cache = f->cache;
     const char* func_name_sz = get_func_name_sz(cur_fnc);
 
     Object x, k, v;
@@ -276,39 +278,19 @@ Object tm_eval(TmFrame* f) {
         printf("File \"%s\": enter function %s\n",get_func_file_sz(cur_fnc), get_func_name_sz(cur_fnc));
     #endif
     while (1) {
-        i = (pc[1] << 8) | pc[2];
-        
-        #if INTERP_DB
-            printf("%30s%2d: %d frame = %d, top = %d\n","", pc[0], i, tm->cur, (int) (top - f->stack));
-        #endif    
-        switch (pc[0]) {
+        switch (cache->op) {
 
         case OP_NUMBER: {
-            double d = atof((char*)pc + 3);
-            pc += i;
-            v = tm_number(d);
-            /* obj_append(tm->constants,v);*/
-            dict_set(tm->constants, v, NONE_OBJECT);
+            TM_PUSH(cache->v.obj);
             break;
         }
 
         case OP_STRING: {
-            v = string_alloc((char*)pc + 3, i);
-            pc += i;
-            /* obj_append(tm->constants,v); */
-            dict_set(tm->constants, v, NONE_OBJECT);
+            TM_PUSH(cache->v.obj);
             break;
         }
 
         case OP_IMPORT: {
-            // TODO
-            // tm_import(globals)
-            // Object import_func = tm_get_global(globals, sz_to_string("_import"));
-            
-            // tm_import(globals, modname, )
-            // module, attribute
-            // arg_start();
-            // arg_push(globals);
             Object modname, attr;
             
             if (i == 1) {
@@ -326,7 +308,7 @@ Object tm_eval(TmFrame* f) {
             break;
         }
         case OP_CONSTANT: {
-            TM_PUSH(GET_CONST(i));
+            TM_PUSH(GET_CONST(cache->v.ival));
             break;
         }
         
@@ -336,12 +318,12 @@ Object tm_eval(TmFrame* f) {
         }
 
         case OP_LOAD_LOCAL: {
-            TM_PUSH(locals[i]);
+            TM_PUSH(locals[cache->v.ival]);
             break;
         }
 
         case OP_STORE_LOCAL:
-            locals[i] = TM_POP();
+            locals[cache->v.ival] = TM_POP();
             break;
 
         case OP_LOAD_GLOBAL: {
@@ -477,9 +459,11 @@ Object tm_eval(TmFrame* f) {
             TM_TOP() = obj_neg(TM_TOP());
             break;
         case OP_CALL: {
+            int n = cache->v.ival;
+            
             f->top = top;
-            top -= i;
-            arg_set_arguments(top + 1, i);
+            top -= n;
+            arg_set_arguments(top + 1, n);
             Object func = TM_POP();
             #if INTERP_DB
                 printf("call %s\n", get_func_name_sz(func));

@@ -45,6 +45,15 @@ struct  GC_Object {
   /* data */
 };
 
+typedef struct _tm_code_cache {
+    int op;
+    union {
+        Object obj;
+        int ival;
+    } v;
+    char* sval;
+} TmCodeCache;
+
 typedef struct TmModule
 {
   int marked;
@@ -52,6 +61,9 @@ typedef struct TmModule
   Object globals;
   Object code;
   Object file;
+  TmCodeCache* cache;
+  int cache_cap;
+  int cache_len;
 }TmModule;
 
 typedef struct TmFunction{
@@ -76,6 +88,7 @@ typedef struct TmFrame {
   char* last_code;
   
   unsigned char* pc;
+  TmCodeCache* cache;
 
   int stacksize;
   int maxlocals;
@@ -87,11 +100,6 @@ typedef struct TmFrame {
   unsigned char* jmp;
 }TmFrame;
 
-struct _tm_jmp_buf {
-    struct _tm_jmp_buf *prev;
-    jmp_buf b;
-    TmFrame* f;
-};
 
 #define FRAMES_COUNT 128
 #define MAX_ARG_COUNT 10

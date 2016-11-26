@@ -83,11 +83,12 @@ void func_free(TmFunction* func){
   tm_free(func, sizeof(TmFunction));
 }
 
-Object module_new(Object file , Object name, Object code){
+Object module_new(Object file, Object name, Object code){
   TmModule *mod = tm_malloc(sizeof(TmModule));
   mod->file = file;
   mod->code = code;
   mod->resolved = 0;
+  mod->cache = NULL;
   /*mod->constants = list_new(20);*/
   /*list_append(GET_LIST(mod->constants), NONE_OBJECT);*/
   mod->globals = dict_new();
@@ -98,8 +99,36 @@ Object module_new(Object file , Object name, Object code){
   return m;
 }
 
+/**
+ * @since 2016-11-25
+ */
+void tm_init_cache(TmModule* m) {
+    if (m->cache != NULL) return;
+    m->cache_cap = 100;
+    m->cache_len = 0;
+    m->cache = tm_malloc(sizeof(TmCodeCache) * m->cache_cap);
+}
+
+/**
+ * @since 2016-11-25
+ */
+void tm_push_cache(TmModule* m, TmCodeCache cache) {
+    if (m->cache_len>=m->cache_cap) {
+        int oldsize = m->cache_cap * sizeof(TmCodeCache);
+        m->cache_cap = m->cache_cap + m->cache_cap / 2 + 1;
+        int newsize = m->cache_cap * sizeof(TmCodeCache);
+        m->cache = tm_realloc(m->cache, oldsize, newsize);
+    }
+    printf("cache: %3d - %s\n", cache.op, cache.sval);
+    m->cache[m->cache_len] = cache;
+    m->cache_len++;
+}
+
 void module_free(TmModule* mod){
-  tm_free(mod, sizeof(TmModule));
+    if (mod->cache != NULL) {
+        tm_free(mod->cache, sizeof(TmCodeCache) * mod->cache_cap);
+    }
+    tm_free(mod, sizeof(TmModule));
 }
 
 

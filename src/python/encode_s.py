@@ -168,8 +168,10 @@ def emit_load(v):
         emit(OP_NONE)
         return;
     t = v.type
-    if t == 'string' or t == 'number':
-        load_const(v)
+    if t == 'string':
+        emit(OP_STRING, v.val)
+    elif t == 'number':
+        emit(OP_NUMBER, v.val)
     elif t == 'None':
         emit(OP_NONE, 0)
     elif t == 'name':
@@ -803,10 +805,8 @@ def _compile(src, filename, des = None):
 
 def compile_escape(s):
     s = str(s)
-    s = s.replace("\\", "\\\\")
     s = s.replace("\r", "")
     s = s.replace("\n", "\\n")
-    s = s.replace("\"", "0\\\"")
     return s
     
 def compile(src, filename, des = None):
@@ -822,8 +822,18 @@ def compile(src, filename, des = None):
     dest = ''
     for item in code:
         # there is no # in CJK charsets, so it is better to split the sequence
-        dest += str(item[0]) + '#' + compile_escape(item[1])+'\\\n'
-    return "char* bin = \"" + dest + "\""
+        dest += str(item[0]) + '#' + compile_escape(item[1])+'\n'
+    return dest;
+  
+def convert_to_cstring(filename, code):
+    code = code.replace('"', '\\"')
+    code = code.replace("\n", "\\n")
+    cstring = "char* " + filename.replace(".", "_") + "_bin" + "=";
+    cstring += '"'
+    cstring += code
+    cstring += '";'
+    return cstring
+    
     
 def _compilefile(filename, des = None):
     return _compile(load(filename), filename, des)
@@ -853,6 +863,7 @@ def main():
         repl_print = repl.repl_print
         code = compilefile(ARGV[1])
         # list = split_instr(code)
+        code = convert_to_cstring(ARGV[1], code)
         print(code)
         # repl_print(code, 0, 3)
     elif len(ARGV) == 3:
