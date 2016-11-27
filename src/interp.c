@@ -63,136 +63,6 @@ Object tm_load_module(Object file, Object code, Object name) {
     return GET_MODULE(mod)->globals;
 }
 
-/**
- * @since 2016-11-24
- * TODO gc problem, still save string to constants dict?
- */
-void tm_loadcode(TmModule* m, char* code) {
-    char* s = code;
-    char buf[1024];
-    int error = 0;
-    char* error_msg = NULL;
-    
-    tm_init_cache(m);
-    
-    TmCodeCache cache;
-    while (*s != 0) {
-        /* must begin with opcode */
-        if (!isdigit(*s)) {
-            error = 1;
-            break;
-        }
-        // read opcode
-        int op = 0;
-        /* isdigit -- ctype.h */
-        while (isdigit(*s)) {
-            op = op * 10 + (*s-'0');
-            s++;
-        }
-        if (*s=='#') {
-            s++;
-        } else {
-            // opcode ended or error
-            break;
-            error = 1;
-        }
-        
-        int i = 0;
-        // load string
-        for (i = 0;*s != 0 && *s != '\n' && *s != '\r'; s++, i++) {
-            if (*s=='\\') {
-                s++;
-                switch(*s) {
-                    case '\\': buf[i] = '\\'; break;
-                    case 'n' : buf[i] = '\n'; break;
-                    case 'r' : buf[i] = '\r'; break;
-                    case 't' : buf[i] = '\t'; break;
-                    default:
-                        buf[i] = *(s-1);
-                        buf[i+1] = *s;
-                        i++;
-                }
-            } else {
-                buf[i] = *s;
-            }
-        }
-        buf[i] = '\0';
-        
-        // skip \r\n
-        while (*s=='\r' || *s=='\n' || *s == ' ' || *s=='\t') {
-            s++;
-        }
-        cache.op = op;
-        cache.sval = buf; // temp value, just for print
-        switch(op) {
-            case OP_NUMBER:
-                cache.v.obj = tm_number(atof(buf)); break;
-            
-            /* string value */
-            case OP_STRING: 
-            case OP_LOAD_GLOBAL:
-            case OP_STORE_GLOBAL:
-            case OP_FILE: 
-            case OP_DEF:           
-                cache.v.obj = string_const(buf); break;
-            
-            /* int value */
-            case OP_LOAD_LOCAL:
-            case OP_STORE_LOCAL:
-            case OP_CALL: 
-            case OP_ROT:
-            case OP_JUMP:
-            case OP_UP_JUMP:     
-            case OP_JUMP_ON_FALSE:
-            case OP_JUMP_ON_TRUE: 
-            case OP_LOAD_PARG: 
-            case OP_LOAD_NARG:
-            case OP_LINE:
-                cache.v.ival = atoi(buf); break;
-        }
-        tm_push_cache(m, cache);
-    }
-    
-    if (error) {
-        tm_raise("invalid code");
-    }
-}
-
-/**
- * @since 2016-11-15
- */
-void tm_import(Object globals, Object modname, Object attr) {
-    Object mod;
-    if (obj_in(modname, tm->modules)) {
-        mod = obj_get(tm->modules, modname);
-    } else {
-        // compile and import
-        Object ext = string_const(".py");
-        Object filename = obj_add(modname, ext);
-        Object code = call_mod_func("encode", "compilefile");
-        mod = tm_load_module(filename, modname, code);
-    }
-    Object star = string_const("*");
-    if (obj_equals(attr, star)) {
-        // set all attribute
-        int i;
-        for (i = 0; i < DICT_LEN(mod); i++) {
-            DictNode node = DICT_NODES(mod)[i];
-            // filter attr starts with _
-            Object key = node.key;
-            if (IS_STR(key) && GET_STR(key)[0] != '_') {
-                obj_set(globals, node.key, node.val);
-            }
-        }
-    } else if (IS_NONE(attr)) {
-        obj_set(globals, modname, mod);
-    } else {
-        // get one attribute;
-        Object v = obj_get(mod, attr);
-        obj_set(globals, attr, v);
-    }
-}
-
 void pop_frame() {
     tm->frame --;
 }
@@ -303,26 +173,21 @@ Object tm_eval(TmFrame* f) {
         case OP_IMPORT: {
             // TODO
             // tm_import(globals)
-            // Object import_func = tm_get_global(globals, sz_to_string("_import"));
-            
-            // tm_import(globals, modname, )
-            // module, attribute
-            // arg_start();
-            // arg_push(globals);
+            Object import_func = tm_get_global(globals, sz_to_string("_import"));
+            arg_start();
+            arg_push(globals);
             Object modname, attr;
             
             if (i == 1) {
                 modname = TM_POP();
-                attr = NONE_OBJECT;
-                // arg_push(TM_POP()); // arg1
+                arg_push(modname); // arg1
             } else {
                 attr = TM_POP();
                 modname = TM_POP();
-                // arg_push(a);
-                // arg_push(b);
+                arg_push(modname);
+                arg_push(attr);
             }
-            tm_import(globals, modname, attr);
-            // all_function(import_func);
+            call_function(import_func);
             break;
         }
         case OP_CONSTANT: {

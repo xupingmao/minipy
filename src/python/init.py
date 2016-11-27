@@ -135,6 +135,8 @@ def _import(des_glo, fname, tar = None):
     if fname in __modules__:
         pass
     else:
+        import os
+        exists = os.exists
         # printf("try to load module %s\n", fname)
         from encode import *
         # can not find file in current dir.
@@ -243,7 +245,7 @@ def resolvepath(path):
     if not ('/' in path or '\\' in path):
         return path
     import os
-    fs1 = split_path(getcwd())
+    fs1 = split_path(os.getcwd())
     fs2 = split_path(path)
     fname = fs2.pop()
     parent = join_path(fs1+fs2)
@@ -313,8 +315,8 @@ def boot(loadlibs=True):
     if argc == 0:
         repl()
     else:
-        if exists(argv[0]):
+        if os.exists(argv[0]):
             execfile(argv[0])
         else:
-            filename = "D:\\temp\\subpy\\libs\\" + argv[0]
-            execfile(filename, False)
+            print("file not exists, exit")
+            

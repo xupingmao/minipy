@@ -308,7 +308,7 @@ Object bf_float() {
 }
 
 /**
- *   load_module( name, code, mod_name = None )
+ *   load_module( filename, code, mod_name = None )
  */
 Object bf_load_module() {
     const char* sz_fnc = "load_module";
@@ -318,7 +318,7 @@ Object bf_load_module() {
     if (get_args_count() == 3) {
         name = arg_take_str_obj(sz_fnc);
     }
-    return tm_load_module(file, name, code);
+    return tm_load_module(file, code, name);
 }
 
 
