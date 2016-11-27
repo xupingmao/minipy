@@ -1,6 +1,7 @@
 import encode
 compile = encode.compile
 split_instr = encode.split_instr
+compile_to_list = encode.compile_to_list
 
 from tmcode import *
 
@@ -68,8 +69,8 @@ def pyeval(src, glo_vars = None, debug = False):
     glo_vars = glo_vars or {}
     env = Env(glo_vars)
     glo_vars['globals'] = env.globals
-    code = compile(src, "<shell>")
-    ins_list = split_instr(code)
+    # code = compile(src, "<shell>")
+    ins_list = compile_to_list(src, "<shell>")
     # print(ins_list)
     loc_vars = []
     stack = []
@@ -83,13 +84,23 @@ def pyeval(src, glo_vars = None, debug = False):
             # print(line)
         cyc += 1
         if op == OP_CONSTANT:
-            r = get_const(v)
+            r = v
             stack.append(r)
             if debug:
                 if istype(r,"string"):
                     line+='"' + r + '"'
                 else:
                     line += str(r)
+        elif op == OP_STRING:
+            r = v
+            stack.append(r)
+            if debug:
+                line += '"' + r + '"'
+        elif op == OP_NUMBER:
+            r = v
+            stack.append(r)
+            if debug:
+                line += r
         elif op == OP_LOAD_LOCAL:
             r = loc_vars[v]
             stack.append(r)
@@ -97,7 +108,7 @@ def pyeval(src, glo_vars = None, debug = False):
             r = stack.pop()
             loc_vars[v] = r
         elif op == OP_LOAD_GLOBAL:
-            name = get_const(v)
+            name = v
             if debug:
                 line += name
             if name in glo_vars:
@@ -106,7 +117,7 @@ def pyeval(src, glo_vars = None, debug = False):
                 r = __builtins__[name]
             stack.append(r)
         elif op == OP_STORE_GLOBAL:
-            name = get_const(v)
+            name = v
             if debug:
                 line += name
             r = stack.pop()

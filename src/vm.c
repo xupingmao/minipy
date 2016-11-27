@@ -7,7 +7,7 @@
 #include "ops.c"
 #include "dict.c"
 #include "function.c"
-#include "interp.c"
+// #include "interp.c"
 #include "exception.c"
 #include "tmarg.c"
 #include "module/time.c"

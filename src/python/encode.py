@@ -801,17 +801,36 @@ def compile(src, filename, des = None):
     if des: save(des, code)
     return code
 
+def compile_to_list(src, filename):
+    global _ctx
+    # lock here
+    asm_init()
+    _ctx = EncodeCtx(src)
+    name_id = get_const_idx(filename.split(".")[0])
+    emit(OP_FILE, name_id)
+    encode(src)
+    _ctx = None
+    code = gen_code(True)
+    const_op_list = [OP_LOAD_GLOBAL, OP_STORE_GLOBAL, OP_CONSTANT]
+    for ins in code:
+        if ins[0] in const_op_list:
+            ins[1] = get_const(ins[1])
+    return code
+
 def compilefile(filename, des = None):
     return compile(load(filename), filename, des)
 
 def split_instr(instr):
     size = len(instr)
     list = []
+    const_op_list = [OP_LOAD_GLOBAL, OP_STORE_GLOBAL, OP_CONSTANT]
     i = 0
     while i < size:
         op = instr[i]
         v = uncode16(instr[i+1], instr[i+2])
         i+=3
+        if op in const_op_list:
+            v = get_const(v)
         list.append([ord(op), v])
     return list
     

@@ -74,6 +74,8 @@ typedef struct TmFunction{
   int maxstack;
   unsigned char* code;
   unsigned char* end;
+  TmCodeCache* cache;
+  TmCodeCache* cache_end;
   Object self;
   Object mod; /* module, includes global, constants, etc. */
   Object name;

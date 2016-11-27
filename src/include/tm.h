@@ -408,7 +408,7 @@ Object    call_mod_func(char* modname, char* funcname);
 #define GET_FUNCTION_GLOBALS(fnc) GET_MODULE(GET_FUNCTION(fnc)->mod)->globals
 
 /* assert macro */
-#define TM_ASSERT(cond, msg) if(!cond) {tm_raise( msg );}
+#define TM_ASSERT(cond, msg) if(!(cond)) {tm_raise( msg );}
 
 
 #define DEBUG(msg) \

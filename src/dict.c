@@ -130,6 +130,17 @@ int dict_set0(TmDict* dict, Object key, Object val){
     return i;
 }
 
+/**
+ * @since 2016-11-27
+ */
+int dict_get0(TmDict* dict, Object key) {
+    DictNode* node = dict_get_node(dict, key);
+    if (node != NULL) {
+        return node - dict->nodes;
+    }
+    return -1;
+}
+
 int dict_set_attr(TmDict* dict, int const_id, Object val) {
     int i;
     DictNode* nodes = dict->nodes;

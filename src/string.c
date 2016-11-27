@@ -88,6 +88,16 @@ Object string_const(char* s) {
     return DICT_NODES(tm->constants)[i].key;
 }
 
+
+/**
+ * @since 2016-11-27
+ */
+Object string_const2(char* s, int len) {
+    Object str_obj = string_alloc(s, len);
+    int i = dict_set(tm->constants, str_obj, NONE_OBJECT);
+    return DICT_NODES(tm->constants)[i].key;
+}
+
 Object string_chr(int n) {
     // use static str_pool to optimize
     // TODO, need handle GC problems
@@ -161,7 +171,7 @@ Object string_append_obj(Object string, Object obj) {
 Object string_append_int(Object string, int64_t num) {
     // the maxium length of long is 20
     char buf[30];
-    sprintf(buf, "%ld", num);
+    sprintf(buf, "%lld", num);
     string = string_append_sz(string, buf); 
     // not use tail-call, prevent buf destroyed by compiler
     return string;

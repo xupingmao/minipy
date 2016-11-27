@@ -2,6 +2,7 @@
 #ifndef _TM_LOG_
 #define _TM_LOG_
 
+#include <stdio.h>
 #include <stdarg.h>
 #include <time.h>
 #include <string.h>

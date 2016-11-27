@@ -9,6 +9,7 @@ unsigned char* func_resolve(TmFunction* fnc, unsigned char* pc) {
     int maxstack = 0;
     int defs = 0;
     unsigned char* s = pc;
+
     if (fnc->resolved) {
         return fnc->end;
     }
@@ -30,11 +31,60 @@ unsigned char* func_resolve(TmFunction* fnc, unsigned char* pc) {
             defs++;
         }
     }
+
     fnc->resolved = 1;
     fnc->maxlocals = maxlocals + 1;
     fnc->code = pc + 3;
     fnc->end = s;
     return fnc->end;
+}
+
+/**
+ * check function's byte code
+ * @return the ending pointer of the func
+ * @since 2016-11-27
+ */
+TmCodeCache* func_resolve_cache(TmFunction* fnc, TmCodeCache* cache) {
+    int maxlocals = -1;
+    int maxstack = 0;
+    int defs = 0;
+    TmCodeCache* cache_head = cache;
+    
+    if (fnc->resolved) {
+        return fnc->cache_end;
+    }
+    while (1) {
+        int op = cache->op;
+        int val = cache->v.ival;
+        /*
+        if (op == OP_LINE) {
+            printf("%d#%d\n", op, val);
+        } else {
+            printf("resolve:%d\n", op);
+        }
+        */
+        if (op == OP_LOAD_LOCAL || op == OP_STORE_LOCAL) {
+            maxlocals = max(cache->v.ival, maxlocals);
+        } else if (op == OP_EOF) {
+            defs--;
+            if (defs == 0) {
+                break;
+            }
+        } else if (op == OP_EOP) {
+            break;
+        } else if (op == OP_DEF) {
+            defs++;
+        } else if (op == 0) {
+            tm_raise("func_resolve_cache: op=%s", op);
+        }
+        cache++;
+    }
+
+    fnc->resolved = 1;
+    fnc->maxlocals = maxlocals + 1;
+    fnc->cache = cache_head + 1;
+    fnc->cache_end = cache + 1;
+    return fnc->cache_end;
 }
 
 Object func_new(Object mod,
@@ -58,6 +108,7 @@ Object method_new(Object _fnc, Object self){
   GET_FUNCTION(nfnc)->name = GET_FUNCTION(_fnc)->name;
   GET_FUNCTION(nfnc)->maxlocals = GET_FUNCTION(_fnc)->maxlocals;
   GET_FUNCTION(nfnc)->code = GET_FUNCTION(_fnc)->code;
+  GET_FUNCTION(nfnc)->cache = GET_FUNCTION(_fnc)->cache;
   return nfnc;
 }
 
@@ -83,6 +134,10 @@ void func_free(TmFunction* func){
   tm_free(func, sizeof(TmFunction));
 }
 
+/**
+ * @param file filename
+ * @name  __name__
+ */
 Object module_new(Object file, Object name, Object code){
   TmModule *mod = tm_malloc(sizeof(TmModule));
   mod->file = file;
@@ -119,7 +174,7 @@ void tm_push_cache(TmModule* m, TmCodeCache cache) {
         int newsize = m->cache_cap * sizeof(TmCodeCache);
         m->cache = tm_realloc(m->cache, oldsize, newsize);
     }
-    printf("cache: %3d - %s\n", cache.op, cache.sval);
+    // printf("cache: %3d - %s\n", cache.op, cache.sval);
     m->cache[m->cache_len] = cache;
     m->cache_len++;
 }
