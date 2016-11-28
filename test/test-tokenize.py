@@ -12,12 +12,27 @@ def tk_vals(r):
         rr.append(tk.val)
     return rr
     
-def tk_test(string, types, vals):
+def tk_test(string, tokens):
+    print("test", string)
     r = tokenize(string)
-    assert tk_types(r) == types
-    assert tk_vals(r) == vals
+    for i in range(len(r)):
+        tk = r[i]
+        assert tk.type == tokens[i*2]
+        assert tk.val  == tokens[i*2+1]
     
 def run():
-    tk_test("def man() pass", ["def", "name", "(", ")", "pass"], ["def", "man", "(", ")", "pass"])
+    tk_test("def man() pass", [
+        "def", "def",
+        "name","man",
+        "(", "(",
+        ")", ")",
+        "pass", "pass"])
+    tk_test("a = 10 + 2", [
+        "name", "a",
+        "=", "=",
+        "number", 10,
+        "+", "+",
+        "number", 2
+    ])
     
 run()
