@@ -5,14 +5,15 @@
 
 #include "include/tm.h"
 
-#define INTERP_DB 0
-
 void tm_loadcode(TmModule* m, char* code);
 
 Object call_function(Object func) {
     Object ret;
     if (IS_FUNC(func)) {
         resolve_method_self(func);
+        
+        tm_log_call(func);
+        
         /* call native */
         if (GET_FUNCTION(func)->native != NULL) {
             return GET_FUNCTION(func)->native();
@@ -282,52 +283,6 @@ TmFrame* push_frame(Object fnc) {
     return f;
 }
 
-/**
- * @since 2016-11-27
- */
-void tm_print_cache(TmCodeCache* cache) {
-    int val = cache->v.ival;
-    Object obj = cache->v.obj;
-
-    switch(cache->op) {
-        case OP_LINE:
-            printf("line: %d\n", val);
-            break;
-        case OP_DEF:
-            printf("def: %d\n", val);
-            break;
-        case OP_JUMP:
-            printf("jmp: %d\n", val);
-            break;
-        case OP_UP_JUMP:
-            printf("up_jmp: %d\n", val);
-            break;
-        case OP_CALL:
-            printf("call: %d\n", val);
-            break;
-        case OP_STRING:
-            printf("string: '%s'\n", GET_STR(cache->v.obj));
-            break;
-        case OP_LOAD_LOCAL:
-            printf("loadl: %d\n", val);
-            break;
-        case OP_STORE_LOCAL:
-            printf("storel: %d\n", val);
-            break;
-        case OP_LOAD_GLOBAL:
-            printf("loadg: %s\n", GET_STR(obj));
-            break;
-        case OP_STORE_GLOBAL:
-            printf("storeg: %s\n", GET_STR(obj));
-            break;
-        case OP_POP:
-            printf("pop\n");
-            break;
-        default:
-            printf("tm_eval: %d\n", cache->op);
-    }
-}
-
 #define PREDICT_JMP(flag) \
     if (!flag && pc[3] == OP_POP_JUMP_ON_FALSE) { \
         top--;\
@@ -359,11 +314,8 @@ Object tm_eval(TmFrame* f) {
     Object ret = NONE_OBJECT;
     int i;
 
-    #if INTERP_DB
-        printf("File \"%s\": enter function %s\n",get_func_file_sz(cur_fnc), get_func_name_sz(cur_fnc));
-    #endif
     while (1) {
-        // tm_print_cache(cache);
+        tm_log_cache(cache);
 
         switch (cache->op) {
 
@@ -378,20 +330,22 @@ Object tm_eval(TmFrame* f) {
         }
 
         case OP_IMPORT: {
+            Object import_func = tm_get_global(globals, sz_to_string("_import"));
+            arg_start();
+            arg_push(globals);
             Object modname, attr;
             
             if (cache->v.ival == 1) {
                 modname = TM_POP();
-                attr = NONE_OBJECT;
-                // arg_push(TM_POP()); // arg1
+                arg_push(modname); // arg1
             } else {
                 attr = TM_POP();
                 modname = TM_POP();
-                // arg_push(a);
-                // arg_push(b);
+                arg_push(modname);
+                arg_push(attr);
             }
-            tm_import(globals, modname, attr);
-            // all_function(import_func);
+            call_function(import_func);
+            
             break;
         }
         case OP_CONSTANT: {

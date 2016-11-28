@@ -114,10 +114,16 @@ void string_free(String *str) {
 int string_index(String* s1, String* s2, int start) {
     char* ss1 = s1->value;
     char* ss2 = s2->value;
-    char* p = strstr(ss1 + start, ss2);
-    if (p == NULL)
-        return -1;
-    return p - ss1;
+    // char* p = strstr(ss1 + start, ss2);
+    // strstr can not handle \0
+    int i = 0;
+    int len = s1->len - s2->len;
+    for (i = start; i < len; i++) {
+        if (memcmp(ss1+i, ss2, s2->len) == 0) {
+            return i;
+        }
+    }
+    return -1;
 }
 
 

@@ -7,6 +7,8 @@
 #include <time.h>
 #include <string.h>
 
+#define TM_LOG_CACHE 0
+#define TM_LOG_CALL  0
 
 /** 
  * 1: info,
@@ -155,7 +157,7 @@ void LOG_END() {
 /**
  * 
  */
-void _log_time(FILE* fp) {
+static void _log_time(FILE* fp) {
     time_t cur_time;
     time(&cur_time);
     char* t_str   = ctime(&cur_time);
@@ -208,5 +210,73 @@ void log_error(char* fmt, ...) {
     
     printf("\n");
 }
+
+#if TM_LOG_CALL == 1
+/**
+ * @since 2016-11-28
+ */
+void tm_log_call(Object func) {
+    Object name = GET_FUNCTION(func)->name;
+    printf("%s(\n", GET_STR(name));
+    int i;
+    for (i = 0; i < tm->arg_cnt; i++) {
+        tm_println(tm->arguments[i]);
+    }
+    printf(");\n");
+}
+#else
+    #define tm_log_call(f) /*tm_log_call*/
+#endif
+
+
+#if TM_LOG_CACHE == 1
+/**
+ * @since 2016-11-27
+ */
+void tm_log_cache(TmCodeCache* cache) {
+    int val = cache->v.ival;
+    Object obj = cache->v.obj;
+
+    switch(cache->op) {
+        case OP_LINE:
+            printf("line: %d\n", val);
+            break;
+        case OP_DEF:
+            printf("def: %d\n", val);
+            break;
+        case OP_JUMP:
+            printf("jmp: %d\n", val);
+            break;
+        case OP_UP_JUMP:
+            printf("up_jmp: %d\n", val);
+            break;
+        case OP_CALL:
+            printf("call: %d\n", val);
+            break;
+        case OP_STRING:
+            printf("string: '%s'\n", GET_STR(cache->v.obj));
+            break;
+        case OP_LOAD_LOCAL:
+            printf("loadl: %d\n", val);
+            break;
+        case OP_STORE_LOCAL:
+            printf("storel: %d\n", val);
+            break;
+        case OP_LOAD_GLOBAL:
+            printf("loadg: %s\n", GET_STR(obj));
+            break;
+        case OP_STORE_GLOBAL:
+            printf("storeg: %s\n", GET_STR(obj));
+            break;
+        case OP_POP:
+            printf("pop\n");
+            break;
+        default:
+            printf("tm_eval: %d\n", cache->op);
+    }
+}
+#else
+    #define tm_log_cache(c) /*tm_log_cache*/
+#endif
 
 #endif // _TM_LOG_
