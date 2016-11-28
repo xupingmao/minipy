@@ -24,3 +24,5 @@ def whilefunc():
     logging.info('Local Scope Test End')
     
 whilefunc()
+
+result = True

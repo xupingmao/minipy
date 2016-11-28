@@ -411,7 +411,8 @@ Object obj_append(Object a, Object item) {
     return a;
 }
 
-Object tm_get_global(Object globals, Object okey) {
+Object tm_get_global(Object globals, char *key) {
+    Object okey = string_new(key);
     DictNode* node = dict_get_node(GET_DICT(globals), okey);
     if (node == NULL) {
         node = dict_get_node(GET_DICT(tm->builtins), okey);

@@ -1,10 +1,6 @@
 #include "include/tm.h"
 #include "log.c"
 
-#ifdef GC_DEBUG
-    #include "debug.c"
-#endif
-
 /**
  * 1. mark all allocated object to be unused (0);
  * 2. mark objects can be reached from `root` to be used (1);
@@ -106,7 +102,6 @@ void* tm_malloc(size_t size) {
     }
     block = malloc(size);
     
-    DEBUG_MALLOC(block);
     log_info("malloc,%d,%d,%p", tm->allocated, tm->allocated + size, block);
 
     if (block == NULL) {
@@ -402,9 +397,6 @@ void gc_destroy() {
         log_info("current local_obj_list->len: %d", tm->local_obj_list->len);
     }
     // TM_TEST_END
-    
-
-    tm->gc_state = GC_STATE_DESTROY; // end
 
     for (i = 0; i < all->len; i++) {
         obj_free(all->nodes[i]);

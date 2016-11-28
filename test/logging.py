@@ -1,11 +1,7 @@
 
 def toBaseStr(obj):
     if istype(obj, 'string'):
-        obj = obj.replace('\t', '\\t')
-        obj = obj.replace('\n', '\\n')
-        obj = obj.replace('\r', '')
-        obj = obj.replace('"', '\\"')
-        return '"' + obj + '"'
+        return obj
     elif istype(obj, 'number'):
         return str(obj)
     return str(obj)

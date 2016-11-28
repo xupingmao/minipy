@@ -118,7 +118,7 @@ int string_index(String* s1, String* s2, int start) {
     // strstr can not handle \0
     int i = 0;
     int len = s1->len - s2->len;
-    for (i = start; i < len; i++) {
+    for (i = start; i <= len; i++) {
         if (memcmp(ss1+i, ss2, s2->len) == 0) {
             return i;
         }
@@ -254,7 +254,7 @@ Object string_builtin_replace() {
     Object nstr = string_alloc("", 0);
     int pos = string_index(self.value.str, src.value.str, 0);
     int lastpos = 0;
-    while (pos != -1 && pos < GET_STR_LEN(self)) {
+    while (pos >=0 && pos < GET_STR_LEN(self)) {
         if (pos != 0){
             nstr = obj_add(nstr,
                     string_substring(self.value.str, lastpos, pos));

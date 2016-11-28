@@ -18,3 +18,6 @@ assertEquals('test'[-2:-1], "t")
 assertEquals('test'[:] , 'test')
 assertEquals('test'[:-2], 'tes')
 assertEquals('test'[1:], 'est')
+
+assertEquals('"'.replace('"', '\\"'), '\\"')
+assertEquals('abc'.replace("\0", "abc"), "abc")

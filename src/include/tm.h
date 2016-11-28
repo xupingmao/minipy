@@ -276,7 +276,7 @@ int         tm_len(Object obj);
 int         is_true_obj(Object v);
 int         tm_iter(Object self, Object *k);
 void        obj_del(Object self, Object k);
-Object      tm_get_global(Object globals, Object key);
+Object      tm_get_global(Object globals, char* key);
 
 // vm functions
 Object call_module_function(char* mod, char* fnc);

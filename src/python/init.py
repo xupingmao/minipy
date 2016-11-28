@@ -171,6 +171,7 @@ def _import(des_glo, fname, tar = None):
         if tar not in g:
             raise(sformat("import error, no definition named '%s'", tar))
         des_glo[tar] = g[tar]
+    return g
 
 def hasattr(obj, name):
     return name in obj
@@ -262,10 +263,8 @@ def execfile(path, chdir = True):
     # printf("run file %s ...\n", fname)
     load_module(fname, _code, '__main__')
     
-def _assert(exp):
-    fidx = vmopt("frame.index")
-    info = vmopt("frame.info", fidx-1)
-    if not exp: raise "AssertionError, " + info.fname + ":" + str(info.lineno)
+def _assert(exp, msg = None):
+    if not exp: raise "AssertionError, " str(msg)
     
 def __debug__(fidx):
     info = vmopt("frame.info", fidx)

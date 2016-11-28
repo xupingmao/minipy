@@ -173,7 +173,7 @@ Object tm_eval(TmFrame* f) {
         case OP_IMPORT: {
             // TODO
             // tm_import(globals)
-            Object import_func = tm_get_global(globals, sz_to_string("_import"));
+            Object import_func = tm_get_global(globals, "_import");
             arg_start();
             arg_push(globals);
             Object modname, attr;
@@ -497,7 +497,7 @@ Object tm_eval(TmFrame* f) {
 
         case OP_DEBUG: {
             #if 0
-            Object fdebug = tm_get_global(globals, sz_to_string("__debug__"));
+            Object fdebug = tm_get_global(globals, "__debug__");
             f->top = top;
             tm_call(0, fdebug, 1, tm_number(tm->frame - tm->frames));        
             break;

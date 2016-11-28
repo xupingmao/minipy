@@ -29,9 +29,9 @@ Object call_function(Object func) {
             } else {
                 f = tm->frame;
                 /* handle exception in this frame */
-                if (f->jmp != NULL) {
-                    f->pc = f->jmp;
-                    f->jmp = NULL;
+                if (f->cache_jmp != NULL) {
+                    f->cache = f->cache_jmp;
+                    f->cache_jmp = NULL;
                     goto L_recall;
                 /* there is no handler, throw to last frame */
                 } else {
@@ -280,6 +280,7 @@ TmFrame* push_frame(Object fnc) {
     }
     *(f->top) = NONE_OBJECT;
     f->jmp = NULL;
+    f->cache_jmp = NULL;
     return f;
 }
 
@@ -330,7 +331,7 @@ Object tm_eval(TmFrame* f) {
         }
 
         case OP_IMPORT: {
-            Object import_func = tm_get_global(globals, sz_to_string("_import"));
+            Object import_func = tm_get_global(globals, "_import");
             arg_start();
             arg_push(globals);
             Object modname, attr;
@@ -513,9 +514,6 @@ Object tm_eval(TmFrame* f) {
             top -= n;
             arg_set_arguments(top + 1, n);
             Object func = TM_POP();
-            #if INTERP_DB
-                printf("call %s\n", get_func_name_sz(func));
-            #endif
 
             x = call_function(func);
             TM_PUSH(x);
@@ -671,6 +669,7 @@ Object tm_eval(TmFrame* f) {
             f->last_top = top; 
             // TODO
             // f->jmp = pc + i * 3; 
+            f->cache_jmp = cache + 1;
             break; 
         }
         case OP_CLR_JUMP: { f->jmp = NULL; break;}
@@ -678,7 +677,7 @@ Object tm_eval(TmFrame* f) {
 
         case OP_DEBUG: {
             #if 0
-            Object fdebug = tm_get_global(globals, sz_to_string("__debug__"));
+            Object fdebug = tm_get_global(globals, "__debug__");
             f->top = top;
             tm_call(0, fdebug, 1, tm_number(tm->frame - tm->frames));        
             break;

@@ -100,6 +100,9 @@ typedef struct TmFrame {
   jmp_buf buf;
   int idx;
   unsigned char* jmp;
+  
+  TmCodeCache* cache_jmp;
+  
 }TmFrame;
 
 
