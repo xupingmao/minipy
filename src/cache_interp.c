@@ -628,7 +628,7 @@ Object tm_eval(TmFrame* f) {
             f->last_top = top; 
             // TODO
             // f->jmp = pc + i * 3; 
-            f->cache_jmp = cache + 1;
+            f->cache_jmp = cache + cache->v.ival;
             break; 
         }
         case OP_CLR_JUMP: { f->jmp = NULL; f->cache_jmp = NULL; break;}
