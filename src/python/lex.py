@@ -159,13 +159,16 @@ def indent(v):
             T.add('dedent',v)
 
 
+def symbol_match(s, i, v):
+    return s[i:i+len(v)] == v
+            
 def do_symbol(s,i,l):
     # symbols = []
     # v,f,i = s[i],i,i+1
     # v=s[i];f=i;i+=1
     v = None
     for sb in SYMBOLS:
-        if mmatch(s, i, sb):
+        if symbol_match(s, i, sb):
             i += len(sb)
             v = sb
             break

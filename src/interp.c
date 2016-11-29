@@ -257,14 +257,14 @@ Object tm_eval(TmFrame* f) {
         case OP_APPEND:
             v = TM_POP();
             x = TM_TOP();
-            tm_assert_type(x, TYPE_LIST, "tm_eval: OP_APPEND");
+            tm_assert(IS_LIST(x), "tm_eval: OP_APPEND require list");
             list_append(GET_LIST(x), v);
             break;
         case OP_DICT_SET:
             v = TM_POP();
             k = TM_POP();
             x = TM_TOP();
-            tm_assert_type(x, TYPE_DICT, "tm_eval: DICT_SET");
+            tm_assert(IS_DICT(x), "tm_eval: OP_DICT_SET require dict");
             obj_set(x, k, v);
             break;
         case OP_DICT: {

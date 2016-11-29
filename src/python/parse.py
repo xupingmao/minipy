@@ -1,4 +1,4 @@
-from tokenize import *
+from lex import *
 
 if "tm" not in globals():
     from boot import *
@@ -31,6 +31,25 @@ stmt = 'import' name
     | 'try' - ':' - block 'except' - (name 'as' name)? ':' block
     | exp '=' - exp ';'?
     | exp ';'?
+
+    
+----------------------------
+   operator priority
+----------------------------
+Low  |  '=' | '+=' | '-=' | '*=' | '/=' | '%='
+     |  ','
+     |  'or'
+     |  'and'
+     |  'not'
+     |  '>' | '>=' | '<' | '<=' | '==' | '!=' | 'in' | 'notin' | 'is'
+     |  '+' | '-'
+     |  '*' | '/' | '%'
+     |  '-'  
+     |  '.' name  | '(' arg_list ')' | '[' or_exp ']'          --- postfix
+     |  '(' comma_exp ')'                                      --- prefix
+High |  object
+----------------------------
+
 
 -    = [\t ]*    
 name = < [a-zA-Z_] [a-zA-Z_0-9]* > -
@@ -131,7 +150,7 @@ def baseitem(p):
         p.add(node)
     elif t == '(':
         p.next()
-        expr(p)
+        exp(p, ',')
         expect(p, ')')
     elif t == '{':
         p.next()

@@ -6,6 +6,11 @@
     GET_NUM(_num) = v;\
     return _num;
 
+void tm_assert(int value, char* msg) {
+    if (!value) {
+        tm_raise("assertion failed, %s", msg);
+    }
+}
 
 const char* tm_type(int type) {
     switch (type) {

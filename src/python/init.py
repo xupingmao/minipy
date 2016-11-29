@@ -300,7 +300,7 @@ add_builtin("require", require)
     
 LIB_PATH = ''
 def boot(loadlibs=True):
-    from tokenize import *
+    from lex import *
     from encode import *
     from repl import *
     import sys

@@ -94,5 +94,7 @@ void os_mod_init() {
     reg_mod_func(os_mod, "chdir",   os_chdir);
     reg_mod_func(os_mod, "stat",    os_stat);
     reg_mod_func(os_mod, "exists",  os_exists);
+    
+    reg_builtin_func("exists", os_exists);
 }
 

@@ -5,6 +5,10 @@ from boot import *
 from tmcode import *
 import sys
 
+if "exists" not in globals():
+    import os
+    exists = os.exists
+
 def code_str(s):
     return code32(len(s))+s
 
@@ -15,7 +19,7 @@ class Lib:
         
 __libs = [
     Lib("init", "init.py"),
-    Lib("tokenize", "tokenize.py"), 
+    Lib("lex", "lex.py"), 
     Lib("parse", "parse.py"), 
     Lib("tmcode", "tmcode.py"),
     Lib("encode", "encode.py"),
@@ -25,7 +29,7 @@ __libs = [
 
 __compiler_files = [
     Lib("boot", "boot.py"),
-    Lib("tokenize", "tokenize.py"),
+    Lib("lex", "lex.py"),
     Lib("parse", "parse.py"),
     Lib("encode", "encode.py"),
 ]

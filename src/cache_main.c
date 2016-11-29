@@ -21,16 +21,13 @@ int main(int argc, char *argv[])
         math_mod_init();
         os_mod_init();
         
-        // printf("load files\n");
-        // load_binary();
-        // tm_load_module2("test.py", test_bin);
-        tm_load_module2("init.py", init_bin);
-        tm_load_module2("tokenize.py", tokenize_bin);
-        tm_load_module2("parse.py", parse_bin);
-        tm_load_module2("tmcode.py", tmcode_bin);
-        tm_load_module2("encode.py", encode_s_bin);
-        tm_load_module2("pyeval.py", pyeval_bin);
-        tm_load_module2("repl.py", repl_bin);
+        tm_load_module2("init", init_bin);
+        tm_load_module2("tokenize", tokenize_bin);
+        tm_load_module2("parse", parse_bin);
+        tm_load_module2("tmcode", tmcode_bin);
+        tm_load_module2("encode", cache_encode_bin);
+        tm_load_module2("pyeval", pyeval_bin);
+        tm_load_module2("repl", repl_bin);
  
         if (tm_hasattr(tm->modules, "init")) {
             call_mod_func("init", "boot");

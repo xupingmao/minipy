@@ -74,18 +74,12 @@ Object tm_load_module(Object file, Object code, Object name) {
 /**
  * @since 2016-11-27
  */
-Object tm_load_module2(char* sz_filename0, char* sz_code) {
-    char sz_filename[1024];
-    strcpy(sz_filename, sz_filename0);
-    char* sz_mod_name = strtok(sz_filename, ".");
-    // printf("load module %s\n", sz_mod_name);
+Object tm_load_module2(char* sz_filename, char* sz_code) {
     Object name = string_new(sz_filename);
-    Object file = string_new(sz_mod_name);
+    Object file = name;
     Object code = string_new("");
     Object mod = module_new(file, name, code);
 
-    // printf("resolve file %s\n", sz_filename);
-    // resolve cache
     tm_loadcode(GET_MODULE(mod), sz_code);
 
     Object fnc = func_new(mod, NONE_OBJECT, NULL);
@@ -423,14 +417,14 @@ Object tm_eval(TmFrame* f) {
         case OP_APPEND:
             v = TM_POP();
             x = TM_TOP();
-            tm_assert_type(x, TYPE_LIST, "tm_eval: OP_APPEND");
+            tm_assert(IS_LIST(x), "tm_eval: OP_APPEND require list");
             list_append(GET_LIST(x), v);
             break;
         case OP_DICT_SET:
             v = TM_POP();
             k = TM_POP();
             x = TM_TOP();
-            tm_assert_type(x, TYPE_DICT, "tm_eval: DICT_SET");
+            tm_assert(IS_DICT(x), "tm_eval: OP_DICT_SET require dict");
             obj_set(x, k, v);
             break;
         case OP_DICT: {

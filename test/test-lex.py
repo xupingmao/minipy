@@ -1,4 +1,4 @@
-from tokenize import *
+from lex import *
 
 def tk_types(r):
     rr = []

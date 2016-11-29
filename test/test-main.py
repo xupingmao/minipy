@@ -28,6 +28,6 @@ testfiles(
         "test-for",
         "test-function",
         "test-while",
-        "test-tokenize",
+        "test-lex",
     ]
 )
