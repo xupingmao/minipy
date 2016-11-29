@@ -21,7 +21,7 @@ A mini python interpreter, vm implemented with ANSI C and compiler implemented w
 In `/src/python`
 
 1. `tmcode.py` bytecode definition
-2. `tokenize.py` tokenizer modified from tinypy/tokenize
+2. `lex.py` lex tokenizer
 3. `parse.py` handwrite LL parser
 4. `encode.py` code generator
 5. `build.py` build compiler to c files, saved in `bin.c` and `instructions.h`.
@@ -56,11 +56,6 @@ In `/src/python`
 5. function, C functions, python functions and methods.
 6. None, NoneType object.
 7. data, data are other data structure such as iterator.
-
-### tools
-1. repl.py repl mode
-2. dis.py dissamble bytecode.
-4. ast.py print abstract syntax tree.
 
 ### Licence
 
