@@ -117,6 +117,9 @@ void tm_log_cache(TmCodeCache* cache) {
         case OP_CALL:
             printf("call: %d\n", val);
             break;
+        case OP_RETURN:
+            printf("return\n");
+            break;
         case OP_STRING:
             printf("string: '%s'\n", GET_STR(cache->v.obj));
             break;
@@ -134,6 +137,18 @@ void tm_log_cache(TmCodeCache* cache) {
             break;
         case OP_POP:
             printf("pop\n");
+            break;
+        case OP_NEXT:
+            printf("next\n");
+            break;
+        case OP_SETJUMP:
+            printf("setjmp: %d\n", val);
+            break;
+        case OP_CLR_JUMP:
+            printf("clrjmp\n");
+            break;
+        case OP_LOAD_EX:
+            printf("loadex\n");
             break;
         default:
             printf("tm_eval: %d\n", cache->op);

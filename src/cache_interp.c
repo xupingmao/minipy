@@ -110,7 +110,7 @@ void tm_loadcode(TmModule* m, char* code) {
             break;
         }
         // read opcode
-        int op = 0;
+        int op = 0, i = 0, len = 0;
         /* isdigit -- ctype.h */
         while (isdigit(*s)) {
             op = op * 10 + (*s-'0');
@@ -118,39 +118,41 @@ void tm_loadcode(TmModule* m, char* code) {
         }
         if (*s=='#') {
             s++;
+            // load string
+            for (i = 0;*s != 0 && *s != '\n' && *s != '\r'; s++, i++) {
+                if (*s=='\\') {
+                    s++;
+                    switch(*s) {
+                        case '\\': buf[i] = '\\'; break;
+                        case 'n' : buf[i] = '\n'; break;
+                        case 'r' : buf[i] = '\r'; break;
+                        case 't' : buf[i] = '\t'; break;
+                        case '0' : buf[i] = '\0'; break;
+                        default:
+                            buf[i] = *(s-1);
+                            buf[i+1] = *s;
+                            i++;
+                    }
+                } else {
+                    buf[i] = *s;
+                }
+            }
+            buf[i] = '\0';
+            len = i;
+        } else if (*s == '\n') {
+            s++;
+            strcpy(buf, "0");
         } else {
             // opcode ended or error
             break;
             error = 1;
         }
         
-        int i = 0;
-        // load string
-        for (i = 0;*s != 0 && *s != '\n' && *s != '\r'; s++, i++) {
-            if (*s=='\\') {
-                s++;
-                switch(*s) {
-                    case '\\': buf[i] = '\\'; break;
-                    case 'n' : buf[i] = '\n'; break;
-                    case 'r' : buf[i] = '\r'; break;
-                    case 't' : buf[i] = '\t'; break;
-                    case '0' : buf[i] = '\0'; break;
-                    default:
-                        buf[i] = *(s-1);
-                        buf[i+1] = *s;
-                        i++;
-                }
-            } else {
-                buf[i] = *s;
-            }
-        }
-        buf[i] = '\0';
-        int len = i;
-
         // skip \r\n
         while (*s=='\r' || *s=='\n' || *s == ' ' || *s=='\t') {
             s++;
         }
+            
         cache.op = op;
         cache.sval = buf; // temp value, just for print
         switch(op) {
@@ -177,9 +179,11 @@ void tm_loadcode(TmModule* m, char* code) {
             case OP_POP_JUMP_ON_FALSE:
             case OP_LOAD_PARG: 
             case OP_LOAD_NARG:
+            case OP_LOAD_PARAMS:
             case OP_LINE:
             case OP_IMPORT:
             case OP_NEXT:
+            case OP_SETJUMP:
                 cache.v.ival = atoi(buf); break;
             default:
                 cache.v.ival = 0; break;
@@ -189,41 +193,6 @@ void tm_loadcode(TmModule* m, char* code) {
     
     if (error) {
         tm_raise("invalid code");
-    }
-}
-
-/**
- * @since 2016-11-15
- */
-void tm_import(Object globals, Object modname, Object attr) {
-    Object mod;
-    if (obj_in(modname, tm->modules)) {
-        mod = obj_get(tm->modules, modname);
-    } else {
-        // compile and import
-        Object ext = string_const(".py");
-        Object filename = obj_add(modname, ext);
-        Object code = call_mod_func("encode", "compilefile");
-        mod = tm_load_module(filename, modname, code);
-    }
-    Object star = string_const("*");
-    if (obj_equals(attr, star)) {
-        // set all attribute
-        int i;
-        for (i = 0; i < DICT_LEN(mod); i++) {
-            DictNode node = DICT_NODES(mod)[i];
-            // filter attr starts with _
-            Object key = node.key;
-            if (IS_STR(key) && GET_STR(key)[0] != '_') {
-                obj_set(globals, node.key, node.val);
-            }
-        }
-    } else if (IS_NONE(attr)) {
-        obj_set(globals, modname, mod);
-    } else {
-        // get one attribute;
-        Object v = obj_get(mod, attr);
-        obj_set(globals, attr, v);
     }
 }
 
@@ -489,9 +458,6 @@ Object tm_eval(TmFrame* f) {
             k = TM_POP();
             x = TM_POP();
             v = TM_POP();
-            #if INTERP_DB
-                tm_printf("Self %o, Key %o, Val %o\n", x, k, v);
-            #endif
             obj_set(x, k, v);
             break;
         case OP_POP: {
@@ -530,13 +496,12 @@ Object tm_eval(TmFrame* f) {
             break;
         }
         case OP_LOAD_PARAMS: {
-            /** not check now
-            int parg = pc[1];
-            int varg = pc[2];
+            int parg = (cache->v.ival >> 8) & 0xff;
+            int varg = cache->v.ival & 0xff;
             if (tm->arg_cnt < parg || tm->arg_cnt > parg + varg) {
                 tm_raise("ArgError,parg=%d,varg=%d,given=%d", 
                     parg, varg, tm->arg_cnt);
-            } */
+            }
             int i;
             for(i = 0; i < tm->arg_cnt; i++){
                 locals[i] = tm->arguments[i];
@@ -666,7 +631,7 @@ Object tm_eval(TmFrame* f) {
             f->cache_jmp = cache + 1;
             break; 
         }
-        case OP_CLR_JUMP: { f->jmp = NULL; break;}
+        case OP_CLR_JUMP: { f->jmp = NULL; f->cache_jmp = NULL; break;}
         case OP_LINE: { f->lineno = cache->v.ival; break;}
 
         case OP_DEBUG: {

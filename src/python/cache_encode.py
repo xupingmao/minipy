@@ -650,7 +650,7 @@ def encode_try(tk):
     exception = newtag()
     end = newtag()
     if not chk_try_block(exception):
-        encode_error(tk, "do not support cursive try")
+        encode_error(tk, "do not support recursive try")
     encode_item(tk.first)
     emit(OP_CLR_JUMP)
     jump(end)

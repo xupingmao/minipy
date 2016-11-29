@@ -22,6 +22,7 @@ testfiles(
         # test base object
         "test-string",
         "test-list",
+        "test-dict",
         
         # test expression
         "test-op",

@@ -22,7 +22,7 @@ int main(int argc, char *argv[])
         os_mod_init();
         
         tm_load_module2("init", init_bin);
-        tm_load_module2("tokenize", tokenize_bin);
+        tm_load_module2("lex", lex_bin);
         tm_load_module2("parse", parse_bin);
         tm_load_module2("tmcode", tmcode_bin);
         tm_load_module2("encode", cache_encode_bin);

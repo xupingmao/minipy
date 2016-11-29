@@ -4,7 +4,7 @@ cd python
 
 rm cache_bin.c
 python cache_encode.py init.py >> cache_bin.c
-python cache_encode.py tokenize.py >> cache_bin.c
+python cache_encode.py lex.py >> cache_bin.c
 python cache_encode.py parse.py >> cache_bin.c
 python cache_encode.py tmcode.py >> cache_bin.c
 python cache_encode.py cache_encode.py >> cache_bin.c
