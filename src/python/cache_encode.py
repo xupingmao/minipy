@@ -867,6 +867,8 @@ def split_instr(instr):
     
 # TM_TEST
 def main():
+    import sys
+    ARGV = sys.argv
     if len(ARGV) < 2:pass
     elif len(ARGV) == 2:
         import repl
