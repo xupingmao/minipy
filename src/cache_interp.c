@@ -475,9 +475,7 @@ Object tm_eval(TmFrame* f) {
             arg_set_arguments(top + 1, n);
             Object func = TM_POP();
 
-            x = call_function(func);
-            TM_PUSH(x);
-            // TM_PUSH(call_function(func));
+            TM_PUSH(call_function(func));
             tm->frame = f;
             FRAME_CHECK_GC();
             break;
@@ -591,7 +589,6 @@ Object tm_eval(TmFrame* f) {
 
         case OP_JUMP_ON_TRUE: {
             if (is_true_obj(TM_TOP())) {
-                // pc += i * 3;
                 cache += cache->v.ival;
                 continue;
             }
@@ -600,7 +597,6 @@ Object tm_eval(TmFrame* f) {
 
         case OP_JUMP_ON_FALSE: {
             if (!is_true_obj(TM_TOP())) {
-                // pc += i * 3;
                 cache += cache->v.ival;
                 continue;
             }
@@ -608,12 +604,10 @@ Object tm_eval(TmFrame* f) {
         }
 
         case OP_UP_JUMP:
-            // pc -= i * 3;
             cache -= cache->v.ival;
             continue;
 
         case OP_JUMP:
-            // pc += i * 3;
             cache += cache->v.ival;
             continue;
 
@@ -626,8 +620,6 @@ Object tm_eval(TmFrame* f) {
         case OP_LOAD_EX: { top = f->last_top; TM_PUSH(tm->ex); break; }
         case OP_SETJUMP: { 
             f->last_top = top; 
-            // TODO
-            // f->jmp = pc + i * 3; 
             f->cache_jmp = cache + cache->v.ival;
             break; 
         }

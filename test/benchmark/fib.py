@@ -6,4 +6,4 @@ def fib (n):
     return fib(n-1) + fib(n-2)
 
 timeit(fib, 30)
-timeit(fib, 35)
+# timeit(fib, 35)

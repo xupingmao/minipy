@@ -30,11 +30,7 @@ Object bf_time_time() {
 }
 
 Object bf_time_clock() {
-#ifdef _WIN32
-    return tm_number((double)clock());
-#else
-    return tm_number((double)clock()/1000);
-#endif
+    return tm_number((double)clock()/CLOCKS_PER_SEC);
 }
 
 

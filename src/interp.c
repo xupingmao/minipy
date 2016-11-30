@@ -346,12 +346,8 @@ Object tm_eval(TmFrame* f) {
             top -= i;
             arg_set_arguments(top + 1, i);
             Object func = TM_POP();
-            #if INTERP_DB
-                printf("call %s\n", get_func_name_sz(func));
-            #endif
-
-            x = call_function(func);
-            TM_PUSH(x);
+            
+            TM_PUSH(call_function(func));
             // TM_PUSH(call_function(func));
             tm->frame = f;
             FRAME_CHECK_GC();
