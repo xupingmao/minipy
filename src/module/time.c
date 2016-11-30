@@ -6,15 +6,26 @@
 
 Object bf_time_time() {
     #ifdef _WIN32
-        SYSTEMTIME stime;
-        GetLocalTime(&stime);
-        double seconds = 0;
-        seconds = (double) time(NULL) + (double) stime.wMilliseconds / 1000.f;
-        return tm_number(seconds);
+        // FILETIME system_time;
+        /* Contains a 64-bit value representing the number of 100-nanosecond intervals since January 1, 1601 (UTC). */
+        // GetSystemTimeAsFileTime(&system_time);
+        // double seconds = 0;
+        // DWORD lowDateTime  = system_time.dwLowDateTime;
+        // DWORD highDateTime = system_time.dwHighDateTime;
+        // int64_t ms;
+        // ms = lowDateTime;
+        // ms += (((int64_t)highDateTime) << 32);
+        
+        // SYSTEMTIME stime;
+        // GetLocalTime(&stime);
+        // stime.wMilliseconds
+        
+        // just return seconds
+        return tm_number(time(NULL));
     #else
         struct timeval tv;
         gettimeofday(&tv, NULL);
-        return tm_number((double)tv.tv_usec / 1000.f);
+        return tm_number((double)tv.tv_usec / 1000000.f);
     #endif
 }
 
