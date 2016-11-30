@@ -830,7 +830,10 @@ def compile(src, filename, des = None):
     dest = ''
     for item in code:
         # there is no # in CJK charsets, so it is better to split the sequence
-        dest += str(item[0]) + '#' + compile_escape(item[1])+'\n'
+        if item[1] == 0:
+            dest += str(item[0]) + '\n'
+        else:
+            dest += str(item[0]) + '#' + compile_escape(item[1])+'\n'
     return dest;
   
 def convert_to_cstring(filename, code):

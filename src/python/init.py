@@ -171,7 +171,7 @@ def _import(des_glo, fname, tar = None):
         if tar not in g:
             raise(sformat("import error, no definition named '%s'", tar))
         des_glo[tar] = g[tar]
-    return g
+    # return g, return none
 
 def hasattr(obj, name):
     return name in obj

@@ -21,3 +21,4 @@ assertEquals('test'[1:], 'est')
 
 assertEquals('"'.replace('"', '\\"'), '\\"')
 assertEquals('abc'.replace("\0", "abc"), "abc")
+assertEquals('a\0c'.replace('\0', 'b'), 'abc')

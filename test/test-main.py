@@ -15,6 +15,9 @@ def testfiles(filenamelist):
             traceback()
             print("test failed -- " + filename)
             return
+            
+    print("="*50)
+    print("\n"*2)
     print("all tests passed!!!")
     
 testfiles(
@@ -30,5 +33,6 @@ testfiles(
         "test-function",
         "test-while",
         "test-lex",
+        "test-parse"
     ]
 )

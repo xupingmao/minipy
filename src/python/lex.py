@@ -61,11 +61,9 @@ KEYWORDS = [
     'except','raise','global','del','from','None', "assert"]
 SYMBOLS = [
     '-=','+=','*=','/=','==','!=','<=','>=',
-    '=','-','+','*', '/', '%', #'**','/','%','<<','>>',
+    '=','-','+','*', '/', '%',
     '<','>',
     '[',']','{','}','(',')','.',':',',',';',
-    # "@",
-    #,'&', '|','!','@','^','$'
     ]
 _B_BEGIN = ['[','(','{']
 _END = [']',')','}']
@@ -163,9 +161,6 @@ def symbol_match(s, i, v):
     return s[i:i+len(v)] == v
             
 def do_symbol(s,i,l):
-    # symbols = []
-    # v,f,i = s[i],i,i+1
-    # v=s[i];f=i;i+=1
     v = None
     for sb in SYMBOLS:
         if symbol_match(s, i, sb):
