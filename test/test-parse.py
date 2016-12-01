@@ -12,6 +12,11 @@ def assert_num(tk, val):
     assert tk.type == "number"
     assert tk.val  == val
     
+def assert_list(tk, val=None):
+    assert istype(tk, "list")
+    if val:
+        assert len(tk) == val
+    
 def test_import():
     code = "import abc"
     astlist = parse(code)
@@ -27,7 +32,16 @@ def test_from():
     assert_name(ast.first, "a")
     assert_str(ast.second, "*") 
     
-
+def test_list():
+    code = "a = [1,2,3]"
+    ast = parse(code)[0].second
+    assert ast.type == "list"
+    nodes = ast.first
+    assert_list(nodes, 3)
+    assert_num(nodes[0], 1)
+    assert_num(nodes[2], 3)
+    
+    
 def test_assignment():
     code = "a = 10"
     ast = parse(code)[0]
@@ -41,13 +55,23 @@ def test_assignment():
     assert_name(ast.first, "a")
     assert_str(ast.second, "abc")
     
+def test_if():
+    code = "if x: print(10)"
+    ast = parse(code)[0]
+    assert ast.type == "if"
+    assert_name(ast.first, "x")
+    assert_list(ast.second, 1)
+    
 def run_test(testlist):
     for test in testlist:
         print(test)
         test()
         
 run_test([
+    test_list,
+    
     test_import,
     test_from,
     test_assignment,
+    test_if,
 ])

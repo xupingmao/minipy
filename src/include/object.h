@@ -23,8 +23,8 @@
 typedef union TmValue {
   double dv;
   double num;
-  int iv;
-  long lv;
+  int    iv;
+  long   lv;
   void*              ptr;
   struct String*     str;
   struct TmList*     list;
@@ -32,7 +32,7 @@ typedef union TmValue {
   struct Dictonary*  dict;
   struct TmModule*   mod;
   struct TmData*     data;
-  struct GC_Object*  gc;
+  struct TmRecycle*  gc;
 }TmValue;
 
 typedef struct Object{
@@ -40,7 +40,7 @@ typedef struct Object{
   TmValue value;
 }Object;
 
-struct  GC_Object {
+struct TmRecycle {
   int marked;
   /* data */
 };
@@ -248,21 +248,6 @@ typedef struct String {
     char *value;
 } String;
 
-typedef struct PtrArray {
-  int len;
-  int cap;
-  Object** elements;
-} PtrArray;
-
-/** 
- * subpy optimization
- * code cache
- */
-
-typedef struct {
-  int op;
-  int val;
-} CodeCache;
 
 /**
  * global variables
