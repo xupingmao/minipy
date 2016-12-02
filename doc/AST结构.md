@@ -73,24 +73,51 @@ second = 操作符右值
 
 ```
 class  = AstNode,
-type   =if,
+type   = if,
 first  = 条件,
-second = if主体,
-third = else语句 | None
+second = true-body,
+third  = None
+```
+
+## if-else
+
+```
+{
+    type   = "if",
+    first  = 条件
+    second = true-body
+    third  = else-body
+}
+```
+
+## if-elif-else
+
+```
+{
+    first  = 条件1
+    second = true-body
+    third  = {
+                type  = "if"
+                first  = 条件2
+                second = 条件2-body
+                third  = elseif/else-body
+             }
+}
 ```
 
 ## while 语句
 ```
 {
-
+    first  = 条件
+    second = body
 }
 ```
 
 ## for语句
 ```
-type = for,
-first = statement (statement 'in' statement)
-second = statementlist
+type   = for,
+first  = for条件,in语句
+second = for-body
 ```
 
 ## 函数定义(def)
@@ -99,5 +126,5 @@ second = statementlist
 type = 'def'
 first = name
 second = arg_list //  [ arg ]
-third = statementlist
+third  = def-body
 ```

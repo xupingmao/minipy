@@ -33,6 +33,9 @@ testfiles(
         "test-function",
         "test-while",
         "test-lex",
-        "test-parse"
+        "test-parse",
+        
+        # some algorithms
+        "ackermann",
     ]
 )

@@ -49,7 +49,9 @@ def test_assignment():
     assert_name(ast.first, "a")
     assert_num(ast.second, 10)
     
-    code = '''a = "abc" '''
+    code = '''
+a = "abc"
+'''
     ast = parse(code)[0]
     assert ast.type == "="
     assert_name(ast.first, "a")
@@ -62,6 +64,35 @@ def test_if():
     assert_name(ast.first, "x")
     assert_list(ast.second, 1)
     
+def test_if2():
+    code = '''
+if x:
+    print(10)
+else:
+    print(0)
+'''
+    ast = parse(code)[0]
+    assert ast.type == "if"
+    assert_name(ast.first, "x")
+    assert_list(ast.second, 1)
+    elsepart = ast.third
+    assert_list(elsepart, 1)
+    
+def test_if3():
+    code = '''
+if x:
+    print(10)
+elif x > 10:
+    print(20)
+else:
+    print(0)
+'''
+    ast = parse(code)[0]
+    assert ast.type == "if"
+    assert_name(ast.first, "x")
+    assert_list(ast.second, 1)
+    
+    
 def run_test(testlist):
     for test in testlist:
         print(test)
@@ -69,9 +100,10 @@ def run_test(testlist):
         
 run_test([
     test_list,
-    
     test_import,
     test_from,
     test_assignment,
     test_if,
+    test_if2,
+    test_if3,
 ])
