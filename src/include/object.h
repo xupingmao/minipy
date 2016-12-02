@@ -29,7 +29,7 @@ typedef union TmValue {
   struct String*     str;
   struct TmList*     list;
   struct TmFunction* func;
-  struct Dictonary*  dict;
+  struct TmDict*     dict;
   struct TmModule*   mod;
   struct TmData*     data;
   struct TmRecycle*  gc;
@@ -166,29 +166,6 @@ typedef struct TmVm {
   
 } TmVm;
 
-/** 
- * definition for data
- */
-
-
-#define DATA_OBJECT_HEAD     \
-    int marked;              \
-    size_t data_size;        \
-    int init;                \
-    void (*mark)();          \
-    void (*free)();          \
-    Object (*str)();         \
-    Object (*get)();         \
-    void (*set)();           \
-    Object* (*next)();
-
-typedef struct Data_proto {
-    DATA_OBJECT_HEAD
-}Data_proto;
-
-#define DATA_HEAD    int marked;      \
-    Data_proto* proto;
-
 typedef struct TmData {
     int marked;
     size_t data_size;
@@ -230,15 +207,15 @@ typedef struct DictNode{
   Object val;
   int hash;
   int used; /* also used for attr index */
-}DictNode;
+} DictNode;
 
-typedef struct Dictonary {
+typedef struct TmDict {
   int marked;
   int len;
   int cap;
   int extend;
   struct DictNode* nodes;
-}TmDict;
+} TmDict;
 
 
 typedef struct String {

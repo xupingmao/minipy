@@ -34,7 +34,6 @@
 #include <ctype.h>
 
 #define TM_INLINE inline
-typedef char instruction;
 
 #include "object.h"
 #define OBJ_SIZE sizeof(Object)
@@ -230,10 +229,6 @@ Object           get_func_name_obj(Object func);
 #define get_globals(func) get_function_globals(GET_FUNCTION(func))
 #define function_format(des, func) func_format(des, GET_FUNCTION(func))
 
-/**
- * data functions
- */
-static Data_proto base_iter_proto;
 
 Object      data_new(size_t size);
 void        data_mark();
@@ -243,10 +238,6 @@ Object      data_get(Object, Object);
 Object      data_str(Object self);
 void        obj_free(Object o);
 Object      obj_new(int type, void* value);
-Data_proto  default_data_proto;
-Data_proto* get_default_data_proto();
-void        init_data_proto(Data_proto* proto);
-
 
 
 /** ops functions
@@ -289,12 +280,7 @@ void   tm_raise(char*fmt , ...);
 Object obj_append(Object a, Object item);
 void   vm_destroy();
 
-// interp functions
 
-typedef struct _Function_define {
-    Object fnc;
-    int len;
-} Function_define;
 
 #define  TM_PUSH(x) *(++top) = (x); if(top > tm->stack_end) tm_raise("stack overflow");
 #define  TM_POP() *(top--)
@@ -337,9 +323,6 @@ Object*   get_builtin(char* key);
 
 // vm.c
 Object    call_mod_func(char* modname, char* funcname);
-
-// tm2c
-// Object    tm_call_native_debug(int lineno, char* func_name, Object(*fn)(), int args, ...);
 
 // macros
 #define strequals(a, b) a == b || strcmp(a,b) == 0
