@@ -1,6 +1,6 @@
 # AST结构
 
-
+-----
 ## 基本值
 
 ### 数字
@@ -12,23 +12,29 @@ val  = numVal
 
 ### 字符串
 ```
-class=  Token,
-type = string,
-val  = strVal
+{
+    class=  Token,
+    type = string,
+    val  = strVal
+}
 ```
 ### 名称
 
 ```
-calss =  Token,
-type  = name,
-val   = nameVal
+{
+    calss =  Token,
+    type  = name,
+    val   = nameVal
+}
 ```
 
 ### None, True, False
 ```
-class  = Token,
-type   = None | True | False,
-val    = None | True | False
+{
+    class  = Token,
+    type   = None | True | False,
+    val    = None | True | False
+}
 ```
 
 
@@ -43,6 +49,7 @@ val    = None | True | False
 
 ```
 
+-----
 ## 语句
 ```
 
@@ -52,7 +59,7 @@ val    = None | True | False
 
 ** 注意 ** 语句可能是列表，需要先使用`isinstance`或者`istype`来判断，然后取type属性判断
 
-## 赋值
+### 赋值
 
 ```
 class  =AstNode,
@@ -61,7 +68,7 @@ first  = 语句 | [语句]  (多重赋值),
 second = 语句 | [语句] ,
 ```
 
-## 操作符
+### 操作符
 ```
 class = AstNode,
 type  = 操作符 +,-,*,/...
@@ -69,7 +76,7 @@ first = 操作符左值
 second = 操作符右值
 ```
 
-## if语句
+### if语句
 
 ```
 class  = AstNode,
@@ -79,7 +86,7 @@ second = true-body,
 third  = None
 ```
 
-## if-else
+### if-else
 
 ```
 {
@@ -90,7 +97,7 @@ third  = None
 }
 ```
 
-## if-elif-else
+### if-elif-else
 
 ```
 {
@@ -105,7 +112,7 @@ third  = None
 }
 ```
 
-## while 语句
+### while 语句
 ```
 {
     first  = 条件
@@ -113,14 +120,14 @@ third  = None
 }
 ```
 
-## for语句
+### for语句
 ```
 type   = for,
 first  = for条件,in语句
 second = for-body
 ```
 
-## 函数定义(def)
+### 函数定义(def)
 
 ```
 type = 'def'
