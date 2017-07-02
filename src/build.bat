@@ -8,7 +8,7 @@ python build.py
 
 popd
 
-gcc -o minipy.exe main.c
+gcc -DTM_USE_CACHE -o minipy.exe main.c
 
 @rem copy minipy.exe python
 

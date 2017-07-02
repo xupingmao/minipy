@@ -2,7 +2,7 @@
 cc = gcc
 
 all: minipy
-	$(cc) -o minipy main.c -lm
+	$(cc) -DTM_USE_CACHE -o minipy main.c -lm
 
 minipy :
 

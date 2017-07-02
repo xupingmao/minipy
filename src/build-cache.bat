@@ -30,6 +30,6 @@ goto gcc_build
 :gcc_build
 mv cache_bin.c ../
 popd
-gcc -o cachepy cache_main.c
+gcc -DTM_USE_CACHE -o minipy main.c
 
 pause
