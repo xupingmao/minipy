@@ -190,10 +190,10 @@ def do_number(s,i,l):
     return i
 
 def is_name_begin(c):
-    return (c>='a' and c<='z') or (c>='A' and c<='Z') or (c in '_%')
+    return (c>='a' and c<='z') or (c>='A' and c<='Z') or (c in '_$')
     
 def is_name(c):
-    return (c>='a' and c<='z') or (c>='A' and c<='Z') or (c in '_%') or (c>='0' and c<='9')
+    return (c>='a' and c<='z') or (c>='A' and c<='Z') or (c in '_$') or (c>='0' and c<='9')
     
 def do_name(s,i,l):
     v=s[i];i+=1

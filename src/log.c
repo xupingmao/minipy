@@ -101,6 +101,8 @@ void tm_log_cache(TmCodeCache* cache) {
     int val = cache->v.ival;
     Object obj = cache->v.obj;
 
+    tm->steps++;
+
     switch(cache->op) {
         case OP_LINE:
             printf("line: %d\n", val);

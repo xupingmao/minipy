@@ -13,6 +13,7 @@ void sys_mod_argv_init(Object sys_mod) {
 
 void sys_mod_modules_init(Object sys_mod) {
     dict_set_by_str(sys_mod, "modules", tm->modules);
+    dict_set_by_str(sys_mod, "version", string_new("minipy"));
 }
 
 void sys_mod_init() {

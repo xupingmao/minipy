@@ -150,8 +150,8 @@ typedef struct TmVm {
   Object modules;
   Object builtins;
   Object root;
-  int steps;  
-  int init; /* modules and builtins init */
+  int steps;   /* record opcode steps executed */
+  int init;    /* modules and builtins init */
 
   struct TmList* all;
   struct TmList* local_obj_list;

@@ -104,6 +104,7 @@ int vm_init(int argc, char* argv[]) {
     tm->argc = argc;
     tm->argv = argv;
     tm->code = NULL;
+    tm->steps = 0;
 
     /* set module boot */
     Object boot = dict_new();
@@ -128,6 +129,9 @@ int vm_init(int argc, char* argv[]) {
  * destroy goes with init
  */
 void vm_destroy() {
+#ifdef TM_PRINT_STEPS
+    printf("steps = %d\n", tm->steps);
+#endif
     gc_destroy();
     free(tm);
 }

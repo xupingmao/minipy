@@ -280,6 +280,9 @@ Object tm_eval(TmFrame* f) {
 
     while (1) {
         tm_log_cache(cache);
+        #ifdef TM_PRINT_STEPS
+            tm->steps++;
+        #endif
 
         switch (cache->op) {
 
