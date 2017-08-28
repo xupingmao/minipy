@@ -1,8 +1,8 @@
-language: 
+language: c
 compiler:
   - clang
   - gcc
 # command to install dependencies
 # install: "pip install -r requirements.txt"
 # command to run tests
-script:make test
+script: make test
