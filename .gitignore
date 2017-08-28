@@ -8,6 +8,9 @@
 tm.exe
 tm0.exe
 tinypy.exe
+minipy
+src/minipy
+test/minipy
 __pycache__
 tinypy-1.1/
 tm2c/output/

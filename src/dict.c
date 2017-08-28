@@ -267,6 +267,23 @@ Object dict_builtin_update() {
     return self;
 }
 
+Object dict_builtin_pop() {
+    Object self = arg_take_dict_obj("dict.pop");
+    Object key  = arg_take_obj("dict.pop");
+    DictNode* node = dict_get_node(GET_DICT(self), key);
+    if (node == NULL) {    
+        if (arg_has_next()) {
+            return arg_take_obj("dict.pop");
+        } else {
+            tm_raise("KeyError %o", key);
+            return NONE_OBJECT;
+        }
+    } else {
+        node->used = 0;
+        return node->val;
+    }
+}
+
 /**
  * init dict methods
  * @since 2015-?
@@ -278,6 +295,7 @@ void dict_methods_init() {
     reg_mod_func(tm->dict_proto, "values", dict_builtin_values);
     reg_mod_func(tm->dict_proto, "copy",   dict_builtin_copy);
     reg_mod_func(tm->dict_proto, "update", dict_builtin_update);
+    reg_mod_func(tm->dict_proto, "pop",    dict_builtin_pop);
 }
 
 /**

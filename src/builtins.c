@@ -271,7 +271,7 @@ Object tm_save(char*fname, Object content) {
 
 Object bf_input() {
     int i = 0;
-    if (has_arg()) {
+    if (arg_has_next()) {
         tm_print(arg_take_obj("input"));
     }
     char buf[2048];
@@ -433,9 +433,9 @@ Object bf_len() {
 
 Object bf_print() {
     int i = 0;
-    while (has_arg()) {
+    while (arg_has_next()) {
         tm_print(arg_take_obj("print"));
-        if (has_arg()) {
+        if (arg_has_next()) {
             putchar(' ');
         }
     }

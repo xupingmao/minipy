@@ -43,13 +43,11 @@ int main(int argc, char *argv[])
             call_mod_func("init", "boot");
         } else if (tm_hasattr(tm->modules, "main")) {
             // adjust sys.argv
-            
             call_mod_func("main", "_main");
         }
     } else if (code == 1){
         traceback();
     } else if (code == 2){
-        
     }
     vm_destroy();
     return 0;

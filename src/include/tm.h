@@ -184,7 +184,7 @@ void    arg_set_arguments(Object* first, int len);
 void    _resolve_method_self(TmFunction *fnc);
 #define resolve_method_self(fnc) _resolve_method_self(GET_FUNCTION((fnc)))
 void    print_arguments();
-int     has_arg();
+int     arg_has_next();
 Object  arg_take_str_obj(const char* fnc);
 char*   arg_take_sz(const char* fnc);
 Object  arg_take_func_obj(const char* fnc);

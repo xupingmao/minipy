@@ -100,7 +100,7 @@ def pyeval(src, glo_vars = None, debug = False):
             r = v
             stack.append(r)
             if debug:
-                line += r
+                line += str(r)
         elif op == OP_LOAD_LOCAL:
             r = loc_vars[v]
             stack.append(r)
@@ -160,7 +160,7 @@ def pyeval(src, glo_vars = None, debug = False):
             k = stack.pop()
             r = stack.pop()
             v = stack.pop()
-            r[k] = x
+            r[k] = v
         elif op == OP_DICT_SET:
             v = stack.pop()
             k = stack.pop()

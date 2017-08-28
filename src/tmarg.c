@@ -58,7 +58,7 @@ Object arg_take_obj(const char* fnc) {
 }
 
 
-int has_arg() {
+int arg_has_next() {
     return tm->arg_loaded < tm->arg_cnt;
 }
 

@@ -17,8 +17,9 @@ void traceback() {
     for (i = LIST_LEN(exlist) - 1; i >= cur; i--) {
         tm_println(LIST_NODES(exlist)[i]);
     }
-    printf("Exception:\n  ");
-    tm_println(tm->ex_line);
+    fprintf(stderr, "Exception:\n  ");
+    fprintf(stderr, "%s\n", GET_SZ(tm->ex_line));
+    /* tm_println(tm->ex_line); */
 }
 
 void tm_raise(char* fmt, ...) {

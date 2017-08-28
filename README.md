@@ -9,6 +9,9 @@
 </pre>
 
 # minipy
+
+[![Build Status](https://travis-ci.org/xupingmao/minipy.svg?branch=master)](https://travis-ci.org/xupingmao/minipy)
+
 A mini python interpreter, vm implemented with ANSI C and compiler implemented with Python 3.
 
 ## How to start
