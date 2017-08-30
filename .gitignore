@@ -4,6 +4,7 @@
 *.log
 .DS_Store
 *.exe
+*.bak
 !/dist/*.exe
 tm.exe
 tm0.exe
