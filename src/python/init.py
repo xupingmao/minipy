@@ -262,7 +262,16 @@ def execfile(path, chdir = True):
     _code = compilefile(fname)
     # printf("run file %s ...\n", fname)
     load_module(fname, _code, '__main__')
-    
+
+def dis(path):
+    from encode import *
+    from tmcode import *
+    ins_list = compile_to_list(load(path), path)
+    for index, item in enumerate(ins_list):
+        op = int(item[0])
+        line = str(index+1).ljust(5) + tmcodes[op].ljust(22) + str(item[1])
+        print(line)
+
 def _assert(exp, msg = None):
     if not exp: raise "AssertionError, " str(msg)
     
@@ -316,6 +325,8 @@ def boot(loadlibs=True):
     else:
         if os.exists(argv[0]):
             execfile(argv[0])
+        elif argv[0] == "-dis":
+            dis(argv[1])
         else:
             print("file not exists, exit")
             

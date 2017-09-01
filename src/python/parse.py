@@ -45,7 +45,7 @@ Low  |  '=' | '+=' | '-=' | '*=' | '/=' | '%='
      |  '+' | '-'
      |  '*' | '/' | '%'
      |  '-'  
-     |  '.' name  | '(' arg_list ')' | '[' or_exp ']'          --- postfix
+     |  '.' name  | '(' arg_list ')' | '[' or_exp ']'          --- suffix
      |  '(' comma_exp ')'                                      --- prefix
 High |  object
 ----------------------------

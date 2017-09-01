@@ -49,10 +49,6 @@ _end_tag_list = [-1]
 _tag_cnt = 0
 _global_index = 0
 
-
-def load_const(const):
-    emit(OP_CONSTANT, get_const_idx(const.val))
-
 class Scope:
     def __init__(self):
         self.locals = []
@@ -89,12 +85,10 @@ class AsmContext:
     def load(self, v):
         # same as store, check scope level first
         if len(self.scopes) == 1:
-            idx = get_const_idx(v.val)
-            emit(OP_LOAD_GLOBAL, idx)
+            emit(OP_LOAD_GLOBAL, v.val)
         # check locals
         elif v.val not in self.scope.locals:
-            idx = get_const_idx(v.val)
-            emit(OP_LOAD_GLOBAL, idx)
+            emit(OP_LOAD_GLOBAL, v.val)
         else:
             idx = self.scope.locals.index(v.val)
             emit(OP_LOAD_LOCAL, idx)
@@ -107,16 +101,14 @@ class AsmContext:
     def store(self, v):
         # first ,check scope level
         if len(self.scopes) == 1:
-            idx = get_const_idx(v.val)
-            emit(OP_STORE_GLOBAL, idx)
+            emit(OP_STORE_GLOBAL, v.val)
         # check if in globals defined in the function, 
         # or store as local
         elif v.val not in self.scope.globals:
             idx = self.index_local(v)
             emit(OP_STORE_LOCAL, idx)
         else:
-            idx = get_const_idx(v.val)
-            emit(OP_STORE_GLOBAL, idx)
+            emit(OP_STORE_GLOBAL, v.val)
 
 def asm_init():
     global _asm_ctx
@@ -146,8 +138,7 @@ def asm_get_regs():
     return len(_asm_ctx.scope.locals)
 
 def store_global(glo):
-    idx = get_const_idx(glo.val)
-    emit(OP_STORE_GLOBAL, idx)
+    emit(OP_STORE_GLOBAL, glo.val)
 
 def add_global(v):
     _asm_ctx.scope.globals.append(v.val)
@@ -157,10 +148,12 @@ def emit(op, val = 0):
     ins = [op, val]
     _code_list.append(ins)
     return ins
+
+def code_pop():
+    return _code_list.pop()
     
 def emit_def(v):
-    idx = get_const_idx(v.val)
-    emit(OP_DEF, idx)
+    emit(OP_DEF, v.val)
 
 # inside function, assignment will be made to locals by default,
 # except that a global is declared. so we must save the declared
@@ -171,8 +164,10 @@ def emit_load(v):
         emit(OP_NONE)
         return;
     t = v.type
-    if t == 'string' or t == 'number':
-        load_const(v)
+    if t == 'string':
+        emit(OP_STRING, v.val)
+    elif t == 'number':
+        emit(OP_NUMBER, v.val)
     elif t == 'None':
         emit(OP_NONE, 0)
     elif t == 'name':
@@ -180,17 +175,6 @@ def emit_load(v):
     else:
         print('LOAD_LOCAL ' + str(v.val))
         
-def save_as_bin(lst):
-    bin = ''
-    # print lst
-    for _ins in lst:
-        ins = _ins[0]
-        val = _ins[1]
-        if ins == OP_NUMBER or ins == OP_STRING:
-            bin += code8(ins) + code16(len(val)) + val
-        else:
-            bin += code8(ins) + code16(val)
-    return bin
 
 def find_tag(code, val):
     cur = 0
@@ -222,8 +206,12 @@ def optimize(x, optimize_jmp = False):
     nx = handle_jmps(x)
     return nx
     
+def join_code():
+    global _code_list
+    global _ext_code_list
+    return _ext_code_list + _code_list
     
-def gen_code(lst = False):
+def _gen_code(lst = False):
     global _code_list
     global _ext_code_list
 
@@ -239,6 +227,18 @@ def gen_code(lst = False):
         if i[1] == None:
             print(i)
     return save_as_bin(x)
+
+def gen_code(lst = False):
+    global _code_list
+    global _ext_code_list
+
+    emit(OP_EOP)
+    code = _ext_code_list + _code_list
+    # release memory
+    _code_list = []
+    _ext_code_list = []
+    code = optimize(code)
+    return code
 
 
 def def_local(v):
@@ -519,6 +519,9 @@ def encode_return(tk):
                 emit(OP_APPEND)
         else:
             encode_item(tk.first)
+            if tk.first.type == "call":
+                op, value = code_pop()
+                emit(OP_TAILCALL, value)
     else:
         # is this necessary ?
         emit_load(None);
@@ -653,7 +656,7 @@ def encode_try(tk):
     exception = newtag()
     end = newtag()
     if not chk_try_block(exception):
-        encode_error(tk, "do not support cursive try")
+        encode_error(tk, "do not support recursive try")
     encode_item(tk.first)
     emit(OP_CLR_JUMP)
     jump(end)
@@ -787,55 +790,91 @@ class EncodeCtx:
     def __init__(self, src):
         self.src = src
 
-def compile(src, filename, des = None):
+def _compile(src, filename, des = None):
     global _ctx
     # lock here
     asm_init()
     _ctx = EncodeCtx(src)
-    name_id = get_const_idx(filename.split(".")[0])
-    emit(OP_FILE, name_id)
+    name = filename.split(".")[0]
+    emit(OP_FILE, name)
     encode(src)
     _ctx = None
-    code = gen_code()
+    code = join_code()
     # unlock
-    if des: save(des, code)
     return code
 
+def compile_escape(s):
+    s = str(s)
+    s = s.replace("\\", "\\\\")
+    s = s.replace("\r", "\\r")
+    s = s.replace("\n", "\\n")
+    s = s.replace("\0", "\\0")
+    return s
+    
 def compile_to_list(src, filename):
     global _ctx
     # lock here
     asm_init()
     _ctx = EncodeCtx(src)
-    name_id = get_const_idx(filename.split(".")[0])
-    emit(OP_FILE, name_id)
+    # name = filename.split(".")[0]
+    emit(OP_FILE, filename)
     encode(src)
     _ctx = None
-    code = gen_code(True)
-    const_op_list = [OP_LOAD_GLOBAL, OP_STORE_GLOBAL, OP_CONSTANT]
-    for ins in code:
-        if ins[0] in const_op_list:
-            ins[1] = get_const(ins[1])
+    code = gen_code()
     return code
 
+def compile(src, filename, des = None):
+    global _ctx
+    # lock here
+    asm_init()
+    _ctx = EncodeCtx(src)
+    name = filename.split(".")[0]
+    emit(OP_FILE, name)
+    encode(src)
+    _ctx = None
+    code = gen_code()
+    dest = ''
+    for item in code:
+        # there is no # in CJK charsets, so it is better to split the sequence
+        if item[1] == 0:
+            dest += str(item[0]) + '\n'
+        else:
+            dest += str(item[0]) + '#' + compile_escape(item[1])+'\n'
+    return dest;
+  
+def convert_to_cstring(filename, code):
+    code = code.replace("\\", "\\\\")
+    code = code.replace('"', '\\"')
+    code = code.replace("\n", "\\n")
+    code = code.replace("\0", "\\0")
+    cstring = "char* " + filename.split(".")[0] + "_bin" + "=";
+    cstring += '"'
+    cstring += code
+    cstring += '";'
+    return cstring
+    
+    
+def _compilefile(filename, des = None):
+    return _compile(load(filename), filename, des)
+    
 def compilefile(filename, des = None):
     return compile(load(filename), filename, des)
 
 def split_instr(instr):
     size = len(instr)
     list = []
-    const_op_list = [OP_LOAD_GLOBAL, OP_STORE_GLOBAL, OP_CONSTANT]
     i = 0
     while i < size:
         op = instr[i]
         v = uncode16(instr[i+1], instr[i+2])
         i+=3
-        if op in const_op_list:
-            v = get_const(v)
         list.append([ord(op), v])
     return list
     
 # TM_TEST
 def main():
+    import sys
+    ARGV = sys.argv
     if len(ARGV) < 2:pass
     elif len(ARGV) == 2:
         import repl
@@ -844,12 +883,17 @@ def main():
         # from tools import *
         repl_print = repl.repl_print
         code = compilefile(ARGV[1])
-        list = split_instr(code)
-        for item in list:
-            print(tmcodes[item[0]], item[1])
+        # list = split_instr(code)
+        code = convert_to_cstring(ARGV[1], code)
+        print(code)
         # repl_print(code, 0, 3)
     elif len(ARGV) == 3:
-        compile(ARGV[1], "#test", ARGV[2])
+        op = ARGV[1];
+        if op == "-p":
+            code = compilefile(ARGV[2])
+            print(code)
+        else:
+            compile(ARGV[1], "#test", ARGV[2])
 
 if __name__ == "__main__":
     main()

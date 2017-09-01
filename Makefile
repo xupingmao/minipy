@@ -2,7 +2,7 @@
 cc = gcc
 
 minipy : src/*.c src/include/*.h
-	$(cc) -DTM_USE_CACHE -DTM_PRINT_STEPS -o minipy src/main.c -lm
+	$(cc) -DTM_USE_CACHE -o minipy src/main.c -lm
 
 .PHONY: clean test
 	

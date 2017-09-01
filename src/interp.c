@@ -5,12 +5,15 @@
 
 #include "include/tm.h"
 
-#define INTERP_DB 0
+void tm_loadcode(TmModule* m, char* code);
 
 Object call_function(Object func) {
     Object ret;
     if (IS_FUNC(func)) {
         resolve_method_self(func);
+        
+        tm_log_call(func);
+        
         /* call native */
         if (GET_FUNCTION(func)->native != NULL) {
             return GET_FUNCTION(func)->native();
@@ -26,9 +29,9 @@ Object call_function(Object func) {
             } else {
                 f = tm->frame;
                 /* handle exception in this frame */
-                if (f->jmp != NULL) {
-                    f->pc = f->jmp;
-                    f->jmp = NULL;
+                if (f->cache_jmp != NULL) {
+                    f->cache = f->cache_jmp;
+                    f->cache_jmp = NULL;
                     goto L_recall;
                 /* there is no handler, throw to last frame */
                 } else {
@@ -56,11 +59,142 @@ Object call_function(Object func) {
  */
 Object tm_load_module(Object file, Object code, Object name) {
     Object mod = module_new(file, name, code);
+
+    // resolve cache
+    tm_loadcode(GET_MODULE(mod), GET_STR(code));
+
     Object fnc = func_new(mod, NONE_OBJECT, NULL);
     GET_FUNCTION(fnc)->code = (unsigned char*) GET_STR(code);
     GET_FUNCTION(fnc)->name = string_new("#main");
+    GET_FUNCTION(fnc)->cache = GET_MODULE(mod)->cache;
     call_function(fnc);
     return GET_MODULE(mod)->globals;
+}
+
+/**
+ * @since 2016-11-27
+ */
+Object tm_load_module2(char* sz_filename, char* sz_code) {
+    Object name = string_new(sz_filename);
+    Object file = name;
+    Object code = string_new("");
+    Object mod = module_new(file, name, code);
+
+    tm_loadcode(GET_MODULE(mod), sz_code);
+
+    Object fnc = func_new(mod, NONE_OBJECT, NULL);
+    GET_FUNCTION(fnc)->code = (unsigned char*) GET_STR(code);
+    GET_FUNCTION(fnc)->name = string_new("#main");
+    GET_FUNCTION(fnc)->cache = GET_MODULE(mod)->cache;
+    call_function(fnc);
+    return GET_MODULE(mod)->globals;
+}
+
+/**
+ * @since 2016-11-24
+ * TODO gc problem, still save string to constants dict?
+ */
+void tm_loadcode(TmModule* m, char* code) {
+    char* s = code;
+    char buf[1024];
+    int error = 0;
+    char* error_msg = NULL;
+    
+    tm_init_cache(m);
+    
+    TmCodeCache cache;
+    while (*s != 0) {
+        /* must begin with opcode */
+        if (!isdigit(*s)) {
+            error = 1;
+            break;
+        }
+        // read opcode
+        int op = 0, i = 0, len = 0;
+        /* isdigit -- ctype.h */
+        while (isdigit(*s)) {
+            op = op * 10 + (*s-'0');
+            s++;
+        }
+        if (*s=='#') {
+            s++;
+            // load string
+            for (i = 0;*s != 0 && *s != '\n' && *s != '\r'; s++, i++) {
+                if (*s=='\\') {
+                    s++;
+                    switch(*s) {
+                        case '\\': buf[i] = '\\'; break;
+                        case 'n' : buf[i] = '\n'; break;
+                        case 'r' : buf[i] = '\r'; break;
+                        case 't' : buf[i] = '\t'; break;
+                        case '0' : buf[i] = '\0'; break;
+                        default:
+                            buf[i] = *(s-1);
+                            buf[i+1] = *s;
+                            i++;
+                    }
+                } else {
+                    buf[i] = *s;
+                }
+            }
+            buf[i] = '\0';
+            len = i;
+        } else if (*s == '\n') {
+            s++;
+            strcpy(buf, "0");
+        } else {
+            // opcode ended or error
+            break;
+            error = 1;
+        }
+        
+        // skip \r\n
+        while (*s=='\r' || *s=='\n' || *s == ' ' || *s=='\t') {
+            s++;
+        }
+            
+        cache.op = op;
+        cache.sval = buf; // temp value, just for print
+        switch(op) {
+            case OP_NUMBER:
+                cache.v.obj = tm_number(atof(buf)); break;
+            
+            /* string value */
+            case OP_STRING: 
+            case OP_LOAD_GLOBAL:
+            case OP_STORE_GLOBAL:
+            case OP_FILE: 
+            case OP_DEF:           
+                cache.v.obj = string_const2(buf, len); break;
+            
+            /* int value */
+            case OP_LOAD_LOCAL:
+            case OP_STORE_LOCAL:
+            case OP_CALL: 
+            case OP_TAILCALL:
+            case OP_ROT:
+            case OP_JUMP:
+            case OP_UP_JUMP:     
+            case OP_JUMP_ON_FALSE:
+            case OP_JUMP_ON_TRUE: 
+            case OP_POP_JUMP_ON_FALSE:
+            case OP_LOAD_PARG: 
+            case OP_LOAD_NARG:
+            case OP_LOAD_PARAMS:
+            case OP_LINE:
+            case OP_IMPORT:
+            case OP_NEXT:
+            case OP_SETJUMP:
+                cache.v.ival = atoi(buf); break;
+            default:
+                cache.v.ival = 0; break;
+        }
+        tm_push_cache(m, cache);
+    }
+    
+    if (error) {
+        tm_raise("invalid code");
+    }
 }
 
 void pop_frame() {
@@ -96,6 +230,7 @@ TmFrame* push_frame(Object fnc) {
     }
 
     f->pc = GET_FUNCTION(fnc)->code;
+    f->cache = GET_FUNCTION(fnc)->cache;
 
     f->locals = top;
     f->maxlocals = get_function_max_locals(GET_FUNCTION(fnc));
@@ -104,14 +239,15 @@ TmFrame* push_frame(Object fnc) {
     f->fnc = fnc;
  
     // clear local variables
-    int i;for(i = 0; i < f->maxlocals; i++) {
+    int i;
+    for(i = 0; i < f->maxlocals; i++) {
         f->locals[i] = NONE_OBJECT;
     }
     *(f->top) = NONE_OBJECT;
     f->jmp = NULL;
+    f->cache_jmp = NULL;
     return f;
 }
-
 
 #define PREDICT_JMP(flag) \
     if (!flag && pc[3] == OP_POP_JUMP_ON_FALSE) { \
@@ -124,61 +260,55 @@ TmFrame* push_frame(Object fnc) {
         *top = tm_number(flag); \
     }
 
+
+/** use cache */
 /** 
 ** evaluate byte code.
 ** @param f: Frame
 ** @return evaluated value.
 */
 Object tm_eval(TmFrame* f) {
-    Object* locals    = f->locals;
-    Object* top       = f->stack;
-    Object cur_fnc    = f->fnc;
-    Object globals    = get_globals(cur_fnc);
-    // TODO use code cache to replace unsigned char*
-    unsigned char* pc = f->pc;
-    const char* func_name_sz = get_func_name_sz(cur_fnc);
-
-    Object x, k, v;
-    Object ret = NONE_OBJECT;
+    Object* locals, *top;
+    Object cur_fnc, globals, x, k, v, ret;
+    TmCodeCache* cache;
     int i;
 
-    #if INTERP_DB
-        printf("File \"%s\": enter function %s\n",get_func_file_sz(cur_fnc), get_func_name_sz(cur_fnc));
-    #endif
+tailcall:
+    locals    = f->locals;
+    top       = f->stack;
+    cur_fnc    = f->fnc;
+    globals    = get_globals(cur_fnc);
+    // TODO use code cache to replace unsigned char*
+    cache = f->cache;
+    const char* func_name_sz = get_func_name_sz(cur_fnc);
+
+    ret = NONE_OBJECT;
+
     while (1) {
-        i = (pc[1] << 8) | pc[2];
-        
-        #if INTERP_DB
-            printf("%30s%2d: %d frame = %d, top = %d\n","", pc[0], i, tm->cur, (int) (top - f->stack));
-        #endif    
-        switch (pc[0]) {
+        tm_log_cache(cache);
+        #ifdef TM_PRINT_STEPS
+            tm->steps++;
+        #endif
+
+        switch (cache->op) {
 
         case OP_NUMBER: {
-            double d = atof((char*)pc + 3);
-            pc += i;
-            v = tm_number(d);
-            /* obj_append(tm->constants,v);*/
-            dict_set(tm->constants, v, NONE_OBJECT);
+            TM_PUSH(cache->v.obj);
             break;
         }
 
         case OP_STRING: {
-            v = string_alloc((char*)pc + 3, i);
-            pc += i;
-            /* obj_append(tm->constants,v); */
-            dict_set(tm->constants, v, NONE_OBJECT);
+            TM_PUSH(cache->v.obj);
             break;
         }
 
         case OP_IMPORT: {
-            // TODO
-            // tm_import(globals)
             Object import_func = tm_get_global(globals, "_import");
             arg_start();
             arg_push(globals);
             Object modname, attr;
             
-            if (i == 1) {
+            if (cache->v.ival == 1) {
                 modname = TM_POP();
                 arg_push(modname); // arg1
             } else {
@@ -188,10 +318,11 @@ Object tm_eval(TmFrame* f) {
                 arg_push(attr);
             }
             call_function(import_func);
+            
             break;
         }
         case OP_CONSTANT: {
-            TM_PUSH(GET_CONST(i));
+            TM_PUSH(GET_CONST(cache->v.ival));
             break;
         }
         
@@ -201,52 +332,59 @@ Object tm_eval(TmFrame* f) {
         }
 
         case OP_LOAD_LOCAL: {
-            TM_PUSH(locals[i]);
+            TM_PUSH(locals[cache->v.ival]);
             break;
         }
 
         case OP_STORE_LOCAL:
-            locals[i] = TM_POP();
+            locals[cache->v.ival] = TM_POP();
             break;
 
         case OP_LOAD_GLOBAL: {
             /* tm_printf("load global %o\n", GET_CONST(i)); */
-            int idx = dict_get_attr(GET_DICT(globals), i);
+            int idx = dict_get0(GET_DICT(globals), cache->v.obj);
             if (idx == -1) {
-                idx = dict_get_attr(GET_DICT(tm->builtins), i);
+                idx = dict_get0(GET_DICT(tm->builtins), cache->v.obj);
                 if (idx == -1) {
-                    tm_raise("NameError: name %o is not defined", GET_CONST(i));
+                    tm_raise("NameError: name %o is not defined", cache->v.obj);
                 } else {
                     Object value = GET_DICT(tm->builtins)->nodes[idx].val;
                     // OPTIMIZE
                     // set the builtin to `globals()`
-                    obj_set(globals, GET_CONST(i), value);
-                    idx = dict_get_attr(GET_DICT(globals), i);
-                    pc[0] = OP_FAST_LD_GLO;
-                    code16(pc+1, idx);
+                    obj_set(globals, cache->v.obj, value);
+                    idx = dict_get0(GET_DICT(globals), cache->v.obj);
+                    // pc[0] = OP_FAST_LD_GLO;
+                    // code16(pc+1, idx);
                     // OPTIMIZE END
+                    cache->op = OP_FAST_LD_GLO;
+                    cache->v.ival = idx;
+
                     TM_PUSH(value);
                 }
             } else {
                 TM_PUSH(GET_DICT(globals)->nodes[idx].val);
-                pc[0] = OP_FAST_LD_GLO;
-                code16(pc+1, idx);
+                // pc[0] = OP_FAST_LD_GLO;
+                // code16(pc+1, idx);
+                cache->op = OP_FAST_LD_GLO;
+                cache->v.ival = idx;
             }
             break;
         }
         case OP_STORE_GLOBAL: {
             x = TM_POP();
-            int idx = dict_set_attr(GET_DICT(globals), i, x);
-            pc[0] = OP_FAST_ST_GLO;
-            code16(pc+1, idx);
+            int idx = dict_set0(GET_DICT(globals), cache->v.obj, x);
+            // pc[0] = OP_FAST_ST_GLO;
+            // code16(pc+1, idx);
+            cache->op = OP_FAST_ST_GLO;
+            cache->v.ival = idx;
             break;
         }
         case OP_FAST_LD_GLO: {
-            TM_PUSH(GET_DICT(globals)->nodes[i].val);
+            TM_PUSH(GET_DICT(globals)->nodes[cache->v.ival].val);
             break;
         }
         case OP_FAST_ST_GLO: {
-            GET_DICT(globals)->nodes[i].val = TM_POP();
+            GET_DICT(globals)->nodes[cache->v.ival].val = TM_POP();
             break;
         }
         case OP_LIST: {
@@ -329,9 +467,6 @@ Object tm_eval(TmFrame* f) {
             k = TM_POP();
             x = TM_POP();
             v = TM_POP();
-            #if INTERP_DB
-                tm_printf("Self %o, Key %o, Val %o\n", x, k, v);
-            #endif
             obj_set(x, k, v);
             break;
         case OP_POP: {
@@ -342,18 +477,49 @@ Object tm_eval(TmFrame* f) {
             TM_TOP() = obj_neg(TM_TOP());
             break;
         case OP_CALL: {
-            f->top = top;
-            top -= i;
-            arg_set_arguments(top + 1, i);
-            Object func = TM_POP();
+            int n = cache->v.ival;
             
+            f->top = top;
+            top -= n;
+            arg_set_arguments(top + 1, n);
+            Object func = TM_POP();
+
             TM_PUSH(call_function(func));
-            // TM_PUSH(call_function(func));
             tm->frame = f;
             FRAME_CHECK_GC();
             break;
         }
-        
+        case OP_TAILCALL: {
+            int n = cache->v.ival;
+            f->top = top;
+            top -= n;
+            Object* first_arg = top+1;
+            arg_set_arguments(top+1, n);
+            Object func = TM_POP();
+            if (GET_FUNCTION(func)->native == NULL) {
+                /** tail call python function **/
+                arg_start();
+                int i = 0;
+                for (i = 0; i < n; i++) {
+                    arg_push(first_arg[i]);
+                }
+                resolve_method_self(func);
+                f->fnc = func;
+                f->pc = GET_FUNCTION(func)->code;
+                f->cache = GET_FUNCTION(func)->cache;
+                f->maxlocals = get_function_max_locals(GET_FUNCTION(func));
+                f->stack = f->locals + f->maxlocals;
+                f->top = f->stack;
+                // clear locals
+                for (i = 0; i < f->maxlocals; i++) {
+                    f->locals[i] = NONE_OBJECT;
+                }
+                goto tailcall;
+            } else {
+                return call_function(func);
+            }
+            break;
+        }
         case OP_APPLY: {
             f->top = top;
             Object args = TM_POP();
@@ -367,26 +533,27 @@ Object tm_eval(TmFrame* f) {
             break;
         }
         case OP_LOAD_PARAMS: {
-            int parg = pc[1];
-            int varg = pc[2];
-            if (tm->arg_cnt < parg || tm->arg_cnt > parg + varg) {
-                tm_raise("ArgError,parg=%d,varg=%d,given=%d", 
-                    parg, varg, tm->arg_cnt);
+            int parg = (cache->v.ival >> 8) & 0xff;
+            int narg = cache->v.ival & 0xff;
+            if (tm->arg_cnt < parg || tm->arg_cnt > parg + narg) {
+                tm_raise("ArgError,parg=%d,narg=%d,given=%d", 
+                    parg, narg, tm->arg_cnt);
             }
+            int i;
             for(i = 0; i < tm->arg_cnt; i++){
                 locals[i] = tm->arguments[i];
             }
             break;
         }
         case OP_LOAD_PARG: {
-            int parg = i;
+            int parg = cache->v.ival;
             for (i = 0; i < parg; i++) {
                 locals[i] = arg_take_obj(func_name_sz);
             }
             break;
         }
         case OP_LOAD_NARG: {
-            int arg_index = i;
+            int arg_index = cache->v.ival;
             Object list = list_new(tm->arg_cnt);
             while (arg_remains() > 0) {
                 obj_append(list, arg_take_obj(func_name_sz));
@@ -404,7 +571,8 @@ Object tm_eval(TmFrame* f) {
                 TM_PUSH(*next);
                 break;
             } else {
-                pc += i * 3;
+                // pc += i * 3;
+                cache += cache->v.ival;
                 continue;
             }
             break;
@@ -412,8 +580,8 @@ Object tm_eval(TmFrame* f) {
         case OP_DEF: {
             Object mod = GET_FUNCTION(cur_fnc)->mod;
             Object fnc = func_new(mod, NONE_OBJECT, NULL);
-            pc = func_resolve(GET_FUNCTION(fnc), pc);
-            GET_FUNCTION_NAME(fnc) = GET_CONST(i);
+            GET_FUNCTION_NAME(fnc) = cache->v.obj;
+            cache = func_resolve_cache(GET_FUNCTION(fnc), cache);
             TM_PUSH(fnc);
             continue;
         }
@@ -422,7 +590,8 @@ Object tm_eval(TmFrame* f) {
             goto end;
         }
         case OP_ROT: {
-            int half = i / 2;
+            int i = cache->v.ival;
+            int half = cache->v.ival / 2;
             int j;
             for (j = 0; j < half; j++) {
                 Object temp = *(top - j);
@@ -450,7 +619,8 @@ Object tm_eval(TmFrame* f) {
 
         case OP_POP_JUMP_ON_FALSE: {
             if (!is_true_obj(TM_POP())) {
-                pc += i * 3;
+                // pc += i * 3;
+                cache += cache->v.ival;
                 continue;
             }
             break;
@@ -458,7 +628,7 @@ Object tm_eval(TmFrame* f) {
 
         case OP_JUMP_ON_TRUE: {
             if (is_true_obj(TM_TOP())) {
-                pc += i * 3;
+                cache += cache->v.ival;
                 continue;
             }
             break;
@@ -466,18 +636,18 @@ Object tm_eval(TmFrame* f) {
 
         case OP_JUMP_ON_FALSE: {
             if (!is_true_obj(TM_TOP())) {
-                pc += i * 3;
+                cache += cache->v.ival;
                 continue;
             }
             break;
         }
 
         case OP_UP_JUMP:
-            pc -= i * 3;
+            cache -= cache->v.ival;
             continue;
 
         case OP_JUMP:
-            pc += i * 3;
+            cache += cache->v.ival;
             continue;
 
         case OP_EOP:
@@ -487,9 +657,13 @@ Object tm_eval(TmFrame* f) {
         }
 
         case OP_LOAD_EX: { top = f->last_top; TM_PUSH(tm->ex); break; }
-        case OP_SETJUMP: { f->last_top = top; f->jmp = pc + i * 3; break; }
-        case OP_CLR_JUMP: { f->jmp = NULL; break;}
-        case OP_LINE: { f->lineno = i; break;}
+        case OP_SETJUMP: { 
+            f->last_top = top; 
+            f->cache_jmp = cache + cache->v.ival;
+            break; 
+        }
+        case OP_CLR_JUMP: { f->jmp = NULL; f->cache_jmp = NULL; break;}
+        case OP_LINE: { f->lineno = cache->v.ival; break;}
 
         case OP_DEBUG: {
             #if 0
@@ -506,12 +680,12 @@ Object tm_eval(TmFrame* f) {
         }
 
         default:
-            tm_raise("BAD INSTRUCTION, %d\n  globals() = \n%o", pc[0],
+            tm_raise("BAD INSTRUCTION, %d\n  globals() = \n%o", cache->op,
                     GET_FUNCTION_GLOBALS(f->fnc));
             goto end;
         }
 
-        pc += 3;
+        cache++;
     }
 
     end:
