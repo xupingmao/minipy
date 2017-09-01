@@ -7,8 +7,9 @@ def testfiles(filenamelist):
     for filename in filenamelist:
         try:
             g = {}
+            print("")
             print("=" * 50)
-            print(filename)
+            print("| ", filename)
             print("=" * 50)
             import_func(g, filename)
         except Exception as e:
@@ -34,6 +35,7 @@ testfiles(
         "test-while",
         "test-lex",
         "test-parse",
+        "test-tailcall",
         
         # some algorithms
         "ackermann",

@@ -29,6 +29,7 @@ _opcode_names = [
     'OP_SETJUMP', 
     
     'OP_CALL', 
+    'OP_TAILCALL',
     'OP_APPLY', # apply(a, b)
     'OP_DEF', 'OP_RETURN', 
 

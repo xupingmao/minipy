@@ -325,7 +325,7 @@ Object*   get_builtin(char* key);
 Object    call_mod_func(char* modname, char* funcname);
 
 // macros
-#define strequals(a, b) a == b || strcmp(a,b) == 0
+#define strequals(a, b) (a == b || strcmp(a,b) == 0)
 
 #define GET_VAL(obj) (obj).value
 #define GET_PTR(obj) (obj).value.ptr
