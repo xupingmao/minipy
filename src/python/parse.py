@@ -595,10 +595,10 @@ def parse_skip(p):
     
 def parse_multi_assign(p):
     p.next()
-    expr(p)
+    expr(p) # left
     expect(p, ']')
     expect(p, '=')
-    expr(p)
+    expr(p) # right
     add_op(p, "=")
 
 

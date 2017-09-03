@@ -221,7 +221,6 @@ def pyeval(src, glo_vars = None, debug = False):
             while i < v:
                 lst.append(stack.pop())
                 i += 1
-            lst.reverse()
             for i in lst:
                 stack.append(i)
             r = None

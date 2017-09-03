@@ -590,13 +590,12 @@ tailcall:
             goto end;
         }
         case OP_ROT: {
-            int i = cache->v.ival;
-            int half = cache->v.ival / 2;
-            int j;
-            for (j = 0; j < half; j++) {
-                Object temp = *(top - j);
-                *(top-j) = *(top - i + j + 1);
-                *(top-i+j+1) = temp;
+            Object* left = top - cache->v.ival + 1;
+            Object* right = top;
+            for (; left < right; left++, right--) {
+                Object temp = *left;
+                *left = *right;
+                *right = temp;
             }
             break;
         }
