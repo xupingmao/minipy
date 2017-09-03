@@ -245,6 +245,17 @@ Object list_builtin_clear() {
     return self;
 }
 
+Object list_builtin_extend() {
+    Object self = arg_take_list_obj("list.extend");
+    TmList* other = arg_take_list_ptr("list.extend");
+    TmList* selfptr = GET_LIST(self);
+    int i = 0;
+    for (i = 0; i < other->len; i++) {
+        list_append(selfptr, other->nodes[i]);
+    }
+    return self;
+}
+
 void list_methods_init() {
     tm->list_proto = dict_new();
     reg_mod_func(tm->list_proto, "append", list_builtin_append);
@@ -255,6 +266,7 @@ void list_methods_init() {
     reg_mod_func(tm->list_proto, "remove", list_builtin_remove);
     reg_mod_func(tm->list_proto, "copy", list_builtin_copy);
     reg_mod_func(tm->list_proto, "clear", list_builtin_clear);
+    reg_mod_func(tm->list_proto, "extend", list_builtin_extend);
 }
 
 Object list_iter_new(Object list) {

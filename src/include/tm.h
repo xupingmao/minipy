@@ -43,6 +43,8 @@ Object ARRAY_CHARS;
 
 #include "instruction.h"
 
+typedef Object (*BuiltinFunc)();
+
 /** code functions **/
 void code16(unsigned char*s, int value);
 void code32(unsigned char*s, int value);
@@ -141,6 +143,7 @@ int      list_index(TmList*, Object val);
 void     list_append(TmList* list, Object v);
 void     list_shorten(TmList* list, int len); // shorten list.
 Object   array_to_list(int n, ...);
+Object   list_builtin_extend();
 
 /* macros */
 #define LIST_GET(obj, i) list_get(GET_LIST(obj), i)
@@ -268,6 +271,7 @@ int         is_true_obj(Object v);
 int         tm_iter(Object self, Object *k);
 void        obj_del(Object self, Object k);
 Object      tm_get_global(Object globals, char* key);
+Object      tm_call_builtin(BuiltinFunc func, int n, ...);
 
 // vm functions
 Object call_module_function(char* mod, char* fnc);

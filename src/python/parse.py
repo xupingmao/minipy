@@ -113,10 +113,7 @@ def expect(ctx, v):
 def add_op(p, v):
     r = p.tree.pop()
     l = p.tree.pop()
-    node = AstNode(v)
-    node.first = l
-    node.second = r
-    p.add(node)
+    p.add(AstNode(v, l, r))
 
 
 def parse_error(p, token=None, msg="Unknown"):
@@ -596,6 +593,15 @@ def parse_annotation(p):
 def parse_skip(p):
     p.next()
     
+def parse_multi_assign(p):
+    p.next()
+    expr(p)
+    expect(p, ']')
+    expect(p, '=')
+    expr(p)
+    add_op(p, "=")
+
+
 stmt_map = {
     "from": parse_from,
     "import": parse_import,
@@ -610,6 +616,7 @@ stmt_map = {
     "break": parse_pass,
     "continue": parse_pass,
     "pass": parse_pass,
+    "[":    parse_multi_assign,
     "name": expr,
     "number": baseitem,
     "string": baseitem,

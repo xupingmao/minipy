@@ -6,8 +6,15 @@
 - Travis-CI
 - License
 - Changelog
-- Dict.pop(key, default_value)
+- Built-in functions
+ 1. Dict.pop(key, default_value)
+ 2. List.extend(list)
 - Tool: minipy -dis [script.py] print opcodes
+- Optimization
+ 1. tail call optimization
+- Syntax
+ 1. [a,b] = v1,v2
+ 2. a = [1,2] * 10
 
 ### Changed
 - Change bytecodes type from byte to TmCodeCache
@@ -29,4 +36,4 @@
 - Some builtin functions
 - Basic modules: sys, time, math etc.
 - Mark-sweep garbage collector
-- Some tools: repl, dis etc.
+- Repl tools.

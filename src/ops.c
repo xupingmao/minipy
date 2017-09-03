@@ -262,10 +262,12 @@ int obj_cmp(Object a, Object b) {
 }
 
 Object obj_mul(Object a, Object b) {
+    /* number * number */
     if (a.type == b.type && a.type == TYPE_NUM) {
         GET_NUM(a) *= GET_NUM(b);
         return a;
     }
+    /* number * string */
     if (a.type == TYPE_NUM && b.type == TYPE_STR) {
         Object temp = a;
         a = b;
@@ -289,6 +291,23 @@ Object obj_mul(Object a, Object b) {
             s += len;
         }
         return des;
+    }
+    /* list * number */
+    if (a.type == TYPE_NUM && b.type == TYPE_LIST) {
+        Object temp = a;
+        a = b;
+        b = temp;
+    }
+    if (a.type == TYPE_LIST && b.type == TYPE_NUM) {
+        if (GET_NUM(b) < 1) {
+            return list_new(0);
+        }
+        Object new_list = list_new(LIST_LEN(a) * GET_NUM(b));
+        int i = 0;
+        for (i = 0; i < GET_NUM(b); i++) {
+            tm_call_builtin(list_builtin_extend, 2, new_list, a);
+        }
+        return new_list;
     }
     tm_raise("obj_mul: can not multiply %o and %o", a, b);
     return NONE_OBJECT;
@@ -501,4 +520,17 @@ Object tm_str(Object a) {
 int get_const_id(Object const_value) {
     int i = dict_set(tm->constants, const_value, NONE_OBJECT);
     return i;
+}
+
+
+Object tm_call_builtin(BuiltinFunc func, int n, ...) {
+    int i = 0;
+    va_list ap;
+    va_start(ap, n);
+
+    arg_start();
+    for (i = 0; i < n; i++) {
+        arg_push(va_arg(ap, Object));
+    }
+    return func();
 }
