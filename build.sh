@@ -1,7 +1,7 @@
 pushd .
 
 cd src/python
-rm cache_bin.c
+rm ../cache_bin.c
 
 python encode.py init.py >> cache_bin.c
 python encode.py lex.py >> cache_bin.c
