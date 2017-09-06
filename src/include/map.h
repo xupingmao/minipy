@@ -1,9 +1,10 @@
 /**
+ * A very simple map implementation with O(n)
  * define map structure
  * DEF_MAP will generate
  *  - Map Structure
  *  - Map new/free
- *  - Map index/get/set
+ *  - Map index/get/set/del
  * @since 2016-08-21
  * @Modified {2017-09-06 20:10:21}
  */

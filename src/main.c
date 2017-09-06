@@ -4,6 +4,9 @@
 
 int main(int argc, char *argv[])
 {
+    #ifdef TM_CHECK_MEM
+        ptr_map = PtrMap_new();
+    #endif
     /* start vm with bin */
     int ret = vm_init(argc, argv);
     if (ret != 0) { 

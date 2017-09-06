@@ -176,7 +176,7 @@ typedef struct TmData {
     Object cur_obj;
 
     void   (*mark)();
-    void   (*free)();
+    void   (*func_free)();
     Object (*str)();
     Object (*get)();
     Object* (*next)();

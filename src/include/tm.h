@@ -43,6 +43,39 @@ Object ARRAY_CHARS;
 
 #include "instruction.h"
 
+#ifdef TM_CHECK_MEM
+    #include "map.h"
+
+    #define sys_malloc malloc
+    #define sys_free   free
+    
+    DEF_MAP(PtrMap, void*, int);
+
+    PtrMap* ptr_map;
+
+    void* PtrMap_malloc(int size, const char* file, int line) {
+        /* printf("%s:%d malloc(%d)\n", file, line, size); */
+        void* mem = sys_malloc(size);
+        PtrMap_set(ptr_map, mem, 1);
+        return mem;
+    }
+
+    void PtrMap_free_mem(void* mem, const char* file, int line) {
+        int *v = PtrMap_get(ptr_map, mem);
+        if (v == NULL) {
+            fprintf(stderr, "%s:%d invalid free!\n", file, line);
+            exit(1);
+        } else {
+            sys_free(mem);
+            PtrMap_del(ptr_map, mem);
+        }
+    }
+
+    #define malloc(size)  PtrMap_malloc(size, __FILE__, __LINE__)
+    #define free(mem)     PtrMap_free_mem(mem, __FILE__, __LINE__)
+
+#endif
+
 typedef Object (*BuiltinFunc)();
 
 /** code functions **/

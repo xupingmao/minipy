@@ -473,7 +473,7 @@ void obj_free(Object o) {
         module_free(o.value.mod);
         break;
     case TYPE_DATA:
-        GET_DATA(o)->free(GET_DATA(o));
+        GET_DATA(o)->func_free(GET_DATA(o));
         // GET_DATA_PROTO(o)->free(GET_DATA(o));
         break;
     }
@@ -522,7 +522,7 @@ Object data_new(size_t data_size) {
     TmData* data = GET_DATA(data_obj);
 
     data->mark = data_mark;
-    data->free = data_free;
+    data->func_free = data_free;
     data->get  = data_get;
     data->set  = data_set;
     data->next = data_next;
