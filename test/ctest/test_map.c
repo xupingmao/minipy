@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <assert.h>
 
 #include "../../src/include/map.h"
 
@@ -28,10 +29,19 @@ int main(int argc, char const *argv[])
         Map_set(m, i, i);
     }
 
+    Map_del(m, 12);
+
+    assert(Map_get(m, 1) == NULL);
+    assert(*Map_get(m, 10) == 10);
+    assert(*Map_get(m, 16) == 16);
+    assert(*Map_get(m, 20) == 20);
+    assert(Map_get(m, 12) == NULL);
+    
     test_map_get(m, 1);
     test_map_get(m, 10);
     test_map_get(m, 16);
     test_map_get(m, 20);
+    test_map_get(m, 12);
 
     Map_free(m);
     return 0;
