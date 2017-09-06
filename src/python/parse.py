@@ -41,7 +41,7 @@ Low  |  '=' | '+=' | '-=' | '*=' | '/=' | '%='
      |  'or'
      |  'and'
      |  'not'
-     |  '>' | '>=' | '<' | '<=' | '==' | '!=' | 'in' | 'notin' | 'is'
+     |  '>' | '>=' | '<' | '<=' | '==' | '!=' | 'in' | 'notin' | 'is' | 'isnot'
      |  '+' | '-'
      |  '*' | '/' | '%'
      |  '-'  
@@ -105,9 +105,9 @@ class ParserCtx:
         body.reverse() # reverse the body
         return body
 
-def expect(ctx, v):
+def expect(ctx, v, msg=None):
     if ctx.token.type != v:
-        compile_error("parse", ctx.src, ctx.token, "expect " + v + " but now is " + ctx.token.type)
+        compile_error("parse", ctx.src, ctx.token, "expect " + v + " but now is " + ctx.token.type + str(msg))
     ctx.next()
 
 def add_op(p, v):
@@ -224,7 +224,7 @@ def exp(p, level):
             exp(p, 'cmp')
     elif level == 'cmp':
         exp(p, '+-')
-        while p.token.type in ('>', '<', '==', 'is', '!=', '>=', '<=', 'in', 'notin'):
+        while p.token.type in ('>', '<', '==', 'is', '!=', '>=', '<=', 'in', 'notin', 'isnot'):
             t = p.token.type
             p.next()
             exp(p, '+-')
@@ -425,11 +425,13 @@ def parse_try(p):
     expect(p, 'except')
     if p.token.type == 'name':
         p.next()
-        expect(p, 'as')
-        if p.token.type != 'name':
-            p.error('error in try-expression')
-        node.second = p.token
-        p.next()
+        if p.token.type == ':':
+            second = Token('name', '_')
+        else:
+            expect(p, 'as')
+            second = p.token
+            expect(p, 'name', 'error in try-expression')
+        node.second = second
     else:node.second = None
     expect(p, ':')
     node.third = p.visit_block()

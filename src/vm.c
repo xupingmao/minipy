@@ -91,7 +91,11 @@ int load_binary() {
 int vm_init(int argc, char* argv[]) {
     
     int i;
-    
+
+    #ifdef TM_CHECK_MEM
+        ptr_map = PtrMap_new();
+    #endif
+
     tm = malloc(sizeof(TmVm));
     if (tm == NULL) {
         fprintf(stderr, "vm init fail");
@@ -134,6 +138,10 @@ void vm_destroy() {
 #endif
     gc_destroy();
     free(tm);
+
+#ifdef TM_CHECK_MEM
+    PtrMap_free(ptr_map);
+#endif
 }
 
 /**
