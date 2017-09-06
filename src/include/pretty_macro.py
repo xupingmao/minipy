@@ -25,6 +25,9 @@ def pretty(text):
         line = line.rstrip(" \\")
         line = line.ljust(max_len) + "\\"
         newlines.append(line)
+    lastline = newlines.pop()
+    if lastline.strip() != "\\":
+        newlines.append(lastline)
     new_text = "\n".join(newlines)
     new_text = re.sub(r"@Modified {[\d\- :]*}", "@Modified {%s}" % time.strftime('%Y-%m-%d %H:%M:%S'), new_text)
     print(new_text)

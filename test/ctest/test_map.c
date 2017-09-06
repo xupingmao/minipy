@@ -21,7 +21,7 @@ int main(int argc, char const *argv[])
 {
     Map* m = Map_new();
 
-    Map_set(m, 10, 10);
+    Map_set(m, 10, 5);
     Map_set(m, 20, 11);
 
     int i;
@@ -32,7 +32,7 @@ int main(int argc, char const *argv[])
     Map_del(m, 12);
 
     assert(Map_get(m, 1) == NULL);
-    assert(*Map_get(m, 10) == 10);
+    assert(*Map_get(m, 10) == 5);
     assert(*Map_get(m, 16) == 16);
     assert(*Map_get(m, 20) == 20);
     assert(Map_get(m, 12) == NULL);

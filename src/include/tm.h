@@ -63,7 +63,7 @@ Object ARRAY_CHARS;
     void PtrMap_free_mem(void* mem, const char* file, int line) {
         int *v = PtrMap_get(ptr_map, mem);
         if (v == NULL) {
-            fprintf(stderr, "%s:%d invalid free!\n", file, line);
+            fprintf(stderr, "%s:%d (%p) invalid free!\n", file, line, mem);
             exit(1);
         } else {
             sys_free(mem);
