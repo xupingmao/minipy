@@ -317,6 +317,11 @@ def encode_notin(tk):
     encode_in(tk)
     emit(OP_NOT)
 
+def encode_isnot(tk):
+    encode_item(tk.first)
+    encode_item(tk.second)
+    emit(OP_NOTEQ)
+
 def encode_inplace_op(tk):
     encode_item(tk.first)
     encode_item(tk.second)
@@ -742,6 +747,7 @@ _encode_dict = {
     'try':encode_try,
     'pass':do_nothing,
     'notin':encode_notin,
+    'isnot':encode_isnot,
     'attr':encode_attr,
     'slice': encode_slice,
     'in': encode_in,

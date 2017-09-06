@@ -481,6 +481,7 @@ tailcall:
             
             f->top = top;
             top -= n;
+            /* TODO top+1 can be optimized as locals */
             arg_set_arguments(top + 1, n);
             Object func = TM_POP();
 

@@ -84,6 +84,14 @@ class TData:
             else:
                 self.res.append(last)
                 self.res.append(Token(t,v,self.f))
+        elif t == 'not':
+            # is not
+            last = self.res.pop()
+            if last.type == 'is':
+                self.res.append(Token("isnot", v, self.f))
+            else:
+                self.res.append(last)
+                self.res.append(Token(t,v,self.f))
         else:
             self.res.append(Token(t,v,self.f))
 
