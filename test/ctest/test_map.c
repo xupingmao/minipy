@@ -30,15 +30,18 @@ int main(int argc, char const *argv[])
     }
 
     Map_del(m, 12);
+    Map_set(m, 13, 20);
 
     assert(Map_get(m, 1) == NULL);
     assert(*Map_get(m, 10) == 5);
+    assert(*Map_get(m, 13) == 20);
     assert(*Map_get(m, 16) == 16);
     assert(*Map_get(m, 20) == 20);
     assert(Map_get(m, 12) == NULL);
     
     test_map_get(m, 1);
     test_map_get(m, 10);
+    test_map_get(m, 13);
     test_map_get(m, 16);
     test_map_get(m, 20);
     test_map_get(m, 12);

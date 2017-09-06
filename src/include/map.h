@@ -6,7 +6,7 @@
  *  - Map new/free
  *  - Map index/get/set/del
  * @since 2016-08-21
- * @Modified {2017-09-06 22:44:56}
+ * @Modified {2017-09-06 23:03:44}
  */
 #define DEF_MAP(MapType,KeyType,ValType)                                    \
 typedef struct t##MapType##Item {                                           \
@@ -43,10 +43,15 @@ int MapType##_index(MapType* map,KeyType key) {                             \
     }                                                                       \
     return -1;                                                              \
 }                                                                           \
-int MapType##_freepos(MapType* map, KeyType key) {                          \
+int MapType##_findpos(MapType* map, KeyType key) {                          \
     int i;                                                                  \
     for(i = 0; i < map->len; i++) {                                         \
-        if (map->items[i].flag == 0 || map->items[i].key == key) {          \
+        if (map->items[i].flag && map->items[i].key == key) {               \
+            return i;                                                       \
+        }                                                                   \
+    }                                                                       \
+    for (i = 0; i < map->len; i++) {                                        \
+        if (map->items[i].flag == 0) {                                      \
             return i;                                                       \
         }                                                                   \
     }                                                                       \
@@ -72,7 +77,7 @@ void MapType##_checksize(MapType* map)  {                                   \
     }                                                                       \
 }                                                                           \
 void MapType##_set(MapType* map, KeyType key, ValType value) {              \
-    int i = MapType##_freepos(map, key);                                    \
+    int i = MapType##_findpos(map, key);                                    \
     if (i < 0) {                                                            \
         MapType##_checksize(map);                                           \
         MapType##Item *item = &map->items[map->len];                        \
