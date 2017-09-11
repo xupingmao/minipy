@@ -120,22 +120,28 @@ Object obj_get(Object self, Object k) {
 /**
  * slice string/list
  * string.slice(a,b) [a,b), b is not included
- * string.slice(0,-1) = string.slice(0,len(string))
+ * string.slice(0,-1) = string.slice(0,len(string)-1)
  * @since 2016-11-19
  * <code>
  * 'test'.slice(0,1) = 't'
- * 'test'.slice(0,-1) = 'test'
+ * 'test'.slice(0,-1) = 'tes'
  * </code>
  */
 Object obj_slice(Object self, Object first, Object second) {
     int start = GET_NUM(first);
-    int end = GET_NUM(second);
+    int end = 0;
+    if (IS_NONE(second)) {
+        end = tm_len(self);
+    } else {
+        end = GET_NUM(second);
+    }
+
     Object ret = NONE_OBJECT;
     
     if (IS_STR(self)) {
         int length = GET_STR_LEN(self);
-        start = start >= 0 ? start : start + length + 1;
-        end   = end   >= 0 ? end   : end   + length + 1;
+        start = start >= 0 ? start : start + length;
+        end   = end   >= 0 ? end   : end   + length;
         if (start < 0 || start > length) {
             start = 0;
         } 
@@ -148,8 +154,8 @@ Object obj_slice(Object self, Object first, Object second) {
         return string_alloc(GET_STR(self) + start, end - start);
     } else if (IS_LIST(self)) {
         int length = LIST_LEN(self);
-        start = start > 0 ? start : start + length + 1;
-        end   = end   > 0 ? end   : end   + length + 1;
+        start = start > 0 ? start : start + length;
+        end   = end   > 0 ? end   : end   + length;
         if (start < 0 || start > length) {
             start = 0;
         } 

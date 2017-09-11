@@ -14,9 +14,9 @@ testfunc('x\r\n'.replace, ['\r', '\n'], 'x\n\n')
 # test slice
 assertEquals('test'[0:1], "t")
 assertEquals('test'[1:2], 'e')
-assertEquals('test'[-2:-1], "t")
+assertEquals('test'[-2:-1], "s")
 assertEquals('test'[:] , 'test')
-assertEquals('test'[:-2], 'tes')
+assertEquals('test'[:-1], 'tes')
 assertEquals('test'[1:], 'est')
 
 assertEquals('"'.replace('"', '\\"'), '\\"')

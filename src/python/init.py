@@ -272,8 +272,12 @@ def dis(path):
         line = str(index+1).ljust(5) + tmcodes[op].ljust(22) + str(item[1])
         print(line)
 
-def _assert(exp, msg = None):
-    if not exp: raise "AssertionError, " str(msg)
+def _assert(exp, err = None):
+    if not exp: 
+        msg = ""
+        if err is not None:
+            msg = str(err)
+        raise "AssertionError, " + msg
     
 def __debug__(fidx):
     info = vmopt("frame.info", fidx)

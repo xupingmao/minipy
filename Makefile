@@ -9,6 +9,9 @@ minipy : src/*.c src/include/*.h
 o2:
 	$(cc) -DTM_USE_CACHE -o minipy -O2 -lm src/main.c
 
+o3:
+	$(cc) -DTM_USE_CACHE -o minipy -O3 -lm src/main.c
+
 debug:
 	$(cc) -DTM_CHECK_MEM -o minipy -g -lm src/main.c
 

@@ -295,7 +295,7 @@ def call_or_get_exp(p):
                 if p.token.type == ':':
                     p.next()
                     if p.token.type == ']':
-                        third = Token("number", -1, p.token.pos) # end
+                        third = Token("None") # end
                     else:
                         exp(p, 'or')
                         third = p.pop()

@@ -1,3 +1,4 @@
+from test import *
 
 assert 1 + 1 == 2
 assert [1,2] + [3,4] == [1,2,3,4]
@@ -17,3 +18,8 @@ assert a == 4
 assert b == 5
 assert c == 6
 print(a,b,c)
+
+a = [1,2,3]
+assertEquals(a[1:2], [2])
+assertEquals(a[0:-1], [1,2])
+
