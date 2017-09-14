@@ -12,9 +12,9 @@
 
 [![Build Status](https://travis-ci.org/xupingmao/minipy.svg?branch=master)](https://travis-ci.org/xupingmao/minipy)
 
-A mini python interpreter, vm implemented with ANSI C and compiler implemented with Python 3.
+迷你Python解释器，Python实现的编译器+C语言实现的VM.
 
-## How to start
+## 如何开始
 
 ```
 cd minipy
@@ -23,52 +23,51 @@ make && make test
 # and enjoy yourself ^_^
 ```
 
-## Features
+## 特性
 
-### Compiler
+### 编译器
 
-In `/src/python`
+位于 `/src/python`
 
-1. `tmcode.py` bytecode definition
-2. `lex.py` lex tokenizer
-3. `parse.py` handwrite LL parser
-4. `encode.py` code generator, just run `python encode.py {script.py}` and you will get generated code.
+1. `tmcode.py` 字节码定义
+2. `lex.py` 词法分析器
+3. `parse.py` 手写递归解析器
+4. `encode.py` 代码生成器，运行 `python encode.py {script.py}` 可以打印出字节码
 
-### VM features
-1. stack based
-2. bytecode defined in `src/tmcode.py`
-3. exception handling implemented with setjmp/longjmp
-4. C function and python function.
-5. exception traceback
-6. mark-sweep garbage collection
+### 虚拟机特性
+1. 基于栈的计算机模型，字节码定义在 `src/python/tmcode.py`
+2. 基于 setjmp/longjmp 实现的异常处理
+3. Native方法和python方法
 
-### Advanced features
-1. tail call optimization
+### 高级特性
+1. Mark-Sweep垃圾回收
+2. 常量池
+3. 尾调用优化
 
 
-### VM hierarchy
-1. `vm.c` entry
-2. `interp.c` interpreter
-3. `builtins.c` built-in functions
-4. `ops.c` operation implementation
-5. `tmarg.c` handle arguments
-6. `exception.c` handle exception
-7. `gc.c` garbage collector and memory management.
-8. `string.c` string functions
-9. `number.c` number functions
-10. `list.c` list functions
-11. `dict.c` dictionary functions
-12. `function.c` function functions
+### 代码结构
+1. `vm.c` 虚拟机入口
+2. `interp.c` 解释器
+3. `builtins.c` 一些常用的内置方法
+4. `ops.c` 操作符实现
+5. `tmarg.c` 函数调用参数API
+6. `exception.c` 异常处理
+7. `gc.c` 垃圾回收器
+8. `string.c`
+9. `number.c`
+10. `list.c`
+11. `dict.c`
+12. `function.c`
 
-### Objects
-1. string, strings are immutable.
-2. number, use `double` as default number.
-3. list, array list increase with simple strategy.
-4. dict, this is not hashtable, for the optimization of global access, because the offset of a variable in `globals` dict never change.Besides, object are implemented in dict.
-5. function, C functions, python functions and methods.
-6. None, NoneType object.
-7. data, data are other data structure such as iterator.
+### 类型系统
+1. string, 是不可变对象
+2. number, 全部使用double类型
+3. list, 列表
+4. dict, dict对象目前不是使用hashtable实现的，
+5. function, 包括native的C函数和自定义的Python函数
+6. None
+7. data, data类型可以使用C语言自由扩展
 
-### Licence
+### 协议
 
 MIT

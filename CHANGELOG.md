@@ -25,6 +25,7 @@
 ### Fixed
 - Fix repl OP_SET behavior
 - Unhandled exception message now writes to stderr
+- slice
 
 ## [1.0.0] - 2016-10-23
 
