@@ -32,7 +32,7 @@ make && make test
 1. `tmcode.py` 字节码定义
 2. `lex.py` 词法分析器
 3. `parse.py` 手写递归解析器
-4. `encode.py` 代码生成器，运行 `python encode.py {script.py}` 可以打印出字节码
+4. `encode.py` 代码生成器，运行 `python encode.py {script.py}` 可以打印出字节码(未处理过的)
 
 ### 虚拟机特性
 1. 基于栈的计算机模型，字节码定义在 `src/python/tmcode.py`
@@ -43,6 +43,9 @@ make && make test
 1. Mark-Sweep垃圾回收
 2. 常量池
 3. 尾调用优化
+
+### 工具
+1. minipy -dis {test.py} 打印字节码(常量处理过)
 
 
 ### 代码结构

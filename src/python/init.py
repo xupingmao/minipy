@@ -263,13 +263,16 @@ def execfile(path, chdir = True):
     # printf("run file %s ...\n", fname)
     load_module(fname, _code, '__main__')
 
+def to_fixed(num, length):
+    return str(num).rjust(length).replace(' ', '0')
+
 def dis(path):
     from encode import *
     from tmcode import *
     ins_list = compile_to_list(load(path), path)
     for index, item in enumerate(ins_list):
         op = int(item[0])
-        line = str(index+1).ljust(5) + tmcodes[op].ljust(22) + str(item[1])
+        line = to_fixed(index+1, 4) + ' ' + tmcodes[op].ljust(22) + str(item[1])
         print(line)
 
 def _assert(exp, err = None):
