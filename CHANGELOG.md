@@ -7,14 +7,17 @@
 - License
 - Changelog
 - Built-in functions
+```
  1. Dict.pop(key, default_value)
  2. List.extend(list)
+```
 - Tool: minipy -dis [script.py] print opcodes
-- Optimization
- 1. tail call optimization
+- tail call optimization
 - Syntax
+```
  1. [a,b] = v1,v2
  2. a = [1,2] * 10
+```
 
 ### Changed
 - Change bytecodes type from byte to TmCodeCache
