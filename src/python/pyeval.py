@@ -1,3 +1,8 @@
+# -*- coding:utf-8 -*-
+# @author xupingmao
+# @since 2016
+# @modified 2018/02/18 11:21:01
+
 import encode
 compile = encode.compile
 split_instr = encode.split_instr

@@ -1,6 +1,11 @@
-PRINT_STR_LEN = 40
+# -*- coding:utf-8 -*-
+# @author xupingmao
+# @since 2016
+# @modified 2018/02/18 11:20:50
+
 import encode
 
+PRINT_STR_LEN = 40
 compilefile = encode.compilefile
 
 def repl_print(p, n = 0, depth = 2):

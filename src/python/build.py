@@ -1,5 +1,8 @@
 #!python
-
+# -*- coding:utf-8 -*-
+# @author xupingmao
+# @since 2016
+# @modified 2018/02/18 11:26:53
 from encode import *
 from boot import *
 from tmcode import *

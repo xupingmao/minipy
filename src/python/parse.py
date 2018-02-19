@@ -1,3 +1,7 @@
+# -*- coding:utf-8 -*-
+# @author xupingmao
+# @since 2016
+# @modified 2018/02/19 16:13:48
 from lex import *
 
 if "tm" not in globals():
@@ -60,12 +64,12 @@ _stm_end_list = ['nl', 'dedent']
 _skip_op = ['nl', ';']
 
 
-def AstNode(type=None, first=None, second=None):
-    o = newobj()
-    o.type = type
-    o.first = first
-    o.second = second
-    return o
+class AstNode:
+
+    def __init__(self, type=None, first=None, second=None):
+        self.type = type
+        self.first = first
+        self.second = second
     
 class ParserCtx:
     def __init__(self, r, txt):

@@ -5,6 +5,7 @@
  *  - vector new/free
  *  - vector get/set/push/pop
  * @since 2016-08-21
+ * @modified 2018/02/18 11:26:30
  */
 #define DEF_VECTOR(VectorType, ValType)                                         \
 typedef struct t##VectorType {                                                  \

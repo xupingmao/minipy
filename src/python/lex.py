@@ -1,3 +1,7 @@
+# -*- coding:utf-8 -*-
+# @author xupingmao
+# @since 2016
+# @modified 2018/02/19 16:18:27
 
 # TM_TEST
 try:
@@ -6,13 +10,11 @@ except:
     # need some tool from python to bootstrap
     from boot import *
 
-# keep Token as a pure function
-def Token(type='symbol',val=None,pos=None):
-    self = newobj()
-    self.pos=pos
-    self.type=type
-    self.val=val
-    return self
+class Token:
+    def __init__(self, type='symbol',val=None,pos=None):
+        self.pos=pos
+        self.type=type
+        self.val=val
 
 def findpos(token):
     if not hasattr(token, 'pos'):
@@ -76,6 +78,7 @@ class TData:
         self.res=[]
         self.indent=[0]
         self.braces=0
+
     def add(self,t,v): 
         if t == 'in':
             last = self.res.pop()

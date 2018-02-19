@@ -1,3 +1,7 @@
+# -*- coding:utf-8 -*-
+# @author xupingmao
+# @since 2016
+# @modified 2018/02/18 11:27:17
 
 def add_builtin(name, func):
     __builtins__[name] = func

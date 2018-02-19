@@ -7,6 +7,9 @@
  * 3. [at runtime] mark objects can be reached from `frames` to be used (1);
  * 4. [at native call] mark objects in tm->local_obj_list to be used(1);
  * 5. release objects which are marked unused (0).
+ * 
+ * @since 2015
+ * @modified 2018/02/18 11:28:56
  */
 
 void chars_init();

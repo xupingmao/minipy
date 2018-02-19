@@ -1,5 +1,8 @@
+# -*- coding:utf-8 -*-
+# @author xupingmao
+# @since 2016
+# @modified 2018/02/18 11:29:59
 import init
-
 import_func = init._import
 
 def testfiles(filenamelist):

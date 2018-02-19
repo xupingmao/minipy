@@ -2,7 +2,8 @@
  * object.h
  *
  *  Created on: 2014/8/25
- *      Author: Xu
+ *  @author: xupingmao
+ *  @modified 2018/02/18 11:26:16
  */
 
 #ifndef _OBJECT_H_
