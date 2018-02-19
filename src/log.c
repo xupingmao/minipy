@@ -1,4 +1,9 @@
-
+/**
+ * description here
+ * @author xupingmao
+ * @since 2016
+ * @modified 2018/02/19 16:41:31
+ */
 #ifndef _TM_LOG_
 #define _TM_LOG_
 

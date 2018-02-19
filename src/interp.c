@@ -11,7 +11,6 @@ Object call_function(Object func) {
     Object ret;
     if (IS_FUNC(func)) {
         resolve_method_self(func);
-        
         tm_log_call(func);
         
         /* call native */
@@ -19,10 +18,6 @@ Object call_function(Object func) {
             return GET_FUNCTION(func)->native();
         } else {
             TmFrame* f = push_frame(func);
-            /*
-            if (GET_FUNCTION(func)->modifier == 0) {
-                return tm_eval(f);
-            }*/
             L_recall:
             if (setjmp(f->buf)==0) {
                 return tm_eval(f);
@@ -59,10 +54,8 @@ Object call_function(Object func) {
  */
 Object tm_load_module(Object file, Object code, Object name) {
     Object mod = module_new(file, name, code);
-
     // resolve cache
     tm_loadcode(GET_MODULE(mod), GET_STR(code));
-
     Object fnc = func_new(mod, NONE_OBJECT, NULL);
     GET_FUNCTION(fnc)->code = (unsigned char*) GET_STR(code);
     GET_FUNCTION(fnc)->name = string_new("#main");
@@ -74,14 +67,12 @@ Object tm_load_module(Object file, Object code, Object name) {
 /**
  * @since 2016-11-27
  */
-Object tm_load_module2(char* sz_filename, char* sz_code) {
+Object load_boot_module(char* sz_filename, char* sz_code) {
     Object name = string_new(sz_filename);
     Object file = name;
     Object code = string_new("");
     Object mod = module_new(file, name, code);
-
     tm_loadcode(GET_MODULE(mod), sz_code);
-
     Object fnc = func_new(mod, NONE_OBJECT, NULL);
     GET_FUNCTION(fnc)->code = (unsigned char*) GET_STR(code);
     GET_FUNCTION(fnc)->name = string_new("#main");

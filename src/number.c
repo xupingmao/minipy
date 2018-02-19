@@ -1,3 +1,10 @@
+/**
+ * description here
+ * @author xupingmao
+ * @since 2016
+ * @modified 2018/02/19 16:44:56
+ */
+
 #include "include/tm.h"
 
 Object tm_number(double v){
@@ -6,8 +13,6 @@ Object tm_number(double v){
   GET_NUM(o) = v;
   return o;
 }
-
-
 
 void number_format(char* des, Object num){
     double v = GET_NUM(num);

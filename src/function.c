@@ -1,3 +1,9 @@
+/**
+ * description here
+ * @author xupingmao
+ * @since 2016
+ * @modified 2018/02/19 16:38:16
+ */
 #include "include/tm.h"
 
 /**
@@ -56,13 +62,6 @@ TmCodeCache* func_resolve_cache(TmFunction* fnc, TmCodeCache* cache) {
     while (1) {
         int op = cache->op;
         int val = cache->v.ival;
-        /*
-        if (op == OP_LINE) {
-            printf("%d#%d\n", op, val);
-        } else {
-            printf("resolve:%d\n", op);
-        }
-        */
         if (op == OP_LOAD_LOCAL || op == OP_STORE_LOCAL) {
             maxlocals = max(cache->v.ival, maxlocals);
         } else if (op == OP_EOF) {
@@ -222,15 +221,6 @@ Object get_func_attr(TmFunction* fnc, Object key) {
     }
     return NONE_OBJECT;
 }
-/*
-void resolve_module(TmModule* mod, TmFunction* fnc){
-    if (! mod->resolved) {
-        Code_check_result st = resolve_code(mod, (unsigned char*) GET_STR(mod->code), 0);
-        fnc->code = st.code;
-        fnc->maxlocals = st.maxlocals;
-        fnc->maxstack = st.maxstack;
-    }
-}*/
 
 unsigned char* get_function_code(TmFunction *fnc){
     //resolve_module(GET_MODULE(fnc->mod), fnc);

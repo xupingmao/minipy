@@ -1,3 +1,10 @@
+/**
+ * opeartor implementions
+ * @author xupingmao
+ * @since 2016
+ * @modified 2018/02/19 16:46:53
+ */
+
 #include "include/tm.h"
 
 #define RET_NUM(v) \

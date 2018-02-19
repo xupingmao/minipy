@@ -1,6 +1,3 @@
-#include "include/tm.h"
-#include "log.c"
-
 /**
  * 1. mark all allocated object to be unused (0);
  * 2. mark objects can be reached from `root` to be used (1);
@@ -9,22 +6,24 @@
  * 5. release objects which are marked unused (0).
  * 
  * @since 2015
- * @modified 2018/02/18 11:28:56
+ * @modified 2018/02/19 16:39:08
  */
+
+#include "include/tm.h"
+#include "log.c"
 
 void chars_init();
 void frames_init();
 
 #define GC_CONSTANS_LEN 10
 #define GC_REACHED_SIGN 1
-#define GC_MARKED(o) (o).value.gc->marked
-
-#define GET_CHAR(n) ARRAY_CHARS[n]
+#define GC_MARKED(o)    (o).value.gc->marked
+#define GET_CHAR(n)     ARRAY_CHARS[n]
 
 
 /**
  * init garbage collector
- * @since ?
+ * @since 2016
  */
 void gc_init() {
     int i;

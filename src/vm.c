@@ -1,3 +1,10 @@
+/**
+ * description here
+ * @author xupingmao
+ * @since 2016
+ * @modified 2018/02/19 16:43:26
+ */
+
 #include "include/tm.h"
 #include "string.c"
 #include "list.c"
@@ -7,15 +14,12 @@
 #include "ops.c"
 #include "dict.c"
 #include "function.c"
-// #include "interp.c"
 #include "exception.c"
 #include "tmarg.c"
 #include "module/time.c"
 #include "module/sys.c"
 #include "module/math.c"
 #include "module/os.c"
-
-// #include "tmtokenize.c"
 
 /**
  * register module function
@@ -170,7 +174,6 @@ int tm_run(int argc, char* argv[], unsigned char* init_code) {
             call_mod_func("init", "boot");
         } else if (tm_hasattr(tm->modules, "main")) {
             // adjust sys.argv
-            
             call_mod_func("main", "_main");
         }
     } else if (code == 1){

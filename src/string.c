@@ -1,11 +1,18 @@
-#include "include/tm.h"
+/**
+ * description here
+ * @author xupingmao
+ * @since 2018/02/19 16:49:28
+ * @modified 2018/02/19 16:49:41
+ */
 
+#include "include/tm.h"
 
 /* code two bytes to string, Big-Endian */
 void code16(unsigned char* src, int value) {
     src[0] = (value >> 8) & 0xff;
     src[1] = (value) & 0xff;
 }
+
 int uncode16(unsigned char** src) {
     unsigned char* s = *src;
     *src += 2;
@@ -18,6 +25,7 @@ void code32(unsigned char* src, int value) {
     src[2] = (value >> 8) & 0xff;
     src[3] = (value) & 0xff;
 }
+
 int uncode32(unsigned char** src) {
     unsigned char* s = *src;
     *src += 4;

@@ -1,3 +1,9 @@
+/**
+ * description here
+ * @author xupingmao <578749341@qq.com>
+ * @since 2016
+ * @modified 2018/02/19 16:52:46
+ */
 #include "include/tm.h"
 #include <ctype.h>
 #include <sys/stat.h>

@@ -1,3 +1,9 @@
+/**
+ * description here
+ * @author xupingmao
+ * @since 2016
+ * @modified 2018/02/19 16:56:40
+ */
 #include "vm.c"
 #include "interp.c"
 #include "cache_bin.c"
@@ -21,13 +27,13 @@ int main(int argc, char *argv[])
         math_mod_init();
         os_mod_init();
         
-        tm_load_module2("init", init_bin);
-        tm_load_module2("lex", lex_bin);
-        tm_load_module2("parse", parse_bin);
-        tm_load_module2("tmcode", tmcode_bin);
-        tm_load_module2("encode", encode_bin);
-        tm_load_module2("pyeval", pyeval_bin);
-        tm_load_module2("repl", repl_bin);
+        load_boot_module("init",   init_bin);
+        load_boot_module("lex",    lex_bin);
+        load_boot_module("parse",  parse_bin);
+        load_boot_module("tmcode", tmcode_bin);
+        load_boot_module("encode", encode_bin);
+        load_boot_module("pyeval", pyeval_bin);
+        load_boot_module("repl",   repl_bin);
         dict_set_by_str(tm->builtins, "TM_USE_CACHE", tm_number(1));
  
         if (tm_hasattr(tm->modules, "init")) {

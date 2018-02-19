@@ -1,8 +1,9 @@
-
 /**
-* @Author xupingmao <578749341@qq.com>
-*/
-
+ * description here
+ * @author xupingmao <578749341@qq.com>
+ * @since 2016
+ * @modified 2018/02/19 16:50:55
+ */
 
 /**
 * less interface is better than more,
