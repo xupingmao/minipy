@@ -2,11 +2,11 @@
  * description here
  * @author xupingmao
  * @since 2016
- * @modified 2018/02/19 16:56:40
+ * @modified 2018/02/19 16:59:47
  */
 #include "vm.c"
 #include "interp.c"
-#include "cache_bin.c"
+#include "bin.c"
 
 int main(int argc, char *argv[])
 {
@@ -20,7 +20,6 @@ int main(int argc, char *argv[])
     /* use first frame */
     int code = setjmp(tm->frames->buf);
     if (code == 0) {
-        // printf("load modules\n");
         /* init modules */
         time_mod_init();
         sys_mod_init();

@@ -1,15 +1,10 @@
 /**
- * description here
+ * less interface is better than more,
+ * too many interfaces with similar function will confuse the users.
  * @author xupingmao <578749341@qq.com>
  * @since 2016
- * @modified 2018/02/19 16:50:55
+ * @modified 2018/02/19 16:58:24
  */
-
-/**
-* less interface is better than more,
-* because many interface with similar function will confuse the users.
-*/
-
 #include "include/tm.h"
 
 /** new hashdict instance, with initial allocated size set to 7.
