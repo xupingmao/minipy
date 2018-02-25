@@ -39,6 +39,7 @@ testfiles(
         "test-lex",
         "test-parse",
         "test-tailcall",
+        "test-try-simple",
         
         # some algorithms
         "ackermann",
