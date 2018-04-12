@@ -1,6 +1,12 @@
 # minipy Changelog
 
-## v-1.1.0 - 2017/09
+## v1.2 - ?
+
+### Changed
+- code style
+
+
+## v1.1 - 2017/09
 
 ### Added
 - Travis-CI
@@ -30,7 +36,7 @@
 - Unhandled exception message now writes to stderr
 - slice
 
-## v-1.0.0 - 2016/10/23
+## v1.0 - 2016/10/23
 
 ### Added
 - A interpreter written in C

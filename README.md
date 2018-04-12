@@ -73,4 +73,4 @@ make && make test
 
 ### 协议
 
-MIT
+- MIT
