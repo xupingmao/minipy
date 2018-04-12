@@ -1,6 +1,6 @@
 # minipy Changelog
 
-## v1.2 - ?
+## v1.2 - 2017/10 - 
 
 ### Changed
 - code style
