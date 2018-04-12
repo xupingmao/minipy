@@ -35,7 +35,7 @@ int uncode32(unsigned char** src) {
 
 /**
  * allocate a new string of length 1
- * @since 2015-?
+ * @since 2015
  */
 Object string_char_new(int c) {
     String* str = tm_malloc(sizeof(String));

@@ -90,10 +90,15 @@ void tm_loadcode(TmModule* m, char* code) {
     char buf[1024];
     int error = 0;
     char* error_msg = NULL;
-    
+
+    memset(buf, 0, sizeof(buf));
     tm_init_cache(m);
     
     TmCodeCache cache;
+    cache.op = 0;
+    cache.v.ival = 0;
+    cache.sval = NULL;
+
     while (*s != 0) {
         /* must begin with opcode */
         if (!isdigit(*s)) {
@@ -110,7 +115,7 @@ void tm_loadcode(TmModule* m, char* code) {
         if (*s=='#') {
             s++;
             // load string
-            for (i = 0;*s != 0 && *s != '\n' && *s != '\r'; s++, i++) {
+            for (i = 0;*s != 0 && *s != '\n' && *s != '\r' && i < sizeof(buf); s++, i++) {
                 if (*s=='\\') {
                     s++;
                     switch(*s) {
@@ -145,6 +150,7 @@ void tm_loadcode(TmModule* m, char* code) {
         }
             
         cache.op = op;
+        cache.v.ival = 0;
         cache.sval = buf; // temp value, just for print
         switch(op) {
             case OP_NUMBER:
@@ -269,12 +275,10 @@ tailcall:
     top       = f->stack;
     cur_fnc    = f->fnc;
     globals    = get_globals(cur_fnc);
-    // TODO use code cache to replace unsigned char*
     cache = f->cache;
     const char* func_name_sz = get_func_name_sz(cur_fnc);
 
     ret = NONE_OBJECT;
-    tm->steps++;
 
     while (1) {
         tm_log_cache(cache);
@@ -310,7 +314,6 @@ tailcall:
                 arg_push(attr);
             }
             call_function(import_func);
-            
             break;
         }
         case OP_CONSTANT: {

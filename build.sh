@@ -1,3 +1,4 @@
+set -x
 prog=python
 
 case $1 in
@@ -15,7 +16,6 @@ rm ../bin.c
 echo "current path: $(pwd)"
 echo "use python interpreter: $prog"
 
-set -x
 $prog encode.py init.py >> bin.c
 $prog encode.py lex.py >> bin.c
 $prog encode.py parse.py >> bin.c
