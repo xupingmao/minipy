@@ -328,6 +328,7 @@ def boot(loadlibs=True):
     global LIB_PATH
     argv = sys.argv
     argc = len(argv)
+    add_builtin("ARGV", argv)
     pathes = split_path(os.getcwd())
     pathes.append("libs")
     LIB_PATH = join_path(pathes)

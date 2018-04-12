@@ -5,6 +5,7 @@ case $1 in
     echo "use minipy to compile compiler"
     mv minipy src/python/mp
     prog=./mp
+    chmod +x src/python/mp
     ;;
 esac
 
@@ -14,6 +15,7 @@ rm ../bin.c
 echo "current path: $(pwd)"
 echo "use python interpreter: $prog"
 
+set -x
 $prog encode.py init.py >> bin.c
 $prog encode.py lex.py >> bin.c
 $prog encode.py parse.py >> bin.c
@@ -24,5 +26,5 @@ $prog encode.py repl.py >> bin.c
 mv bin.c ../
 popd
 
-make
-
+make debug
+set +x

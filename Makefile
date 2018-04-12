@@ -13,10 +13,10 @@ o3:
 	$(cc) -DTM_USE_CACHE -o minipy -O3 -lm src/main.c
 
 debug:
-	$(cc) -DTM_CHECK_MEM -o minipy -g -lm src/main.c
+	$(cc) -g -o minipy src/main.c -lm
 
 check_mem: 
-	$(cc) -DTM_CHECK_MEM -o minipy -lm src/main.c
+	$(cc) -DTM_CHECK_MEM -o minipy src/main.c -lm
 	
 test:
 	./minipy ./test/test-main.py

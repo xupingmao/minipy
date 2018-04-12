@@ -40,7 +40,7 @@ testfiles(
         "test-parse",
         "test-tailcall",
         "test-try-simple",
-        
+        "test-sys",
         # some algorithms
         "ackermann",
     ]

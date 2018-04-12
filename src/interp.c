@@ -274,6 +274,7 @@ tailcall:
     const char* func_name_sz = get_func_name_sz(cur_fnc);
 
     ret = NONE_OBJECT;
+    tm->steps++;
 
     while (1) {
         tm_log_cache(cache);
