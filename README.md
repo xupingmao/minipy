@@ -34,15 +34,14 @@ make && make test
 3. `parse.py` 手写递归解析器
 4. `encode.py` 代码生成器，运行 `python encode.py {script.py}` 可以打印出字节码(未处理过的)
 
-### 虚拟机特性
-1. 基于栈的计算机模型，字节码定义在 `src/python/tmcode.py`
-2. 基于 setjmp/longjmp 实现的异常处理
-3. Native方法和python方法
-
-### 高级特性
-1. Mark-Sweep垃圾回收
-2. 常量池
-3. 尾调用优化
+### 特性
+- [x] 基于栈的计算机模型，字节码定义在 `src/python/tmcode.py`
+- [x] 支持异常处理，基于`setjmp/longjmp`实现
+- [x] 支持Native方法扩展
+- [x] 支持常用的Python类型
+- [x] Mark-Sweep垃圾回收
+- [x] 字符串常量池
+- [x] 尾调用优化
 
 ### 工具
 1. minipy -dis {test.py} 打印字节码(常量处理过)

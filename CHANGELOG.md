@@ -1,10 +1,12 @@
 # minipy Changelog
 
-## v1.2 - ?
+## v1.2 - 2018/04
 
 ### Changed
 - code style
 
+### Added
+- build.sh
 
 ## v1.1 - 2017/09
 
