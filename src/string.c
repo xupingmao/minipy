@@ -2,7 +2,7 @@
  * description here
  * @author xupingmao
  * @since 2018/02/19 16:49:28
- * @modified 2018/02/19 16:49:41
+ * @modified 2018/12/15 23:00:14
  */
 
 #include "include/tm.h"
@@ -185,7 +185,7 @@ Object string_append_obj(Object string, Object obj) {
 Object string_append_int(Object string, int64_t num) {
     // the maxium length of long is 20
     char buf[30];
-    sprintf(buf, "%lld", num);
+    sprintf(buf, "%lld", (long long int)num);
     string = string_append_sz(string, buf); 
     // not use tail-call, prevent buf destroyed by compiler
     return string;
