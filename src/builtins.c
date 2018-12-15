@@ -2,7 +2,7 @@
  * description here
  * @author xupingmao <578749341@qq.com>
  * @since 2016
- * @modified 2018/02/19 16:52:46
+ * @modified 2018/12/15 18:06:02
  */
 #include "include/tm.h"
 #include <ctype.h>
@@ -432,6 +432,15 @@ Object bf_str() {
     return tm_str(a);
 }
 
+Object bf_bool() {
+    Object a = arg_take_obj("bool");
+    if (is_true_obj(a)) {
+        return tm->_TRUE;
+    } else {
+        return tm->_FALSE;
+    }
+}
+
 Object bf_len() {
     Object o = arg_take_obj("len");
     return tm_number(tm_len(o));
@@ -814,6 +823,7 @@ void builtins_init() {
     reg_builtin_func("str", bf_str);
     reg_builtin_func("int", bf_int);
     reg_builtin_func("float", bf_float);
+    reg_builtin_func("bool", bf_bool);
     reg_builtin_func("print", bf_print);
     reg_builtin_func("chr", bf_chr);
     reg_builtin_func("ord", bf_ord);

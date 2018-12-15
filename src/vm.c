@@ -2,7 +2,7 @@
  * description here
  * @author xupingmao
  * @since 2016
- * @modified 2018/02/19 16:43:26
+ * @modified 2018/12/15 18:07:48
  */
 
 #include "include/tm.h"
@@ -109,10 +109,12 @@ int vm_init(int argc, char* argv[]) {
     // init gc
     gc_init();
 
-    tm->argc = argc;
-    tm->argv = argv;
-    tm->code = NULL;
-    tm->steps = 0;
+    tm->argc   = argc;
+    tm->argv   = argv;
+    tm->code   = NULL;
+    tm->steps  = 0;
+    tm->_TRUE  = tm_number(1);
+    tm->_FALSE = tm_number(0);
 
     /* set module boot */
     Object boot = dict_new();

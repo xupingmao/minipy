@@ -39,9 +39,13 @@ make && make test
 - [x] 支持异常处理，基于`setjmp/longjmp`实现
 - [x] 支持Native方法扩展
 - [x] 支持常用的Python类型
+- [x] 支持函数定义、简单类定义
 - [x] Mark-Sweep垃圾回收
 - [x] 字符串常量池
 - [x] 尾调用优化
+- [] DEBUG功能
+- [] 用户级线程
+- [] 类的继承
 
 ### 工具
 1. minipy -dis {test.py} 打印字节码(常量处理过)
