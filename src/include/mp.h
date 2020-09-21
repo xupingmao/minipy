@@ -1,7 +1,7 @@
 
 
-#ifndef _TM_H
-#define _TM_H
+#ifndef _MP_H
+#define _MP_H
 /** 
  *  coding standards
  *  static variable . not specified
@@ -158,7 +158,7 @@ void        gc_check_native_call(int size, Object ret);
 Object        string_char_new(int c);
 Object        string_chr(int n); // get a char from char_list.
 Object        string_alloc(char* s, int size);
-#define       sz_to_string(s) string_alloc(s, -1)
+#define       string_from_sz(s) string_alloc(s, -1)
 #define       string_new(s) string_alloc(s, strlen(s))
 Object        string_const(char*);
 void          string_free(String*);
@@ -196,7 +196,7 @@ void     list_insert(TmList*list, int index, Object value);
 int      list_index(TmList*, Object val);
 void     list_append(TmList* list, Object v);
 void     list_shorten(TmList* list, int len); // shorten list.
-Object   array_to_list(int n, ...);
+Object   list_from_array(int n, ...);
 Object   list_builtin_extend();
 
 // dict functions
@@ -244,10 +244,8 @@ Object  arg_take_list_obj(const char* fnc);
 Object  arg_take_dict_obj(const char* fnc);
 Object  arg_take_obj(const char* fnc);
 Object  arg_take_data_obj(const char* fnc);
-int     get_args_count() ;
+int     arg_count() ;
 int     arg_remains();
-void    tm_unget_arg();
-
 
 
 // function functions
@@ -354,7 +352,6 @@ Object    bf_int();
 Object    bf_float();
 Object    bf_system();
 Object    bf_print();
-Object    blt__add_type_method();
 void      builtins_init();
 Object*   get_builtin(char* key);
 

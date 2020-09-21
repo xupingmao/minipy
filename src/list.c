@@ -2,9 +2,9 @@
  * description here
  * @author xupingmao
  * @since 2016
- * @modified 2018/02/19 16:42:11
+ * @modified 2020/09/22 00:07:36
  */
-#include "include/tm.h"
+#include "include/mp.h"
 
 /** 
  * @param cap capacity of the list
@@ -86,7 +86,7 @@ void list_append(TmList* list, Object obj) {
     list->len++;
 }
 
-Object array_to_list(int n, ...) {
+Object list_from_array(int n, ...) {
     va_list ap;
     int i = 0;
     Object list = list_new(n);

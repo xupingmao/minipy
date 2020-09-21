@@ -2,10 +2,10 @@
  * opeartor implementions
  * @author xupingmao
  * @since 2016
- * @modified 2018/02/19 16:46:53
+ * @modified 2020/09/22 00:11:09
  */
 
-#include "include/tm.h"
+#include "include/mp.h"
 
 #define RET_NUM(v) \
     Object _num;\
@@ -293,7 +293,7 @@ Object obj_mul(Object a, Object b) {
             return a;
         int times = (int) GET_NUM(b);
         if (times <= 0)
-            return sz_to_string("");
+            return string_from_sz("");
         if (times == 1)
             return a;
         des = string_alloc(NULL, len * times);
@@ -520,7 +520,7 @@ Object tm_str(Object a) {
         function_format(buf, a);
         return string_new(buf);
     case TYPE_NONE:
-        return sz_to_string("None");
+        return string_from_sz("None");
     case TYPE_DATA:
         return GET_DATA(a)->str(GET_DATA(a));
     default:

@@ -1,4 +1,4 @@
-#include "../include/tm.h"
+#include "../include/mp.h"
 #include <math.h>
 
 /***********************************
@@ -93,7 +93,7 @@ Object bf_vmopt() {
     if (strcmp(opt, "gc") == 0) {
         gc_full();
     } else if (strcmp(opt, "help") == 0) {
-        return sz_to_string("gc, help");
+        return string_from_sz("gc, help");
     } else if (strcmp(opt, "frame.local") == 0) {
         int fidx = arg_take_int("vminfo");
         int lidx = arg_take_int("vminfo");

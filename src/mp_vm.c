@@ -2,10 +2,10 @@
  * description here
  * @author xupingmao
  * @since 2016
- * @modified 2018/12/15 18:07:48
+ * @modified 2020/09/22 00:11:10
  */
 
-#include "include/tm.h"
+#include "include/mp.h"
 #include "string.c"
 #include "list.c"
 #include "number.c"
@@ -27,7 +27,7 @@
  */
 void reg_mod_func(Object mod, char* name, Object (*native)()) {
     Object func = func_new(NONE_OBJECT, NONE_OBJECT, native);
-    GET_FUNCTION(func)->name = sz_to_string(name);
+    GET_FUNCTION(func)->name = string_from_sz(name);
     obj_set(mod,GET_FUNCTION(func)->name, func);
 }
 
@@ -45,7 +45,7 @@ void load_module(Object name, Object code) {
     Object mod = module_new(name, name, code);
     Object fnc = func_new(mod, NONE_OBJECT, NULL);
     GET_FUNCTION(fnc)->code = (unsigned char*) GET_STR(code);
-    GET_FUNCTION(fnc)->name = sz_to_string("#main");
+    GET_FUNCTION(fnc)->name = string_from_sz("#main");
     call_function(fnc);
 }
 
@@ -119,7 +119,7 @@ int vm_init(int argc, char* argv[]) {
     /* set module boot */
     Object boot = dict_new();
     dict_set_by_str(tm->modules, "boot", boot);
-    dict_set_by_str(boot, "__name__", sz_to_string("boot"));
+    dict_set_by_str(boot, "__name__", string_from_sz("boot"));
     dict_set_by_str(tm->builtins, "tm", tm_number(1));
     dict_set_by_str(tm->builtins, "True", tm_number(1));
     dict_set_by_str(tm->builtins, "False", tm_number(0));

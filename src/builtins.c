@@ -2,9 +2,9 @@
  * description here
  * @author xupingmao <578749341@qq.com>
  * @since 2016
- * @modified 2018/12/15 18:06:02
+ * @modified 2020/09/22 00:11:15
  */
-#include "include/tm.h"
+#include "include/mp.h"
 #include <ctype.h>
 #include <sys/stat.h>
 #include <errno.h>
@@ -321,7 +321,7 @@ Object bf_load_module() {
     Object file = arg_take_str_obj(sz_fnc);
     Object code = arg_take_str_obj(sz_fnc);
     Object name = NONE_OBJECT;
-    if (get_args_count() == 3) {
+    if (arg_count() == 3) {
         name = arg_take_str_obj(sz_fnc);
     }
     return tm_load_module(file, code, name);
@@ -343,13 +343,13 @@ Object bf_exit() {
 Object bf_gettype() {
     Object obj = arg_take_obj("gettype");
     switch(TM_TYPE(obj)) {
-        case TYPE_STR: return sz_to_string("string");
-        case TYPE_NUM: return sz_to_string("number");
-        case TYPE_LIST: return sz_to_string("list");
-        case TYPE_DICT: return sz_to_string("dict");
-        case TYPE_FUNCTION: return sz_to_string("function");
-        case TYPE_DATA: return sz_to_string("data");
-        case TYPE_NONE: return sz_to_string("None");
+        case TYPE_STR: return string_from_sz("string");
+        case TYPE_NUM: return string_from_sz("number");
+        case TYPE_LIST: return string_from_sz("list");
+        case TYPE_DICT: return string_from_sz("dict");
+        case TYPE_FUNCTION: return string_from_sz("function");
+        case TYPE_DATA: return string_from_sz("data");
+        case TYPE_NONE: return string_from_sz("None");
         default: tm_raise("gettype(%o)", obj);
     }
     return NONE_OBJECT;
@@ -413,7 +413,7 @@ Object bf_code32() {
 }
 
 Object bf_raise() {
-    if (get_args_count() == 0) {
+    if (arg_count() == 0) {
         tm_raise("raise");
     } else {
         tm_raise("%s", arg_take_sz("raise"));
@@ -529,7 +529,7 @@ Object bf_write() {
         // buffer[i] = s[i];
     // }
     printf("%s", s);
-    // return array_to_list(2, tm_number(t2-t1), tm_number(t3-t2));
+    // return list_from_array(2, tm_number(t2-t1), tm_number(t3-t2));
     return NONE_OBJECT;
 }
 
@@ -606,7 +606,7 @@ Object* enumerate_next(TmData* iterator) {
     } else {
         int idx = iterator->cur;
         iterator->cur += 1;
-        iterator->cur_obj = array_to_list(2, tm_number(idx), *next_value);
+        iterator->cur_obj = list_from_array(2, tm_number(idx), *next_value);
         return &iterator->cur_obj;
     }
 }
@@ -742,9 +742,9 @@ Object bf_get_ex_list() {
 Object bf_get_os_name() {
     const char* sz_func = "getosname";
 #ifdef _WINDOWS_H
-    return sz_to_string("nt");
+    return string_from_sz("nt");
 #else
-    return sz_to_string("posix");
+    return string_from_sz("posix");
 #endif
 }
 

@@ -3,9 +3,9 @@
  * too many interfaces with similar function will confuse the users.
  * @author xupingmao <578749341@qq.com>
  * @since 2016
- * @modified 2018/02/19 16:58:24
+ * @modified 2020/09/22 00:11:14
  */
-#include "include/tm.h"
+#include "include/mp.h"
 
 /** new hashdict instance, with initial allocated size set to 7.
 *   better not similar to computer binary size ( as to say 2 ), 
@@ -198,7 +198,7 @@ Object* dict_get_by_str0(TmDict* dict, char* key) {
 }
 
 void dict_set_by_str0(TmDict* dict, char* key, Object value) {
-    dict_set0(dict, sz_to_string(key), value);
+    dict_set0(dict, string_from_sz(key), value);
 }
 
 void dict_del(TmDict* dict, Object key) {

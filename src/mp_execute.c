@@ -3,7 +3,7 @@
   * 2015-6-16: interpreter for tinyvm bytecode.
  **/
 
-#include "include/tm.h"
+#include "include/mp.h"
 
 void tm_loadcode(TmModule* m, char* code);
 

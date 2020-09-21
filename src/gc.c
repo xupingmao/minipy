@@ -6,10 +6,10 @@
  * 5. release objects which are marked unused (0).
  * 
  * @since 2015
- * @modified 2018/02/19 16:39:08
+ * @modified 2020/09/22 00:17:00
  */
 
-#include "include/tm.h"
+#include "include/mp.h"
 #include "log.c"
 
 void chars_init();
@@ -290,7 +290,7 @@ void gc_mark_locals_and_stack() {
 
 /**
  * sweep unmarked objects in tm->all
- * @since ?
+ * @since ? before 2016
  * @modified 2016-08-20
  */
 void gc_sweep() {

@@ -2,10 +2,10 @@
  * minipy arguments module
  * @author xupingmao
  * @since 2016
- * @modified 2020/09/21 02:15:38
+ * @modified 2020/09/22 00:09:34
  */
 
-#include "include/tm.h"
+#include "include/mp.h"
 
 /**
  * reset argument list
@@ -148,6 +148,6 @@ Object arg_take_data_obj(const char* fnc) {
     }
     return v;
 }
-int get_args_count() {
+int arg_count() {
     return tm->arg_cnt;
 }

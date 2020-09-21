@@ -2,10 +2,10 @@
  * description here
  * @author xupingmao
  * @since 2018/02/19 16:49:28
- * @modified 2018/12/15 23:00:14
+ * @modified 2020/09/22 00:11:05
  */
 
-#include "include/tm.h"
+#include "include/mp.h"
 
 /* code two bytes to string, Big-Endian */
 void code16(unsigned char* src, int value) {
@@ -202,7 +202,7 @@ Object string_substring(String* str, int start, int end) {
     end = max_end < end ? max_end : end;
     len = end - start;
     if (len <= 0)
-        return sz_to_string("");
+        return string_from_sz("");
     new_str = string_alloc(NULL, len);
     s = GET_STR(new_str);
     for (i = start; i < end; i++) {

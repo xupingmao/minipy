@@ -3,7 +3,7 @@
  *
  *  Created on: 2014/8/25
  *  @author: xupingmao
- *  @modified 2018/02/18 11:26:16
+ *  @modified 2020/09/22 00:23:37
  */
 
 #ifndef _OBJECT_H_
@@ -21,6 +21,7 @@
 #define MAX_FILE_SIZE 1024 * 1024 * 5 /* max file size loaded into memery */
 #include <stdint.h>
 
+/* handle like lua */
 typedef union TmValue {
   double dv;
   double num;
@@ -36,10 +37,12 @@ typedef union TmValue {
   struct TmRecycle*  gc;
 }TmValue;
 
+
 typedef struct Object{
   char type;
   TmValue value;
 }Object;
+
 
 struct TmRecycle {
   int marked;
@@ -112,9 +115,10 @@ typedef struct TmFrame {
 #define STACK_SIZE 2048
 typedef struct TmVm {
   char* version;
-  int debug;
+  int   debug;
 
-  int argc;
+  /* program arguments */
+  int    argc;
   char** argv;
   
   /* compiled code */
@@ -125,7 +129,7 @@ typedef struct TmVm {
   Object ex;
   Object ex_line;
   Object ex_list;
-  int ex_index; /* index of frame where exception was thrown */
+  int    ex_index; /* index of frame where exception was thrown */
 
   int frames_init_done;
   TmFrame frames[FRAMES_COUNT];
@@ -143,7 +147,6 @@ typedef struct TmVm {
   Object dict_proto;
   Object str_proto;
 
-  
   int arg_cnt;
   int arg_loaded;
 
@@ -151,6 +154,7 @@ typedef struct TmVm {
   Object modules;
   Object builtins;
   Object root;
+
   int steps;   /* record opcode steps executed */
   int init;    /* modules and builtins init */
 
@@ -171,16 +175,20 @@ typedef struct TmData {
     int marked;
     size_t data_size;
     
+    /* for iterator */
     long cur;
     long inc;
     long end;
     Object cur_obj;
+    Object* (*next)();
 
+    /* for gc */
     void   (*mark)();
     void   (*func_free)();
+
+    /* meta functions */
     Object (*str)();
     Object (*get)();
-    Object* (*next)();
     void   (*set)();
 
     void* extend_data_ptr;
