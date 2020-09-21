@@ -2,10 +2,10 @@
  * description here
  * @author xupingmao
  * @since 2016
- * @modified 2018/02/19 16:59:47
+ * @modified 2020/09/21 02:18:50
  */
-#include "vm.c"
-#include "interp.c"
+#include "mp_vm.c"
+#include "mp_execute.c"
 #include "bin.c"
 
 int main(int argc, char *argv[])
@@ -20,12 +20,13 @@ int main(int argc, char *argv[])
     /* use first frame */
     int code = setjmp(tm->frames->buf);
     if (code == 0) {
-        /* init modules */
+        /* init c modules */
         time_mod_init();
         sys_mod_init();
         math_mod_init();
         os_mod_init();
         
+        /* load python modules */
         load_boot_module("init",   init_bin);
         load_boot_module("lex",    lex_bin);
         load_boot_module("parse",  parse_bin);
@@ -42,9 +43,12 @@ int main(int argc, char *argv[])
             call_mod_func("main", "_main");
         }
     } else if (code == 1){
+        /* handle exceptions */
         traceback();
     } else if (code == 2){
+        /* call exit() */
     }
+
     vm_destroy();
     return 0;
 }

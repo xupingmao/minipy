@@ -1,14 +1,12 @@
 /**
- * description here
+ * minipy arguments module
  * @author xupingmao
  * @since 2016
- * @modified 2018/02/19 16:44:18
+ * @modified 2020/09/21 02:15:38
  */
 
 #include "include/tm.h"
-// 
-// argument functions
-// 
+
 /**
  * reset argument list
  * call this function before set argument
