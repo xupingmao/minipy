@@ -3,7 +3,7 @@
  *
  *  Created on: 2014/8/25
  *  @author: xupingmao
- *  @modified 2020/09/22 00:23:37
+ *  @modified 2020/09/22 00:38:01
  */
 
 #ifndef _OBJECT_H_
@@ -133,10 +133,13 @@ typedef struct TmVm {
 
   int frames_init_done;
   TmFrame frames[FRAMES_COUNT];
+  /* current frame */
   TmFrame *frame;
   
   Object *stack_end;
   Object stack[STACK_SIZE];
+
+  /* for builtin C functions */
   Object internal_arg_stack[MAX_ARG_COUNT];
   
   /* Object *top; */

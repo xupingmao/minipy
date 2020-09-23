@@ -1,7 +1,7 @@
 # -*- coding:utf-8 -*-
 # @author xupingmao
 # @since 2016
-# @modified 2018/02/18 11:27:17
+# @modified 2020/09/23 02:10:36
 
 def add_builtin(name, func):
     __builtins__[name] = func
@@ -142,7 +142,7 @@ def _import(des_glo, fname, tar = None):
         import os
         exists = os.exists
         # printf("try to load module %s\n", fname)
-        from encode import *
+        from mp_encode import *
         # can not find file in current dir.
         if not exists(fname + '.py'):
             # try to find in PATH defined in file.
@@ -258,7 +258,7 @@ def resolvepath(path):
     return fname
     
 def execfile(path, chdir = True):
-    from encode import *
+    from mp_encode import *
     if chdir:
         fname = resolvepath(path)
     else:
@@ -271,12 +271,12 @@ def to_fixed(num, length):
     return str(num).rjust(length).replace(' ', '0')
 
 def dis(path):
-    from encode import *
-    from tmcode import *
+    from mp_encode import *
+    from mp_opcode import *
     ins_list = compile_to_list(load(path), path)
     for index, item in enumerate(ins_list):
         op = int(item[0])
-        line = to_fixed(index+1, 4) + ' ' + tmcodes[op].ljust(22) + str(item[1])
+        line = to_fixed(index+1, 4) + ' ' + opcodes[op].ljust(22) + str(item[1])
         print(line)
 
 def _assert(exp, err = None):
@@ -320,8 +320,8 @@ add_builtin("require", require)
     
 LIB_PATH = ''
 def boot(loadlibs=True):
-    from lex import *
-    from encode import *
+    from mp_lex import *
+    from mp_encode import *
     from repl import *
     import sys
     import os

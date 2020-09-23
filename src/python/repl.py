@@ -1,12 +1,12 @@
 # -*- coding:utf-8 -*-
 # @author xupingmao
 # @since 2016
-# @modified 2018/02/18 11:20:50
+# @modified 2020/09/23 01:42:34
 
-import encode
+import mp_encode
 
 PRINT_STR_LEN = 40
-compilefile = encode.compilefile
+compilefile = mp_encode.compilefile
 
 def repl_print(p, n = 0, depth = 2):
     if depth <= 0:

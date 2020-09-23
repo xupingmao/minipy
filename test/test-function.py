@@ -1,4 +1,4 @@
-from test import *
+from   test import *
 import logging
 
 def cursive(n):

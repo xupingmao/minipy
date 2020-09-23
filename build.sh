@@ -16,13 +16,13 @@ rm ../bin.c
 echo "current path: $(pwd)"
 echo "use python interpreter: $prog"
 
-$prog encode.py init.py >> bin.c
-$prog encode.py lex.py >> bin.c
-$prog encode.py parse.py >> bin.c
-$prog encode.py tmcode.py >> bin.c
-$prog encode.py encode.py >> bin.c
-$prog encode.py pyeval.py >> bin.c
-$prog encode.py repl.py >> bin.c
+$prog mp_encode.py init.py >> bin.c
+$prog mp_encode.py mp_lex.py >> bin.c
+$prog mp_encode.py mp_parse.py >> bin.c
+$prog mp_encode.py mp_encode.py >> bin.c
+$prog mp_encode.py mp_opcode.py >> bin.c
+$prog mp_encode.py pyeval.py >> bin.c
+$prog mp_encode.py repl.py >> bin.c
 mv bin.c ../
 popd
 

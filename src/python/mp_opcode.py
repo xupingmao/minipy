@@ -1,7 +1,8 @@
 # -*- coding:utf-8 -*-
+# stack based opcodes
 # @author xupingmao
 # @since 2016
-# @modified 2018/02/18 11:27:51
+# @modified 2020/09/24 01:23:36
 
 from boot import *
 cheader = '''/*
@@ -29,7 +30,7 @@ _opcode_names = [
     'OP_LIST', 'OP_DICT', 
     'OP_APPEND',
     'OP_JUMP', 'OP_UP_JUMP', 'OP_POP_JUMP_ON_FALSE', 'OP_JUMP_ON_FALSE', 'OP_JUMP_ON_TRUE',
-    #TAGSIZE
+    # TAGSIZE
     'OP_UNPACK', 'OP_ROT', 'OP_DEL', 'OP_FOR', 'OP_NEXT', 'OP_ITER', 'OP_LOAD_EX',
     'OP_SETJUMP', 
     
@@ -40,8 +41,12 @@ _opcode_names = [
 
     'OP_LOAD_PARAMS', 'OP_LOAD_NARG', "OP_LOAD_PARG",
 
+    # end of function
     'OP_EOF',
+
     "OP_CLR_JUMP",
+
+    # end of program
     'OP_EOP',
     # mulity assignment, eg. x,y = 1,2
     'OP_DEBUG',
@@ -62,11 +67,11 @@ _opcode_names = [
 
 # update global values.
 i = 0
-tmcodes = {}
+opcodes = {}
 while i < len(_opcode_names):
     name = _opcode_names[i]
     globals()[name] = i + 1
-    tmcodes[i+1] = name
+    opcodes[i+1] = name
     i += 1
 
 def export_clang_define(des, self = None):

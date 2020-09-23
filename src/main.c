@@ -2,10 +2,10 @@
  * description here
  * @author xupingmao
  * @since 2016
- * @modified 2020/09/21 02:18:50
+ * @modified 2020/09/23 02:11:38
  */
-#include "mp_vm.c"
-#include "mp_execute.c"
+#include "vm.c"
+#include "execute.c"
 #include "bin.c"
 
 int main(int argc, char *argv[])
@@ -27,13 +27,13 @@ int main(int argc, char *argv[])
         os_mod_init();
         
         /* load python modules */
-        load_boot_module("init",   init_bin);
-        load_boot_module("lex",    lex_bin);
-        load_boot_module("parse",  parse_bin);
-        load_boot_module("tmcode", tmcode_bin);
-        load_boot_module("encode", encode_bin);
-        load_boot_module("pyeval", pyeval_bin);
-        load_boot_module("repl",   repl_bin);
+        load_boot_module("init",      init_bin);
+        load_boot_module("mp_opcode", mp_opcode_bin);
+        load_boot_module("mp_lex",    mp_lex_bin);
+        load_boot_module("mp_parse",  mp_parse_bin);
+        load_boot_module("mp_encode", mp_encode_bin);
+        load_boot_module("pyeval",    pyeval_bin);
+        load_boot_module("repl",      repl_bin);
         dict_set_by_str(tm->builtins, "TM_USE_CACHE", tm_number(1));
  
         if (tm_hasattr(tm->modules, "init")) {
@@ -46,7 +46,7 @@ int main(int argc, char *argv[])
         /* handle exceptions */
         traceback();
     } else if (code == 2){
-        /* call exit() */
+        /* minipy call exit() */
     }
 
     vm_destroy();

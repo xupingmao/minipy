@@ -2,10 +2,10 @@
 # -*- coding:utf-8 -*-
 # @author xupingmao
 # @since 2016
-# @modified 2018/02/18 11:26:53
+# @modified 2020/09/23 01:35:20
 from encode import *
 from boot import *
-from tmcode import *
+from mp_code import *
 import sys
 
 if "exists" not in globals():
@@ -22,19 +22,19 @@ class Lib:
         
 __libs = [
     Lib("init", "init.py"),
-    Lib("lex", "lex.py"), 
-    Lib("parse", "parse.py"), 
-    Lib("tmcode", "tmcode.py"),
-    Lib("encode", "encode.py"),
+    Lib("mp_lex",    "mp_lex.py"), 
+    Lib("mp_parse",  "mp_parse.py"), 
+    Lib("mp_opcode", "mp_opcode.py"),
+    Lib("mp_encode", "mp_encode.py"),
     Lib("pyeval", "pyeval.py"),
     Lib("repl", "repl.py"),
 ]
 
 __compiler_files = [
     Lib("boot", "boot.py"),
-    Lib("lex", "lex.py"),
-    Lib("parse", "parse.py"),
-    Lib("encode", "encode.py"),
+    Lib("mp_lex",    "mp_lex.py"),
+    Lib("mp_parse",  "mp_parse.py"),
+    Lib("mp_encode", "mp_encode.py"),
 ]
         
 def build(cc="tcc", libs=None, dst_path = "../bin.c"):
@@ -67,7 +67,7 @@ def build(cc="tcc", libs=None, dst_path = "../bin.c"):
         print("file not modified, bye")
         return
     print("generate instruction.h ...")
-    export_clang_define("../include/instruction.h", "tmcode.py")
+    export_clang_define("../include/instruction.h", "mpcode.py")
     print("build successfull!")
     """
     if cc != None:

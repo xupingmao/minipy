@@ -1,4 +1,4 @@
-from lex import *
+from mp_lex import *
 
 def tk_types(r):
     rr = []

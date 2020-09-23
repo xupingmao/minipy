@@ -1,14 +1,14 @@
 # -*- coding:utf-8 -*-
 # @author xupingmao
 # @since 2016
-# @modified 2018/02/18 11:21:01
+# @modified 2020/09/23 01:48:50
 
-import encode
-compile = encode.compile
-split_instr = encode.split_instr
-compile_to_list = encode.compile_to_list
+import mp_encode
+compile         = mp_encode.compile
+split_instr     = mp_encode.split_instr
+compile_to_list = mp_encode.compile_to_list
 
-from tmcode import *
+from mp_opcode import *
 
 def _op_add(a,b):
     return a+b
@@ -38,6 +38,7 @@ def _op_in(a,b):
     return a in b
 def _op_del(a,b):
     del a[b]
+
 op_dict = {
     OP_ADD: _op_add,
     OP_SUB: _op_sub,
@@ -85,7 +86,7 @@ def pyeval(src, glo_vars = None, debug = False):
     while idx < len(ins_list):
         op,v = ins_list[idx]
         if debug:
-            line = str(cyc).ljust(5) + tmcodes[op].ljust(22) + str(v).ljust(20)
+            line = str(cyc).ljust(5) + mpcodes[op].ljust(22) + str(v).ljust(20)
             # print(line)
         cyc += 1
         if op == OP_CONSTANT:
@@ -230,7 +231,7 @@ def pyeval(src, glo_vars = None, debug = False):
                 stack.append(i)
             r = None
         else:
-            raise(sformat("unknown handled code %s:\"%s\"\n", op, tmcodes[op]))
+            raise(sformat("unknown handled code %s:\"%s\"\n", op, mpcodes[op]))
         
         if debug:
             print(line)

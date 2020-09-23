@@ -1,4 +1,4 @@
-from parse import *
+from mp_parse import *
 
 def assert_name(tk, val):
     assert tk.type == "name"

@@ -1,5 +1,8 @@
 /**
-  * date : 2014-9-2
+  * execute minipy bytecode
+  * @since 2014-9-2
+  * @modified 2020/09/24 01:28:52
+  *
   * 2015-6-16: interpreter for tinyvm bytecode.
  **/
 
@@ -13,7 +16,7 @@ Object call_function(Object func) {
         resolve_method_self(func);
         tm_log_call(func);
         
-        /* call native */
+        /* call native function */
         if (GET_FUNCTION(func)->native != NULL) {
             return GET_FUNCTION(func)->native();
         } else {

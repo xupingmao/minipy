@@ -3,7 +3,7 @@
  * too many interfaces with similar function will confuse the users.
  * @author xupingmao <578749341@qq.com>
  * @since 2016
- * @modified 2020/09/22 00:11:14
+ * @modified 2020/09/23 02:05:00
  */
 #include "include/mp.h"
 
@@ -110,6 +110,9 @@ int findfreepos(TmDict* dict) {
     return -1;
 }
 
+/**
+ * @return node index
+ */
 int dict_set0(TmDict* dict, Object key, Object val){
     int i;
     DictNode* node = dict_get_node(dict, key);

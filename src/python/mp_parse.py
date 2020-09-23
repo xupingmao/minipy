@@ -1,8 +1,8 @@
 # -*- coding:utf-8 -*-
 # @author xupingmao
 # @since 2016
-# @modified 2018/02/19 16:13:48
-from lex import *
+# @modified 2020/09/23 01:23:56
+from mp_lex import *
 
 if "tm" not in globals():
     from boot import *

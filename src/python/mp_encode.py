@@ -1,13 +1,13 @@
 # -*- coding:utf-8 -*-
 # @author xupingmao
 # @since 2016
-# @modified 2018/02/18 11:27:08
+# @modified 2020/09/24 01:22:12
 
 if "tm" not in globals():
     from boot import *
 
-from parse import *
-from tmcode import *
+from mp_parse import *
+from mp_opcode import *
 
 _asm_ctx = None
 _code_list = None
@@ -885,11 +885,12 @@ def split_instr(instr):
 def main():
     import sys
     ARGV = sys.argv
-    if len(ARGV) < 2:pass
+    if len(ARGV) < 2:
+        print("usage: %s filename" % ARGV[0])
     elif len(ARGV) == 2:
         import repl
-        import tmcode
-        tmcodes = tmcode.tmcodes
+        import mp_opcode
+        opcodes = mp_opcode.opcodes
         # from tools import *
         repl_print = repl.repl_print
         code = compilefile(ARGV[1])
