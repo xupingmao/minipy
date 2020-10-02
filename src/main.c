@@ -2,7 +2,7 @@
  * description here
  * @author xupingmao
  * @since 2016
- * @modified 2020/09/23 02:11:38
+ * @modified 2020/09/30 16:51:46
  */
 #include "vm.c"
 #include "execute.c"
@@ -27,13 +27,13 @@ int main(int argc, char *argv[])
         os_mod_init();
         
         /* load python modules */
-        load_boot_module("init",      init_bin);
-        load_boot_module("mp_opcode", mp_opcode_bin);
-        load_boot_module("mp_lex",    mp_lex_bin);
-        load_boot_module("mp_parse",  mp_parse_bin);
-        load_boot_module("mp_encode", mp_encode_bin);
-        load_boot_module("pyeval",    pyeval_bin);
-        load_boot_module("repl",      repl_bin);
+        load_boot_module("init",        init_bin);
+        load_boot_module("mp_opcode",   mp_opcode_bin);
+        load_boot_module("mp_tokenize", mp_tokenize_bin);
+        load_boot_module("mp_parse",    mp_parse_bin);
+        load_boot_module("mp_encode",   mp_encode_bin);
+        load_boot_module("pyeval",      pyeval_bin);
+        load_boot_module("repl",        repl_bin);
         dict_set_by_str(tm->builtins, "TM_USE_CACHE", tm_number(1));
  
         if (tm_hasattr(tm->modules, "init")) {

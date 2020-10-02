@@ -1,7 +1,7 @@
 # -*- coding:utf-8 -*-
 # @author xupingmao
 # @since 2016
-# @modified 2018/04/13 22:26:04
+# @modified 2020/09/30 17:12:53
 
 # TM_TEST
 try:
@@ -10,12 +10,11 @@ except:
     # need some tool from python to bootstrap
     from boot import *
 
-def Token(type='symbol',val=None,pos=None):
-    self = newobj()
-    self.pos=pos
-    self.type=type
-    self.val=val
-    return self
+class Token:
+    def __init__(self, type='symbol', val=None, pos=None):
+        self.pos  = pos
+        self.type = type
+        self.val  = val
 
 
 def findpos(token):
@@ -58,7 +57,7 @@ def compile_error(ctx, s, token, e_msg = ""):
         raise Exception(e_msg)
     #raise
 
-_ISYMBOLS = '-=[];,./!%*()+{}:<>@^'
+SYMBOL_CHARS = '-=[];,./!%*()+{}:<>@^'
 KEYWORDS = [
     'as','def','class', 'return','pass','and','or','not','in','import',
     'is','while','break','for','continue','if','else','elif','try',
@@ -69,8 +68,8 @@ SYMBOLS = [
     '<','>',
     '[',']','{','}','(',')','.',':',',',';',
     ]
-_B_BEGIN = ['[','(','{']
-_END = [']',')','}']
+B_BEGIN = ['[','(','{']
+B_END   = [']',')','}']
 
 class TData:
     def __init__(self):
@@ -108,7 +107,13 @@ def tokenize(s):
     global T
     s = clean(s)
     return do_tokenize(s)
-        
+
+def is_blank(c):
+    return c == ' ' or c == '\t'
+
+def is_number_begin(c):
+    return c >= '0' and c <= '9'
+
 def do_tokenize(s):
     global T
     T = TData()
@@ -121,14 +126,14 @@ def do_tokenize(s):
             T.nl = False
             i = do_indent(s,i,l)
         elif c == '\n': i = do_nl(s,i,l)
-        elif c in _ISYMBOLS: i = do_symbol(s,i,l)
-        elif c >= '0' and c <= '9': i = do_number(s,i,l)
-        elif is_name_begin(c):  i = do_name(s,i,l)
-        elif c=='"' or c=="'": i = do_string(s,i,l)
-        elif c=='#': i = do_comment(s,i,l)
+        elif c in SYMBOL_CHARS: i = do_symbol(s,i,l)
+        elif is_number_begin(c): i = do_number(s,i,l)
+        elif is_name_begin(c):   i = do_name(s,i,l)
+        elif c == '"' or c == "'":   i = do_string(s,i,l)
+        elif c == '#': i = do_comment(s,i,l)
         elif c == '\\' and s[i+1] == '\n':
             i += 2; T.y+=1; T.yi = i
-        elif c == ' ' or c == '\t': i += 1
+        elif is_blank(c): i += 1
         else: compile_error('do_tokenize',s, Token('', '', T.f), "unknown token")
     indent(0)
     r = T.res
@@ -183,8 +188,8 @@ def do_symbol(s,i,l):
     if v == None:
         raise "invalid symbol"
     T.add(v,v)
-    if v in _B_BEGIN: T.braces += 1
-    if v in _END: T.braces -= 1
+    if v in B_BEGIN: T.braces += 1
+    if v in B_END: T.braces -= 1
     return i
 
 def do_number(s,i,l):

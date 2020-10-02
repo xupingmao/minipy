@@ -1,8 +1,8 @@
 # -*- coding:utf-8 -*-
 # @author xupingmao
 # @since 2016
-# @modified 2020/09/23 01:23:56
-from mp_lex import *
+# @modified 2020/09/30 16:49:14
+from mp_tokenize import *
 
 if "tm" not in globals():
     from boot import *

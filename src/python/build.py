@@ -2,7 +2,7 @@
 # -*- coding:utf-8 -*-
 # @author xupingmao
 # @since 2016
-# @modified 2020/09/23 01:35:20
+# @modified 2020/09/30 16:49:29
 from encode import *
 from boot import *
 from mp_code import *
@@ -22,7 +22,7 @@ class Lib:
         
 __libs = [
     Lib("init", "init.py"),
-    Lib("mp_lex",    "mp_lex.py"), 
+    Lib("mp_tokenize", "mp_lex.py"), 
     Lib("mp_parse",  "mp_parse.py"), 
     Lib("mp_opcode", "mp_opcode.py"),
     Lib("mp_encode", "mp_encode.py"),

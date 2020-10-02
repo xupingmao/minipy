@@ -1,7 +1,7 @@
 # -*- coding:utf-8 -*-
 # @author xupingmao
 # @since 2016
-# @modified 2020/09/23 02:10:36
+# @modified 2020/09/30 16:51:31
 
 def add_builtin(name, func):
     __builtins__[name] = func
@@ -320,7 +320,6 @@ add_builtin("require", require)
     
 LIB_PATH = ''
 def boot(loadlibs=True):
-    from mp_lex import *
     from mp_encode import *
     from repl import *
     import sys

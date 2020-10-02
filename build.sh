@@ -17,7 +17,7 @@ echo "current path: $(pwd)"
 echo "use python interpreter: $prog"
 
 $prog mp_encode.py init.py >> bin.c
-$prog mp_encode.py mp_lex.py >> bin.c
+$prog mp_encode.py mp_tokenize.py >> bin.c
 $prog mp_encode.py mp_parse.py >> bin.c
 $prog mp_encode.py mp_encode.py >> bin.c
 $prog mp_encode.py mp_opcode.py >> bin.c
