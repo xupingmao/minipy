@@ -2,7 +2,7 @@
  * description here
  * @author xupingmao
  * @since 2018/02/19 16:49:28
- * @modified 2020/09/22 00:11:05
+ * @modified 2020/10/02 12:32:42
  */
 
 #include "include/mp.h"
@@ -135,6 +135,26 @@ int string_index(String* s1, String* s2, int start) {
 }
 
 
+int string_rfind(String* s1, String* s2) {
+    char* ss1 = s1->value;
+    char* ss2 = s2->value;
+
+    int end = s1->len - s2->len;
+    int i = end - 1;
+
+    if (end < 0) {
+        return -1;
+    }
+
+    for (i = end; i >= 0; i--) {
+        if (memcmp(ss1+i, ss2, s2->len) == 0) {
+            return i;
+        }
+    }
+
+    return -1;
+}
+
 /**
  * the caller always starts with str = string_new("");
  * which is not a string_chr();
@@ -218,6 +238,12 @@ Object string_builtin_find() {
     return tm_number(string_index(self.value.str, str.value.str, 0));
 }
 
+Object string_builtin_rfind() {
+    Object self = arg_take_str_obj("rfind");
+    Object  str = arg_take_str_obj("rfind");
+    return tm_number(string_rfind(self.value.str, str.value.str));
+}
+
 Object string_builtin_substring() {
     static const char* sz_func = "substring";
     Object self = arg_take_str_obj(sz_func);
@@ -278,7 +304,7 @@ Object string_builtin_replace() {
 
 Object string_builtin_split() {
     const char* sz_func = "split";
-    Object self = arg_take_str_obj(sz_func);
+    Object self    = arg_take_str_obj(sz_func);
     Object pattern = arg_take_str_obj(sz_func);
     int pos, lastpos;
     Object nstr, list;
@@ -352,6 +378,7 @@ void string_methods_init() {
     tm->str_proto = dict_new();
     reg_mod_func(tm->str_proto, "replace",    string_builtin_replace);
     reg_mod_func(tm->str_proto, "find",       string_builtin_find);
+    reg_mod_func(tm->str_proto, "rfind",      string_builtin_rfind);
     reg_mod_func(tm->str_proto, "substring",  string_builtin_substring);
     reg_mod_func(tm->str_proto, "upper",      string_builtin_upper);
     reg_mod_func(tm->str_proto, "lower",      string_builtin_lower);

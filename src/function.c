@@ -2,7 +2,7 @@
  * description here
  * @author xupingmao
  * @since 2016
- * @modified 2020/09/22 00:03:51
+ * @modified 2020/10/02 09:55:26
  */
 #include "include/mp.h"
 
@@ -192,6 +192,8 @@ void func_format(char* des, TmFunction* func){
     strncpy(sz_buf, sz_fnc, 19);
     if (func->self.type != TYPE_NONE) {
         sprintf(des, "<method %p %s>", func, sz_buf);
+    } else if (func->native != NULL) {
+        sprintf(des, "<function (native) %p %s>", func, sz_buf);
     } else {
         sprintf(des, "<function %p %s>", func, sz_buf);
     }

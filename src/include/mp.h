@@ -159,7 +159,8 @@ Object        string_char_new(int c);
 Object        string_chr(int n); // get a char from char_list.
 Object        string_alloc(char* s, int size);
 #define       string_from_sz(s) string_alloc(s, -1)
-#define       string_new(s) string_alloc(s, strlen(s))
+#define       string_static(s)  string_alloc(s, -1)
+#define       string_new(s)     string_alloc(s, strlen(s))
 Object        string_const(char*);
 void          string_free(String*);
 int           string_equals(String*s0, String*s1);

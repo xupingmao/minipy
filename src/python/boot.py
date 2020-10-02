@@ -1,7 +1,10 @@
 # -*- coding:utf-8 -*-
 # @author xupingmao
 # @since 2016
-# @modified 2018/02/18 11:21:27
+# @modified 2020/10/02 08:57:56
+
+"""CPython运行环境使用
+"""
 import sys
 import struct
 import os
@@ -52,10 +55,7 @@ def repl_print(p, n, depth):
 
 def mmatch(s, i, v):
     return s[i:i+len(v)] == v
-# import loadlib
-'''
-bootstrap for standard python to go.
-'''
+
 def require(path, name):
     raise "require not implemented"
     

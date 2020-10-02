@@ -1,7 +1,7 @@
 # -*- coding:utf-8 -*-
 # @author xupingmao
 # @since 2016
-# @modified 2020/09/24 01:22:12
+# @modified 2020/10/02 10:34:08
 
 if "tm" not in globals():
     from boot import *
@@ -579,16 +579,16 @@ def _import_name2str(mod):
     elif mod.type == 'string':
         return mod
     
-def encode_impo_i_many(mod, items):
+def encode_import_many(mod, items):
     mod = _import_name2str(mod)
     if items.type == ',':
-        encode_impo_i_many(mod, items.first)
-        encode_impo_i_many(mod, items.second)
+        encode_import_many(mod, items.first)
+        encode_import_many(mod, items.second)
     else:
         encode_imp_it_one(mod, items)
 
 def encode_from(tk):
-    encode_impo_i_many(tk.first, tk.second)
+    encode_import_many(tk.first, tk.second)
 
 def _encode_import(item):
     item.type = 'string'

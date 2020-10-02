@@ -1,7 +1,7 @@
 /**
   * execute minipy bytecode
   * @since 2014-9-2
-  * @modified 2020/09/24 01:28:52
+  * @modified 2020/10/02 12:02:55
   *
   * 2015-6-16: interpreter for tinyvm bytecode.
  **/
@@ -302,11 +302,12 @@ tailcall:
         }
 
         case OP_IMPORT: {
+            // _import(des_globals, fname, tar);
             Object import_func = tm_get_global(globals, "_import");
             arg_start();
             arg_push(globals);
             Object modname, attr;
-            
+
             if (cache->v.ival == 1) {
                 modname = TM_POP();
                 arg_push(modname); // arg1

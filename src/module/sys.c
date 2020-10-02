@@ -17,9 +17,13 @@ void sys_mod_modules_init(Object sys_mod) {
 }
 
 void sys_mod_init() {
-    Object sys_mod = dict_new();
+    Object sys_mod  = dict_new();
+    Object sys_path = list_new(2);
     sys_mod_argv_init(sys_mod);
     sys_mod_modules_init(sys_mod);
-    dict_set_by_str(tm->modules, "sys", sys_mod);
+    dict_set_by_str(sys_mod, "path", sys_path);
+
+    // register to modules
+    dict_set_by_str(tm->modules, "sys",  sys_mod);
 }
 

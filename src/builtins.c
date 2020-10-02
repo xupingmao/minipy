@@ -2,7 +2,7 @@
  * description here
  * @author xupingmao <578749341@qq.com>
  * @since 2016
- * @modified 2020/09/22 00:11:15
+ * @modified 2020/10/02 10:06:19
  */
 #include "include/mp.h"
 #include <ctype.h>
@@ -231,7 +231,11 @@ void tm_printf(char* fmt, ...) {
     va_end(a);
 }
 
-
+/**
+ * get rest file length
+ * @param fp file descripter
+ * @return rest file length
+ */
 long get_rest_size(FILE* fp){
     long cur, end;
     cur = ftell(fp);
@@ -242,17 +246,20 @@ long get_rest_size(FILE* fp){
 }
 
 
-// vm-builtins
-
-Object tm_load(char* fname){
-    FILE* fp = fopen(fname, "rb");
+/**
+ * load file
+ * @param fpath file path
+ * @return file text
+ */
+Object tm_load(char* fpath){
+    FILE* fp = fopen(fpath, "rb");
     if(fp == NULL){
-        tm_raise("load: can not open file \"%s\"",fname);
+        tm_raise("load: can not open file \"%s\"", fpath);
         return NONE_OBJECT;
     }
     long len = get_rest_size(fp);
     if(len > MAX_FILE_SIZE){
-        tm_raise("load: file too big to load, size = %d", (len));
+        tm_raise("load: file too big to load, size = %d", len);
         return NONE_OBJECT;
     }
     Object text = string_alloc(NULL, len);

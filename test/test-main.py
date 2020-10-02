@@ -1,9 +1,9 @@
 # -*- coding:utf-8 -*-
 # @author xupingmao
 # @since 2016
-# @modified 2018/02/18 11:29:59
-import init
-import_func = init._import
+# @modified 2020/10/02 10:31:29
+import mp_init
+import_func = mp_init._import
 
 def testfiles(filenamelist):
     suc = False

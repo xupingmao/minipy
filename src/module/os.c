@@ -86,6 +86,35 @@ Object os_exists(){
     return tm->_TRUE;
 }
 
+Object os_path_dirname0(Object fpath) {
+    tm_assert_type(fpath, TYPE_STR, "os_path_dirname");
+
+    char* fpath_sz = GET_STR(fpath);
+    char* end_char = strrchr(fpath_sz, '/');
+
+    if (end_char) {
+        int end = end_char - fpath_sz;
+        return string_substring(GET_STR_OBJ(fpath), 0, end);
+    }
+
+    end_char = strrchr(fpath_sz, '\\');
+    if (end_char) {
+        int end = end_char - fpath_sz;
+        return string_substring(GET_STR_OBJ(fpath), 0, end);
+    }
+
+    return string_static("");
+}
+
+Object os_path_join0(Object dirname, Object fname) {
+    tm_assert_type(dirname, TYPE_STR, "os_path_join");
+    tm_assert_type(dirname, TYPE_STR, "os_path_join");
+
+    Object sep  = string_chr('/');
+    Object temp = obj_add(dirname, sep);
+    return obj_add(temp, fname);
+}
+
 void os_mod_init() {
     Object os_mod = dict_new();
     dict_set_by_str(tm->modules, "os", os_mod);

@@ -1,7 +1,8 @@
 # -*- coding:utf-8 -*-
 # @author xupingmao
 # @since 2016
-# @modified 2020/09/30 16:51:31
+# @modified 2020/10/02 12:36:06
+"""Minipy初始化, 这里_import函数还没准备好，无法调用"""
 
 def add_builtin(name, func):
     __builtins__[name] = func
@@ -12,11 +13,13 @@ def ljust(self, num):
     if len(self) >= num: return self
     rest = num - len(self)
     return self + rest * ' '
+
 def rjust(self, num):
     num = int(num)
     if len(self) >= num: return self
     rest = num - len(self)
     return rest * ' ' + self
+
 def center(self, num):
     num = int(num)
     if len(self) >= num: return self
@@ -24,6 +27,7 @@ def center(self, num):
     right = int(right)
     left = num - right - len(self)
     return left * ' ' + self + right * ' '
+
 def sformat0(args):
     fmt = args[0]
     if len(args) == 1: return fmt
@@ -119,8 +123,6 @@ def quote(obj):
     else:
         return str(obj)
 
-
-''' file system tools '''
 def copy(src, des):
     bin = load(src)
     save(des, bin)
@@ -130,12 +132,22 @@ def mtime(fname):
     obj = os.stat(fname)
     return obj.st_mtime
 
-'''
-tools for tinyvm to bootstrap
-'''
+def find_module_path(name):
+    import sys
+    for dirname in sys.path:
+        fpath = dirname + FILE_SEP + name + ".py"
+        if exists(fpath):
+            return fpath
+    return None
 
 def _import(des_glo, fname, tar = None):
-    'this _import function can not prevent import circle'
+    """import module, *WARN* this _import function can not prevent import circle
+    Python根据sys.path路径来依次加载模块
+
+    @param dict des_glo, target globals
+    @param str  fname, fpath
+    @param str  tar, import one attribute
+    """
     if fname in __modules__:
         pass
     else:
@@ -144,20 +156,14 @@ def _import(des_glo, fname, tar = None):
         # printf("try to load module %s\n", fname)
         from mp_encode import *
         # can not find file in current dir.
-        if not exists(fname + '.py'):
-            # try to find in PATH defined in file.
-            if 'PATH' in des_glo:
-                fname = des_glo["PATH"] + FILE_SEP + fname
-            # still can not be found? find in LIB_PATH
-            if not exists(fname + '.py'):
-                libname = LIB_PATH + FILE_SEP + fname
-            if not exists(libname + ".py"):
-                raise(sformat("import error, can not open file \"%s.py\"", fname))
-            else:
-                fname = libname
+        fpath = find_module_path(fname)
+
+        if fpath is None:
+            raise(sformat("import error, can not open file \"%s.py\"", fname))
+
         try:
             #__modules__[fname] = {}
-            _code = compilefile(fname + '.py')
+            _code = compilefile(fpath)
         except Exception as e:
             #del __modules__[fname]
             raise(sformat('import error: fail to compile file "%s.py":\n\t%s', fname, e))
@@ -257,15 +263,10 @@ def resolvepath(path):
     os.chdir(parent)
     return fname
     
-def execfile(path, chdir = True):
+def execfile(fpath, chdir = True):
     from mp_encode import *
-    if chdir:
-        fname = resolvepath(path)
-    else:
-        fname = path
-    _code = compilefile(fname)
-    # printf("run file %s ...\n", fname)
-    load_module(fname, _code, '__main__')
+    code = compilefile(fpath)
+    load_module(fpath, code, '__main__')
 
 def to_fixed(num, length):
     return str(num).rjust(length).replace(' ', '0')
@@ -294,6 +295,19 @@ def __debug__(fidx):
         printf("#"+str(i))
         repl_print(vmopt("frame.local", fidx, i))
     input("continue")
+
+
+def os_dirname(fpath):
+    index = fpath.rfind("/")
+    if index >= 0:
+        return fpath[:index]
+    else:
+        return ""
+
+def update_sys_path(fpath):
+    import sys
+    dirname = os_dirname(fpath)
+    sys.path.append(dirname)
     
 # add_obj_method("str", "format", sformat)
 add_obj_method('str', 'ljust', ljust)
@@ -335,6 +349,7 @@ def boot(loadlibs=True):
         repl()
     else:
         if os.exists(argv[0]):
+            update_sys_path(argv[0])
             execfile(argv[0])
         elif argv[0] == "-dis":
             dis(argv[1])

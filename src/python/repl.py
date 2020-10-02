@@ -1,7 +1,7 @@
 # -*- coding:utf-8 -*-
 # @author xupingmao
 # @since 2016
-# @modified 2020/09/23 01:42:34
+# @modified 2020/10/02 10:22:15
 
 import mp_encode
 
@@ -81,10 +81,10 @@ def print_help():
     
 def repl():
     import pyeval
-    fpyeval = pyeval.pyeval
     print("Welcome To Minipy!!!")
     print("Try 'help' for more information, 'exit' to quit")
     
+    fpyeval = pyeval.pyeval
     global debug
     debug = 0
 
