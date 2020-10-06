@@ -34,7 +34,7 @@ const char* tm_type(int type) {
     case TYPE_DATA:
         return "data";
     case TYPE_NONE:
-        return "none";
+        return "None";
     }
     return "unknown";
 }
@@ -363,21 +363,26 @@ Object obj_mod(Object a, Object b) {
  */
 int mp_in(Object child, Object parent) {
     switch (TM_TYPE(parent)) {
-    case TYPE_LIST: {
-        return (list_index(GET_LIST(parent), child) != -1);
-    }
-    case TYPE_STR: {
-        if (TM_TYPE(child) != TYPE_STR)
-            return 0;
-        return string_index(GET_STR_OBJ(parent), GET_STR_OBJ(child), 0) != -1;
-    }
-    case TYPE_DICT: {
-        DictNode* node = dict_get_node(GET_DICT(parent), child);
-        if (node == NULL) {
-            return 0;
+        case TYPE_LIST: {
+            return (list_index(GET_LIST(parent), child) != -1);
         }
-        return 1;
-    }
+        case TYPE_STR: {
+            if (TM_TYPE(child) != TYPE_STR)
+                return 0;
+            return string_index(GET_STR_OBJ(parent), GET_STR_OBJ(child), 0) != -1;
+        }
+        case TYPE_DICT: {
+            DictNode* node = dict_get_node(GET_DICT(parent), child);
+            if (node == NULL) {
+                return 0;
+            }
+            return 1;
+        }
+        case TYPE_NONE: return 0;
+        case TYPE_NUM:  return 0;
+        case TYPE_FUNCTION: return 0;
+        /* TODO DATA */ 
+        default: tm_raise("obj_in: cant handle type (%s)", tm_type(TM_TYPE(parent)));
     }
     return 0;
 }

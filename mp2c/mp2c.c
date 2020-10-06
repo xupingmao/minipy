@@ -24,6 +24,11 @@ void gc_local_add(Object object) {
     gc_track(object);
 }
 
+void gc_check_native_call(int size, Object returnObject) {
+
+}
+
+
 Object tm_call(Object func, int args, ...) {
     int i = 0;
     va_list ap;
@@ -156,7 +161,7 @@ Object tm_call_native_debug(int lineno, char* func_name, Object (*fn)(), int arg
     LOG(LEVEL_ERROR, "call,%d,%s,end", lineno, func_name, 0);
     // if (size != tm->local_obj_list->len) {
         // if size changed, there must be new allocated objects
-        gc_native_call_sweep(size, ret); // check whether need full gc.
+        // gc_native_call_sweep(size, ret); // check whether need full gc.
     // }
 
     // tm_inspect_obj(get_tm_local_list());
@@ -249,9 +254,9 @@ int tm_run_func(int argc, char* argv[], char* mod_name, Object (*func)(void)) {
     /* use first frame */
     int code = setjmp(tm->frames->buf);
     if (code == 0) {
-        Object *sys  = dict_get_by_str(tm->modules, "sys");
-        Object *_argv = dict_get_by_str(*sys, "argv");
-        list_insert(GET_LIST(*_argv), 0, string_new(mod_name));
+        Object sys   = GET_DICT_ATTR(tm->modules, "sys");
+        Object _argv = GET_DICT_ATTR(sys, "argv");
+        list_insert(GET_LIST(_argv), 0, string_new(mod_name));
 
         tm_call_native(func,0);
         gc_full();

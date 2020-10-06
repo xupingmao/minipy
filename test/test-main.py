@@ -34,6 +34,7 @@ testfiles(
         
         # test expression
         "test-op",
+        "test-in",
         "test-for",
         "test-function",
         "test-while",

@@ -45,6 +45,7 @@
 #define GET_DATA(obj) (obj).value.data
 #define GET_DATA_PROTO(obj) (obj).value.data->proto
 #define GET_DICT(obj) GET_VAL(obj).dict
+#define GET_DICT_ATTR(dict, key)  *dict_get_by_str0(GET_DICT(dict), key)
 #define GET_MODULE(obj) GET_VAL(obj).mod
 #define GET_MOD(obj) GET_VAL(obj).mod
 #define GET_LIST(obj) GET_VAL(obj).list

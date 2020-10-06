@@ -130,6 +130,12 @@ int vm_init(int argc, char* argv[]) {
     string_methods_init();
     dict_methods_init();
     builtins_init();
+
+    /* init c modules */
+    time_mod_init();
+    sys_mod_init();
+    math_mod_init();
+    os_mod_init();
     
     return 0;
 }

@@ -686,6 +686,13 @@ def xml_line_head(n):
 
 def print_ast_line_pos(tree):
     if hasattr(tree, "pos"):
+        pos = tree.pos
+        # skip invalid pos
+        if pos is None:
+            return
+        if len(pos) == 0:
+            return
+
         line = tree.pos[0]
         line_str = str(line)
         space = 4 - len(line_str)
@@ -709,6 +716,8 @@ def print_ast_block_close(n, node):
 def print_ast_obj(tree, n=0):
     if tree == None:
         return
+    if gettype(tree) == "list":
+        return print_ast_list(tree, n)
 
     # literal
     if tree.type in ("number", "string", "None", "name"):
@@ -739,8 +748,6 @@ def print_ast_list(tree, n=0):
     print(xml_line_head(n), "</block>")
 
 def print_ast(tree, n=0):
-    if gettype(tree) == "list":
-        return print_ast_list(tree, n)
     return print_ast_obj(tree, n)
 
 def parsefile(fname):

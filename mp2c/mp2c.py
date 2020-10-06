@@ -22,7 +22,6 @@ func_sub             = "obj_sub"
 func_mul             = "obj_mul"
 func_div             = "obj_div"
 func_mod             = "obj_mod"
-func_cmp             = "obj_cmp"
 func_LT              = "obj_LT"
 func_LE              = "obj_LE"
 func_GT              = "obj_GT"
@@ -102,6 +101,11 @@ def is_number_token(token):
 
 def is_attr_token(token):
     return token.type == "name" or token.type == "string"
+
+def is_indent_func(func):
+    return func is do_if \
+        or func is do_for\
+        or func is do_while
 
 class Scope:
     def __init__(self, prev):
@@ -317,6 +321,7 @@ class Generator:
     def gen_clang_head(self):
         head  = "#define TM_NO_BIN 1\n"
         head += '#include "../src/vm.c"\n'
+        head += '#include "../src/execute.c"\n'
         head += '#include "../mp2c/mp2c.c"\n'
         head += "#define S string_new\n"
         head += "#define N tm_number\n"
@@ -469,9 +474,15 @@ def do_dict(item, env):
 def do_bool(item, env):
     if item.type in op_bool:
         return do_item(item, env)
-    return func_bool + "(" + do_item(item, env) + ")"
+
+    value = do_item(item, env)
+    if value is None:
+        print("do_bool: do_item return None")
+        value = "NONE_OBJECT"
+    return func_bool + "(" + value + ")"
     
 def do_block(list, env, indent=0):
+    # indent will be handled by format_block
     lines = []
     for exp in list:
         if exp.type == "string": 
@@ -488,14 +499,14 @@ def do_block(list, env, indent=0):
             lines.append(code)
 
         if line is not None:
-            lines.append(indent * " " + line)
+            lines.append(line)
     return lines
     
 def do_if(item, env, indent=0):
     cond  = do_bool(item.first, env)
     lines = do_block(item.second, env, indent+2)
     third = item.third
-    head = sformat("if(%s) %s", cond, format_block(lines, indent+2))
+    head  = format_indent(indent) + sformat("if(%s) %s", cond, format_block(lines, indent+2))
     if third == None:
         pass
     elif gettype(third) == "list":
@@ -590,7 +601,7 @@ def format_block(lines, indent=0):
     for line in lines: 
         if line != None:
             text += format_indent(indent) + line + "\n"
-    return text + format_indent(indent) + "}"
+    return text + format_indent(indent - 2) + "}"
     
 def do_getargs(list, env, indent):
     r = []
@@ -624,7 +635,8 @@ def do_def(item, env, obj=None):
         for var in locs:
             vars.append("{}(&{});".format(gc_track_local, env.get_var_name(var)))
 
-    lines.append("func_end:");
+    lines.append("func_end:")
+
     if env.enable_gc:
         lines.append("gc_pop_locals({});".format(len(locs)))
     # return
@@ -637,14 +649,15 @@ def do_def(item, env, obj=None):
         tm_define, env.get_globals(), env.get_const(name), cname)
     
 def do_return(item, env):
+    indent = env.indent
     # free tracked locals
     ret = do_item(item.first, env, 0)
     if ret == "":
-        # return line + "return NONE_OBJECT;"
-        return format_indent(env.indent) + "goto func_end;";
+        # print("do_return_1: indent={}".format(indent))
+        return format_indent(indent) + "goto func_end;";
     else:
-        # return line + "return " + ret + ";"
-        return "ret = {};\n{}goto func_end;".format(ret, format_indent(env.indent))
+        # print("do_return_2: indent={}".format(indent))
+        return "ret = {};\n{}goto func_end;".format(ret, format_indent(indent))
     
 def do_class(item, env):
     class_define = do_assign(item, env, "dict_new()")
@@ -739,13 +752,13 @@ def do_lt(item, env):
     return do_op(item, env, func_LT)
     
 def do_gt(item, env):
-    return do_op(item, env, func_cmp) + ">0"
+    return do_op(item, env, func_GT)
     
 def do_le(item, env):
     return do_op(item, env, func_LE)
     
 def do_ge(item, env):
-    return do_op(item, env, func_cmp) + ">=0"
+    return do_op(item, env, func_GE)
 
 def do_ne(item, env):
     return "(" + do_op(item, env, "!obj_equals", "!=") + ")"
@@ -755,6 +768,8 @@ def do_eq(item, env):
     
 def do_not(item, env):
     value = do_item(item.first, env)
+    if value is None:
+        raise Exception("do_not: value is None")
     if not value.startswith("is_true_obj"):
         return "!is_true_obj(" + value + ")"
     return sformat("!(%s)", value)
@@ -768,7 +783,9 @@ def do_neg(item, env):
 def do_get(item, env):
     if env.readable:
         if is_string_token(item.second):
-            return '{}({},{})'.format(func_get_attr, do_item(item.first, env), get_string_def(item.second.val))
+            left = do_item(item.first, env)
+            right = get_string_def(item.second.val)
+            return '{}({},{})'.format(func_get_attr, left, right)
     return do_op(item, env, func_get)
     
 def do_attr(item, env):
@@ -779,6 +796,17 @@ def do_in(item, env):
     # TODO a in a,b,c
     return do_op(item, env, "obj_in")
 
+def do_is(item, env):
+    return do_op(item, env, "obj_is")
+
+def do_isnot(item, env):
+    return do_op(item, env, "obj_isnot")
+
+def do_slice(item, env):
+    value = do_item(item.first, env)
+    left  = do_item(item.second, env)
+    right = do_item(item.third, env)
+    return "obj_slice({},{},{})".format(value, left, right)
     
 def do_inplace_op(item, env, op):
     item2 = AstNode(op, item.first, item.second)
@@ -826,6 +854,9 @@ def do_break(item, env):
 def do_continue(item, env):
     return "continue;"
 
+def do_pass(item, env):
+    return ""
+
 _handlers = {
     "if":     do_if,
     "while":  do_while,
@@ -868,11 +899,16 @@ _handlers = {
     "get": do_get,
     "attr": do_attr,
     "in": do_in,
+    "is": do_is,
+    "isnot": do_isnot,
+    "slice": do_slice,
+
     "import": do_import,
     "from": do_from,
     "global": do_global,
     "break": do_break,
-    "continue": do_continue
+    "continue": do_continue,
+    "pass": do_pass,
 }
 
 def do_item(item, env, indent = 0):
@@ -884,29 +920,34 @@ def do_item(item, env, indent = 0):
         return ""
     if istype(item, "list"):
         return do_list0(item, env);
+    
     if not hasattr(item, "type"):
         repl_print(item, 1, 4)
         raise "Unknown type AstNode"
 
     if item.type in _handlers:
         func = _handlers[item.type]
-        code = func(item, env)
+        if is_indent_func(func):
+            # print("do_item: is_indent_func")
+            code = func(item, env, indent)
+        else:
+            code = func(item, env)
 
     if func != None:
         # if indent > 0: code = " " * indent + code
         return code
 
+    raise Exception("do_item: no handler found, item.type=" + item.type)
+
 # env
 # consts, globals, scopes.
 
 def do_program(tree, env, indent):
+    return do_block(tree, env, 0)
+
     try:
         return do_block(tree, env, 0)
     except Exception as e:
-        # repl_print(tree, 2, 5)
-        # print_ast(tree)
-        # import pdb
-        # pdb.set_trace()
         compile_error(env.fname, env.src, env.token, e)
 
 def mp2c(fname, src, option):

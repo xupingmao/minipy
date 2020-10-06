@@ -7,4 +7,4 @@ def fib(n):
 		return 1
 	return fib(n-1) + fib(n-2)
 
-print("fib(10)=" + str(fib(10)))
+print("fib(30)=" + str(fib(30)))

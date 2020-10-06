@@ -20,12 +20,6 @@ int main(int argc, char *argv[])
     /* use first frame */
     int code = setjmp(tm->frames->buf);
     if (code == 0) {
-        /* init c modules */
-        time_mod_init();
-        sys_mod_init();
-        math_mod_init();
-        os_mod_init();
-        
         /* load python modules */
         load_boot_module("mp_init",     mp_init_bin);
         load_boot_module("mp_opcode",   mp_opcode_bin);
