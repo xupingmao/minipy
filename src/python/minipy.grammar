@@ -1,0 +1,81 @@
+; TODO
+; Parsing Expression Grammar (ABNF)
+; ABNF语法摘要（部分）
+; （::=）是“被定义为”的意思
+; 在双引号中的字("word")代表着这些字符本身。而double_quote用来代表双引号。
+; 尖括号( < > )内包含的为必选项。
+; 方括号( [ ] )内包含的为可选项。
+; 大括号( { } )内包含的为可重复0至无数次的项。
+; 竖线( | )表示在其左右两边任选一项，相当于"OR"的意思。
+; 分号（；）表示注释
+
+
+grammar ::= { stmt }
+
+stmt ::= import_statement
+    | if_statement
+    | while_statement
+    | for_statement
+    | 'continue' - ';'?
+    | 'break' - ';'?
+    | 'pass' - ';'?
+    
+    | 'def' - name '(' - (parg)* (varg)* ')' - ':' - block
+    | 'class' - name ':' block
+    | 'return' - exp? ';'?
+    
+    | 'assert' - exp ';'?
+    | 'raise'  - exp ';'?
+    | 'global' - name ';'?
+    | 'del' - exp ';'?
+    
+    | 'try' - ':' - block 'except' - (name 'as' name)? ':' block
+    | assignment_statement
+    | exp ';'?
+
+
+import_statement ::= "import" module_name | "from" module_name "import"  ("*" | name_list)
+module_name      ::= name { "." name }
+name_list        ::= name { "," name }
+
+
+if_statement    ::= "if"    exp ":" block {"elif" exp ":" block} ["else" block]
+while_statement ::= "while" exp ":" block
+for_statment    ::= "for"   name_list "in" exp ":" block
+
+; a       = 1
+; a, b    = 1, 2
+; t.a, b  = 1, 2
+; f().a   = 10
+; c.m().a = 10
+assignment_statement ::= var_list "=" exp
+var_list      ::= var_statement { "," var_statement}
+var_statement ::= name {"." var_statement | "[" exp "]" }
+
+; INDENT/DEDENT is tokenized
+block ::= INDENT exp { exp } DEDENT | exp { ";" exp }
+
+;----------------------------
+;   operator priority
+;----------------------------
+
+Low  |  '=' | '+=' | '-=' | '*=' | '/=' | '%='
+     |  ','
+     |  'or'
+     |  'and'
+     |  'not'
+     |  '>' | '>=' | '<' | '<=' | '==' | '!=' | 'in' | 'notin' | 'is' | 'isnot'
+     |  '+' | '-'
+     |  '*' | '/' | '%'
+     |  '-'  
+     |  '.' name  | '(' arg_list ')' | '[' or_exp ']'          ; suffix
+     |  '(' comma_exp ')'                                      ; prefix
+High |  object
+----------------------------
+
+
+-     ::= [\t ]*                               ; Spacing
+SPACE ::= "\t" | " "
+name  ::= < [a-zA-Z_] [a-zA-Z_0-9]* > -        ; name
+DOT   ::= "."
+

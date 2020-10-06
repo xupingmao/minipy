@@ -30,6 +30,7 @@ testfiles(
         "test-string",
         "test-list",
         "test-dict",
+        "test-assignment",
         
         # test expression
         "test-op",

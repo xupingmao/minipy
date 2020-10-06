@@ -72,6 +72,7 @@ B_BEGIN = ['[','(','{']
 B_END   = [']',')','}']
 
 class TData:
+
     def __init__(self):
         self.y=1
         self.yi=0

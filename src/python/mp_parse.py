@@ -2,63 +2,12 @@
 # @author xupingmao
 # @since 2016
 # @modified 2020/09/30 16:49:14
+"""Parse minipy code, grammar see minipy.grammar"""
+
 from mp_tokenize import *
 
 if "tm" not in globals():
     from boot import *
-
-'''
-
-Parsing Expression Grammar
-
-grammar = stmt+
-
-stmt = 'import' name
-    | 'from' name 'import' ('*' | name)
-    
-    | 'if' - exp ':' ('elif' exp ':' block )* ('else' block)?
-    | 'while' - exp ':' block
-    | 'for' - exp 'in' - exp ':' - block
-    | 'continue' - ';'?
-    | 'break' - ';'?
-    | 'pass' - ';'?
-    
-    | 'def' - name '(' - (parg)* (varg)* ')' - ':' - block
-    | 'class' - name ':' block
-    | 'return' - exp? ';'?
-    
-    | 'assert' - exp ';'?
-    | 'raise'  - exp ';'?
-    | 'global' - name ';'?
-    | 'del' - exp ';'?
-    
-    | 'try' - ':' - block 'except' - (name 'as' name)? ':' block
-    | exp '=' - exp ';'?
-    | exp ';'?
-
-    
-----------------------------
-   operator priority
-----------------------------
-Low  |  '=' | '+=' | '-=' | '*=' | '/=' | '%='
-     |  ','
-     |  'or'
-     |  'and'
-     |  'not'
-     |  '>' | '>=' | '<' | '<=' | '==' | '!=' | 'in' | 'notin' | 'is' | 'isnot'
-     |  '+' | '-'
-     |  '*' | '/' | '%'
-     |  '-'  
-     |  '.' name  | '(' arg_list ')' | '[' or_exp ']'          --- suffix
-     |  '(' comma_exp ')'                                      --- prefix
-High |  object
-----------------------------
-
-
--    = [\t ]*    
-name = < [a-zA-Z_] [a-zA-Z_0-9]* > -
-    
-'''
 
 _stm_end_list = ['nl', 'dedent']
 _skip_op = ['nl', ';']
@@ -98,6 +47,11 @@ class ParserCtx:
         self.tree.append(v)
         self.last_token = v
 
+    def add_op(self, type):
+        right = self.pop()
+        left  = self.pop()
+        self.add(AstNode(type, left, right))
+
     def visit_block(self):
         self.tree.append('block')
         parse_block(self)
@@ -114,10 +68,20 @@ def expect(ctx, v, msg=None):
         compile_error("parse", ctx.src, ctx.token, "expect " + v + " but now is " + ctx.token.type + str(msg))
     ctx.next()
 
+def assert_type(p, type, msg):
+    if p.token.type != type:
+        parse_error(p, p.token, msg)
+    #p.next()
+
 def add_op(p, v):
     r = p.tree.pop()
     l = p.tree.pop()
     p.add(AstNode(v, l, r))
+
+def build_op(p, type):
+    right = p.tree.pop()
+    left = p.tree.pop()
+    return AstNode(type, left, right)
 
 
 def parse_error(p, token=None, msg="Unknown"):
@@ -125,11 +89,6 @@ def parse_error(p, token=None, msg="Unknown"):
         compile_error('parse', p.src, token, msg)
     else:
         raise("assert_type error")
-
-def assert_type(p, type, msg):
-    if p.token.type != type:
-        parse_error(p, p.token, msg)
-    #p.next()
 
 def baseitem(p):
     t = p.token.type
@@ -172,7 +131,42 @@ def baseitem(p):
         p.add(node)
 
 def expr(p):
+    return exp(p, "=")
+
+def parse_assign_or_exp(p):
     return exp(p, '=')
+
+def parse_rvalue(p):
+    return exp(p, "rvalue")
+
+def parse_var(p):
+    token = p.token
+    expect(p, "name")
+    p.add(token)
+
+    while True:
+        if p.token.type == ".":
+            parse_var(p)
+            p.add_op("attr")
+        elif p.token.type == "[":
+            p.next()
+            parse_rvalue(p)
+            expect(p, "]")
+            p.add_op("get")
+        else:
+            return p.pop()
+
+def parse_var_list(p):
+    vars = [parse_var(p)]
+    while p.token.type == ",":
+        var = parse_var(p)
+        vars.append(var)
+
+    if len(vars) > 1:
+        p.add(vars)
+    else:
+        p.add(vars[0])
+
 
 #  This is not LL grammar
 #  Assignment = Lvalue '=' Rvalue
@@ -183,7 +177,9 @@ def expr(p):
 #  Expression = CommaExp ( ',' CommaExp)*
 #  CommaExp   = OrExp ('or' OrExp)*
 def exp(p, level):
+    # Low -> High operator
     if level == '=':
+        # TODO: parse_var_list(p)
         exp(p, ',') # lvalue will be checked at compile phase
         if p.token.type in ('=', '+=', '-=', '*=', '/=', '%='):
             t = p.token.type
@@ -356,7 +352,7 @@ def _name_check(p, node):
         parse_error(p, node, 'import error' + node.type)
 
 def parse_from(p):
-    p.next()
+    expect(p, "from")
     expr(p)
     expect(p, "import")
     node = AstNode("from")
@@ -533,12 +529,13 @@ def parse_def(p):
     p.add(func)
 
 def parse_class(p):
-    p.next()
-    assert_type(p, 'name','ClassException')
+    expect(p, "class")
+    # assert_type(p, 'name','ClassException')
     clazz = AstNode()
     clazz.type = 'class'
     clazz.first = p.token
-    p.next()
+    expect(p, "name")
+
     if p.token.type == '(':
         p.next()
         assert_type(p, 'name', 'ClassException')
@@ -623,7 +620,7 @@ stmt_map = {
     "continue": parse_pass,
     "pass": parse_pass,
     "[":    parse_multi_assign,
-    "name": expr,
+    "name": parse_assign_or_exp,
     "number": baseitem,
     "string": baseitem,
     "try": parse_try,
@@ -675,17 +672,55 @@ def parse(content):
         compile_error("parse", content, p.token, str(e))
         raise(e)
 
+def xml_item(type, value):
+    return "<" + type + ">" + str(value) + "</" + type + ">"
+
+def xml_start(type):
+    return "<" + type + ">"
+
+def xml_close(type):
+    return "</" + type + ">"
+
+def xml_line_head(n):
+    return " " * n
+
+def print_ast_line_pos(tree):
+    if hasattr(tree, "pos"):
+        line = tree.pos[0]
+        line_str = str(line)
+        space = 4 - len(line_str)
+        printf("<!--" + line_str.ljust(4) + '-->')
+    else:
+        printf("<!--****-->")
+
+def print_ast_line(n, node):
+    print_ast_line_pos(node)
+    print(xml_line_head(n), xml_item(node.type, node.val))
+
+def print_ast_block_start(n, node):
+    print_ast_line_pos(node)
+    print(xml_line_head(n), xml_start(node.type))
+
+def print_ast_block_close(n, node):
+    print_ast_line_pos(node)
+    print(xml_line_head(n), xml_close(node.type))
+
 # TM_TEST
 def print_ast_obj(tree, n=0):
     if tree == None:
         return
-    if tree.type in ("number", "string", "None"):
-        print(" " * n, tree.val)
+
+    # literal
+    if tree.type in ("number", "string", "None", "name"):
+        print_ast_line(n, tree)
         return
+
+    # statement
     if tree.type == "name":
-        print(" " * n, tree.type , tree.val)
+        print_ast_line(n, tree)
     else:
-        print(" " * n, tree.type)
+        print_ast_block_start(n, tree)
+
     if hasattr(tree, "first"):
         print_ast(tree.first, n+2)
     if hasattr(tree, "second"):
@@ -693,22 +728,19 @@ def print_ast_obj(tree, n=0):
     if hasattr(tree, "third"):
         print_ast(tree.third, n+2)
 
+    print_ast_block_close(n, tree)
+
 def print_ast_list(tree, n=0):
-    print(" " * n, "[]")
+    print_ast_line_pos(tree)
+    print(xml_line_head(n), "<block>")
     for item in tree:
         print_ast_obj(item, n+2)
+    print_ast_line_pos(tree)
+    print(xml_line_head(n), "</block>")
 
 def print_ast(tree, n=0):
     if gettype(tree) == "list":
-        print("     ")
         return print_ast_list(tree, n)
-    if hasattr(tree, "pos"):
-        line = tree.pos[0]
-        line_str = str(line)
-        space = 4 - len(line_str)
-        printf(space*' ' + line_str + ':')
-    else:
-        print("     ")
     return print_ast_obj(tree, n)
 
 def parsefile(fname):

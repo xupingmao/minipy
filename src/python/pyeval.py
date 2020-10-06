@@ -86,7 +86,7 @@ def pyeval(src, glo_vars = None, debug = False):
     while idx < len(ins_list):
         op,v = ins_list[idx]
         if debug:
-            line = str(cyc).ljust(5) + mpcodes[op].ljust(22) + str(v).ljust(20)
+            line = str(cyc).ljust(5) + opcodes[op].ljust(22) + str(v).ljust(20)
             # print(line)
         cyc += 1
         if op == OP_CONSTANT:
@@ -231,7 +231,7 @@ def pyeval(src, glo_vars = None, debug = False):
                 stack.append(i)
             r = None
         else:
-            raise(sformat("unknown handled code %s:\"%s\"\n", op, mpcodes[op]))
+            raise(sformat("unknown handled code %s:\"%s\"\n", op, opcodes[op]))
         
         if debug:
             print(line)
