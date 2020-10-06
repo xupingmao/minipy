@@ -7,7 +7,7 @@ tm_const             = "Object const_"
 tm_pusharg           = "tm_pusharg("
 tm_call              = "tm_call("
 tm_num               = "tm_number("
-tm_str               = "string_const"
+tm_str               = "string_static"
 tm_get_glo           = "tm_get_global"
 tm_define            = "def_func"
 def_native_method    = "def_native_method"
@@ -323,8 +323,8 @@ class Generator:
         lines = define_lines + lines
             
         head = "#define TM_NO_BIN 1\n"
-        head += '#include "../../src/vm.c"\n'
-        head += '#include "../../src/tm2c.c"\n'
+        head += '#include "../src/vm.c"\n'
+        head += '#include "../mp2c/mp2c.c"\n'
         head += "#define S string_new\n"
         head += "#define N tm_number\n"
         head += "/* DEFINE START */\n"
@@ -973,6 +973,9 @@ if __name__ == "__main__":
 
     mod  = name.split(".")[0]
     code = mp2c(name, text, opt)
-    save("build/" + mod + ".c", code)
+
+    target_file = "build/" + mod + ".c"
+    save(target_file, code)
+    print("saved to", target_file)
     # save("bin/" + mod + ".c", code)
 

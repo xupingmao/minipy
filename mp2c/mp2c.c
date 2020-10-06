@@ -1,6 +1,9 @@
 #ifndef TM2C_C
 #define TM2C_C
 
+#define LEVEL_ERROR 0
+#define LOG(level, msg, lineno, value) /* x */
+
 Object tm_call(Object func, int args, ...) {
     int i = 0;
     va_list ap;
