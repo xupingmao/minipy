@@ -18,3 +18,4 @@ tm2c/output/
 *.plist
 *.bz2
 /参考项目/
+/build/*.c
