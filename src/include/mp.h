@@ -251,19 +251,22 @@ int     arg_remains();
 
 // function functions
 Object           func_new(Object mod,Object self,Object (*native_func)());
-Object           get_func_attr(TmFunction* fnc, Object key);
+Object           func_get_attr(TmFunction* fnc, Object key);
 void             func_free(TmFunction*);
-Object           method_new(Object _fnc, Object self);
-Object           module_new(Object file, Object name, Object code);
-void             module_free(TmModule*);
-unsigned char*   get_function_code(TmFunction*);
+unsigned char*   func_get_code(TmFunction*);
+Object           func_get_code_obj(TmFunction*);
 void             func_format(char* des, TmFunction* func);
 TmModule*        get_func_mod(TmFunction* func);
-Object           class_new(Object dict);
 Object           get_function_globals(TmFunction*);
 unsigned char*   func_resolve(TmFunction*, unsigned char*);
 Object           get_file_name_obj(Object func);
 Object           get_func_name_obj(Object func);
+
+Object           method_new(Object _fnc, Object self);
+Object           module_new(Object file, Object name, Object code);
+void             module_free(TmModule*);
+
+Object           class_new(Object dict);
 
 
 Object      data_new(size_t size);
@@ -282,6 +285,7 @@ Object      obj_new(int type, void* value);
  */
 const char* tm_type(int type);
 void        obj_set(Object self, Object key, Object value);
+void        obj_del(Object self, Object k);
 Object      obj_get(Object self, Object key);
 Object      obj_add(Object a, Object b);
 Object      obj_sub(Object a, Object b);
@@ -297,7 +301,6 @@ Object      tm_str(Object obj);
 Object      obj_append(Object a, Object item);
 
 Object*     next_ptr(Object iterator);
-void        obj_set(Object self, Object k, Object v);
 char*       obj_to_sz(Object obj);
 int         mp_cmp(Object a, Object b);
 int         mp_in(Object key, Object collection);
@@ -305,15 +308,14 @@ int         obj_equals(Object a, Object b);
 int         tm_len(Object obj);
 int         is_true_obj(Object v);
 int         tm_iter(Object self, Object *k);
-void        obj_del(Object self, Object k);
 Object      tm_get_global(Object globals, char* key);
 Object      tm_call_builtin(BuiltinFunc func, int n, ...);
 
 // vm functions
 Object call_module_function(char* mod, char* fnc);
 void   reg_builtin(char* name, Object value);
-void   reg_mod_func(Object mod, char* name, Object(*native)());
 void   reg_builtin_func(char* name, Object (*native)());
+void   reg_mod_func(Object mod, char* name, Object(*native)());
 void   reg_mod_attr(char* mod_name,char* attr, Object value);
 int    obj_eq_sz(Object str, const char* value);
 void   tm_raise(char*fmt , ...);

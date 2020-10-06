@@ -199,7 +199,7 @@ void func_format(char* des, TmFunction* func){
     }
 }
 
-Object func_get_code(TmFunction* func) {
+Object func_get_code_obj(TmFunction* func) {
     if (func->native != NULL) {
         return NONE_OBJECT;
     }
@@ -213,18 +213,18 @@ Object func_get_code(TmFunction* func) {
 }
 
 
-Object get_func_attr(TmFunction* fnc, Object key) {
+Object func_get_attr(TmFunction* fnc, Object key) {
     if(obj_eq_sz(key, "__name__")) {
         return fnc->name;
     }else if(obj_eq_sz(key, "__self__")) {
         return fnc->self;
     } else if (obj_eq_sz(key, "__code__")) {
-        return func_get_code(fnc);
+        return func_get_code_obj(fnc);
     }
     return NONE_OBJECT;
 }
 
-unsigned char* get_function_code(TmFunction *fnc){
+unsigned char* func_get_code(TmFunction *fnc){
     //resolve_module(GET_MODULE(fnc->mod), fnc);
     return fnc->code;
 }

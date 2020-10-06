@@ -116,7 +116,7 @@ Object obj_get(Object self, Object k) {
         break;
     }
     case TYPE_FUNCTION:
-        return get_func_attr(GET_FUNCTION(self), k);
+        return func_get_attr(GET_FUNCTION(self), k);
     case TYPE_DATA:
         return GET_DATA(self)->get(GET_DATA(self), k);
     }

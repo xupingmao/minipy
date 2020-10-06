@@ -25,7 +25,8 @@ void gc_local_add(Object object) {
 }
 
 void gc_check_native_call(int size, Object returnObject) {
-
+    gc_track(returnObject);
+    // TODO check memory
 }
 
 
