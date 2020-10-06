@@ -323,8 +323,8 @@ class Generator:
         lines = define_lines + lines
             
         head = "#define TM_NO_BIN 1\n"
-        head += '#include "../../src/vm.c"\n'
-        head += '#include "../../src/tm2c.c"\n'
+        head += '#include "../src/vm.c"\n'
+        head += '#include "../mp2c/mp2c.c"\n'
         head += "#define S string_new\n"
         head += "#define N tm_number\n"
         head += "/* DEFINE START */\n"
@@ -903,10 +903,10 @@ def mp2c(fname, src, option):
     env.src = src
     env.origin_lines = src.split("\n")
 
-    init_main = AstNode("=")
-    init_main.first = Token("name", "__name__")
+    init_main        = AstNode("=")
+    init_main.first  = Token("name", "__name__")
     init_main.second = Token("string", "__main__")
-    init__name__  = do_item(init_main, env)
+    init__name__     = do_item(init_main, env)
 
     env.find_all_func_def(tree)
 
