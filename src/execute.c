@@ -424,27 +424,27 @@ tailcall:
         case OP_EQEQ: { *(top-1) = tm_number(obj_equals(*(top-1), *top)); top--; break; }
         case OP_NOTEQ: { *(top-1) = tm_number(!obj_equals(*(top-1), *top)); top--; break; }
         case OP_LT: {
-            *(top-1) = tm_number(obj_cmp(*(top-1), *top)<0);
+            *(top-1) = tm_number(mp_cmp(*(top-1), *top)<0);
             top--;
             break;
         }
         case OP_LTEQ: {
-            *(top-1) = tm_number(obj_cmp(*(top-1), *top)<=0);
+            *(top-1) = tm_number(mp_cmp(*(top-1), *top)<=0);
             top--;
             break;
         }
         case OP_GT: {
-            *(top-1) = tm_number(obj_cmp(*(top-1), *top)>0);
+            *(top-1) = tm_number(mp_cmp(*(top-1), *top)>0);
             top--;
             break;
         }
         case OP_GTEQ: {
-            *(top-1) = tm_number(obj_cmp(*(top-1), *top)>=0);
+            *(top-1) = tm_number(mp_cmp(*(top-1), *top)>=0);
             top--;
             break;
         }
         case OP_IN: {
-            *(top-1) = tm_number(obj_in(*(top-1), *top));
+            *(top-1) = tm_number(mp_in(*(top-1), *top));
             top--;
             break;
         }

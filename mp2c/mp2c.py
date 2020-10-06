@@ -23,6 +23,10 @@ func_mul             = "obj_mul"
 func_div             = "obj_div"
 func_mod             = "obj_mod"
 func_cmp             = "obj_cmp"
+func_LT              = "obj_LT"
+func_LE              = "obj_LE"
+func_GT              = "obj_GT"
+func_GE              = "obj_GE"
 func_not             = "obj_not"
 func_neg             = "obj_neg"
 func_get             = "obj_get"
@@ -300,7 +304,7 @@ class Generator:
         self.env = env
         self.is_module = env.is_module
 
-    def gen_c_func_def_list(self):
+    def gen_clang_declare_list(self):
         """generate c function def list"""
         lines = ["/* Function Definition */"]
         env = self.env
@@ -308,27 +312,25 @@ class Generator:
             line = "Object {}();".format(env.get_c_func_def(py_func))
             lines.append(line)
         lines.append("/* Function Definition End */")
-        return "\n".join(lines) + "\n"
+        return "\n".join(lines) + "\n\n"
 
-
-    def process(self, lines):
-        
-        env = self.env
-        define_lines = []
-
-        define_lines = gen_constants_init(env)
-
-        define_lines.append("tm_def_mod(\"{}\", {});".format(env.get_mod_name(), env.get_globals()))
-            
-        lines = define_lines + lines
-            
-        head = "#define TM_NO_BIN 1\n"
+    def gen_clang_head(self):
+        head  = "#define TM_NO_BIN 1\n"
         head += '#include "../src/vm.c"\n'
         head += '#include "../mp2c/mp2c.c"\n'
         head += "#define S string_new\n"
         head += "#define N tm_number\n"
-        head += "/* DEFINE START */\n"
+        return head
 
+    def process(self, lines):
+        env = self.env
+        define_lines = gen_constants_init(env)
+        define_lines.append("tm_def_mod(\"{}\", {});".format(env.get_mod_name(), env.get_globals()))
+            
+        lines = define_lines + lines
+        head  = self.gen_clang_head()
+
+        head += "/* DEFINE START */\n"
         # include list
         for include in env.include_list:
             head += '#include "{}.c"\n'.format(include)
@@ -340,19 +342,21 @@ class Generator:
             head += "Object " + env.get_var_name(var) + ";\n"
         head += "/* DEFINE END */\n\n"
         
-        head += self.gen_c_func_def_list()
+        head += self.gen_clang_declare_list()
 
         # function define.
         for func_define in env.func_defines:
             head += func_define + "\n\n"
         
-        # global 
-        head += "Object " + env.prefix + "0(){\n"
-        code =  head + "\n".join(lines)+"\nreturn NONE_OBJECT;\n}\n"
+        # globals
+        head += "/* Module: {} */\n".format(env.mod_name)
+        head += "Object " + env.prefix + "0(){\n  "
+        body = "\n  ".join(lines)+"\n  return NONE_OBJECT;\n}\n"
+        code = head + body
 
         if not self.is_module:
             # main entry
-            code += sformat("\nint main(int argc, char* argv[]) {\ntm_run_func(argc, argv, \"%s\", %s0);\n}\n", env.get_mod_name(), env.prefix)
+            code += sformat("\nint main(int argc, char* argv[]) {\n  tm_run_func(argc, argv, \"%s\", %s0);\n}\n", env.get_mod_name(), env.prefix)
         self.code = code
 
     def get_code(self):
@@ -470,37 +474,41 @@ def do_bool(item, env):
 def do_block(list, env, indent=0):
     lines = []
     for exp in list:
-        if exp.type == "string": continue
-        line = do_item(exp, env)
-        if exp.type == "call": line += ";"
+        if exp.type == "string": 
+            continue
+
+        line = do_item(exp, env, indent)
+        if exp.type == "call":
+            line += ";"
+
         if env.record_line:
-            lineno = get_line_no(exp)
+            lineno    = get_line_no(exp)
             code_line = env.origin_lines[lineno-1]
             code = 'printf("%s\\n", {});'.format(get_string_def(code_line))
             lines.append(code)
+
         if line is not None:
-            lines.append(line)
+            lines.append(indent * " " + line)
     return lines
     
 def do_if(item, env, indent=0):
-    cond = do_bool(item.first, env)
-    lines = do_block(item.second, env, indent)
+    cond  = do_bool(item.first, env)
+    lines = do_block(item.second, env, indent+2)
     third = item.third
-    head = sformat("if(%s) %s", cond, format_block(lines, indent))
+    head = sformat("if(%s) %s", cond, format_block(lines, indent+2))
     if third == None:
         pass
     elif gettype(third) == "list":
-        return head + "else" + format_block(do_block(third, env, 2),indent)
+        return head + "else" + format_block(do_block(third, env, 2),indent+2)
     else:
-        # lines.append(do_item(third, env, indent))
         return head + "else " + do_item(third, env)
     return head
 
 def do_for(item, env, indent=0):
-    temp = env.get_temp_var_name()
+    temp     = env.get_temp_var_name()
     temp_ptr = env.get_temp_ptr_name()
-    expr = item.first
-    block = item.second
+    expr     = item.first
+    block    = item.second
 
     names = expr.first
     assert len(names) == 1, "only support 1 item for statement"
@@ -573,14 +581,16 @@ def do_call(item, env):
     # tm_call(lineno, func, nargs, args)
     return fmt.format(name, n, args)
     # return tm_call + name + "," + + "," + str(n) + args + ")"
-    
+
+def format_indent(indent):
+    return " " * indent
+
 def format_block(lines, indent=0):
     text = "{\n";
     for line in lines: 
         if line != None:
-            text += line + "\n"
-    # return text + indent * " " + "}\n"
-    return text + "}"
+            text += format_indent(indent) + line + "\n"
+    return text + format_indent(indent) + "}"
     
 def do_getargs(list, env, indent):
     r = []
@@ -590,25 +600,26 @@ def do_getargs(list, env, indent):
             code = do_assign(node, env)
             r.append(code)
         line = do_assign(item, env, "tm_take_arg()")
-        r.append(line)
+        r.append("  " + line)
     return r
     
 def do_def(item, env, obj=None):
     env.new_scope()
+
     name = item.first.val
     args = do_getargs(item.second, env, 2)
-    lines = args + do_block(item.third, env, 0)
+    lines = args + do_block(item.third, env, 2)
     cname = env.get_c_func_def(name)
     if obj!=None:
         obj.name = cname
         obj.constname = env.get_const(name)
     locs = env.locals()
-    vars = ["// " + name]
+    vars = ["  // Function: " + name]
     for var in locs:
-        vars.append("Object " + env.get_var_name(var) + ";")
+        vars.append("  Object " + env.get_var_name(var) + ";")
+    vars.append("  Object ret = {};".format(tm_None))
 
-    vars.append("Object ret = {};".format(tm_None))
-
+    # gc handle
     if env.enable_gc:
         for var in locs:
             vars.append("{}(&{});".format(gc_track_local, env.get_var_name(var)))
@@ -616,22 +627,24 @@ def do_def(item, env, obj=None):
     lines.append("func_end:");
     if env.enable_gc:
         lines.append("gc_pop_locals({});".format(len(locs)))
-    lines.append("return ret;")
-    # lines = ['puts("enter function %s");'.format(name)] + lines
+    # return
+    lines.append("  return ret;")
     func_define = "Object " + cname + "() " + format_block(vars+lines, 0)
+
     env.exit_scope(func_define)
+
     return sformat("%s(%s,%s,%s);", 
         tm_define, env.get_globals(), env.get_const(name), cname)
     
-def do_return(item, env, indent=0):
+def do_return(item, env):
     # free tracked locals
     ret = do_item(item.first, env, 0)
     if ret == "":
         # return line + "return NONE_OBJECT;"
-        return "goto func_end;";
+        return format_indent(env.indent) + "goto func_end;";
     else:
         # return line + "return " + ret + ";"
-        return "ret = {};\ngoto func_end;".format(ret)
+        return "ret = {};\n{}goto func_end;".format(ret, format_indent(env.indent))
     
 def do_class(item, env):
     class_define = do_assign(item, env, "dict_new()")
@@ -723,13 +736,13 @@ def do_sub(item, env):
     return do_op(item, env, func_sub)
     
 def do_lt(item, env):
-    return do_op(item, env, func_cmp) + "<0"
+    return do_op(item, env, func_LT)
     
 def do_gt(item, env):
     return do_op(item, env, func_cmp) + ">0"
     
 def do_le(item, env):
-    return do_op(item, env, func_cmp) + "<=0"
+    return do_op(item, env, func_LE)
     
 def do_ge(item, env):
     return do_op(item, env, func_cmp) + ">=0"
@@ -864,17 +877,21 @@ _handlers = {
 
 def do_item(item, env, indent = 0):
     func = None
-    env.token = item
+    env.token  = item
+    env.indent = indent
+
     if item == None:
         return ""
     if istype(item, "list"):
         return do_list0(item, env);
     if not hasattr(item, "type"):
         repl_print(item, 1, 4)
-        raise
+        raise "Unknown type AstNode"
+
     if item.type in _handlers:
         func = _handlers[item.type]
         code = func(item, env)
+
     if func != None:
         # if indent > 0: code = " " * indent + code
         return code
@@ -893,14 +910,11 @@ def do_program(tree, env, indent):
         compile_error(env.fname, env.src, env.token, e)
 
 def mp2c(fname, src, option):
-    tree = parse(src)
-    # repl_print(tree, 0, 5)
-    #env = {"vars": [], "consts": [], "funcs": [], "globals":[]}
-    words = fname.split(".")
+    tree     = parse(src)
+    words    = fname.split(".")
     mod_name = words[0]
-    # mod_name = fname.substring(0, len(fname)-3)
-    env = Env(fname, option)
-    env.src = src
+    env      = Env(fname, option)
+    env.src  = src
     env.origin_lines = src.split("\n")
 
     init_main        = AstNode("=")
@@ -943,7 +957,7 @@ def get_opt(options):
     opt.debug       = False
     opt.record_line = False
     opt.prefix      = None
-    opt.multi_line  = True ## generate list/dict of multi-line style
+    opt.multi_line  = False ## generate list/dict of multi-line style
     opt.is_module   = False ## if this is true, will not generate main function
     opt.readable    = False ## generate readable C file
 

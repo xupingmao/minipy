@@ -289,16 +289,19 @@ Object      obj_mul(Object a, Object b);
 Object      obj_div(Object a, Object b);
 Object      obj_mod(Object a, Object b);
 Object      obj_neg(Object o) ;
-int         obj_in(Object key, Object collection);
-int         obj_equals(Object a, Object b);
-int         obj_cmp(Object a, Object b);
+Object      obj_cmp(Object a, Object b);
+Object      obj_in(Object left, Object right);
 Object      obj_slice(Object self, Object first, Object second);
-Object*     next_ptr(Object iterator);
 Object      iter_new(Object collections);
+Object      tm_str(Object obj);
+Object      obj_append(Object a, Object item);
+
+Object*     next_ptr(Object iterator);
 void        obj_set(Object self, Object k, Object v);
 char*       obj_to_sz(Object obj);
-
-Object      tm_str(Object obj);
+int         mp_cmp(Object a, Object b);
+int         mp_in(Object key, Object collection);
+int         obj_equals(Object a, Object b);
 int         tm_len(Object obj);
 int         is_true_obj(Object v);
 int         tm_iter(Object self, Object *k);
@@ -314,7 +317,6 @@ void   reg_builtin_func(char* name, Object (*native)());
 void   reg_mod_attr(char* mod_name,char* attr, Object value);
 int    obj_eq_sz(Object str, const char* value);
 void   tm_raise(char*fmt , ...);
-Object obj_append(Object a, Object item);
 void   vm_destroy();
 
 

@@ -804,7 +804,7 @@ Object bf_setattr() {
 Object bf_hasattr() {
     Object self = arg_take_obj("getattr");
     Object key  = arg_take_obj("getattr");
-    return tm_number(obj_in(self, key));
+    return obj_in(self, key);
 }
 
 void builtins_init() {

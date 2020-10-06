@@ -16,9 +16,9 @@ stmt ::= import_statement
     | if_statement
     | while_statement
     | for_statement
-    | 'continue' - ';'?
-    | 'break' - ';'?
-    | 'pass' - ';'?
+    | continue_statement
+    | break_statement
+    | pass_statement
     
     | 'def' - name '(' - (parg)* (varg)* ')' - ':' - block
     | 'class' - name ':' block
@@ -43,14 +43,19 @@ if_statement    ::= "if"    exp ":" block {"elif" exp ":" block} ["else" block]
 while_statement ::= "while" exp ":" block
 for_statment    ::= "for"   name_list "in" exp ":" block
 
+continue_statement ::= "continue" [ ";" ]
+break_statement    ::= "break"    [ ";" ]
+pass_statement     ::= "pass"     [ ";" ]
+
 ; a       = 1
 ; a, b    = 1, 2
 ; t.a, b  = 1, 2
 ; f().a   = 10
 ; c.m().a = 10
+; c.m()[10 + 5] = 20
 assignment_statement ::= var_list "=" exp
 var_list      ::= var_statement { "," var_statement}
-var_statement ::= name {"." var_statement | "[" exp "]" }
+var_statement ::= name | exp ("." name | "[" exp "]")
 
 ; INDENT/DEDENT is tokenized
 block ::= INDENT exp { exp } DEDENT | exp { ";" exp }
@@ -67,9 +72,9 @@ Low  |  '=' | '+=' | '-=' | '*=' | '/=' | '%='
      |  '>' | '>=' | '<' | '<=' | '==' | '!=' | 'in' | 'notin' | 'is' | 'isnot'
      |  '+' | '-'
      |  '*' | '/' | '%'
-     |  '-'  
-     |  '.' name  | '(' arg_list ')' | '[' or_exp ']'          ; suffix
-     |  '(' comma_exp ')'                                      ; prefix
+     |  "-"                                                    ; negative operator
+     |  "." name  | "(" arg_list ")" | "[" or_exp "]"          ; suffix
+     |  "(" comma_exp ")"                                      ; prefix
 High |  object
 ----------------------------
 

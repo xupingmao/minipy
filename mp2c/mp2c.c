@@ -2,7 +2,27 @@
 #define TM2C_C
 
 #define LEVEL_ERROR 0
-#define LOG(level, msg, lineno, value) /* x */
+#define LOG(level, msg, lineno, func_name, value) /* x */
+
+Object obj_LT(Object left, Object right) {
+    return tm_number(mp_cmp(left, right) < 0);
+}
+
+Object obj_LE(Object left, Object right) {
+    return tm_number(mp_cmp(left, right) <= 0);
+}
+
+Object obj_GT(Object left, Object right) {
+    return tm_number(mp_cmp(left, right) > 0);
+}
+
+Object obj_GE(Object left, Object right) {
+    return tm_number(mp_cmp(left, right) >= 0);
+}
+
+void gc_local_add(Object object) {
+    gc_track(object);
+}
 
 Object tm_call(Object func, int args, ...) {
     int i = 0;
@@ -171,7 +191,7 @@ Object tm_import(Object globals, Object mod_name) {
 }
 
 void tm_import_all(Object globals, Object mod_name) {
-    int b_has = obj_in(mod_name, tm->modules);
+    int b_has = mp_in(mod_name, tm->modules);
     if (b_has) {
         Object mod_value = obj_get(tm->modules, mod_name);
         // do something here.

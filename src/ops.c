@@ -255,7 +255,11 @@ int obj_equals(Object a, Object b){
     return 0;
 }
 
-int obj_cmp(Object a, Object b) {
+Object obj_cmp(Object a, Object b) {
+    return tm_number(mp_cmp(a, b));
+}
+
+int mp_cmp(Object a, Object b) {
     if (TM_TYPE(a) == TM_TYPE(b)) {
         switch (TM_TYPE(a)) {
             case TYPE_NUM: {
@@ -357,7 +361,7 @@ Object obj_mod(Object a, Object b) {
 /* parent has child
  * child in parent
  */
-int obj_in(Object child, Object parent) {
+int mp_in(Object child, Object parent) {
     switch (TM_TYPE(parent)) {
     case TYPE_LIST: {
         return (list_index(GET_LIST(parent), child) != -1);
@@ -379,7 +383,11 @@ int obj_in(Object child, Object parent) {
 }
 
 int obj_not_in(Object child, Object parent) {
-    return !obj_in(child, parent);
+    return !mp_in(child, parent);
+}
+
+Object obj_in(Object left, Object right) {
+    return tm_number(mp_in(left, right));
 }
 
 int is_true_obj(Object v) {
