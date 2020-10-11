@@ -2,7 +2,7 @@
  * description here
  * @author xupingmao
  * @since 2016
- * @modified 2020/10/02 09:55:26
+ * @modified 2020/10/11 18:42:26
  */
 #include "include/mp.h"
 
@@ -89,6 +89,8 @@ TmCodeCache* func_resolve_cache(TmFunction* fnc, TmCodeCache* cache) {
 Object func_new(Object mod,
         Object self,
         Object (*native_func)()){
+  tm_assert_type2(mod, TYPE_MODULE, TYPE_NONE, "func_new");
+
   TmFunction* f= tm_malloc(sizeof(TmFunction));
   f->resolved = 0;
   f->mod = mod;
@@ -230,6 +232,7 @@ unsigned char* func_get_code(TmFunction *fnc){
 }
 
 Object get_function_globals(TmFunction* fnc) {
+    tm_assert_type(fnc->mod, TYPE_MODULE, "get_function_globals");
     return GET_MODULE(fnc->mod)->globals;
 }
 

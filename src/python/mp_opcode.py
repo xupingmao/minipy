@@ -2,7 +2,7 @@
 # stack based opcodes
 # @author xupingmao
 # @since 2016
-# @modified 2020/09/24 01:23:36
+# @modified 2020/10/11 19:30:55
 
 from boot import *
 cheader = '''/*
@@ -37,7 +37,7 @@ _opcode_names = [
     'OP_CALL', 
     'OP_TAILCALL',
     'OP_APPLY', # apply(a, b)
-    'OP_DEF', 'OP_RETURN', 
+    'OP_DEF', 'OP_RETURN',
 
     'OP_LOAD_PARAMS', 'OP_LOAD_NARG', "OP_LOAD_PARG",
 

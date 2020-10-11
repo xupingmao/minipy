@@ -1,4 +1,6 @@
+
 set -x
+
 prog=python
 
 case $1 in

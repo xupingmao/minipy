@@ -6,7 +6,7 @@
  * 5. release objects which are marked unused (0).
  * 
  * @since 2015
- * @modified 2020/09/22 00:17:00
+ * @modified 2020/10/11 18:32:02
  */
 
 #include "include/mp.h"
@@ -37,11 +37,12 @@ void gc_init() {
     tm->debug = 0;
     tm->allocated = 0;
     tm->max_allocated = 0;
-    tm->gc_threshold = 1024 * 8; // set 8k to see gc process
+    tm->gc_threshold  = 1024 * 8; // set 8k to see gc process
     tm->gc_state = 1; // enable gc.
 
     tm->all = untracked_list_new(100);
-    tm->local_obj_list = NULL; // object allocated in local scope. which can be sweeped simply.
+    // object allocated in local scope. which can be sweeped simply.
+    tm->local_obj_list = NULL;
     // tm->gc_deleted = NULL;
     tm->list_proto.type = TYPE_NONE;
     tm->dict_proto.type = TYPE_NONE;
@@ -79,12 +80,13 @@ void frames_init() {
     tm->frames_init_done = 0;
     for (i = 0; i < FRAMES_COUNT; i++) {
         TmFrame* f = tm->frames + i;
-        f->stack = f->top = tm->stack;
+        f->stack = tm->stack;
+        f->top   = tm->stack;
         f->lineno = -1;
         f->fnc = NONE_OBJECT;
         f->pc = NULL;
         f->maxlocals = 0;
-        f->maxstack = 0;
+        f->maxstack  = 0;
         f->jmp = NULL;
         f->idx = i;
     }

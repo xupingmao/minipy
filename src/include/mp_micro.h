@@ -3,7 +3,7 @@
  *
  *  Created on: 2020/09/21
  *  @author: xupingmao
- *  @modified 2020/09/21 01:56:02
+ *  @modified 2020/10/11 19:04:32
  */
 
 #ifndef MP_MICRO_H_
@@ -36,7 +36,7 @@
 #define GET_FUNC_MOD_NAME(fnc) GET_FUNCTIONTION_MODULE_PTR(fnc)->file
 #define GET_FUNC_CONSTANTS_NODES(fnc) LIST_NODES(GET_FUNC_CONSTANTS(fnc))
 #define GET_FUNCTION_NAME(fnc) GET_FUNCTION(fnc)->name
-#define get_globals(func) get_function_globals(GET_FUNCTION(func))
+#define GET_GLOBALS(func) get_function_globals(GET_FUNCTION(func))
 #define function_format(des, func) func_format(des, GET_FUNCTION(func))
 
 

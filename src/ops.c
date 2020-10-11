@@ -2,7 +2,7 @@
  * opeartor implementions
  * @author xupingmao
  * @since 2016
- * @modified 2020/09/22 00:11:09
+ * @modified 2020/10/11 18:50:15
  */
 
 #include "include/mp.h"
@@ -18,6 +18,8 @@ void tm_assert(int value, char* msg) {
         tm_raise("assertion failed, %s", msg);
     }
 }
+
+char MP_TYPE_STR[64];
 
 const char* tm_type(int type) {
     switch (type) {
@@ -35,14 +37,25 @@ const char* tm_type(int type) {
         return "data";
     case TYPE_NONE:
         return "None";
+    case TYPE_MODULE:
+        return "module";
     }
-    return "unknown";
+
+    sprintf(MP_TYPE_STR, "unknown(%d)", type);
+    return MP_TYPE_STR;
 }
 
 void tm_assert_type(Object o, int type, char* msg) {
     if (TM_TYPE(o) != type) {
         tm_raise("%s, expect %s but see %s", msg, 
             tm_type(type), tm_type(o.type));
+    }
+}
+
+void tm_assert_type2(Object o, int type1, int type2, char* msg) {
+    if (TM_TYPE(o) != type1 && TM_TYPE(o) != type2) {
+        tm_raise("%s, expect %s or %s but see %s", msg, 
+            tm_type(type1), tm_type(type2), tm_type(o.type));
     }
 }
 

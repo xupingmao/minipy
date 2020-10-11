@@ -2,7 +2,7 @@
  * description here
  * @author xupingmao
  * @since 2016
- * @modified 2020/09/22 00:11:10
+ * @modified 2020/10/11 18:30:13
  */
 
 #include "include/mp.h"
@@ -16,6 +16,7 @@
 #include "function.c"
 #include "exception.c"
 #include "tmarg.c"
+#include "execute.c"
 #include "module/time.c"
 #include "module/sys.c"
 #include "module/math.c"
@@ -106,6 +107,7 @@ int vm_init(int argc, char* argv[]) {
         return -1;
     }
 
+    // vm init done at gc_init()
     // init gc
     gc_init();
 
@@ -120,8 +122,10 @@ int vm_init(int argc, char* argv[]) {
     Object boot = dict_new();
     dict_set_by_str(tm->modules, "boot", boot);
     dict_set_by_str(boot, "__name__", string_from_sz("boot"));
-    dict_set_by_str(tm->builtins, "tm", tm_number(1));
-    dict_set_by_str(tm->builtins, "True", tm_number(1));
+
+    /* builtins constants */
+    dict_set_by_str(tm->builtins, "tm",    tm_number(1));
+    dict_set_by_str(tm->builtins, "True",  tm_number(1));
     dict_set_by_str(tm->builtins, "False", tm_number(0));
     dict_set_by_str(tm->builtins, "__builtins__", tm->builtins);
     dict_set_by_str(tm->builtins, "__modules__",  tm->modules);

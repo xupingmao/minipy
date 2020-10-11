@@ -2,7 +2,7 @@
  * description here
  * @author xupingmao
  * @since 2016
- * @modified 2020/09/22 00:03:46
+ * @modified 2020/10/11 18:25:35
  */
 
 #include "include/mp.h"
@@ -26,7 +26,6 @@ void traceback() {
     }
     fprintf(stderr, "Exception:\n  ");
     fprintf(stderr, "%s\n", GET_SZ(tm->ex_line));
-    /* tm_println(tm->ex_line); */
 }
 
 void tm_raise(char* fmt, ...) {

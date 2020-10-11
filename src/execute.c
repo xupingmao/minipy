@@ -1,7 +1,7 @@
 /**
   * execute minipy bytecode
   * @since 2014-9-2
-  * @modified 2020/10/02 12:02:55
+  * @modified 2020/10/11 19:23:24
   *
   * 2015-6-16: interpreter for tinyvm bytecode.
  **/
@@ -21,6 +21,7 @@ Object call_function(Object func) {
             return GET_FUNCTION(func)->native();
         } else {
             TmFrame* f = push_frame(func);
+
             L_recall:
             if (setjmp(f->buf)==0) {
                 return tm_eval(f);
@@ -31,15 +32,16 @@ Object call_function(Object func) {
                     f->cache = f->cache_jmp;
                     f->cache_jmp = NULL;
                     goto L_recall;
-                /* there is no handler, throw to last frame */
                 } else {
+                    /* there is no handler, throw to prev frame */
                     push_exception(f);
-                    tm->frame--;
+                    pop_frame();
                     longjmp(tm->frame->buf, 1);
                 }
             }
         }
     } else if (IS_DICT(func)) {
+        // TODO implement as class
         ret = class_new(func);
         Object *_fnc = dict_get_by_str(ret, "__init__");
         if (_fnc != NULL) {
@@ -198,6 +200,10 @@ void tm_loadcode(TmModule* m, char* code) {
 }
 
 void pop_frame() {
+    if (tm->frame < tm->frames) {
+        printf("pop_frame: invalid call\n");
+        exit(1);
+    }
     tm->frame --;
 }
 
@@ -229,14 +235,16 @@ TmFrame* push_frame(Object fnc) {
         tm_raise("tm_eval: frame overflow");
     }
 
-    f->pc = GET_FUNCTION(fnc)->code;
+    f->pc    = GET_FUNCTION(fnc)->code;
     f->cache = GET_FUNCTION(fnc)->cache;
 
-    f->locals = top;
     f->maxlocals = get_function_max_locals(GET_FUNCTION(fnc));
-    f->stack = f->locals + f->maxlocals;
-    f->top = f->stack;
-    f->fnc = fnc;
+
+    f->locals = top;
+    /* stack starts after locals */
+    f->stack  = f->locals + f->maxlocals;
+    f->top    = f->stack;
+    f->fnc    = fnc;
  
     // clear local variables
     int i;
@@ -274,11 +282,12 @@ Object tm_eval(TmFrame* f) {
     int i;
 
 tailcall:
-    locals    = f->locals;
-    top       = f->stack;
-    cur_fnc    = f->fnc;
-    globals    = get_globals(cur_fnc);
-    cache = f->cache;
+    locals  = f->locals;
+    top     = f->stack;
+    cur_fnc = f->fnc;
+    globals = GET_GLOBALS(cur_fnc);
+    cache   = f->cache;
+
     const char* func_name_sz = get_func_name_sz(cur_fnc);
 
     ret = NONE_OBJECT;

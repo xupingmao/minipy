@@ -2,10 +2,9 @@
  * description here
  * @author xupingmao
  * @since 2016
- * @modified 2020/10/02 10:28:57
+ * @modified 2020/10/11 18:15:09
  */
 #include "vm.c"
-#include "execute.c"
 #include "bin.c"
 
 int main(int argc, char *argv[])
