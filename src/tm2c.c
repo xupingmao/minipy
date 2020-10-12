@@ -222,7 +222,7 @@ int tm_run_func(int argc, char* argv[], char* mod_name, Object (*func)(void)) {
     if (ret != 0) { 
         return ret;
     }
-    tm->local_obj_list = untracked_list_new(100);
+    tm->local_obj_list = list_new_untracked(100);
     /* use first frame */
     int code = setjmp(tm->frames->buf);
     if (code == 0) {

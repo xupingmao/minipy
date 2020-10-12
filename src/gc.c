@@ -6,7 +6,7 @@
  * 5. release objects which are marked unused (0).
  * 
  * @since 2015
- * @modified 2020/10/11 18:32:02
+ * @modified 2020/10/13 00:40:54
  */
 
 #include "include/mp.h"
@@ -40,7 +40,7 @@ void gc_init() {
     tm->gc_threshold  = 1024 * 8; // set 8k to see gc process
     tm->gc_state = 1; // enable gc.
 
-    tm->all = untracked_list_new(100);
+    tm->all = list_new_untracked(100);
     // object allocated in local scope. which can be sweeped simply.
     tm->local_obj_list = NULL;
     // tm->gc_deleted = NULL;
@@ -141,30 +141,33 @@ void tm_free(void* o, size_t size) {
  */
 Object gc_track(Object v) {
     switch (v.type) {
-    case TYPE_NUM:
-    case TYPE_NONE:
-        return v;
-    case TYPE_STR:
-        v.value.str->marked = 0;
-        break;
-    case TYPE_LIST:
-        GET_LIST(v)->marked = 0;
-        break;
-    case TYPE_DICT:
-        GET_DICT(v)->marked = 0;
-        break;
-    case TYPE_MODULE:
-        GET_MODULE(v)->marked = 0;
-        break;
-    case TYPE_FUNCTION:
-        GET_FUNCTION(v)->marked = 0;
-        break;
-    case TYPE_DATA:
-        GET_DATA(v)->marked = 0;
-        break;
-    default:
-        tm_raise("gc_track(), not supported type %d", v.type);
-        return v;
+        case TYPE_NUM:
+        case TYPE_NONE:
+            return v;
+        case TYPE_STR:
+            v.value.str->marked = 0;
+            break;
+        case TYPE_LIST:
+            GET_LIST(v)->marked = 0;
+            break;
+        case TYPE_DICT:
+            GET_DICT(v)->marked = 0;
+            break;
+        case TYPE_MODULE:
+            GET_MODULE(v)->marked = 0;
+            break;
+        case TYPE_FUNCTION:
+            GET_FUNCTION(v)->marked = 0;
+            break;
+        case TYPE_DATA:
+            GET_DATA(v)->marked = 0;
+            break;
+        case TYPE_CLASS:
+            GET_CLASS(v)->marked = 0;
+            break;
+        default:
+            tm_raise("gc_track(), not supported type %d", v.type);
+            return v;
     }
     if (tm->local_obj_list != NULL) {
         // if local-obj-sweep is enabled, add this to local list
@@ -208,6 +211,16 @@ void gc_mark_func(TmFunction* func) {
     gc_mark(func->name);
 }
 
+void gc_mark_class(MpClass* pclass) {
+    if (pclass->marked) {
+        return;
+    }
+
+    pclass->marked = GC_REACHED_SIGN;
+    gc_mark(pclass->name);
+    gc_mark(pclass->attr_dict);
+}
+
 /**
  * mark object only once, not cursively
  * @since 2016-08-21
@@ -241,6 +254,9 @@ void gc_mark(Object o) {
         break;
     case TYPE_FUNCTION:
         gc_mark_func(GET_FUNCTION(o));
+        break;
+    case TYPE_CLASS:
+        gc_mark_class(GET_CLASS(o));
         break;
     case TYPE_MODULE:
         if (GET_MODULE(o)->marked)
@@ -301,7 +317,7 @@ void gc_sweep() {
     int deleted_cnt = 0;
 
     log_info("sweep,%d,0,start", tm->all->len);
-    TmList* temp = untracked_list_new(200);
+    TmList* temp = list_new_untracked(200);
     TmList* all = tm->all;
 
     for (i = 0; i < all->len; i++) {
@@ -336,6 +352,9 @@ void gc_sweep() {
         break;\
     case TYPE_FUNCTION:\
         GET_FUNCTION(v)->marked = 0;\
+        break;\
+    case TYPE_CLASS:\
+        GET_CLASS(v)->marked = 0;\
         break;\
     }
 
@@ -447,6 +466,9 @@ Object obj_new(int type, void * value) {
     case TYPE_FUNCTION:
         GET_FUNCTION(o) = value;
         break;
+    case TYPE_CLASS:
+        GET_CLASS(o) = value;
+        break;
     case TYPE_NONE:
         break;
     default:
@@ -472,6 +494,9 @@ void obj_free(Object o) {
         break;
     case TYPE_FUNCTION:
         func_free(GET_FUNCTION(o));
+        break;
+    case TYPE_CLASS:
+        class_free(GET_CLASS(o));
         break;
     case TYPE_MODULE:
         module_free(o.value.mod);

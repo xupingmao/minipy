@@ -1,7 +1,7 @@
 # -*- coding:utf-8 -*-
 # @author xupingmao
 # @since 2016
-# @modified 2020/10/02 10:22:15
+# @modified 2020/10/13 00:15:52
 
 import mp_encode
 
@@ -12,7 +12,7 @@ def repl_print(p, n = 0, depth = 2):
     if depth <= 0:
         print("...")
         return
-    if gettype(p) == 'dict':
+    if gettype(p) == 'dict' or gettype(p) == "class":
         if depth == 1:
             printf("%s{...}\n", n * ' ')
             return

@@ -321,7 +321,6 @@ class Generator:
     def gen_clang_head(self):
         head  = "#define TM_NO_BIN 1\n"
         head += '#include "../src/vm.c"\n'
-        head += '#include "../src/execute.c"\n'
         head += '#include "../mp2c/mp2c.c"\n'
         head += "#define S string_new\n"
         head += "#define N tm_number\n"

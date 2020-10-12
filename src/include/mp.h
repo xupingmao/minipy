@@ -165,7 +165,6 @@ Object        string_const(char*);
 void          string_free(String*);
 int           string_equals(String*s0, String*s1);
 Object        string_substring(String* str, int start, int end) ;
-Object        tm_str(Object obj);
 void          string_methods_init();
 Object        string_iter_new(Object s);
 Object*       string_next(TmData* iterator);
@@ -183,7 +182,7 @@ long long  long_value(Object num);
 void     list_check(TmList*);
 Object   list_new(int cap);
 /* create a TmList which not tracked by Garbage Collector. */
-TmList*  untracked_list_new(int cap);
+TmList*  list_new_untracked(int cap);
 void     list_set(TmList* list, int n, Object v);
 Object   list_get(TmList* list, int n);
 void     list_free(TmList* );
@@ -266,7 +265,10 @@ Object           method_new(Object _fnc, Object self);
 Object           module_new(Object file, Object name, Object code);
 void             module_free(TmModule*);
 
-Object           class_new(Object dict);
+Object           class_new(Object name);
+Object           class_instance(Object dict);
+void             class_format(char* dest, Object clazz);
+void             class_free(MpClass* pclass);
 
 
 Object      data_new(size_t size);

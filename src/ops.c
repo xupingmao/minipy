@@ -2,7 +2,7 @@
  * opeartor implementions
  * @author xupingmao
  * @since 2016
- * @modified 2020/10/11 18:50:15
+ * @modified 2020/10/13 00:56:02
  */
 
 #include "include/mp.h"
@@ -35,6 +35,8 @@ const char* tm_type(int type) {
         return "dict";
     case TYPE_DATA:
         return "data";
+    case TYPE_CLASS:
+        return "class";
     case TYPE_NONE:
         return "None";
     case TYPE_MODULE:
@@ -75,16 +77,21 @@ void obj_set(Object self, Object k, Object v) {
     // gc_mark_single(k); // used between gc scan
     // gc_mark_single(v); // only need to mark single.
     switch (TM_TYPE(self)) {
-    case TYPE_LIST: {
-        tm_assert_type(k, TYPE_NUM, "obj_set");
-        double d = GET_NUM(k);
-        tm_assert_int(d, "list_set");
-        list_set(GET_LIST(self), (int)d, v);
-    }
-        return;
-    case TYPE_DICT:
-        dict_set0(GET_DICT(self), k, v);
-        return;
+        case TYPE_LIST: {
+            tm_assert_type(k, TYPE_NUM, "obj_set");
+            double d = GET_NUM(k);
+            tm_assert_int(d, "list_set");
+            list_set(GET_LIST(self), (int)d, v);
+            return;
+        }
+        case TYPE_DICT:
+            dict_set0(GET_DICT(self), k, v);
+            return;
+        case TYPE_CLASS: {
+            MpClass* pclass = GET_CLASS(self);
+            dict_set0(GET_DICT(pclass->attr_dict), k, v);
+            return;
+        }
     }
     tm_raise("obj_set: Self %o, Key %o, Val %o", self, k, v);
 }
@@ -92,46 +99,50 @@ void obj_set(Object self, Object k, Object v) {
 Object obj_get(Object self, Object k) {
     Object v;
     switch (TM_TYPE(self)) {
-    case TYPE_STR: {
-        DictNode* node;
-        if (TM_TYPE(k) == TYPE_NUM) {
-            double d = GET_NUM(k);
-            int n = d;
-            if (n < 0) {
-                n += GET_STR_LEN(self);
+        case TYPE_STR: {
+            DictNode* node;
+            if (TM_TYPE(k) == TYPE_NUM) {
+                double d = GET_NUM(k);
+                int n = d;
+                if (n < 0) {
+                    n += GET_STR_LEN(self);
+                }
+                if (n >= GET_STR_LEN(self) || n < 0)
+                    tm_raise("String_get: index overflow ,len=%d,index=%d, str=%o",
+                            GET_STR_LEN(self), n, self);
+                return string_chr(0xff & GET_STR(self)[n]);
+            } else if ((node = dict_get_node(GET_DICT(tm->str_proto), k)) != NULL) {
+                return method_new(node->val, self);
             }
-            if (n >= GET_STR_LEN(self) || n < 0)
-                tm_raise("String_get: index overflow ,len=%d,index=%d, str=%o",
-                        GET_STR_LEN(self), n, self);
-            return string_chr(0xff & GET_STR(self)[n]);
-        } else if ((node = dict_get_node(GET_DICT(tm->str_proto), k)) != NULL) {
-            return method_new(node->val, self);
+            break;
         }
-        break;
-    }
-    case TYPE_LIST:{
-        DictNode* node;
-        if (TM_TYPE(k) == TYPE_NUM) {
-            return list_get(GET_LIST(self), GET_NUM(k));
-        } else if ((node = dict_get_node(GET_DICT(tm->list_proto), k))!=NULL) {
-            return method_new(node->val, self);
+        case TYPE_LIST:{
+            DictNode* node;
+            if (TM_TYPE(k) == TYPE_NUM) {
+                return list_get(GET_LIST(self), GET_NUM(k));
+            } else if ((node = dict_get_node(GET_DICT(tm->list_proto), k))!=NULL) {
+                return method_new(node->val, self);
+            }
+            break;
         }
-        break;
-    }
-    case TYPE_DICT:{
-        DictNode* node;
-        node = dict_get_node(GET_DICT(self), k);
-        if (node != NULL) {
-            return node->val;
-        } else if ((node = dict_get_node(GET_DICT(tm->dict_proto), k))!=NULL) {
-            return method_new(node->val, self);
+        case TYPE_DICT:{
+            DictNode* node;
+            node = dict_get_node(GET_DICT(self), k);
+            if (node != NULL) {
+                return node->val;
+            } else if ((node = dict_get_node(GET_DICT(tm->dict_proto), k))!=NULL) {
+                return method_new(node->val, self);
+            }
+            break;
         }
-        break;
-    }
-    case TYPE_FUNCTION:
-        return func_get_attr(GET_FUNCTION(self), k);
-    case TYPE_DATA:
-        return GET_DATA(self)->get(GET_DATA(self), k);
+        case TYPE_FUNCTION:
+            return func_get_attr(GET_FUNCTION(self), k);
+        case TYPE_DATA:
+            return GET_DATA(self)->get(GET_DATA(self), k);
+        case TYPE_CLASS: {
+            MpClass* pclass = GET_CLASS(self);
+            return obj_get(pclass->attr_dict, k);
+        }
     }
     tm_raise("keyError %o", k);
     return NONE_OBJECT;
@@ -174,8 +185,12 @@ Object obj_slice(Object self, Object first, Object second) {
         return string_alloc(GET_STR(self) + start, end - start);
     } else if (IS_LIST(self)) {
         int length = LIST_LEN(self);
-        start = start > 0 ? start : start + length;
-        end   = end   > 0 ? end   : end   + length;
+        if (start < 0) {
+            start += length;
+        }
+        if (end < 0) {
+            end += length;
+        }
         if (start < 0 || start > length) {
             start = 0;
         } 
@@ -245,6 +260,7 @@ int obj_equals(Object a, Object b){
         }
         case TYPE_LIST:    {
             if(GET_LIST(a) == GET_LIST(b)) return 1;
+            if(LIST_LEN(a) != LIST_LEN(b)) return 0;
             int i;
             int len = GET_LIST(a)->len;
             Object* nodes1 = GET_LIST(a)->nodes;
@@ -259,6 +275,7 @@ int obj_equals(Object a, Object b){
         case TYPE_NONE:return 1;
         case TYPE_DICT:return GET_DICT(a) == GET_DICT(b);
         case TYPE_FUNCTION: return GET_FUNCTION(a) == GET_FUNCTION(b);
+        case TYPE_CLASS: return GET_CLASS(a) == GET_CLASS(b);
         default: {
             const char* ltype = tm_type(a.type);
             const char* rtype = tm_type(b.type);
@@ -441,6 +458,7 @@ Object iter_new(Object collections) {
     switch(TM_TYPE(collections)) {
         case TYPE_LIST: return list_iter_new(collections);
         case TYPE_DICT: return dict_iter_new(collections);
+        case TYPE_CLASS: return iter_new(GET_CLASS(collections)->attr_dict);
         case TYPE_STR:  return string_iter_new(collections);
         case TYPE_DATA: return collections;
         default: tm_raise("iter_new(): can not create a iterator of %o", collections);
@@ -491,10 +509,13 @@ int tm_len(Object o) {
     switch (TM_TYPE(o)) {
     case TYPE_STR:
         len = GET_STR_LEN(o);
+        break;
     case TYPE_LIST:
         len = LIST_LEN(o);
+        break;
     case TYPE_DICT:
         len = DICT_LEN(o);
+        break;
     }
     if (len < 0) {
         tm_raise("tm_len: %o has no attribute len", o);
@@ -543,7 +564,10 @@ Object tm_str(Object a) {
         sprintf(buf, "<dict at %p>", GET_DICT(a));
         return string_new(buf);
     case TYPE_FUNCTION:
-        function_format(buf, a);
+        FUNCTION_FORMAT(buf, a);
+        return string_new(buf);
+    case TYPE_CLASS:
+        class_format(buf, a);
         return string_new(buf);
     case TYPE_NONE:
         return string_from_sz("None");

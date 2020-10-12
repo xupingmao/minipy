@@ -2,7 +2,7 @@
  * description here
  * @author xupingmao
  * @since 2016
- * @modified 2020/09/22 00:07:36
+ * @modified 2020/10/13 00:40:51
  */
 #include "include/mp.h"
 
@@ -10,7 +10,7 @@
  * @param cap capacity of the list
  * create a list which will not be tracked by garbage collector
  */
-TmList* untracked_list_new(int cap) {
+TmList* list_new_untracked(int cap) {
     TmList* list = tm_malloc(sizeof(TmList));
     list->len = 0;
     if (cap <= 0) {
@@ -24,7 +24,7 @@ TmList* untracked_list_new(int cap) {
 Object list_new(int cap) {
     Object v;
     v.type = TYPE_LIST;
-    v.value.list = untracked_list_new(cap);
+    v.value.list = list_new_untracked(cap);
     return gc_track(v);
 }
 

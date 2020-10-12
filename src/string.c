@@ -2,7 +2,7 @@
  * description here
  * @author xupingmao
  * @since 2018/02/19 16:49:28
- * @modified 2020/10/02 12:32:42
+ * @modified 2020/10/13 00:39:47
  */
 
 #include "include/mp.h"
@@ -88,6 +88,7 @@ Object string_alloc(char *s, int size) {
 
 /**
  * create a new string and put it to tm->constants
+ * this object will not be tracked by gc
  * @since 2016-08-22
  */
 Object string_const(char* s) {

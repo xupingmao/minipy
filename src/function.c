@@ -2,7 +2,7 @@
  * description here
  * @author xupingmao
  * @since 2016
- * @modified 2020/10/11 18:42:26
+ * @modified 2020/10/13 00:37:45
  */
 #include "include/mp.h"
 
@@ -113,8 +113,18 @@ Object method_new(Object _fnc, Object self){
   return nfnc;
 }
 
-Object class_new(Object clazz){
-  TmDict* cl = GET_DICT(clazz);
+Object class_new(Object name) {
+  // TODO add class type
+  MpClass* clazz = tm_malloc(sizeof(MpClass));
+  clazz->name = name;
+  clazz->attr_dict = dict_new();
+  return gc_track(obj_new(TYPE_CLASS, clazz));
+}
+
+
+Object class_instance(Object clazz){
+  MpClass *pclass = GET_CLASS(clazz);
+  TmDict* cl = GET_DICT(pclass->attr_dict);
   Object k,v;
   Object instance = dict_new();
   DictNode* nodes = cl->nodes;
@@ -129,6 +139,17 @@ Object class_new(Object clazz){
   }
   return instance;
 }
+
+void class_free(MpClass* pclass) {
+  tm_free(pclass, sizeof(MpClass));
+}
+
+void class_format(char* dest, Object class_obj) {
+  tm_assert_type(class_obj, TYPE_CLASS, "class_format");
+  MpClass* clazz = GET_CLASS(class_obj);
+  sprintf(dest, "<class %s@%p>", GET_SZ(clazz->name), clazz);
+}
+
 
 void func_free(TmFunction* func){
   // the references will be tracked by gc collecter
@@ -244,7 +265,7 @@ int get_function_max_locals(TmFunction* fnc){
 char* get_func_name_sz(Object func) {
     if (IS_FUNC(func)) {
         return GET_STR(GET_FUNCTION(func)->name);
-    } else if (IS_DICT(func)){
+    } else if (IS_CLASS(func)){
         return "<class>";
     } else {
         return "<unknown>";

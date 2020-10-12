@@ -83,7 +83,7 @@ Array1Glob = [0]*51
 # Array2Glob = [x[:] for x in [Array1Glob]*51]
 Array2Glob = []
 for x in [Array1Glob] * 51:
-    Array2Glob.append(x.copy())
+    Array2Glob.append(x[:])
 PtrGlb = None
 PtrGlbNext = None
 

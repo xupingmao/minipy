@@ -2,7 +2,7 @@
 # stack based opcodes
 # @author xupingmao
 # @since 2016
-# @modified 2020/10/11 19:30:55
+# @modified 2020/10/12 23:46:45
 
 from boot import *
 cheader = '''/*
@@ -16,30 +16,49 @@ cheader = '''/*
 ctail = "\n#endif\n\n"
 
 _opcode_names = [
-    'OP_STRING', 'OP_NUMBER',
     "OP_IMPORT",
+    # basic types
+    'OP_STRING', 
+    'OP_NUMBER',
+    
     'OP_ADD', 'OP_SUB', 'OP_MUL', 'OP_DIV', 'OP_MOD', 'OP_NEG',
     'OP_NOT', 'OP_GT', 'OP_LT', 'OP_GTEQ', 'OP_LTEQ', 'OP_EQEQ', 'OP_NOTEQ', 'OP_IN', 'OP_NOTIN',
     'OP_AND', 'OP_OR', 'OP_SET', 
     'OP_GET',
     'OP_SLICE',
+
     'OP_NONE', 'OP_STORE_LOCAL', 'OP_STORE_GLOBAL', 'OP_LOAD_LOCAL', 'OP_LOAD_GLOBAL', 'OP_CONSTANT',
     #'LOAD_GLOBALS', 
     'OP_POP', 
-    'OP_DICT_SET',
-    'OP_LIST', 'OP_DICT', 
+
+    # list
+    'OP_LIST', 
     'OP_APPEND',
+
+    # dict
+    'OP_DICT', 
+    'OP_DICT_SET',
+    
     'OP_JUMP', 'OP_UP_JUMP', 'OP_POP_JUMP_ON_FALSE', 'OP_JUMP_ON_FALSE', 'OP_JUMP_ON_TRUE',
+    
     # TAGSIZE
     'OP_UNPACK', 'OP_ROT', 'OP_DEL', 'OP_FOR', 'OP_NEXT', 'OP_ITER', 'OP_LOAD_EX',
     'OP_SETJUMP', 
     
     'OP_CALL', 
     'OP_TAILCALL',
-    'OP_APPLY', # apply(a, b)
-    'OP_DEF', 'OP_RETURN',
+    # apply(a, b)
+    'OP_APPLY', 
+    'OP_DEF', 
+    'OP_RETURN',
+    
+    # class opcodes
+    'OP_CLASS', 
+    'OP_CLASS_SET',
 
-    'OP_LOAD_PARAMS', 'OP_LOAD_NARG', "OP_LOAD_PARG",
+    'OP_LOAD_PARAMS', 
+    'OP_LOAD_NARG', 
+    "OP_LOAD_PARG",
 
     # end of function
     'OP_EOF',
@@ -51,10 +70,13 @@ _opcode_names = [
     # mulity assignment, eg. x,y = 1,2
     'OP_DEBUG',
     'OP_LINE',
+    
+
     'OP_TAG', 
     # instructions for vm to optimize.
     'OP_FAST_ST_GLO',
     'OP_FAST_LD_GLO',
+
     'OP_FILE',
     # unused instructions
     #'LT_JUMP_ON_FALSE', 
@@ -94,4 +116,4 @@ def export_clang_define(des, self = None):
     # save('../include/instruction.h', ctext)
 
 if __name__ == '__main__':
-    export_clang_define('instruction.h')
+    export_clang_define('./src/include/instruction.h')

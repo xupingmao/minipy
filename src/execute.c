@@ -1,7 +1,7 @@
 /**
   * execute minipy bytecode
   * @since 2014-9-2
-  * @modified 2020/10/11 19:23:24
+  * @modified 2020/10/13 00:19:47
   *
   * 2015-6-16: interpreter for tinyvm bytecode.
  **/
@@ -40,9 +40,8 @@ Object call_function(Object func) {
                 }
             }
         }
-    } else if (IS_DICT(func)) {
-        // TODO implement as class
-        ret = class_new(func);
+    } else if (IS_CLASS(func)) {
+        ret = class_instance(func);
         Object *_fnc = dict_get_by_str(ret, "__init__");
         if (_fnc != NULL) {
             call_function(*_fnc);
@@ -166,7 +165,8 @@ void tm_loadcode(TmModule* m, char* code) {
             case OP_LOAD_GLOBAL:
             case OP_STORE_GLOBAL:
             case OP_FILE: 
-            case OP_DEF:           
+            case OP_DEF:
+            case OP_CLASS:
                 cache.v.obj = string_const2(buf, len); break;
             
             /* int value */
@@ -426,7 +426,7 @@ tailcall:
         TM_OP(OP_GET, obj_get)
         case OP_SLICE: {
             Object second = TM_POP();
-            Object first = TM_POP();
+            Object first  = TM_POP();
             *top = obj_slice(*top, first, second);
             break;
         }
@@ -597,6 +597,12 @@ tailcall:
         case OP_RETURN: {
             ret = TM_POP();
             goto end;
+        }
+        case OP_CLASS: {
+            Object class_name = cache->v.obj;
+            Object clazz = class_new(class_name);
+            dict_set0(GET_DICT(globals), class_name, clazz);
+            break;
         }
         case OP_ROT: {
             Object* left = top - cache->v.ival + 1;

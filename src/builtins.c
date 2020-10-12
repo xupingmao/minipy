@@ -2,7 +2,7 @@
  * description here
  * @author xupingmao <578749341@qq.com>
  * @since 2016
- * @modified 2020/10/02 10:06:19
+ * @modified 2020/10/13 00:18:00
  */
 #include "include/mp.h"
 #include <ctype.h>
@@ -355,6 +355,7 @@ Object bf_gettype() {
         case TYPE_LIST: return string_from_sz("list");
         case TYPE_DICT: return string_from_sz("dict");
         case TYPE_FUNCTION: return string_from_sz("function");
+        case TYPE_CLASS: return string_from_sz("class");
         case TYPE_DATA: return string_from_sz("data");
         case TYPE_NONE: return string_from_sz("None");
         default: tm_raise("gettype(%o)", obj);

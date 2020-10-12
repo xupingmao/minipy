@@ -3,7 +3,7 @@
  *
  *  Created on: 2014/8/25
  *  @author: xupingmao
- *  @modified 2020/09/22 00:38:01
+ *  @modified 2020/10/12 23:41:28
  */
 
 #ifndef _OBJECT_H_
@@ -17,6 +17,8 @@
 #define TYPE_NONE 7
 #define TYPE_MODULE 9
 #define TYPE_DATA 10
+#define TYPE_CLASS 11
+
 #define TM_TYPE(o) (o).type
 #define MAX_FILE_SIZE 1024 * 1024 * 5 /* max file size loaded into memery */
 #include <stdint.h>
@@ -35,6 +37,7 @@ typedef union TmValue {
   struct TmModule*   mod;
   struct TmData*     data;
   struct TmRecycle*  gc;
+  struct MpClass*    clazz;
 }TmValue;
 
 
@@ -85,6 +88,14 @@ typedef struct TmFunction{
   Object name;
   Object (*native)();
 }TmFunction;
+
+typedef struct MpClass {
+  int marked;
+  // class name
+  Object name;
+  // class attributes
+  Object attr_dict;
+} MpClass;
 
 typedef struct TmFrame {
   Object *locals;

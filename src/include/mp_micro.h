@@ -3,7 +3,7 @@
  *
  *  Created on: 2020/09/21
  *  @author: xupingmao
- *  @modified 2020/10/11 19:04:32
+ *  @modified 2020/10/13 00:04:38
  */
 
 #ifndef MP_MICRO_H_
@@ -37,7 +37,7 @@
 #define GET_FUNC_CONSTANTS_NODES(fnc) LIST_NODES(GET_FUNC_CONSTANTS(fnc))
 #define GET_FUNCTION_NAME(fnc) GET_FUNCTION(fnc)->name
 #define GET_GLOBALS(func) get_function_globals(GET_FUNCTION(func))
-#define function_format(des, func) func_format(des, GET_FUNCTION(func))
+#define FUNCTION_FORMAT(des, func) func_format(des, GET_FUNCTION(func))
 
 
 #define GET_VAL(obj) (obj).value
@@ -49,6 +49,7 @@
 #define GET_MODULE(obj) GET_VAL(obj).mod
 #define GET_MOD(obj) GET_VAL(obj).mod
 #define GET_LIST(obj) GET_VAL(obj).list
+#define GET_CLASS(obj) GET_VAL(obj).clazz
 
 #define DICT_LEN(obj)  GET_DICT(obj)->len
 #define DICT_NODES(obj) GET_DICT(obj)->nodes
@@ -59,6 +60,7 @@
 #define IS_NONE(obj)   TM_TYPE(obj) == TYPE_NONE
 #define IS_LIST(obj)   TM_TYPE(obj) == TYPE_LIST
 #define IS_FUNC(obj)   TM_TYPE(obj) == TYPE_FUNCTION
+#define IS_CLASS(obj)  TM_TYPE(obj) == TYPE_CLASS
 #define IS_DICT(o)     TM_TYPE(o)==TYPE_DICT
 #define IS_STR(obj)    TM_TYPE(obj) == TYPE_STR
 #define IS_NUM(obj)    TM_TYPE(obj) == TYPE_NUM

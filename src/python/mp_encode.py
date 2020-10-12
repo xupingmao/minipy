@@ -1,7 +1,7 @@
 # -*- coding:utf-8 -*-
 # @author xupingmao
 # @since 2016
-# @modified 2020/10/02 10:34:08
+# @modified 2020/10/13 00:03:04
 
 if "tm" not in globals():
     from boot import *
@@ -508,8 +508,9 @@ def encode_def(tk, in_class = 0):
 
 def encode_class(tk):
     buildclass = []
-    emit(OP_DICT, 0)
-    store(tk.first)
+    # emit(OP_DICT, 0)
+    # store(tk.first)
+    emit(OP_CLASS, tk.first.val)
     for func in tk.second:
         if func.type == "pass": continue
         if func.type != "def":
