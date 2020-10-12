@@ -50,23 +50,23 @@ def testfunc(func, args, expect = None):
         
 def assertEquals(result, expect, msg=None):
     if result == expect:
-        logging.info('PASS, result=', toPrintableStr(result))
+        logging.info('PASS, result=' + toPrintableStr(result))
         return True
     else:
-        logging.error('FAIL, result=', toPrintableStr(result),\
+        logging.error('FAIL, result=' + toPrintableStr(result),\
             'expect=', toPrintableStr(expect), msg)
         raise
         
 def assertStarts(result, expect, msg=None):
     if result.startswith(expect):
-        logging.info('PASS, result=', toPrintableStr(result))
+        logging.info('PASS, result=' + toPrintableStr(result))
         return True
     else:
-        logging.error('FAIL, result=', toPrintableStr(result),\
+        logging.error('FAIL, result=' + toPrintableStr(result),\
             'expect=', toPrintableStr(expect), msg)
         raise
         
 def assertTrue(value, msg=None):
     if not value:
-        logging.error('FAIL, msg=', msg)
+        logging.error('FAIL, msg=' + msg)
         raise
