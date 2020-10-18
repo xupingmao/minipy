@@ -2,7 +2,7 @@
  * description here
  * @author xupingmao
  * @since 2018/02/19 16:49:28
- * @modified 2020/10/13 00:39:47
+ * @modified 2020/10/19 01:00:45
  */
 
 #include "include/mp.h"
@@ -372,6 +372,11 @@ Object string_builtin_format() {
             string_append_char(nstr, c);
         }
     }
+
+    if (start == 1) {
+        string_append_char(nstr, '{');
+    }
+    
     return nstr;
 }
 

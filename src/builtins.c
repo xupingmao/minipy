@@ -2,7 +2,7 @@
  * description here
  * @author xupingmao <578749341@qq.com>
  * @since 2016
- * @modified 2020/10/13 00:18:00
+ * @modified 2020/10/18 23:40:54
  */
 #include "include/mp.h"
 #include <ctype.h>
@@ -152,7 +152,11 @@ void tm_inspect_obj(Object o) {
  * o  -> repl(object)
  * os -> object
  */
-Object tm_format_va_list(char* fmt, va_list ap, int acquire_new_line) {
+Object tm_format_va_list(char* fmt, va_list ap, int append_newline) {
+    return tm_format_va_list_check_length(fmt, ap, -1, append_newline);
+}
+
+Object tm_format_va_list_check_length(char* fmt, va_list ap, int ap_length, int append_newline) {
     int i;
     int len = strlen(fmt);
     Object str = string_new("");
@@ -160,9 +164,21 @@ Object tm_format_va_list(char* fmt, va_list ap, int acquire_new_line) {
     char* start = fmt;
     int istrans = 1;
     char buf[20];
+    int args_in_fmt = 0;
+
     for (i = 0; i < len; i++) {
         if (fmt[i] == '%') {
             i++;
+            if (fmt[i] == '%') {
+                continue;
+            }
+
+            // format arguments
+            args_in_fmt += 1;
+            if (ap_length != -1 && args_in_fmt > ap_length) {
+                tm_raise("TypeError: not enough arguments for format string");
+            }
+
             switch (fmt[i]) {
             case 'd':
                 sprintf(buf, "%d", va_arg(ap, int));
@@ -203,14 +219,14 @@ Object tm_format_va_list(char* fmt, va_list ap, int acquire_new_line) {
                 break;
             }
             default:
-                tm_raise("format, unknown pattern %c", fmt[i]);
+                tm_raise("format: unknown pattern %c", fmt[i]);
                 break;
             }
         } else {
             str = string_append_char(str, fmt[i]);
         }
     }
-    if (acquire_new_line) {
+    if (append_newline) {
         str = string_append_char(str, '\n');
     }
     return str;
@@ -221,6 +237,14 @@ Object tm_format(char* fmt, ...) {
     va_start(a, fmt);
     Object v = tm_format_va_list(fmt, a, 0);
     va_end(a);
+    return v;
+}
+
+Object tm_format_check_length(char* fmt, int ap_length, ...) {
+    va_list ap;
+    va_start(ap, ap_length);
+    Object v = tm_format_va_list_check_length(fmt, ap, ap_length, 0);
+    va_end(ap);
     return v;
 }
 
@@ -272,7 +296,7 @@ Object tm_load(char* fpath){
 Object tm_save(char*fname, Object content) {
     FILE* fp = fopen(fname, "wb");
     if (fp == NULL) {
-        tm_raise("tm_save : can not save to file \"%s\"", fname);
+        tm_raise("tm_save: can not save to file \"%s\"", fname);
     }
     char* txt = GET_STR(content);
     int len = GET_STR_LEN(content);

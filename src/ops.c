@@ -2,9 +2,10 @@
  * opeartor implementions
  * @author xupingmao
  * @since 2016
- * @modified 2020/10/13 00:56:02
+ * @modified 2020/10/19 00:16:47
  */
 
+#include <assert.h>
 #include "include/mp.h"
 
 #define RET_NUM(v) \
@@ -369,13 +370,67 @@ Object obj_div(Object a, Object b) {
     return NONE_OBJECT;
 }
 
+Object string_mod_list(Object str, Object list) {
+    assert(TM_TYPE(str)  == TYPE_STR);
+    assert(TM_TYPE(list) == TYPE_LIST);
+
+    char* fmt = GET_SZ(str);
+    int str_length = GET_STR_LEN(str);
+    TmList* plist = GET_LIST(list);
+    int i = 0;
+    int arg_index = 0;
+
+    Object result = string_new("");
+
+    for (i = 0; i < str_length; i++) {
+        char c = fmt[i];
+
+        if (c == '%') {
+            i++;
+            switch(fmt[i]) {
+                case 's':
+                    string_append_obj(result, list_get(plist, arg_index));
+                    arg_index++;
+                    break;
+                case 'd': {
+                    Object item = list_get(plist, arg_index);                 
+                    tm_assert_type(item, TYPE_NUM, "obj_mod");  
+                    string_append_obj(result, item);
+                    arg_index++;
+                    break;
+                }
+                default:
+                    tm_raise("obj_mod: unknown format type %c", fmt[i]);
+            }
+        } else {
+            string_append_char(result, c);
+        }
+    }
+
+    return result;
+}
+
+Object string_ops_mod(Object a, Object b) {
+    assert(TM_TYPE(a) == TYPE_STR);
+    char* fmt = GET_SZ(a);
+
+    if (TM_TYPE(b) == TYPE_LIST) {
+        return string_mod_list(a, b);
+    } else {
+        Object list = list_new(1);
+        TmList* plist = GET_LIST(list);
+        list_append(plist, b);
+        return string_mod_list(a, list);
+    }
+}
+
 Object obj_mod(Object a, Object b) {
     if (a.type == b.type && a.type == TYPE_NUM) {
         return tm_number((long) GET_NUM(a) % (long) GET_NUM(b));
     } else if (a.type == TYPE_STR) {
         Object *__mod__ = get_builtin("__mod__");
         if (__mod__ == NULL) {
-            tm_raise("__mod__ is not defined");
+            return string_ops_mod(a, b);
         } else {
             arg_start();
             arg_push(a);

@@ -97,7 +97,12 @@ def run_test(testlist):
     for test in testlist:
         print(test)
         test()
-        
+
+def test_modulo():
+    code = "a = 'b=%s,c=%s' % (b, c)"
+    ast  = parse(code)[0]
+    assert ast.type == "="
+
 run_test([
     test_list,
     test_import,
@@ -106,4 +111,5 @@ run_test([
     test_if,
     test_if2,
     test_if3,
+    test_modulo,
 ])

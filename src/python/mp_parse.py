@@ -1,7 +1,7 @@
 # -*- coding:utf-8 -*-
 # @author xupingmao
 # @since 2016
-# @modified 2020/09/30 16:49:14
+# @modified 2020/10/19 00:58:20
 """Parse minipy code, grammar see minipy.grammar"""
 
 from mp_tokenize import *
@@ -110,8 +110,11 @@ def baseitem(p):
         p.add(node)
     elif t == '(':
         p.next()
+        # node = AstNode("tuple")
         exp(p, ',')
         expect(p, ')')
+        # node.first = p.pop()
+        # p.add(node)
     elif t == '{':
         p.next()
         node = AstNode('dict')

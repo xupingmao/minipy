@@ -1,7 +1,7 @@
 # -*- coding:utf-8 -*-
 # @author xupingmao
 # @since 2016
-# @modified 2020/10/13 00:03:04
+# @modified 2020/10/19 00:52:54
 
 if "tm" not in globals():
     from boot import *
@@ -366,6 +366,12 @@ def encode_list(v):
 
     #emit(OP_LIST, tk_list_len(v.first))
 
+def encode_tuple(tk):
+    return encode_list(tk)
+
+def encode_comma(tk):
+    return encode_item(tk.first) + encode_item(tk.second)
+
 def is_const_list(list):
     for item in list:
         if not hasattr(item, "type"):
@@ -423,9 +429,6 @@ def encode_assign(tk):
         encode_item(tk.second)
         n = 1
     encode_assign_to(tk.first, n)
-    
-def encode_tuple(tk):
-    return encode_item(tk.first) + encode_item(tk.second)
     
 def encode_dict(tk):
     items = tk.first
@@ -723,7 +726,8 @@ def encode_in(tk):
 _encode_dict = {
     'if': encode_if,
     '=': encode_assign,
-    ',': encode_tuple,
+    'tuple': encode_tuple,
+    ',': encode_comma,
     'dict': encode_dict,
     'call': encode_call,
     'apply': encode_apply,
@@ -772,6 +776,10 @@ def getlineno(tk):
     return None
     
 def encode_item(tk):
+    """encode ast item.
+    @param tk ast token
+    @return opstack height
+    """
     if tk == None: return 0
     # encode for statement list.
     if gettype(tk) == 'list':
@@ -881,29 +889,39 @@ def split_instr(instr):
         i+=3
         list.append([ord(op), v])
     return list
-    
+
+def to_fixed(num, length):
+    return str(num).rjust(length).replace(' ', '0')
+
+def dis(path):
+    ins_list = compile_to_list(load(path), path)
+    for index, item in enumerate(ins_list):
+        op = int(item[0])
+        line = to_fixed(index+1, 4) + ' ' + opcodes[op].ljust(22) + str(item[1])
+        print(line)
+
 # TM_TEST
 def main():
     import sys
     ARGV = sys.argv
     if len(ARGV) < 2:
-        print("usage: %s filename" % ARGV[0])
+        print("usage: %s filename    : compile python to c code" % ARGV[0])
+        print("       %s -p filename : print code" % ARGV[0])
     elif len(ARGV) == 2:
+        # execute python file
         import repl
         import mp_opcode
         opcodes = mp_opcode.opcodes
-        # from tools import *
-        repl_print = repl.repl_print
         code = compilefile(ARGV[1])
-        # list = split_instr(code)
         code = convert_to_cstring(ARGV[1], code)
         print(code)
-        # repl_print(code, 0, 3)
     elif len(ARGV) == 3:
         op = ARGV[1];
         if op == "-p":
             code = compilefile(ARGV[2])
             print(code)
+        elif op == "-dis":
+            dis(ARGV[2])
         else:
             compile(ARGV[1], "#test", ARGV[2])
 

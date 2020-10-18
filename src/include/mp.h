@@ -347,7 +347,9 @@ void tm_raise(char* fmt, ...);
 void      tm_print(Object v);
 void      tm_println(Object v);
 Object    tm_format_va_list(char* fmt, va_list ap, int appendln);
+Object    tm_format_va_list_check_length(char* fmt, va_list ap, int ap_length, int appendln);
 Object    tm_format(char*fmt, ...);
+Object    tm_format_check_length(char*fmt, int ap_length, ...);
 void      tm_inspect_obj(Object o);
 void      tm_printf(char* fmt, ...);
 /* avoid '\0' in char array, which will be regarded as end by c lang */

@@ -1,7 +1,7 @@
 /**
   * execute minipy bytecode
   * @since 2014-9-2
-  * @modified 2020/10/13 00:19:47
+  * @modified 2020/10/19 00:48:21
   *
   * 2015-6-16: interpreter for tinyvm bytecode.
  **/
@@ -106,7 +106,7 @@ void tm_loadcode(TmModule* m, char* code) {
     while (*s != 0) {
         /* must begin with opcode */
         if (!isdigit(*s)) {
-            error = 1;
+            tm_raise("loadcode: not digit opcode, char=%c, fname=%o, code=%o", *s, m->file, m->code);
             break;
         }
         // read opcode
@@ -144,6 +144,7 @@ void tm_loadcode(TmModule* m, char* code) {
             strcpy(buf, "0");
         } else {
             // opcode ended or error
+            tm_raise("loadcode: invalid code %d, %c", op, *s);
             break;
             error = 1;
         }
