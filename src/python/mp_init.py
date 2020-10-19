@@ -1,7 +1,7 @@
 # -*- coding:utf-8 -*-
 # @author xupingmao
 # @since 2016
-# @modified 2020/10/02 12:36:06
+# @modified 2020/10/20 01:14:39
 """Minipy初始化, 这里_import函数还没准备好，无法调用"""
 
 def add_builtin(name, func):
@@ -76,6 +76,7 @@ def sformat(*narg):
     return sformat0(narg)
 
 def str_join(sep, list):
+    # TODO implement in native code
     text = ''
     for i in range(len(list)):
         if i != 0:

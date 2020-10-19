@@ -1,7 +1,7 @@
 # -*- coding:utf-8 -*-
 # @author xupingmao <578749341@qq.com>
 # @since 2020/10/18 00:32:28
-# @modified 2020/10/19 00:59:54
+# @modified 2020/10/19 23:34:30
 
 from mp_encode import *
 from mp_opcode import *
@@ -31,6 +31,35 @@ def convert(code):
         elif op == OP_DEF:
             line = "Object {}_{}() {".format(module_name, val)
             writer.writeline(line)
+        elif op == OP_LOAD_PARAMS:
+            line = "  /* OP_LOAD_PARAMS */"
+            writer.writeline(line)
+        elif op == OP_LOAD_LOCAL:
+            line = "  MP_PUSH(locals[{}]);".format(val)
+            writer.writeline(line)
+        elif op == OP_NUMBER:
+            line = "  MP_PUSH(tm_number({}));".format(val)
+            writer.writeline(line)
+        elif op == OP_STRING:
+            line = "  MP_PUSH(string_new(\"{}\"));".format(val)
+            writer.writeline(line)
+        elif op == OP_LTEQ:
+            writer.writeline("  L1 = MP_POP();")
+            writer.writeline("  L2 = MP_POP();")
+            line = "  MP_PUSH(obj_LTEQ(L1, L2));";
+            writer.writeline(line)
+        elif op == OP_POP_JUMP_ON_FALSE:
+            writer.writeline("  if(!is_true_obj(MP_POP()) {")
+            writer.writeline("    goto TAG_{};".format(val))
+            writer.writeline("  }")
+        elif op == OP_LOAD_GLOBAL:
+            writer.writeline("  TM_PUSH(load_global(\"{}\");".format(val))
+        elif op == OP_CALL:
+            writer.writeline("  TM_PUSH(call_function({}));".format(val));
+        elif op == OP_POP:
+            writer.writeline("  TM_POP();")
+        elif op == OP_JUMP:
+            writer.writeline("  goto TAG_{};".format(val))
         elif op == OP_LINE:
             continue
         else:

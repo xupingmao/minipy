@@ -1,7 +1,7 @@
 # -*- coding:utf-8 -*-
 # @author xupingmao
 # @since 2016
-# @modified 2020/10/19 00:52:54
+# @modified 2020/10/20 01:29:54
 
 if "tm" not in globals():
     from boot import *
@@ -189,7 +189,7 @@ def find_tag(code, val):
         if ins[0] != OP_TAG:
             cur+=1
 
-def handle_jmps(code):
+def resolve_tags(code):
     code_size = len(code)
     cur = 0
     new_code = []
@@ -207,7 +207,7 @@ def handle_jmps(code):
 def optimize(x, optimize_jmp = False):
     last = 0
     tag = 0
-    nx = handle_jmps(x)
+    nx = resolve_tags(x)
     return nx
     
 def join_code():
@@ -349,7 +349,7 @@ def encode_list0(v):
         encode_item(item)
         emit(OP_APPEND)
 
-        
+
 def encode_list(v):
     emit(OP_LIST, 0)
     # encode_list0(v.first)
@@ -367,6 +367,11 @@ def encode_list(v):
     #emit(OP_LIST, tk_list_len(v.first))
 
 def encode_tuple(tk):
+    # print("encode_tuple", getlineno(tk))
+    if gettype(tk.first) == "list" and is_const_list(tk.first):
+        g = get_const_list(tk.first)
+        emit_load(g)
+        return 1
     return encode_list(tk)
 
 def encode_comma(tk):
@@ -511,8 +516,6 @@ def encode_def(tk, in_class = 0):
 
 def encode_class(tk):
     buildclass = []
-    # emit(OP_DICT, 0)
-    # store(tk.first)
     emit(OP_CLASS, tk.first.val)
     for func in tk.second:
         if func.type == "pass": continue
@@ -526,6 +529,7 @@ def encode_class(tk):
 def encode_return(tk):
     if tk.first:
         if gettype(tk.first) == "list":
+            # multi return
             emit(OP_LIST)
             for item in tk.first:
                 encode_item(item)
@@ -716,13 +720,10 @@ def encode_slice(tk):
     
 def encode_in(tk):
     encode_item(tk.first)
-    if gettype(tk.second) == 'list' and is_const_list(tk.second):
-        g = get_const_list(tk.second)
-        emit_load(g)
-    else:
-        encode_item(tk.second)
-    emit(OP_IN)    
-    
+    encode_item(tk.second)
+    emit(OP_IN)
+
+
 _encode_dict = {
     'if': encode_if,
     '=': encode_assign,
@@ -780,21 +781,29 @@ def encode_item(tk):
     @param tk ast token
     @return opstack height
     """
-    if tk == None: return 0
+    if tk == None:
+        return 0
     # encode for statement list.
     if gettype(tk) == 'list':
-        for i in tk:
-            # comment 
-            if i.type == 'string':
-                continue
-            lineno = getlineno(i)
-            if lineno != None: emit(OP_LINE, lineno)
-            encode_item(i)
-            if i.type == 'call': emit(OP_POP)
-        return
+        return encode_block(tk)
+
     r = _encode_dict[tk.type](tk)
-    if r != None:return r
+    if r != None:
+        return r
     return 1
+
+def encode_block(tk):
+    assert gettype(tk) == "list"
+    for i in tk:
+        # comment 
+        if i.type == 'string':
+            continue
+        lineno = getlineno(i)
+        if lineno != None: 
+            emit(OP_LINE, lineno)
+        encode_item(i)
+        if i.type == 'call': 
+            emit(OP_POP)
 
 def encode(content):
     global _tag_cnt
@@ -893,12 +902,26 @@ def split_instr(instr):
 def to_fixed(num, length):
     return str(num).rjust(length).replace(' ', '0')
 
-def dis(path):
-    ins_list = compile_to_list(load(path), path)
+def dis_code(code, return_str = False, fname = "<string>"):
+    if return_str == True:
+        result = []
+
+    ins_list = compile_to_list(code, fname)
     for index, item in enumerate(ins_list):
         op = int(item[0])
         line = to_fixed(index+1, 4) + ' ' + opcodes[op].ljust(22) + str(item[1])
-        print(line)
+
+        if return_str:
+            result.append(line)
+        else:
+            print(line)
+
+    if return_str:
+        return "\n".join(result)
+
+def dis(path, return_str = False):
+    code = load(path)
+    return dis_code(code, return_str, path)
 
 # TM_TEST
 def main():

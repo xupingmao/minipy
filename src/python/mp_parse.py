@@ -1,7 +1,7 @@
 # -*- coding:utf-8 -*-
 # @author xupingmao
 # @since 2016
-# @modified 2020/10/19 00:58:20
+# @modified 2020/10/20 01:27:21
 """Parse minipy code, grammar see minipy.grammar"""
 
 from mp_tokenize import *
@@ -42,6 +42,9 @@ class ParserCtx:
 
     def pop(self):
         return self.tree.pop()
+
+    def last(self):
+        return self.tree[-1]
 
     def add(self, v):
         self.tree.append(v)
@@ -110,11 +113,14 @@ def baseitem(p):
         p.add(node)
     elif t == '(':
         p.next()
-        # node = AstNode("tuple")
         exp(p, ',')
         expect(p, ')')
-        # node.first = p.pop()
-        # p.add(node)
+        # tuple node
+        last = p.last()
+        if gettype(last) == "list":
+            p.pop()
+            node = AstNode("tuple", last)
+            p.add(node)
     elif t == '{':
         p.next()
         node = AstNode('dict')

@@ -1,0 +1,5 @@
+0001 OP_FILE               <string>
+0002 OP_LINE               1
+0003 OP_NUMBER             10.0
+0004 OP_STORE_GLOBAL       age
+0005 OP_EOP                0

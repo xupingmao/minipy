@@ -1,0 +1,9 @@
+0001 OP_FILE               <string>
+0002 OP_NUMBER             1.0
+0003 OP_NUMBER             2.0
+0004 OP_NUMBER             3.0
+0005 OP_ROT                3
+0006 OP_STORE_GLOBAL       a
+0007 OP_STORE_GLOBAL       b
+0008 OP_STORE_GLOBAL       c
+0009 OP_EOP                0
