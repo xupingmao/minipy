@@ -2,7 +2,7 @@
  * description here
  * @author xupingmao
  * @since 2016
- * @modified 2020/10/21 01:35:34
+ * @modified 2020/10/21 01:39:13
  */
 
 #include "include/mp.h"
@@ -56,8 +56,8 @@ void load_module(Object name, Object code) {
  * @param sz_fnc, function name
  */
 Object call_mod_func(char* mod, char* sz_fnc) {
-    Object mod = obj_get(tm->modules, string_new(mod));
-    Object fnc = obj_get(mod, string_new(sz_fnc));
+    Object m = obj_get(tm->modules, string_new(mod));
+    Object fnc = obj_get(m, string_new(sz_fnc));
     arg_start();
     return call_function(fnc);
 }

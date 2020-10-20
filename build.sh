@@ -6,9 +6,8 @@ prog=python
 case $1 in
     "mp" )
     echo "use minipy to compile compiler"
-    mv minipy src/python/mp
-    prog=./mp
-    chmod +x src/python/mp
+    mv minipy build/
+    prog=../../build/minipy
     ;;
 esac
 
