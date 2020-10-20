@@ -6,7 +6,7 @@
  * 5. release objects which are marked unused (0).
  * 
  * @since 2015
- * @modified 2020/10/13 00:40:54
+ * @modified 2020/10/21 01:09:28
  */
 
 #include "include/mp.h"
@@ -232,6 +232,17 @@ void gc_mark_single(Object o) {
     GC_MARKED(o) = 1;
 }
 
+void gc_mark_module(TmModule* pmodule) {
+    if (pmodule->marked) {
+        return;
+    }
+
+    pmodule->marked = GC_REACHED_SIGN;
+    gc_mark(pmodule->code);
+    gc_mark(pmodule->file);
+    gc_mark(pmodule->globals);
+}
+
 /**
  * mark object as used
  * @since 2014-??
@@ -259,13 +270,7 @@ void gc_mark(Object o) {
         gc_mark_class(GET_CLASS(o));
         break;
     case TYPE_MODULE:
-        if (GET_MODULE(o)->marked)
-            return;
-        GET_MODULE(o)->marked = GC_REACHED_SIGN;
-        gc_mark(GET_MODULE(o)->code);
-        gc_mark(GET_MODULE(o)->file);
-        /*gc_mark(GET_MODULE(o)->constants);*/
-        gc_mark(GET_MODULE(o)->globals);
+        gc_mark_module(GET_MODULE(o));
         break;
     case TYPE_DATA:
         if (GET_DATA(o)->marked)
@@ -336,28 +341,6 @@ void gc_sweep() {
     log_info("sweep,%d,0,end", tm->all->len);
 }
 
-#define MARK(v) \
-    switch( v.type ){  \
-    case TYPE_STR: \
-        v.value.str->marked = 0;\
-        break;\
-    case TYPE_LIST:\
-        GET_LIST(v)->marked = 0;\
-        break;\
-    case TYPE_DICT:\
-        GET_DICT(v)->marked = 0;\
-        break;\
-    case TM_MOD:\
-        GET_MODULE(v)->marked = 0;\
-        break;\
-    case TYPE_FUNCTION:\
-        GET_FUNCTION(v)->marked = 0;\
-        break;\
-    case TYPE_CLASS:\
-        GET_CLASS(v)->marked = 0;\
-        break;\
-    }
-
 /**
  * mark and sweep garbage collection
  *
@@ -416,6 +399,7 @@ void gc_destroy() {
     log_info("destroy gc ...");
     log_info("max allocated memory: %d K", tm->max_allocated / 1024);
     log_info("current all->len: %d", tm->all->len);
+
     if (tm->local_obj_list) {
         log_info("current local_obj_list->len: %d", tm->local_obj_list->len);
     }

@@ -158,9 +158,9 @@ void        gc_check_native_call(int size, Object ret);
 Object        string_char_new(int c);
 Object        string_chr(int n); // get a char from char_list.
 Object        string_alloc(char* s, int size);
+Object        string_new(char*s);
 #define       string_from_sz(s) string_alloc(s, -1)
 #define       string_static(s)  string_alloc(s, -1)
-#define       string_new(s)     string_alloc(s, strlen(s))
 Object        string_const(char*);
 void          string_free(String*);
 int           string_equals(String*s0, String*s1);

@@ -2,7 +2,7 @@
  * description here
  * @author xupingmao
  * @since 2016
- * @modified 2020/10/13 00:40:51
+ * @modified 2020/10/21 01:33:45
  */
 #include "include/mp.h"
 
@@ -177,8 +177,6 @@ Object list_add(TmList* list1, TmList*list2) {
 }
 
 // belows are builtin methods
-//
-
 
 Object list_builtin_append() {
     const char* sz_func = "list.append";

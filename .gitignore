@@ -17,5 +17,5 @@ tinypy-1.1/
 tm2c/output/
 *.plist
 *.bz2
-/参考项目/
-/build/*.c
+/01_参考项目/
+/build/

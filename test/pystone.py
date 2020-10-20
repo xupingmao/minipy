@@ -47,7 +47,7 @@ clock = time.clock
 
 __version__ = "1.2"
 
-[Ident1, Ident2, Ident3, Ident4, Ident5] = 1,2,3,4,5 # range(1, 6)
+Ident1, Ident2, Ident3, Ident4, Ident5 = 1,2,3,4,5 # range(1, 6)
 
 class Record:
 
@@ -75,16 +75,16 @@ def main(loops=LOOPS):
 def pystones(loops=LOOPS):
     return Proc0(loops)
 
-IntGlob = 0
-BoolGlob = FALSE
-Char1Glob = '\0'
-Char2Glob = '\0'
+IntGlob    = 0
+BoolGlob   = FALSE
+Char1Glob  = '\0'
+Char2Glob  = '\0'
 Array1Glob = [0]*51
 # Array2Glob = [x[:] for x in [Array1Glob]*51]
 Array2Glob = []
 for x in [Array1Glob] * 51:
     Array2Glob.append(x[:])
-PtrGlb = None
+PtrGlb     = None
 PtrGlbNext = None
 
 def Proc0(loops=LOOPS):

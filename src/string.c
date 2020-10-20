@@ -2,7 +2,7 @@
  * description here
  * @author xupingmao
  * @since 2018/02/19 16:49:28
- * @modified 2020/10/19 01:00:45
+ * @modified 2020/10/21 01:18:05
  */
 
 #include "include/mp.h"
@@ -57,8 +57,8 @@ Object string_char_new(int c) {
 Object string_alloc(char *s, int size) {
     String* str = tm_malloc(sizeof(String));
     Object v;
-    /* malloc new memory */
     if (size > 0) {
+        /* copy string data to new memory */
         str->stype = 1;
         str->value = tm_malloc(size + 1);
         str->len = size;
@@ -70,8 +70,8 @@ Object string_alloc(char *s, int size) {
         str->value[size] = '\0';
     } else if(size == 1){
         return string_chr(s[0]);
-    /* use string ptr in C data section */
     } else {
+        /* use string ptr in C data section */
         str->stype = 0;
         if (size == 0) {
             str->value = "";
@@ -84,6 +84,10 @@ Object string_alloc(char *s, int size) {
     v.type = TYPE_STR;
     v.value.str = str;
     return gc_track(v);
+}
+
+Object string_new(char* s) {
+    return string_alloc(s, strlen(s));
 }
 
 /**

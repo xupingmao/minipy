@@ -2,7 +2,7 @@
  * opeartor implementions
  * @author xupingmao
  * @since 2016
- * @modified 2020/10/19 00:16:47
+ * @modified 2020/10/21 01:28:01
  */
 
 #include <assert.h>
@@ -543,6 +543,8 @@ void obj_del(Object self, Object k) {
 Object obj_append(Object a, Object item) {
     if (IS_LIST(a)) {
         list_append(GET_LIST(a), item);
+    } else {
+        tm_raise("obj_append: not supported type %s", tm_type(a.type));
     }
     return a;
 }

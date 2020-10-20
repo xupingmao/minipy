@@ -84,3 +84,7 @@ SPACE ::= "\t" | " "
 name  ::= < [a-zA-Z_] [a-zA-Z_0-9]* > -        ; name
 DOT   ::= "."
 
+baseitem ::= number | string | name | 'None' | 'True' | 'False' | list | tuple
+list     ::= '[' { comma_exp } ']'
+tuple    ::= '(' { comma_exp } ')'
+

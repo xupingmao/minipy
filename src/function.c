@@ -2,7 +2,7 @@
  * description here
  * @author xupingmao
  * @since 2016
- * @modified 2020/10/13 00:37:45
+ * @modified 2020/10/21 01:13:41
  */
 #include "include/mp.h"
 
@@ -104,6 +104,7 @@ Object func_new(Object mod,
 }
 
 Object method_new(Object _fnc, Object self){
+  tm_assert_type(_fnc, TYPE_FUNCTION, "method_new");
   TmFunction* fnc = GET_FUNCTION(_fnc);
   Object nfnc = func_new(fnc->mod, self, fnc->native);
   GET_FUNCTION(nfnc)->name = GET_FUNCTION(_fnc)->name;

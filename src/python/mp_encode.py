@@ -1,7 +1,7 @@
 # -*- coding:utf-8 -*-
 # @author xupingmao
 # @since 2016
-# @modified 2020/10/20 01:29:54
+# @modified 2020/10/20 01:31:37
 
 if "tm" not in globals():
     from boot import *
@@ -363,8 +363,6 @@ def encode_list(v):
         encode_item(v.first)
         emit(OP_APPEND)
     return 1
-
-    #emit(OP_LIST, tk_list_len(v.first))
 
 def encode_tuple(tk):
     # print("encode_tuple", getlineno(tk))

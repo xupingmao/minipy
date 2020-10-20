@@ -2,7 +2,7 @@
  * description here
  * @author xupingmao
  * @since 2016
- * @modified 2020/10/11 18:30:13
+ * @modified 2020/10/21 01:35:34
  */
 
 #include "include/mp.h"
@@ -56,35 +56,10 @@ void load_module(Object name, Object code) {
  * @param sz_fnc, function name
  */
 Object call_mod_func(char* mod, char* sz_fnc) {
-    Object m = obj_get(tm->modules, string_new(mod));
-    Object fnc = obj_get(m, string_new(sz_fnc));
+    Object mod = obj_get(tm->modules, string_new(mod));
+    Object fnc = obj_get(mod, string_new(sz_fnc));
     arg_start();
     return call_function(fnc);
-}
-
-/**
- * load bytecode binary
- * format:
- *  [4bytes:files count]
- *   files: [4bytes:bytes length][bytes]
- */
-int load_binary() {
-    unsigned char* text = tm->code; /* code to initialize the vm */
-    if (text == NULL) {
-        /* no bootstrap code */
-        return 1;
-    }
-    int count = uncode32(&text);
-    int i;for(i = 0; i < count; i++) {
-        int name_len = uncode32(&text);
-        Object name = string_alloc((char*)text, name_len);
-        text += name_len;
-        int code_len = uncode32(&text);
-        Object code = string_alloc((char*)text, code_len);
-        text += code_len;
-        load_module(name, code);
-    }
-    return 1;
 }
 
 /**
@@ -120,8 +95,8 @@ int vm_init(int argc, char* argv[]) {
 
     /* set module boot */
     Object boot = dict_new();
-    dict_set_by_str(tm->modules, "boot", boot);
-    dict_set_by_str(boot, "__name__", string_from_sz("boot"));
+    obj_set(tm->modules, string_from_sz("boot"), boot);
+    obj_set(boot, string_from_sz("__name__"), string_from_sz("boot"));
 
     /* builtins constants */
     dict_set_by_str(tm->builtins, "tm",    tm_number(1));
@@ -158,41 +133,4 @@ void vm_destroy() {
 #ifdef TM_CHECK_MEM
     PtrMap_free(ptr_map);
 #endif
-}
-
-/**
- * run vm with specified code;
- * @since 2016-11-13
- */
-int tm_run(int argc, char* argv[], unsigned char* init_code) {
-    int ret = vm_init(argc, argv);
-    if (ret != 0) { 
-        return ret;
-    }
-    tm->code = init_code;
-
-    /* use first frame */
-    int code = setjmp(tm->frames->buf);
-    if (code == 0) {
-        /* init modules */
-        time_mod_init();
-        sys_mod_init();
-        math_mod_init();
-        os_mod_init();
-    
-        load_binary();
-        
-        if (tm_hasattr(tm->modules, "init")) {
-            call_mod_func("init", "boot");
-        } else if (tm_hasattr(tm->modules, "main")) {
-            // adjust sys.argv
-            call_mod_func("main", "_main");
-        }
-    } else if (code == 1){
-        traceback();
-    } else if (code == 2){
-        
-    }
-    vm_destroy();
-    return 0;
 }
