@@ -2,17 +2,11 @@
  * opeartor implementions
  * @author xupingmao
  * @since 2016
- * @modified 2020/10/21 01:28:01
+ * @modified 2020/10/23 00:35:36
  */
 
 #include <assert.h>
 #include "include/mp.h"
-
-#define RET_NUM(v) \
-    Object _num;\
-    TM_TYPE(_num) = TYPE_NUM;\
-    GET_NUM(_num) = v;\
-    return _num;
 
 void tm_assert(int value, char* msg) {
     if (!value) {
@@ -20,30 +14,29 @@ void tm_assert(int value, char* msg) {
     }
 }
 
-char MP_TYPE_STR[64];
-
 const char* tm_type(int type) {
-    switch (type) {
-    case TYPE_STR:
-        return "string";
-    case TYPE_NUM:
-        return "number";
-    case TYPE_LIST:
-        return "list";
-    case TYPE_FUNCTION:
-        return "function";
-    case TYPE_DICT:
-        return "dict";
-    case TYPE_DATA:
-        return "data";
-    case TYPE_CLASS:
-        return "class";
-    case TYPE_NONE:
-        return "None";
-    case TYPE_MODULE:
-        return "module";
-    }
+    static char MP_TYPE_STR[64];
 
+    switch (type) {
+        case TYPE_STR:
+            return "string";
+        case TYPE_NUM:
+            return "number";
+        case TYPE_LIST:
+            return "list";
+        case TYPE_FUNCTION:
+            return "function";
+        case TYPE_DICT:
+            return "dict";
+        case TYPE_DATA:
+            return "data";
+        case TYPE_CLASS:
+            return "class";
+        case TYPE_NONE:
+            return "None";
+        case TYPE_MODULE:
+            return "module";
+    }
     sprintf(MP_TYPE_STR, "unknown(%d)", type);
     return MP_TYPE_STR;
 }
@@ -112,7 +105,9 @@ Object obj_get(Object self, Object k) {
                     tm_raise("String_get: index overflow ,len=%d,index=%d, str=%o",
                             GET_STR_LEN(self), n, self);
                 return string_chr(0xff & GET_STR(self)[n]);
-            } else if ((node = dict_get_node(GET_DICT(tm->str_proto), k)) != NULL) {
+            }
+            // string method
+            if ((node = dict_get_node(GET_DICT(tm->str_proto), k)) != NULL) {
                 return method_new(node->val, self);
             }
             break;
@@ -121,7 +116,9 @@ Object obj_get(Object self, Object k) {
             DictNode* node;
             if (TM_TYPE(k) == TYPE_NUM) {
                 return list_get(GET_LIST(self), GET_NUM(k));
-            } else if ((node = dict_get_node(GET_DICT(tm->list_proto), k))!=NULL) {
+            }
+            // list method
+            if ((node = dict_get_node(GET_DICT(tm->list_proto), k))!=NULL) {
                 return method_new(node->val, self);
             }
             break;
@@ -131,7 +128,9 @@ Object obj_get(Object self, Object k) {
             node = dict_get_node(GET_DICT(self), k);
             if (node != NULL) {
                 return node->val;
-            } else if ((node = dict_get_node(GET_DICT(tm->dict_proto), k))!=NULL) {
+            } 
+            // dict method
+            if ((node = dict_get_node(GET_DICT(tm->dict_proto), k))!=NULL) {
                 return method_new(node->val, self);
             }
             break;
@@ -223,26 +222,26 @@ Object obj_sub(Object a, Object b) {
 Object obj_add(Object a, Object b) {
     if (TM_TYPE(a) == TM_TYPE(b)) {
         switch (TM_TYPE(a)) {
-        case TYPE_NUM:
-            GET_NUM(a) += GET_NUM(b);
-            return a;
-        case TYPE_STR: {
-            char* sa = GET_STR(a);
-            char* sb = GET_STR(b);
-            int la = GET_STR_LEN(a);
-            int lb = GET_STR_LEN(b);
-            if (la == 0) {return b;    }
-            if (lb == 0) {return a;    }
-            int len = la + lb;
-            Object des = string_alloc(NULL, len);
-            char*s = GET_STR(des);
-            memcpy(s, sa, la);
-            memcpy(s + la, sb, lb);
-            return des;
-        }
-        case TYPE_LIST: {
-            return list_add(GET_LIST(a), GET_LIST(b));
-        }
+            case TYPE_NUM:
+                GET_NUM(a) += GET_NUM(b);
+                return a;
+            case TYPE_STR: {
+                char* sa = GET_STR(a);
+                char* sb = GET_STR(b);
+                int la = GET_STR_LEN(a);
+                int lb = GET_STR_LEN(b);
+                if (la == 0) {return b;    }
+                if (lb == 0) {return a;    }
+                int len = la + lb;
+                Object des = string_alloc(NULL, len);
+                char*s = GET_STR(des);
+                memcpy(s, sa, la);
+                memcpy(s + la, sb, lb);
+                return des;
+            }
+            case TYPE_LIST: {
+                return list_add(GET_LIST(a), GET_LIST(b));
+            }
         }
     }
     tm_raise("obj_add: can not add %o and %o", (a), (b));
@@ -280,7 +279,7 @@ int obj_equals(Object a, Object b){
         default: {
             const char* ltype = tm_type(a.type);
             const char* rtype = tm_type(b.type);
-            tm_raise("equals(): not supported type %d:%s and %d:%s", TM_TYPE(a), ltype, TM_TYPE(b), rtype);
+            tm_raise("obj_equals: not supported type %d:%s and %d:%s", TM_TYPE(a), ltype, TM_TYPE(b), rtype);
         } 
     }
     return 0;

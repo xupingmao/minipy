@@ -1,14 +1,14 @@
 /**
   * execute minipy bytecode
   * @since 2014-9-2
-  * @modified 2020/10/19 00:48:21
+  * @modified 2020/10/23 00:41:37
   *
   * 2015-6-16: interpreter for tinyvm bytecode.
  **/
 
 #include "include/mp.h"
 
-void tm_loadcode(TmModule* m, char* code);
+void mp_resolve_code(TmModule* m, char* code);
 
 Object call_function(Object func) {
     Object ret;
@@ -54,42 +54,10 @@ Object call_function(Object func) {
 }
 
 /**
- * @since 2016-11-20
- */
-Object tm_load_module(Object file, Object code, Object name) {
-    Object mod = module_new(file, name, code);
-    // resolve cache
-    tm_loadcode(GET_MODULE(mod), GET_STR(code));
-    Object fnc = func_new(mod, NONE_OBJECT, NULL);
-    GET_FUNCTION(fnc)->code = (unsigned char*) GET_STR(code);
-    GET_FUNCTION(fnc)->name = string_new("#main");
-    GET_FUNCTION(fnc)->cache = GET_MODULE(mod)->cache;
-    call_function(fnc);
-    return GET_MODULE(mod)->globals;
-}
-
-/**
- * @since 2016-11-27
- */
-Object load_boot_module(char* sz_filename, char* sz_code) {
-    Object name = string_new(sz_filename);
-    Object file = name;
-    Object code = string_new("");
-    Object mod = module_new(file, name, code);
-    tm_loadcode(GET_MODULE(mod), sz_code);
-    Object fnc = func_new(mod, NONE_OBJECT, NULL);
-    GET_FUNCTION(fnc)->code = (unsigned char*) GET_STR(code);
-    GET_FUNCTION(fnc)->name = string_new("#main");
-    GET_FUNCTION(fnc)->cache = GET_MODULE(mod)->cache;
-    call_function(fnc);
-    return GET_MODULE(mod)->globals;
-}
-
-/**
  * @since 2016-11-24
  * TODO gc problem, still save string to constants dict?
  */
-void tm_loadcode(TmModule* m, char* code) {
+void mp_resolve_code(TmModule* m, char* code) {
     char* s = code;
     char buf[1024];
     int error = 0;

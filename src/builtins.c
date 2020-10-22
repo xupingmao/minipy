@@ -2,7 +2,7 @@
  * description here
  * @author xupingmao <578749341@qq.com>
  * @since 2016
- * @modified 2020/10/18 23:40:54
+ * @modified 2020/10/23 00:42:49
  */
 #include "include/mp.h"
 #include <ctype.h>
@@ -355,7 +355,7 @@ Object bf_load_module() {
     if (arg_count() == 3) {
         name = arg_take_str_obj(sz_fnc);
     }
-    return tm_load_module(file, code, name);
+    return load_file_module(file, code, name);
 }
 
 

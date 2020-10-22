@@ -331,7 +331,7 @@ void   vm_destroy();
 #define  GET_CONST(i) GET_DICT(tm->constants)->nodes[i].key
 Object   call_unsafe(Object fnc);
 Object   call_function(Object func);
-Object   tm_load_module(Object filename, Object code, Object name);
+Object   load_file_module(Object filename, Object code, Object name);
 Object   tm_eval(TmFrame*);
 TmFrame* push_frame(Object fnc);
 void     pop_frame();

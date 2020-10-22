@@ -2,7 +2,7 @@
  * description here
  * @author xupingmao
  * @since 2016
- * @modified 2020/10/11 18:15:09
+ * @modified 2020/10/23 00:37:03
  */
 #include "vm.c"
 #include "bin.c"
@@ -14,8 +14,7 @@ int main(int argc, char *argv[])
     if (ret != 0) { 
         return ret;
     }
-    // tm->code = bin;
-
+    
     /* use first frame */
     int code = setjmp(tm->frames->buf);
     if (code == 0) {

@@ -2,7 +2,7 @@
  * description here
  * @author xupingmao
  * @since 2016
- * @modified 2020/10/21 01:39:13
+ * @modified 2020/10/23 00:42:47
  */
 
 #include "include/mp.h"
@@ -48,6 +48,41 @@ void load_module(Object name, Object code) {
     GET_FUNCTION(fnc)->code = (unsigned char*) GET_STR(code);
     GET_FUNCTION(fnc)->name = string_from_sz("#main");
     call_function(fnc);
+}
+
+/**
+ * @since 2016-11-20
+ */
+Object load_file_module(Object file, Object code, Object name) {
+    Object mod = module_new(file, name, code);
+    // resolve cache
+    mp_resolve_code(GET_MODULE(mod), GET_STR(code));
+
+    Object fnc = func_new(mod, NONE_OBJECT, NULL);
+    GET_FUNCTION(fnc)->code = (unsigned char*) GET_STR(code);
+    GET_FUNCTION(fnc)->name = string_new("#main");
+    GET_FUNCTION(fnc)->cache = GET_MODULE(mod)->cache;
+    call_function(fnc);
+    return GET_MODULE(mod)->globals;
+}
+
+/**
+ * @since 2016-11-27
+ */
+Object load_boot_module(char* sz_filename, char* sz_code) {
+    Object name = string_new(sz_filename);
+    Object file = name;
+    Object code = string_new("");
+    Object mod  = module_new(file, name, code);
+
+    mp_resolve_code(GET_MODULE(mod), sz_code);
+    Object fnc = func_new(mod, NONE_OBJECT, NULL);
+    GET_FUNCTION(fnc)->code = (unsigned char*) GET_STR(code);
+    GET_FUNCTION(fnc)->name = string_new("#main");
+    GET_FUNCTION(fnc)->cache = GET_MODULE(mod)->cache;
+    
+    call_function(fnc);
+    return GET_MODULE(mod)->globals;
 }
 
 /**
