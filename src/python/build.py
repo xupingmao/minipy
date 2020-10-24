@@ -124,10 +124,10 @@ def build_single_py():
         fp = open(path)
         state = 1
         for line in fp.readlines():
-            if "# TM_TEST_END" in line:
+            if "# MP_TEST_END" in line:
                 state = 1
                 continue
-            if "# TM_TEST" in line:
+            if "# MP_TEST" in line:
                 # 测试内容
                 state = 0
                 continue

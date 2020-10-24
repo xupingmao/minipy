@@ -24,7 +24,7 @@ int js_hash(unsigned char* s, int len) {
  * @since 2015-?
  */
 int mp_hash(Object key) {
-    switch(TM_TYPE(key)) {
+    switch(MP_TYPE(key)) {
     case TYPE_STR:return js_hash((unsigned char*) GET_STR(key), GET_STR_LEN(key));
     case TYPE_NUM:return abs((int) GET_NUM(key));
     default: return 0;

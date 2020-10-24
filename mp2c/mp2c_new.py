@@ -1,7 +1,7 @@
 # -*- coding:utf-8 -*-
 # @author xupingmao <578749341@qq.com>
 # @since 2020/10/18 00:32:28
-# @modified 2020/10/19 23:34:30
+# @modified 2020/10/24 16:08:43
 
 from mp_encode import *
 from mp_opcode import *
@@ -53,15 +53,17 @@ def convert(code):
             writer.writeline("    goto TAG_{};".format(val))
             writer.writeline("  }")
         elif op == OP_LOAD_GLOBAL:
-            writer.writeline("  TM_PUSH(load_global(\"{}\");".format(val))
+            writer.writeline("  MP_PUSH(load_global(\"{}\");".format(val))
         elif op == OP_CALL:
-            writer.writeline("  TM_PUSH(call_function({}));".format(val));
+            writer.writeline("  MP_PUSH(call_function({}));".format(val));
         elif op == OP_POP:
-            writer.writeline("  TM_POP();")
+            writer.writeline("  MP_POP();")
         elif op == OP_JUMP:
             writer.writeline("  goto TAG_{};".format(val))
         elif op == OP_LINE:
             continue
+        elif op == OP_EQEQ:
+            writer.writeline("  MP_PUSH(obj_EQEQ(MP_POP(), MP_POP());")
         else:
             op_str = opcodes[op]
             raise "Unknown opcode, key={}, val={}".format(op_str, val)

@@ -3,7 +3,7 @@
 # @since 2016
 # @modified 2020/09/30 17:12:53
 
-# TM_TEST
+# MP_TEST
 try:
     _ = tm
 except:
@@ -268,7 +268,7 @@ def do_comment(s,i,l):
         T.add("@", "debugger")
     return i
 
-# TM_TEST
+# MP_TEST
 def _main():
     import sys
     ARGV = sys.argv
@@ -284,6 +284,6 @@ def _main():
 
 if __name__ == "__main__":
     _main()
-# TM_TEST_END
+# MP_TEST_END
 
 

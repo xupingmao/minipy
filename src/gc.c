@@ -395,7 +395,7 @@ void gc_destroy() {
     MpList* all = tm->all;
     int i;
     
-    // TM_TEST
+    // MP_TEST
     log_info("destroy gc ...");
     log_info("max allocated memory: %d K", tm->max_allocated / 1024);
     log_info("current all->len: %d", tm->all->len);
@@ -403,7 +403,7 @@ void gc_destroy() {
     if (tm->local_obj_list) {
         log_info("current local_obj_list->len: %d", tm->local_obj_list->len);
     }
-    // TM_TEST_END
+    // MP_TEST_END
 
     for (i = 0; i < all->len; i++) {
         obj_free(all->nodes[i]);
@@ -430,7 +430,7 @@ void gc_destroy() {
  */
 Object obj_new(int type, void * value) {
     Object o;
-    TM_TYPE(o) = type;
+    MP_TYPE(o) = type;
     switch (type) {
     case TYPE_NUM:
         o.value.num = *(double*) value;
@@ -466,7 +466,7 @@ Object obj_new(int type, void * value) {
  * @since ?
  */
 void obj_free(Object o) {
-    switch (TM_TYPE(o)) {
+    switch (MP_TYPE(o)) {
     case TYPE_STR:
         string_free(GET_STR_OBJ(o));
         break;

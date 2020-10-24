@@ -4,16 +4,16 @@
  * @since 2016
  * @modified 2018/02/19 16:41:31
  */
-#ifndef _TM_LOG_
-#define _TM_LOG_
+#ifndef _MP_LOG_
+#define _MP_LOG_
 
 #include <stdio.h>
 #include <stdarg.h>
 #include <time.h>
 #include <string.h>
 
-#define TM_LOG_CACHE 0
-#define TM_LOG_CALL  0
+#define MP_LOG_CACHE 0
+#define MP_LOG_CALL  0
 
 /** 
  * 1: info,
@@ -80,7 +80,7 @@ void log_error(char* fmt, ...) {
     printf("\n");
 }
 
-#if TM_LOG_CALL == 1
+#if MP_LOG_CALL == 1
 /**
  * @since 2016-11-28
  */
@@ -98,7 +98,7 @@ void mp_log_call(Object func) {
 #endif
 
 
-#if TM_LOG_CACHE == 1
+#if MP_LOG_CACHE == 1
 /**
  * @since 2016-11-27
  */
@@ -165,4 +165,4 @@ void mp_log_cache(MpCodeCache* cache) {
     #define mp_log_cache(c) /*mp_log_cache*/
 #endif
 
-#endif // _TM_LOG_
+#endif // _MP_LOG_

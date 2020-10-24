@@ -484,7 +484,7 @@ def encode_def(tk, in_class = 0):
         # regs.append(item.first)
         if item.type == 'narg':
             narg = 1
-            # emit(TM_NARG, index)
+            # emit(MP_NARG, index)
             break
         if item.second:
             varg += 1
@@ -921,7 +921,7 @@ def dis(path, return_str = False):
     code = load(path)
     return dis_code(code, return_str, path)
 
-# TM_TEST
+# MP_TEST
 def main():
     import sys
     ARGV = sys.argv
@@ -949,5 +949,5 @@ def main():
 if __name__ == "__main__":
     main()
 
-# TM_TEST_END
+# MP_TEST_END
 

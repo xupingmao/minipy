@@ -176,7 +176,7 @@ void pop_frame() {
     tm->frame --;
 }
 
-#define TM_OP(OP_CODE, OP_FUNC) case OP_CODE: \
+#define MP_OP(OP_CODE, OP_FUNC) case OP_CODE: \
     *(top-1) = OP_FUNC(*(top-1), *top);--top;\
     break;
     
@@ -263,19 +263,19 @@ tailcall:
 
     while (1) {
         mp_log_cache(cache);
-        #ifdef TM_PRINT_STEPS
+        #ifdef MP_PRINT_STEPS
             tm->steps++;
         #endif
 
         switch (cache->op) {
 
         case OP_NUMBER: {
-            TM_PUSH(cache->v.obj);
+            MP_PUSH(cache->v.obj);
             break;
         }
 
         case OP_STRING: {
-            TM_PUSH(cache->v.obj);
+            MP_PUSH(cache->v.obj);
             break;
         }
 
@@ -287,11 +287,11 @@ tailcall:
             Object modname, attr;
 
             if (cache->v.ival == 1) {
-                modname = TM_POP();
+                modname = MP_POP();
                 arg_push(modname); // arg1
             } else {
-                attr = TM_POP();
-                modname = TM_POP();
+                attr = MP_POP();
+                modname = MP_POP();
                 arg_push(modname);
                 arg_push(attr);
             }
@@ -299,22 +299,22 @@ tailcall:
             break;
         }
         case OP_CONSTANT: {
-            TM_PUSH(GET_CONST(cache->v.ival));
+            MP_PUSH(GET_CONST(cache->v.ival));
             break;
         }
         
         case OP_NONE: {
-            TM_PUSH(NONE_OBJECT);
+            MP_PUSH(NONE_OBJECT);
             break;
         }
 
         case OP_LOAD_LOCAL: {
-            TM_PUSH(locals[cache->v.ival]);
+            MP_PUSH(locals[cache->v.ival]);
             break;
         }
 
         case OP_STORE_LOCAL:
-            locals[cache->v.ival] = TM_POP();
+            locals[cache->v.ival] = MP_POP();
             break;
 
         case OP_LOAD_GLOBAL: {
@@ -336,10 +336,10 @@ tailcall:
                     cache->op = OP_FAST_LD_GLO;
                     cache->v.ival = idx;
 
-                    TM_PUSH(value);
+                    MP_PUSH(value);
                 }
             } else {
-                TM_PUSH(GET_DICT(globals)->nodes[idx].val);
+                MP_PUSH(GET_DICT(globals)->nodes[idx].val);
                 // pc[0] = OP_FAST_LD_GLO;
                 // code16(pc+1, idx);
                 cache->op = OP_FAST_LD_GLO;
@@ -348,7 +348,7 @@ tailcall:
             break;
         }
         case OP_STORE_GLOBAL: {
-            x = TM_POP();
+            x = MP_POP();
             int idx = dict_set0(GET_DICT(globals), cache->v.obj, x);
             // pc[0] = OP_FAST_ST_GLO;
             // code16(pc+1, idx);
@@ -357,45 +357,45 @@ tailcall:
             break;
         }
         case OP_FAST_LD_GLO: {
-            TM_PUSH(GET_DICT(globals)->nodes[cache->v.ival].val);
+            MP_PUSH(GET_DICT(globals)->nodes[cache->v.ival].val);
             break;
         }
         case OP_FAST_ST_GLO: {
-            GET_DICT(globals)->nodes[cache->v.ival].val = TM_POP();
+            GET_DICT(globals)->nodes[cache->v.ival].val = MP_POP();
             break;
         }
         case OP_LIST: {
-            TM_PUSH(list_new(2));
+            MP_PUSH(list_new(2));
             FRAME_CHECK_GC();
             break;
         }
         case OP_APPEND:
-            v = TM_POP();
-            x = TM_TOP();
+            v = MP_POP();
+            x = MP_TOP();
             mp_assert(IS_LIST(x), "mp_eval: OP_APPEND require list");
             list_append(GET_LIST(x), v);
             break;
         case OP_DICT_SET:
-            v = TM_POP();
-            k = TM_POP();
-            x = TM_TOP();
+            v = MP_POP();
+            k = MP_POP();
+            x = MP_TOP();
             mp_assert(IS_DICT(x), "mp_eval: OP_DICT_SET require dict");
             obj_set(x, k, v);
             break;
         case OP_DICT: {
-            TM_PUSH(dict_new());
+            MP_PUSH(dict_new());
             FRAME_CHECK_GC();
             break;
         }
-        TM_OP(OP_ADD, obj_add)
-        TM_OP(OP_SUB, obj_sub)
-        TM_OP(OP_MUL, obj_mul)
-        TM_OP(OP_DIV, obj_div)
-        TM_OP(OP_MOD, obj_mod)
-        TM_OP(OP_GET, obj_get)
+        MP_OP(OP_ADD, obj_add)
+        MP_OP(OP_SUB, obj_sub)
+        MP_OP(OP_MUL, obj_mul)
+        MP_OP(OP_DIV, obj_div)
+        MP_OP(OP_MOD, obj_mod)
+        MP_OP(OP_GET, obj_get)
         case OP_SLICE: {
-            Object second = TM_POP();
-            Object first  = TM_POP();
+            Object second = MP_POP();
+            Object first  = MP_POP();
             *top = obj_slice(*top, first, second);
             break;
         }
@@ -441,9 +441,9 @@ tailcall:
             break;
         }
         case OP_SET:
-            k = TM_POP();
-            x = TM_POP();
-            v = TM_POP();
+            k = MP_POP();
+            x = MP_POP();
+            v = MP_POP();
             obj_set(x, k, v);
             break;
         case OP_POP: {
@@ -451,7 +451,7 @@ tailcall:
             break;
         }
         case OP_NEG:
-            TM_TOP() = obj_neg(TM_TOP());
+            MP_TOP() = obj_neg(MP_TOP());
             break;
         case OP_CALL: {
             int n = cache->v.ival;
@@ -460,9 +460,9 @@ tailcall:
             top -= n;
             /* TODO top+1 can be optimized as locals */
             arg_set_arguments(top + 1, n);
-            Object func = TM_POP();
+            Object func = MP_POP();
 
-            TM_PUSH(call_function(func));
+            MP_PUSH(call_function(func));
             tm->frame = f;
             FRAME_CHECK_GC();
             break;
@@ -473,7 +473,7 @@ tailcall:
             top -= n;
             Object* first_arg = top+1;
             arg_set_arguments(top+1, n);
-            Object func = TM_POP();
+            Object func = MP_POP();
             if (GET_FUNCTION(func)->native == NULL) {
                 /** tail call python function **/
                 arg_start();
@@ -500,12 +500,12 @@ tailcall:
         }
         case OP_APPLY: {
             f->top = top;
-            Object args = TM_POP();
+            Object args = MP_POP();
             mp_assert_type(args, TYPE_LIST, "mp_eval: OP_APPLY");
             arg_set_arguments(LIST_NODES(args), LIST_LEN(args));
-            Object func = TM_POP();
+            Object func = MP_POP();
             x = call_function(func);
-            TM_PUSH(x);
+            MP_PUSH(x);
             tm->frame = f;
             FRAME_CHECK_GC();
             break;
@@ -546,7 +546,7 @@ tailcall:
         case OP_NEXT: {
             Object *next = next_ptr(*top);
             if (next != NULL) {
-                TM_PUSH(*next);
+                MP_PUSH(*next);
                 break;
             } else {
                 // pc += i * 3;
@@ -560,11 +560,11 @@ tailcall:
             Object fnc = func_new(mod, NONE_OBJECT, NULL);
             GET_FUNCTION_NAME(fnc) = cache->v.obj;
             cache = func_resolve_cache(GET_FUNCTION(fnc), cache);
-            TM_PUSH(fnc);
+            MP_PUSH(fnc);
             continue;
         }
         case OP_RETURN: {
-            ret = TM_POP();
+            ret = MP_POP();
             goto end;
         }
         case OP_CLASS: {
@@ -584,24 +584,24 @@ tailcall:
             break;
         }
         case OP_UNPACK: {
-            x = TM_POP();
+            x = MP_POP();
             mp_assert_type(x, TYPE_LIST, "mp_eval:UNPACK");
             int j;
             for(j = LIST_LEN(x)-1; j >= 0; j--) {
-                TM_PUSH(LIST_GET(x, j));
+                MP_PUSH(LIST_GET(x, j));
             }
             break;
         }
 
         case OP_DEL: {
-            k = TM_POP();
-            x = TM_POP();
+            k = MP_POP();
+            x = MP_POP();
             obj_del(x, k);
             break;
         }
 
         case OP_POP_JUMP_ON_FALSE: {
-            if (!is_true_obj(TM_POP())) {
+            if (!is_true_obj(MP_POP())) {
                 // pc += i * 3;
                 cache += cache->v.ival;
                 continue;
@@ -610,7 +610,7 @@ tailcall:
         }
 
         case OP_JUMP_ON_TRUE: {
-            if (is_true_obj(TM_TOP())) {
+            if (is_true_obj(MP_TOP())) {
                 cache += cache->v.ival;
                 continue;
             }
@@ -618,7 +618,7 @@ tailcall:
         }
 
         case OP_JUMP_ON_FALSE: {
-            if (!is_true_obj(TM_TOP())) {
+            if (!is_true_obj(MP_TOP())) {
                 cache += cache->v.ival;
                 continue;
             }
@@ -639,7 +639,7 @@ tailcall:
            goto end;
         }
 
-        case OP_LOAD_EX: { top = f->last_top; TM_PUSH(tm->ex); break; }
+        case OP_LOAD_EX: { top = f->last_top; MP_PUSH(tm->ex); break; }
         case OP_SETJUMP: { 
             f->last_top = top; 
             f->cache_jmp = cache + cache->v.ival;

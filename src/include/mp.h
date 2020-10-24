@@ -33,7 +33,7 @@
 #include <math.h>
 #include <ctype.h>
 
-#define TM_INLINE inline
+#define MP_INLINE inline
 
 #include "object.h"
 #define OBJ_SIZE sizeof(Object)
@@ -43,7 +43,7 @@ Object ARRAY_CHARS;
 
 #include "instruction.h"
 
-#ifdef TM_CHECK_MEM
+#ifdef MP_CHECK_MEM
     /* #include <execinfo.h> */
     #include "map.h"
 
@@ -325,9 +325,9 @@ void   vm_destroy();
 
 
 
-#define  TM_PUSH(x) *(++top) = (x); if(top > tm->stack_end) mp_raise("stack overflow");
-#define  TM_POP() *(top--)
-#define  TM_TOP() (*top)
+#define  MP_PUSH(x) *(++top) = (x); if(top > tm->stack_end) mp_raise("stack overflow");
+#define  MP_POP() *(top--)
+#define  MP_TOP() (*top)
 #define  GET_CONST(i) GET_DICT(tm->constants)->nodes[i].key
 Object   call_unsafe(Object fnc);
 Object   call_function(Object func);

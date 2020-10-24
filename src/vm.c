@@ -107,7 +107,7 @@ int vm_init(int argc, char* argv[]) {
     
     int i;
 
-    #ifdef TM_CHECK_MEM
+    #ifdef MP_CHECK_MEM
         ptr_map = PtrMap_new();
     #endif
 
@@ -159,13 +159,13 @@ int vm_init(int argc, char* argv[]) {
  * destroy goes with init
  */
 void vm_destroy() {
-#ifdef TM_PRINT_STEPS
+#ifdef MP_PRINT_STEPS
     printf("steps = %d\n", tm->steps);
 #endif
     gc_destroy();
     free(tm);
 
-#ifdef TM_CHECK_MEM
+#ifdef MP_CHECK_MEM
     PtrMap_free(ptr_map);
 #endif
 }

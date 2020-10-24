@@ -721,7 +721,7 @@ def print_ast_block_close(n, node):
     print_ast_line_pos(node)
     print(xml_line_head(n), xml_close(node.type))
 
-# TM_TEST
+# MP_TEST
 def print_ast_obj(tree, n=0):
     if tree == None:
         return
@@ -775,5 +775,5 @@ if __name__ == "__main__":
     tree = parsefile(sys.argv[1])
     print_ast(tree)
 
-# TM_TEST_END
+# MP_TEST_END
 

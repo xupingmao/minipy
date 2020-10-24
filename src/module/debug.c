@@ -73,7 +73,7 @@ Object mp_getfname(Object fnc) {
 
 Object bf_get_mp_local_list() {
     Object obj;
-    TM_TYPE(obj) = TYPE_LIST;
+    MP_TYPE(obj) = TYPE_LIST;
     GET_LIST(obj) = tm->local_obj_list;
     return obj;
 }

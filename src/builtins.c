@@ -85,7 +85,7 @@ void mp_inspect_obj0(Object o, int padding) {
         printf(" ");
     }
     char buf[128];
-    switch(TM_TYPE(o)) {
+    switch(MP_TYPE(o)) {
         case TYPE_NUM: 
             number_format(buf, o);
             printf("%s\n", buf);
@@ -114,13 +114,13 @@ void mp_inspect_obj0(Object o, int padding) {
             printf("<list len=%d %p>\n", LIST_LEN(o), GET_LIST(o));
             break;
         default:
-            printf("<unknown %d>\n", TM_TYPE(o));
+            printf("<unknown %d>\n", MP_TYPE(o));
     }
 }
 
 void mp_inspect_obj(Object o) {
     int i;
-    switch(TM_TYPE(o)) {
+    switch(MP_TYPE(o)) {
         case TYPE_LIST:
             printf("[\n");
             for (i = 0; i < LIST_LEN(o); i++) {
@@ -373,7 +373,7 @@ Object bf_exit() {
 
 Object bf_gettype() {
     Object obj = arg_take_obj("gettype");
-    switch(TM_TYPE(obj)) {
+    switch(MP_TYPE(obj)) {
         case TYPE_STR: return string_from_sz("string");
         case TYPE_NUM: return string_from_sz("number");
         case TYPE_LIST: return string_from_sz("list");
@@ -397,7 +397,7 @@ Object bf_istype() {
     Object obj = arg_take_obj("istype");
     char* type = arg_take_sz("istype");
     int is_type = 0;
-    switch(TM_TYPE(obj)) {
+    switch(MP_TYPE(obj)) {
         case TYPE_STR: is_type = strcmp(type, "string") == 0 ; break;
         case TYPE_NUM: is_type = strcmp(type, "number") == 0 ; break;
         case TYPE_LIST: is_type = strcmp(type, "list") == 0; break;
@@ -417,7 +417,7 @@ Object bf_chr() {
 
 Object bf_ord() {
     Object c = arg_take_str_obj("ord");
-    TM_ASSERT(GET_STR_LEN(c) == 1, "ord() expected a character");
+    MP_ASSERT(GET_STR_LEN(c) == 1, "ord() expected a character");
     return number_obj((unsigned char) GET_STR(c)[0]);
 }
 

@@ -30,7 +30,7 @@
 /* function micros */
 #define GET_FUNCTION(obj) (obj.value.func)
 #define GET_FUNC(obj) ((obj).value.func)
-#define IS_FUNCTION(o) TM_TYPE(o)==TYPE_FUNCTION
+#define IS_FUNCTION(o) MP_TYPE(o)==TYPE_FUNCTION
 #define GET_FUNCTIONTION_MODULE_PTR(fnc) GET_MODULE(GET_FUNCTION(fnc)->mod)
 #define GET_FUNC_CONSTANTS(fnc) GET_FUNCTIONTION_MODULE_PTR(fnc)->constants
 #define GET_FUNC_MOD_NAME(fnc) GET_FUNCTIONTION_MODULE_PTR(fnc)->file
@@ -57,27 +57,27 @@
 #define GET_NUM(obj) (obj).value.dv
 
 
-#define IS_NONE(obj)   TM_TYPE(obj) == TYPE_NONE
-#define IS_LIST(obj)   TM_TYPE(obj) == TYPE_LIST
-#define IS_FUNC(obj)   TM_TYPE(obj) == TYPE_FUNCTION
-#define IS_CLASS(obj)  TM_TYPE(obj) == TYPE_CLASS
-#define IS_DICT(o)     TM_TYPE(o)==TYPE_DICT
-#define IS_STR(obj)    TM_TYPE(obj) == TYPE_STR
-#define IS_NUM(obj)    TM_TYPE(obj) == TYPE_NUM
-#define IS_DATA(obj)   TM_TYPE(obj) == TYPE_DATA
+#define IS_NONE(obj)   MP_TYPE(obj) == TYPE_NONE
+#define IS_LIST(obj)   MP_TYPE(obj) == TYPE_LIST
+#define IS_FUNC(obj)   MP_TYPE(obj) == TYPE_FUNCTION
+#define IS_CLASS(obj)  MP_TYPE(obj) == TYPE_CLASS
+#define IS_DICT(o)     MP_TYPE(o)==TYPE_DICT
+#define IS_STR(obj)    MP_TYPE(obj) == TYPE_STR
+#define IS_NUM(obj)    MP_TYPE(obj) == TYPE_NUM
+#define IS_DATA(obj)   MP_TYPE(obj) == TYPE_DATA
 #define IS_NATIVE(obj) GET_FUNCTION(obj)->native != NULL
 
-#define NOT_NONE(obj) TM_TYPE(obj) != TYPE_NONE
-#define NOT_LIST(obj) TM_TYPE(obj) != TYPE_LIST
-#define NOT_DICT(obj) TM_TYPE(obj) != TYPE_DICT
-#define NOT_FUNC(obj) TM_TYPE(obj) != TYPE_FUNCTION
-#define NOT_STR(obj)  TM_TYPE(obj) != TYPE_STR
+#define NOT_NONE(obj) MP_TYPE(obj) != TYPE_NONE
+#define NOT_LIST(obj) MP_TYPE(obj) != TYPE_LIST
+#define NOT_DICT(obj) MP_TYPE(obj) != TYPE_DICT
+#define NOT_FUNC(obj) MP_TYPE(obj) != TYPE_FUNCTION
+#define NOT_STR(obj)  MP_TYPE(obj) != TYPE_STR
 #define NOT_NATIVE(obj) GET_FUNCTION(obj)->native == NULL
 
 
 
 #define ASSERT_TYPE_WITH_INFO(obj, type, info) \
-    if(TM_TYPE(obj)!=type){                    \
+    if(MP_TYPE(obj)!=type){                    \
         mp_raise(info, obj);                    \
     }
 
@@ -89,7 +89,7 @@
 #define GET_FUNCTION_GLOBALS(fnc) GET_MODULE(GET_FUNCTION(fnc)->mod)->globals
 
 /* assert macro */
-#define TM_ASSERT(cond, msg) if(!(cond)) {mp_raise( msg );}
+#define MP_ASSERT(cond, msg) if(!(cond)) {mp_raise( msg );}
 
 /* gcc process ++ from right to left */
 #define READ_BYTE(s) *s++

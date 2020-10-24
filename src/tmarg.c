@@ -127,7 +127,7 @@ MpList* arg_take_list_ptr(const char* fnc) {
 
 int arg_take_int(const char* fnc) {
     Object v = get_arg_from_vm0(fnc);
-    if (TM_TYPE(v) != TYPE_NUM) {
+    if (MP_TYPE(v) != TYPE_NUM) {
         mp_raise("%s: expect number but see %s", fnc, mp_type(v.type));
     }
     return (int) GET_NUM(v);
@@ -135,7 +135,7 @@ int arg_take_int(const char* fnc) {
 
 double arg_take_double(const char* fnc) {
     Object v = get_arg_from_vm0(fnc);
-    if (TM_TYPE(v) != TYPE_NUM) {
+    if (MP_TYPE(v) != TYPE_NUM) {
         mp_raise("%s: expect number but see %s", fnc, mp_type(v.type));
     }
     return GET_NUM(v);
@@ -147,7 +147,7 @@ Object arg_take_obj(const char* fnc) {
 
 Object arg_take_data_obj(const char* fnc) {
     Object v = get_arg_from_vm0(fnc);
-    if (TM_TYPE(v) != TYPE_DATA) {
+    if (MP_TYPE(v) != TYPE_DATA) {
         mp_raise("%s: expect data but see %s", fnc, mp_type(v.type));
     }
     return v;

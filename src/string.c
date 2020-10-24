@@ -45,7 +45,7 @@ Object string_char_new(int c) {
     str->len = 1;
     str->value[0] = c;
     str->value[1] = '\0';
-    TM_TYPE(obj) = TYPE_STR;
+    MP_TYPE(obj) = TYPE_STR;
     GET_STR_OBJ(obj) = str;
     return gc_track(obj);
 }

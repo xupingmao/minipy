@@ -19,7 +19,7 @@
 #define TYPE_DATA 10
 #define TYPE_CLASS 11
 
-#define TM_TYPE(o) (o).type
+#define MP_TYPE(o) (o).type
 #define MAX_FILE_SIZE 1024 * 1024 * 5 /* max file size loaded into memery */
 #include <stdint.h>
 

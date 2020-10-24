@@ -42,14 +42,14 @@ const char* mp_type(int type) {
 }
 
 void mp_assert_type(Object o, int type, char* msg) {
-    if (TM_TYPE(o) != type) {
+    if (MP_TYPE(o) != type) {
         mp_raise("%s, expect %s but see %s", msg, 
             mp_type(type), mp_type(o.type));
     }
 }
 
 void mp_assert_type2(Object o, int type1, int type2, char* msg) {
-    if (TM_TYPE(o) != type1 && TM_TYPE(o) != type2) {
+    if (MP_TYPE(o) != type1 && MP_TYPE(o) != type2) {
         mp_raise("%s, expect %s or %s but see %s", msg, 
             mp_type(type1), mp_type(type2), mp_type(o.type));
     }
@@ -63,14 +63,14 @@ void mp_assert_int(double value, char* msg) {
 }
 
 int obj_eq_sz(Object obj, const char* value) {
-    return TM_TYPE(obj) == TYPE_STR
+    return MP_TYPE(obj) == TYPE_STR
             && (GET_STR(obj) == value || strcmp(GET_STR(obj), value) == 0);
 }
 
 void obj_set(Object self, Object k, Object v) {
     // gc_mark_single(k); // used between gc scan
     // gc_mark_single(v); // only need to mark single.
-    switch (TM_TYPE(self)) {
+    switch (MP_TYPE(self)) {
         case TYPE_LIST: {
             mp_assert_type(k, TYPE_NUM, "obj_set");
             double d = GET_NUM(k);
@@ -92,10 +92,10 @@ void obj_set(Object self, Object k, Object v) {
 
 Object obj_get(Object self, Object k) {
     Object v;
-    switch (TM_TYPE(self)) {
+    switch (MP_TYPE(self)) {
         case TYPE_STR: {
             DictNode* node;
-            if (TM_TYPE(k) == TYPE_NUM) {
+            if (MP_TYPE(k) == TYPE_NUM) {
                 double d = GET_NUM(k);
                 int n = d;
                 if (n < 0) {
@@ -114,7 +114,7 @@ Object obj_get(Object self, Object k) {
         }
         case TYPE_LIST:{
             DictNode* node;
-            if (TM_TYPE(k) == TYPE_NUM) {
+            if (MP_TYPE(k) == TYPE_NUM) {
                 return list_get(GET_LIST(self), GET_NUM(k));
             }
             // list method
@@ -220,8 +220,8 @@ Object obj_sub(Object a, Object b) {
 }
 
 Object obj_add(Object a, Object b) {
-    if (TM_TYPE(a) == TM_TYPE(b)) {
-        switch (TM_TYPE(a)) {
+    if (MP_TYPE(a) == MP_TYPE(b)) {
+        switch (MP_TYPE(a)) {
             case TYPE_NUM:
                 GET_NUM(a) += GET_NUM(b);
                 return a;
@@ -249,8 +249,8 @@ Object obj_add(Object a, Object b) {
 }
 
 int obj_equals(Object a, Object b){
-    if(TM_TYPE(a) != TM_TYPE(b)) return 0;
-    switch(TM_TYPE(a)){
+    if(MP_TYPE(a) != MP_TYPE(b)) return 0;
+    switch(MP_TYPE(a)){
         case TYPE_NUM:return GET_NUM(a) == GET_NUM(b);
         case TYPE_STR: {
             String* s1 = GET_STR_OBJ(a);
@@ -279,7 +279,7 @@ int obj_equals(Object a, Object b){
         default: {
             const char* ltype = mp_type(a.type);
             const char* rtype = mp_type(b.type);
-            mp_raise("obj_equals: not supported type %d:%s and %d:%s", TM_TYPE(a), ltype, TM_TYPE(b), rtype);
+            mp_raise("obj_equals: not supported type %d:%s and %d:%s", MP_TYPE(a), ltype, MP_TYPE(b), rtype);
         } 
     }
     return 0;
@@ -290,8 +290,8 @@ Object obj_cmp(Object a, Object b) {
 }
 
 int mp_cmp(Object a, Object b) {
-    if (TM_TYPE(a) == TM_TYPE(b)) {
-        switch (TM_TYPE(a)) {
+    if (MP_TYPE(a) == MP_TYPE(b)) {
+        switch (MP_TYPE(a)) {
             case TYPE_NUM: {
                 double diff = GET_NUM(a) - GET_NUM(b);
                 if (diff > 0.0) {
@@ -370,8 +370,8 @@ Object obj_div(Object a, Object b) {
 }
 
 Object string_mod_list(Object str, Object list) {
-    assert(TM_TYPE(str)  == TYPE_STR);
-    assert(TM_TYPE(list) == TYPE_LIST);
+    assert(MP_TYPE(str)  == TYPE_STR);
+    assert(MP_TYPE(list) == TYPE_LIST);
 
     char* fmt = GET_SZ(str);
     int str_length = GET_STR_LEN(str);
@@ -410,10 +410,10 @@ Object string_mod_list(Object str, Object list) {
 }
 
 Object string_ops_mod(Object a, Object b) {
-    assert(TM_TYPE(a) == TYPE_STR);
+    assert(MP_TYPE(a) == TYPE_STR);
     char* fmt = GET_SZ(a);
 
-    if (TM_TYPE(b) == TYPE_LIST) {
+    if (MP_TYPE(b) == TYPE_LIST) {
         return string_mod_list(a, b);
     } else {
         Object list = list_new(1);
@@ -446,12 +446,12 @@ Object obj_mod(Object a, Object b) {
  * child in parent
  */
 int mp_in(Object child, Object parent) {
-    switch (TM_TYPE(parent)) {
+    switch (MP_TYPE(parent)) {
         case TYPE_LIST: {
             return (list_index(GET_LIST(parent), child) != -1);
         }
         case TYPE_STR: {
-            if (TM_TYPE(child) != TYPE_STR)
+            if (MP_TYPE(child) != TYPE_STR)
                 return 0;
             return string_index(GET_STR_OBJ(parent), GET_STR_OBJ(child), 0) != -1;
         }
@@ -466,7 +466,7 @@ int mp_in(Object child, Object parent) {
         case TYPE_NUM:  return 0;
         case TYPE_FUNCTION: return 0;
         /* TODO DATA */ 
-        default: mp_raise("obj_in: cant handle type (%s)", mp_type(TM_TYPE(parent)));
+        default: mp_raise("obj_in: cant handle type (%s)", mp_type(MP_TYPE(parent)));
     }
     return 0;
 }
@@ -480,7 +480,7 @@ Object obj_in(Object left, Object right) {
 }
 
 int is_true_obj(Object v) {
-    switch (TM_TYPE(v)) {
+    switch (MP_TYPE(v)) {
     case TYPE_NUM:
         return GET_NUM(v) != 0;
     case TYPE_NONE:
@@ -509,7 +509,7 @@ Object obj_neg(Object o) {
 
 
 Object iter_new(Object collections) {
-    switch(TM_TYPE(collections)) {
+    switch(MP_TYPE(collections)) {
         case TYPE_LIST: return list_iter_new(collections);
         case TYPE_DICT: return dict_iter_new(collections);
         case TYPE_CLASS: return iter_new(GET_CLASS(collections)->attr_dict);
@@ -525,7 +525,7 @@ Object* next_ptr(Object iterator) {
 }
 
 void obj_del(Object self, Object k) {
-    switch(TM_TYPE(self)) {
+    switch(MP_TYPE(self)) {
         case TYPE_DICT:{
             dict_del(GET_DICT(self), k);
             break;
@@ -562,7 +562,7 @@ Object mp_get_global(Object globals, char *key) {
 
 int mp_len(Object o) {
     int len = -1;
-    switch (TM_TYPE(o)) {
+    switch (MP_TYPE(o)) {
     case TYPE_STR:
         len = GET_STR_LEN(o);
         break;
@@ -583,7 +583,7 @@ int mp_len(Object o) {
 Object mp_str(Object a) {
     char buf[100];
     memset(buf, 0, sizeof(buf));
-    switch (TM_TYPE(a)) {
+    switch (MP_TYPE(a)) {
     case TYPE_STR:
         return a;
     case TYPE_NUM: {

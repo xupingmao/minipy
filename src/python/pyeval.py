@@ -198,7 +198,7 @@ def pyeval(src, glo_vars = None, debug = False):
         elif op == OP_UNPACK:
             collection = stack.pop()
             if len(collection) != v:
-                raise("TM_UNARRAY expect length %s but see %s".format(v, len(collection)))
+                raise("MP_UNARRAY expect length %s but see %s".format(v, len(collection)))
             collection.reverse()
             for x in collection:
                 stack.append(x)

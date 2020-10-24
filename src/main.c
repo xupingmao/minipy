@@ -26,7 +26,7 @@ int main(int argc, char *argv[])
         load_boot_module("mp_encode",   mp_encode_bin);
         load_boot_module("pyeval",      pyeval_bin);
         load_boot_module("repl",        repl_bin);
-        dict_set_by_str(tm->builtins, "TM_USE_CACHE", number_obj(1));
+        dict_set_by_str(tm->builtins, "MP_USE_CACHE", number_obj(1));
  
         if (mp_hasattr(tm->modules, "mp_init")) {
             call_mod_func("mp_init", "boot");
