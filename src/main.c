@@ -26,15 +26,15 @@ int main(int argc, char *argv[])
         load_boot_module("mp_encode",   mp_encode_bin);
         load_boot_module("pyeval",      pyeval_bin);
         load_boot_module("repl",        repl_bin);
-        dict_set_by_str(tm->builtins, "TM_USE_CACHE", tm_number(1));
+        dict_set_by_str(tm->builtins, "TM_USE_CACHE", number_obj(1));
  
-        if (tm_hasattr(tm->modules, "mp_init")) {
+        if (mp_hasattr(tm->modules, "mp_init")) {
             call_mod_func("mp_init", "boot");
-        } else if (tm_hasattr(tm->modules, "main")) {
+        } else if (mp_hasattr(tm->modules, "main")) {
             // adjust sys.argv
             call_mod_func("main", "_main");
         } else {
-            tm_raise("no entry found");
+            mp_raise("no entry found");
         }
     } else if (code == 1){
         /* handle exceptions */

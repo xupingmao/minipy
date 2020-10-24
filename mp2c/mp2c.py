@@ -2,19 +2,19 @@ import sys
 import os
 from mp_parse import *
 
-tm_obj               = "Object "
-tm_const             = "Object const_"
-tm_pusharg           = "tm_pusharg("
-tm_call              = "tm_call("
-tm_num               = "tm_number("
-tm_str               = "string_static"
-tm_get_glo           = "tm_get_global"
-tm_define            = "def_func"
+mp_obj               = "Object "
+mp_const             = "Object const_"
+mp_pusharg           = "mp_pusharg("
+mp_call              = "mp_call("
+mp_num               = "number_obj("
+mp_str               = "string_static"
+mp_get_glo           = "mp_get_global"
+mp_define            = "def_func"
 def_native_method    = "def_native_method"
-tm_call_native       = "tm_call_native"
-tm_call_native_0     = "tm_call_native_0"
-tm_call_native_1     = "tm_call_native_1"
-tm_call_native_2     = "tm_call_native_2"
+mp_call_native       = "mp_call_native"
+mp_call_native_0     = "mp_call_native_0"
+mp_call_native_1     = "mp_call_native_1"
+mp_call_native_2     = "mp_call_native_2"
 arg_insert           = "arg_insert"
 func_bool            = "is_true_obj"
 func_add             = "obj_add"
@@ -35,7 +35,7 @@ func_list            = "argv_to_list"
 func_method          = "def_method"
 gc_track_local       = "gc_track_local"
 gc_pop_locals        = "gc_pop_locals"
-tm_None              = "NONE_OBJECT"
+mp_None              = "NONE_OBJECT"
 FUNC_GET_NUM         = "GET_NUM"
 
 op_bool = [">", ">=", "<", "<+", "==", "!=", "and", "or", "in", "not", "notin"]
@@ -58,7 +58,7 @@ BUILTIN_FUNC_MAPPING = {
     "ord":       "bf_ord",
     "load":      "bf_load",
     "save":      "bf_save",
-    "get_tm_local_list": "bf_get_tm_local_list",
+    "get_mp_local_list": "bf_get_mp_local_list",
 }
 
 def escape(text):
@@ -81,13 +81,13 @@ def get_string_def(value):
 
 def build_native_call(func, *args):
     if len(args) == 0:
-        return "{}({});".format(tm_call_native_0, func)
+        return "{}({});".format(mp_call_native_0, func)
     elif len(args) == 1:
-        return "{}({},{});".format(tm_call_native_1, func, ",".join(args))
+        return "{}({},{});".format(mp_call_native_1, func, ",".join(args))
     elif len(args) == 2:
-        return "{}({},{});".format(tm_call_native_2, func, ",".join(args))
+        return "{}({},{});".format(mp_call_native_2, func, ",".join(args))
     else:
-        return "{}({},{},{});".format(tm_call_native, func, len(args), ",".join(args))
+        return "{}({},{},{});".format(mp_call_native, func, len(args), ",".join(args))
         
 
 def is_string_token(token):
@@ -296,9 +296,9 @@ def gen_constants_init(env):
     for const in env.consts:
         h = env.get_const(const) + "="
         if gettype(const) == "number":
-            body = "tm_number(" + str(const) + ");"
+            body = "number_obj(" + str(const) + ");"
         elif gettype(const) == "string":
-            body = "{}({});".format(tm_str, get_string_def(str(const)))
+            body = "{}({});".format(mp_str, get_string_def(str(const)))
         define_lines.append(h+body)
     return define_lines
 
@@ -323,13 +323,13 @@ class Generator:
         head += '#include "../src/vm.c"\n'
         head += '#include "../mp2c/mp2c.c"\n'
         head += "#define S string_new\n"
-        head += "#define N tm_number\n"
+        head += "#define N number_obj\n"
         return head
 
     def process(self, lines):
         env = self.env
         define_lines = gen_constants_init(env)
-        define_lines.append("tm_def_mod(\"{}\", {});".format(env.get_mod_name(), env.get_globals()))
+        define_lines.append("mp_def_mod(\"{}\", {});".format(env.get_mod_name(), env.get_globals()))
             
         lines = define_lines + lines
         head  = self.gen_clang_head()
@@ -360,7 +360,7 @@ class Generator:
 
         if not self.is_module:
             # main entry
-            code += sformat("\nint main(int argc, char* argv[]) {\n  tm_run_func(argc, argv, \"%s\", %s0);\n}\n", env.get_mod_name(), env.prefix)
+            code += sformat("\nint main(int argc, char* argv[]) {\n  mp_run_func(argc, argv, \"%s\", %s0);\n}\n", env.get_mod_name(), env.prefix)
         self.code = code
 
     def get_code(self):
@@ -411,7 +411,7 @@ def do_name(item, env):
     if env.has_var(item.val):
         return env.get_var_name(item.val)
     # item = Token("string", item.val)
-    # return "{}({},{})".format(tm_get_glo, env.get_globals(), do_const(item, env))
+    # return "{}({},{})".format(mp_get_glo, env.get_globals(), do_const(item, env))
     # return do_get(item, env)
 
     # get gloabl variable
@@ -571,16 +571,16 @@ def do_call(item, env):
         if name:
             if env.debug:
                 py_func_name = item.first.val
-                fmt = "tm_call_native_debug({}, " + get_string_def(py_func_name) + ",{} {})"
-                # fmt = "tm_call_native_debug({}, {}, {} {})"
+                fmt = "mp_call_native_debug({}, " + get_string_def(py_func_name) + ",{} {})"
+                # fmt = "mp_call_native_debug({}, {}, {} {})"
             else:
-                fmt = "tm_call_native({}, {} {})"
+                fmt = "mp_call_native({}, {} {})"
         else:
             name = do_item(item.first, env)
-            fmt  = "tm_call({},{} {})"
+            fmt  = "mp_call({},{} {})"
     else:
         name = do_item(item.first, env)
-        fmt = "tm_call({}, {} {})"
+        fmt = "mp_call({}, {} {})"
     if item.second == None:
         n = 0
     elif istype(item.second, "list"):
@@ -588,9 +588,9 @@ def do_call(item, env):
     else:
         n = 1
     args = do_args(item.second, env)
-    # tm_call(lineno, func, nargs, args)
+    # mp_call(lineno, func, nargs, args)
     return fmt.format(name, n, args)
-    # return tm_call + name + "," + + "," + str(n) + args + ")"
+    # return mp_call + name + "," + + "," + str(n) + args + ")"
 
 def format_indent(indent):
     return " " * indent
@@ -609,7 +609,7 @@ def do_getargs(list, env, indent):
             node = AstNode("=", item.first, item.second)
             code = do_assign(node, env)
             r.append(code)
-        line = do_assign(item, env, "tm_take_arg()")
+        line = do_assign(item, env, "mp_take_arg()")
         r.append("  " + line)
     return r
     
@@ -627,7 +627,7 @@ def do_def(item, env, obj=None):
     vars = ["  // Function: " + name]
     for var in locs:
         vars.append("  Object " + env.get_var_name(var) + ";")
-    vars.append("  Object ret = {};".format(tm_None))
+    vars.append("  Object ret = {};".format(mp_None))
 
     # gc handle
     if env.enable_gc:
@@ -645,7 +645,7 @@ def do_def(item, env, obj=None):
     env.exit_scope(func_define)
 
     return sformat("%s(%s,%s,%s);", 
-        tm_define, env.get_globals(), env.get_const(name), cname)
+        mp_define, env.get_globals(), env.get_const(name), cname)
     
 def do_return(item, env):
     indent = env.indent
@@ -693,7 +693,7 @@ def do_class(item, env):
     # text = class_define + "\n"
     # for line in lines:
     #     text += line + "\n"
-    return "{}({},{},{});".format(tm_define, env.get_globals(), env.get_const(clz_name_str), env.get_c_func_def(clz_name_str))
+    return "{}({},{},{});".format(mp_define, env.get_globals(), env.get_const(clz_name_str), env.get_c_func_def(clz_name_str))
     
 
 def do_try(item, env):
@@ -830,14 +830,14 @@ def do_inplace_mod(item, env):
 
 def do_import(item, env):
     mod = do_const(item.first, env)
-    return "tm_import({}, {});".format(env.get_globals(), mod)
+    return "mp_import({}, {});".format(env.get_globals(), mod)
 
 def do_from(item, env):
     mod = do_const(item.first, env)
     # modname = item.first.val
     # env.add_include(modname)
     # return build_native_call(modname+"_Iinit")
-    return "tm_import_all({}, {});".format(env.get_globals(), mod)    
+    return "mp_import_all({}, {});".format(env.get_globals(), mod)    
 
 def do_global(item, env):
     g_name = item.first.val

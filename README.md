@@ -29,10 +29,10 @@ make && make test
 
 位于 `/src/python`
 
-1. `tmcode.py` 字节码定义
-2. `lex.py` 词法分析器
-3. `parse.py` 手写递归解析器
-4. `encode.py` 代码生成器，运行 `python encode.py {script.py}` 可以打印出字节码(未处理过的)
+1. `mp_opcode.py` 字节码定义
+2. `mp_tokenize.py` 词法分析器
+3. `mp_parse.py` 手写递归解析器
+4. `mp_encode.py` 代码生成器，运行 `python mp_encode.py {script.py}` 可以打印出字节码(未处理过的)
 
 ### 特性
 - [x] 基于栈的计算机模型，字节码定义在 `src/python/tmcode.py`
@@ -52,18 +52,18 @@ make && make test
 
 
 ### 代码结构
-1. `vm.c` 虚拟机入口
-2. `interp.c` 解释器
-3. `builtins.c` 一些常用的内置方法
-4. `ops.c` 操作符实现
-5. `tmarg.c` 函数调用参数API
-6. `exception.c` 异常处理
-7. `gc.c` 垃圾回收器
-8. `string.c`
-9. `number.c`
-10. `list.c`
-11. `dict.c`
-12. `function.c`
+01. `vm.c` 虚拟机入口
+02. `execute.c` 解释器
+03. `builtins.c` 一些常用的内置方法
+04. `ops.c` 操作符实现
+05. `tmarg.c` 函数调用参数API
+06. `exception.c` 异常处理
+07. `gc.c` 垃圾回收器
+08. `string.c` 字符串处理
+09. `number.c` 数字处理
+10. `list.c`   列表处理
+11. `dict.c`   字典处理
+12. `function.c` 函数/方法处理
 
 ### 类型系统
 1. string, 是不可变对象
@@ -71,8 +71,9 @@ make && make test
 3. list, 列表
 4. dict, dict对象目前不是使用hashtable实现的，
 5. function, 包括native的C函数和自定义的Python函数
-6. None
-7. data, data类型可以使用C语言自由扩展
+6. class, 类
+7. None
+8. data, data类型可以使用C语言自由扩展
 
 ### 协议
 

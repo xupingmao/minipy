@@ -21,16 +21,16 @@ Object bf_time_time() {
         // stime.wMilliseconds
         
         // just return seconds
-        return tm_number(time(NULL));
+        return number_obj(time(NULL));
     #else
         struct timeval tv;
         gettimeofday(&tv, NULL);
-        return tm_number((double)tv.tv_usec / 1000000.f);
+        return number_obj((double)tv.tv_usec / 1000000.f);
     #endif
 }
 
 Object bf_time_clock() {
-    return tm_number((double)clock()/CLOCKS_PER_SEC);
+    return number_obj((double)clock()/CLOCKS_PER_SEC);
 }
 
 

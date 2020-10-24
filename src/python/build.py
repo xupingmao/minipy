@@ -182,7 +182,7 @@ def build_mini_c(pyfilename):
 int main(int argc, char *argv[])
 {
     /* start vm with bin */
-    return tm_run(argc, argv, bin);
+    return mp_run(argc, argv, bin);
 }
     '''
     return text

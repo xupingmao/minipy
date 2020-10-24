@@ -38,10 +38,10 @@ int uncode32(unsigned char** src) {
  * @since 2015
  */
 Object string_char_new(int c) {
-    String* str = tm_malloc(sizeof(String));
+    String* str = mp_malloc(sizeof(String));
     struct Object obj;
     str->stype = 2; // marked as char type;
-    str->value = tm_malloc(2);
+    str->value = mp_malloc(2);
     str->len = 1;
     str->value[0] = c;
     str->value[1] = '\0';
@@ -55,12 +55,12 @@ Object string_char_new(int c) {
  * use constant char if size <= 0
  */
 Object string_alloc(char *s, int size) {
-    String* str = tm_malloc(sizeof(String));
+    String* str = mp_malloc(sizeof(String));
     Object v;
     if (size > 0) {
         /* copy string data to new memory */
         str->stype = 1;
-        str->value = tm_malloc(size + 1);
+        str->value = mp_malloc(size + 1);
         str->len = size;
         if (s != NULL) {
             memcpy(str->value, s, size);
@@ -119,9 +119,9 @@ Object string_chr(int n) {
 
 void string_free(String *str) {
     if (str->stype) {
-        tm_free(str->value, str->len + 1);
+        mp_free(str->value, str->len + 1);
     }
-    tm_free(str, sizeof(String));
+    mp_free(str, sizeof(String));
 }
 
 int string_index(String* s1, String* s2, int start) {
@@ -169,10 +169,10 @@ Object string_append_char(Object string, char c) {
     // return obj_add(string, string_chr(c));
     String* str = GET_STR_OBJ(string);
     if (str->stype) {
-        str->value = tm_realloc(str->value, str->len+1, str->len+2);
+        str->value = mp_realloc(str->value, str->len+1, str->len+2);
     } else {
         // static string, must malloc a new memory
-        str->value = tm_malloc(str->len+2);
+        str->value = mp_malloc(str->len+2);
     }
     str->value[str->len] = c;
     str->value[str->len+1] = '\0';
@@ -189,10 +189,10 @@ Object string_append_sz(Object string, char* sz) {
     String* str = GET_STR_OBJ(string);
     int sz_len = strlen(sz);
     if (str->stype) {
-        str->value = tm_realloc(str->value, str->len+1, str->len+1+sz_len);
+        str->value = mp_realloc(str->value, str->len+1, str->len+1+sz_len);
     } else {
         char* old_value = str->value;
-        str->value = tm_malloc(str->len + sz_len+1);
+        str->value = mp_malloc(str->len + sz_len+1);
         strcpy(str->value, old_value);
     }
     strcpy(str->value+str->len, sz);
@@ -202,7 +202,7 @@ Object string_append_sz(Object string, char* sz) {
 }
 
 Object string_append_obj(Object string, Object obj) {
-    Object obj_str = tm_str(obj);
+    Object obj_str = mp_str(obj);
     char* sz = GET_STR(obj_str);
     return string_append_sz(string, sz);
 }
@@ -240,13 +240,13 @@ Object string_builtin_find() {
     static const char* sz_func = "find";
     Object self = arg_take_str_obj(sz_func);
     Object str = arg_take_str_obj(sz_func);
-    return tm_number(string_index(self.value.str, str.value.str, 0));
+    return number_obj(string_index(self.value.str, str.value.str, 0));
 }
 
 Object string_builtin_rfind() {
     Object self = arg_take_str_obj("rfind");
     Object  str = arg_take_str_obj("rfind");
-    return tm_number(string_rfind(self.value.str, str.value.str));
+    return number_obj(string_rfind(self.value.str, str.value.str));
 }
 
 Object string_builtin_substring() {
@@ -338,7 +338,7 @@ Object string_builtin_split() {
 Object string_builtin_startswith() {
     Object self = arg_take_str_obj("str.startswith");
     Object arg0 = arg_take_str_obj("str.startswith");
-    return tm_number(string_index(GET_STR_OBJ(self), GET_STR_OBJ(arg0), 0) == 0);
+    return number_obj(string_index(GET_STR_OBJ(self), GET_STR_OBJ(arg0), 0) == 0);
 }
 
 Object string_builtin_endswith() {
@@ -347,9 +347,9 @@ Object string_builtin_endswith() {
     Object arg0 = arg_take_str_obj(func_name);
     int idx = string_index(GET_STR_OBJ(self), GET_STR_OBJ(arg0), 0);
     if (idx < 0) {
-        return tm_number(0);
+        return number_obj(0);
     }
-    return tm_number(idx + tm_len(arg0) == tm_len(self));
+    return number_obj(idx + mp_len(arg0) == mp_len(self));
 }
 
 Object string_builtin_format() {
@@ -398,7 +398,7 @@ void string_methods_init() {
     reg_mod_func(tm->str_proto, "format",     string_builtin_format);
 }
 
-Object* string_next(TmData* iterator) {
+Object* string_next(MpData* iterator) {
     if (iterator->cur >= iterator->end) {
         return NULL;
     }
@@ -411,7 +411,7 @@ Object* string_next(TmData* iterator) {
 
 Object string_iter_new(Object str) {
     Object data = data_new(1);
-    TmData* iterator = GET_DATA(data);
+    MpData* iterator = GET_DATA(data);
     iterator->cur  = 0;
     iterator->end  = GET_STR_LEN(str);
     iterator->next = string_next;

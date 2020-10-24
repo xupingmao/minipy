@@ -2,7 +2,7 @@
  * description here
  * @author xupingmao
  * @since 2016
- * @modified 2020/10/21 01:13:41
+ * @modified 2020/10/23 00:49:20
  */
 #include "include/mp.h"
 
@@ -10,7 +10,7 @@
  * check function's byte code
  * @return the ending pointer of the func
  */
-unsigned char* func_resolve(TmFunction* fnc, unsigned char* pc) {
+unsigned char* func_resolve(MpFunction* fnc, unsigned char* pc) {
     int maxlocals = -1;
     int maxstack = 0;
     int defs = 0;
@@ -50,11 +50,11 @@ unsigned char* func_resolve(TmFunction* fnc, unsigned char* pc) {
  * @return the ending pointer of the func
  * @since 2016-11-27
  */
-TmCodeCache* func_resolve_cache(TmFunction* fnc, TmCodeCache* cache) {
+MpCodeCache* func_resolve_cache(MpFunction* fnc, MpCodeCache* cache) {
     int maxlocals = -1;
     int maxstack = 0;
     int defs = 0;
-    TmCodeCache* cache_head = cache;
+    MpCodeCache* cache_head = cache;
     
     if (fnc->resolved) {
         return fnc->cache_end;
@@ -74,7 +74,7 @@ TmCodeCache* func_resolve_cache(TmFunction* fnc, TmCodeCache* cache) {
         } else if (op == OP_DEF) {
             defs++;
         } else if (op == 0) {
-            tm_raise("func_resolve_cache: op=%s", op);
+            mp_raise("func_resolve_cache: op=%s", op);
         }
         cache++;
     }
@@ -89,12 +89,11 @@ TmCodeCache* func_resolve_cache(TmFunction* fnc, TmCodeCache* cache) {
 Object func_new(Object mod,
         Object self,
         Object (*native_func)()){
-  tm_assert_type2(mod, TYPE_MODULE, TYPE_NONE, "func_new");
+  mp_assert_type2(mod, TYPE_MODULE, TYPE_NONE, "func_new");
 
-  TmFunction* f= tm_malloc(sizeof(TmFunction));
+  MpFunction* f= mp_malloc(sizeof(MpFunction));
   f->resolved = 0;
   f->mod = mod;
-  // f->code = code;
   f->code = NULL;
   f->native = native_func;
   f->maxlocals = 0;
@@ -103,9 +102,12 @@ Object func_new(Object mod,
   return gc_track(obj_new(TYPE_FUNCTION, f));
 }
 
+/**
+ * create new method from function
+ */
 Object method_new(Object _fnc, Object self){
-  tm_assert_type(_fnc, TYPE_FUNCTION, "method_new");
-  TmFunction* fnc = GET_FUNCTION(_fnc);
+  mp_assert_type(_fnc, TYPE_FUNCTION, "method_new");
+  MpFunction* fnc = GET_FUNCTION(_fnc);
   Object nfnc = func_new(fnc->mod, self, fnc->native);
   GET_FUNCTION(nfnc)->name = GET_FUNCTION(_fnc)->name;
   GET_FUNCTION(nfnc)->maxlocals = GET_FUNCTION(_fnc)->maxlocals;
@@ -116,7 +118,7 @@ Object method_new(Object _fnc, Object self){
 
 Object class_new(Object name) {
   // TODO add class type
-  MpClass* clazz = tm_malloc(sizeof(MpClass));
+  MpClass* clazz = mp_malloc(sizeof(MpClass));
   clazz->name = name;
   clazz->attr_dict = dict_new();
   return gc_track(obj_new(TYPE_CLASS, clazz));
@@ -125,7 +127,7 @@ Object class_new(Object name) {
 
 Object class_instance(Object clazz){
   MpClass *pclass = GET_CLASS(clazz);
-  TmDict* cl = GET_DICT(pclass->attr_dict);
+  MpDict* cl = GET_DICT(pclass->attr_dict);
   Object k,v;
   Object instance = dict_new();
   DictNode* nodes = cl->nodes;
@@ -142,19 +144,19 @@ Object class_instance(Object clazz){
 }
 
 void class_free(MpClass* pclass) {
-  tm_free(pclass, sizeof(MpClass));
+  mp_free(pclass, sizeof(MpClass));
 }
 
 void class_format(char* dest, Object class_obj) {
-  tm_assert_type(class_obj, TYPE_CLASS, "class_format");
+  mp_assert_type(class_obj, TYPE_CLASS, "class_format");
   MpClass* clazz = GET_CLASS(class_obj);
   sprintf(dest, "<class %s@%p>", GET_SZ(clazz->name), clazz);
 }
 
 
-void func_free(TmFunction* func){
+void func_free(MpFunction* func){
   // the references will be tracked by gc collecter
-  tm_free(func, sizeof(TmFunction));
+  mp_free(func, sizeof(MpFunction));
 }
 
 /**
@@ -162,7 +164,7 @@ void func_free(TmFunction* func){
  * @name  __name__
  */
 Object module_new(Object file, Object name, Object code){
-  TmModule *mod = tm_malloc(sizeof(TmModule));
+  MpModule *mod = mp_malloc(sizeof(MpModule));
   mod->file = file;
   mod->code = code;
   mod->resolved = 0;
@@ -172,45 +174,45 @@ Object module_new(Object file, Object name, Object code){
   mod->globals = dict_new();
   Object m = gc_track(obj_new(TYPE_MODULE, mod));
   /* set module */
-  obj_set(tm->modules, file, mod->globals);
-  dict_set_by_str(mod->globals, "__name__", name);
+  obj_set(tm->modules,  file, mod->globals);
+  obj_set(mod->globals, string_static("__name__"), name);
   return m;
 }
 
 /**
  * @since 2016-11-25
  */
-void tm_init_cache(TmModule* m) {
+void mp_init_cache(MpModule* m) {
     if (m->cache != NULL) return;
     m->cache_cap = 100;
     m->cache_len = 0;
-    m->cache = tm_malloc(sizeof(TmCodeCache) * m->cache_cap);
+    m->cache = mp_malloc(sizeof(MpCodeCache) * m->cache_cap);
 }
 
 /**
  * @since 2016-11-25
  */
-void tm_push_cache(TmModule* m, TmCodeCache cache) {
+void mp_push_cache(MpModule* m, MpCodeCache cache) {
     if (m->cache_len>=m->cache_cap) {
-        int oldsize = m->cache_cap * sizeof(TmCodeCache);
+        int oldsize = m->cache_cap * sizeof(MpCodeCache);
         m->cache_cap = m->cache_cap + m->cache_cap / 2 + 1;
-        int newsize = m->cache_cap * sizeof(TmCodeCache);
-        m->cache = tm_realloc(m->cache, oldsize, newsize);
+        int newsize = m->cache_cap * sizeof(MpCodeCache);
+        m->cache = mp_realloc(m->cache, oldsize, newsize);
     }
     // printf("cache: %3d - %s\n", cache.op, cache.sval);
     m->cache[m->cache_len] = cache;
     m->cache_len++;
 }
 
-void module_free(TmModule* mod){
+void module_free(MpModule* mod){
     if (mod->cache != NULL) {
-        tm_free(mod->cache, sizeof(TmCodeCache) * mod->cache_cap);
+        mp_free(mod->cache, sizeof(MpCodeCache) * mod->cache_cap);
     }
-    tm_free(mod, sizeof(TmModule));
+    mp_free(mod, sizeof(MpModule));
 }
 
 
-void func_format(char* des, TmFunction* func){
+void func_format(char* des, MpFunction* func){
     char sz_buf[20];
     char* sz_fnc = GET_STR(func->name);
     strncpy(sz_buf, sz_fnc, 19);
@@ -223,7 +225,7 @@ void func_format(char* des, TmFunction* func){
     }
 }
 
-Object func_get_code_obj(TmFunction* func) {
+Object func_get_code_obj(MpFunction* func) {
     if (func->native != NULL) {
         return NONE_OBJECT;
     }
@@ -237,10 +239,10 @@ Object func_get_code_obj(TmFunction* func) {
 }
 
 
-Object func_get_attr(TmFunction* fnc, Object key) {
+Object func_get_attr(MpFunction* fnc, Object key) {
     if(obj_eq_sz(key, "__name__")) {
         return fnc->name;
-    }else if(obj_eq_sz(key, "__self__")) {
+    } else if(obj_eq_sz(key, "__self__")) {
         return fnc->self;
     } else if (obj_eq_sz(key, "__code__")) {
         return func_get_code_obj(fnc);
@@ -248,17 +250,17 @@ Object func_get_attr(TmFunction* fnc, Object key) {
     return NONE_OBJECT;
 }
 
-unsigned char* func_get_code(TmFunction *fnc){
+unsigned char* func_get_code(MpFunction *fnc){
     //resolve_module(GET_MODULE(fnc->mod), fnc);
     return fnc->code;
 }
 
-Object get_function_globals(TmFunction* fnc) {
-    tm_assert_type(fnc->mod, TYPE_MODULE, "get_function_globals");
+Object get_function_globals(MpFunction* fnc) {
+    mp_assert_type(fnc->mod, TYPE_MODULE, "get_function_globals");
     return GET_MODULE(fnc->mod)->globals;
 }
 
-int get_function_max_locals(TmFunction* fnc){
+int get_function_max_locals(MpFunction* fnc){
     //resolve_module(GET_MODULE(fnc->mod), fnc);
     return fnc->maxlocals;
 }

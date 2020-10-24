@@ -8,13 +8,13 @@
 #include <assert.h>
 #include "include/mp.h"
 
-void tm_assert(int value, char* msg) {
+void mp_assert(int value, char* msg) {
     if (!value) {
-        tm_raise("assertion failed, %s", msg);
+        mp_raise("assertion failed, %s", msg);
     }
 }
 
-const char* tm_type(int type) {
+const char* mp_type(int type) {
     static char MP_TYPE_STR[64];
 
     switch (type) {
@@ -41,24 +41,24 @@ const char* tm_type(int type) {
     return MP_TYPE_STR;
 }
 
-void tm_assert_type(Object o, int type, char* msg) {
+void mp_assert_type(Object o, int type, char* msg) {
     if (TM_TYPE(o) != type) {
-        tm_raise("%s, expect %s but see %s", msg, 
-            tm_type(type), tm_type(o.type));
+        mp_raise("%s, expect %s but see %s", msg, 
+            mp_type(type), mp_type(o.type));
     }
 }
 
-void tm_assert_type2(Object o, int type1, int type2, char* msg) {
+void mp_assert_type2(Object o, int type1, int type2, char* msg) {
     if (TM_TYPE(o) != type1 && TM_TYPE(o) != type2) {
-        tm_raise("%s, expect %s or %s but see %s", msg, 
-            tm_type(type1), tm_type(type2), tm_type(o.type));
+        mp_raise("%s, expect %s or %s but see %s", msg, 
+            mp_type(type1), mp_type(type2), mp_type(o.type));
     }
 }
 
-void tm_assert_int(double value, char* msg) {
+void mp_assert_int(double value, char* msg) {
     /* (int)(-1.2) = -1 */
     if (value - floor(value) > 0.000001) {
-        tm_raise("%s require int", msg);
+        mp_raise("%s require int", msg);
     }
 }
 
@@ -72,9 +72,9 @@ void obj_set(Object self, Object k, Object v) {
     // gc_mark_single(v); // only need to mark single.
     switch (TM_TYPE(self)) {
         case TYPE_LIST: {
-            tm_assert_type(k, TYPE_NUM, "obj_set");
+            mp_assert_type(k, TYPE_NUM, "obj_set");
             double d = GET_NUM(k);
-            tm_assert_int(d, "list_set");
+            mp_assert_int(d, "list_set");
             list_set(GET_LIST(self), (int)d, v);
             return;
         }
@@ -87,7 +87,7 @@ void obj_set(Object self, Object k, Object v) {
             return;
         }
     }
-    tm_raise("obj_set: Self %o, Key %o, Val %o", self, k, v);
+    mp_raise("obj_set: Self %o, Key %o, Val %o", self, k, v);
 }
 
 Object obj_get(Object self, Object k) {
@@ -102,7 +102,7 @@ Object obj_get(Object self, Object k) {
                     n += GET_STR_LEN(self);
                 }
                 if (n >= GET_STR_LEN(self) || n < 0)
-                    tm_raise("String_get: index overflow ,len=%d,index=%d, str=%o",
+                    mp_raise("String_get: index overflow ,len=%d,index=%d, str=%o",
                             GET_STR_LEN(self), n, self);
                 return string_chr(0xff & GET_STR(self)[n]);
             }
@@ -144,7 +144,7 @@ Object obj_get(Object self, Object k) {
             return obj_get(pclass->attr_dict, k);
         }
     }
-    tm_raise("keyError %o", k);
+    mp_raise("keyError %o", k);
     return NONE_OBJECT;
 }
 
@@ -162,7 +162,7 @@ Object obj_slice(Object self, Object first, Object second) {
     int start = GET_NUM(first);
     int end = 0;
     if (IS_NONE(second)) {
-        end = tm_len(self);
+        end = mp_len(self);
     } else {
         end = GET_NUM(second);
     }
@@ -203,7 +203,7 @@ Object obj_slice(Object self, Object first, Object second) {
             obj_append(ret, LIST_GET(self, i));
         }
     } else {
-        tm_raise("slice not implemented for type %s", tm_type(self.type));
+        mp_raise("slice not implemented for type %s", mp_type(self.type));
     }
     return ret;
 }
@@ -215,7 +215,7 @@ Object obj_sub(Object a, Object b) {
             return a;
         }
     }
-    tm_raise("obj_sub: can not substract %o and %o", a, b);
+    mp_raise("obj_sub: can not substract %o and %o", a, b);
     return NONE_OBJECT;
 }
 
@@ -244,7 +244,7 @@ Object obj_add(Object a, Object b) {
             }
         }
     }
-    tm_raise("obj_add: can not add %o and %o", (a), (b));
+    mp_raise("obj_add: can not add %o and %o", (a), (b));
     return NONE_OBJECT;
 }
 
@@ -277,16 +277,16 @@ int obj_equals(Object a, Object b){
         case TYPE_FUNCTION: return GET_FUNCTION(a) == GET_FUNCTION(b);
         case TYPE_CLASS: return GET_CLASS(a) == GET_CLASS(b);
         default: {
-            const char* ltype = tm_type(a.type);
-            const char* rtype = tm_type(b.type);
-            tm_raise("obj_equals: not supported type %d:%s and %d:%s", TM_TYPE(a), ltype, TM_TYPE(b), rtype);
+            const char* ltype = mp_type(a.type);
+            const char* rtype = mp_type(b.type);
+            mp_raise("obj_equals: not supported type %d:%s and %d:%s", TM_TYPE(a), ltype, TM_TYPE(b), rtype);
         } 
     }
     return 0;
 }
 
 Object obj_cmp(Object a, Object b) {
-    return tm_number(mp_cmp(a, b));
+    return number_obj(mp_cmp(a, b));
 }
 
 int mp_cmp(Object a, Object b) {
@@ -304,7 +304,7 @@ int mp_cmp(Object a, Object b) {
             case TYPE_STR: return strcmp(GET_STR(a), GET_STR(b));
         }
     }
-    tm_raise("obj_cmp: can not compare %o and %o", a, b);
+    mp_raise("obj_cmp: can not compare %o and %o", a, b);
     return 0;
 }
 
@@ -352,11 +352,11 @@ Object obj_mul(Object a, Object b) {
         Object new_list = list_new(LIST_LEN(a) * GET_NUM(b));
         int i = 0;
         for (i = 0; i < GET_NUM(b); i++) {
-            tm_call_builtin(list_builtin_extend, 2, new_list, a);
+            mp_call_builtin(list_builtin_extend, 2, new_list, a);
         }
         return new_list;
     }
-    tm_raise("obj_mul: can not multiply %o and %o", a, b);
+    mp_raise("obj_mul: can not multiply %o and %o", a, b);
     return NONE_OBJECT;
 }
 
@@ -365,7 +365,7 @@ Object obj_div(Object a, Object b) {
         GET_NUM(a) /= GET_NUM(b);
         return a;
     }
-    tm_raise("obj_div: can not divide %o and %o", a, b);
+    mp_raise("obj_div: can not divide %o and %o", a, b);
     return NONE_OBJECT;
 }
 
@@ -375,7 +375,7 @@ Object string_mod_list(Object str, Object list) {
 
     char* fmt = GET_SZ(str);
     int str_length = GET_STR_LEN(str);
-    TmList* plist = GET_LIST(list);
+    MpList* plist = GET_LIST(list);
     int i = 0;
     int arg_index = 0;
 
@@ -393,13 +393,13 @@ Object string_mod_list(Object str, Object list) {
                     break;
                 case 'd': {
                     Object item = list_get(plist, arg_index);                 
-                    tm_assert_type(item, TYPE_NUM, "obj_mod");  
+                    mp_assert_type(item, TYPE_NUM, "obj_mod");  
                     string_append_obj(result, item);
                     arg_index++;
                     break;
                 }
                 default:
-                    tm_raise("obj_mod: unknown format type %c", fmt[i]);
+                    mp_raise("obj_mod: unknown format type %c", fmt[i]);
             }
         } else {
             string_append_char(result, c);
@@ -417,7 +417,7 @@ Object string_ops_mod(Object a, Object b) {
         return string_mod_list(a, b);
     } else {
         Object list = list_new(1);
-        TmList* plist = GET_LIST(list);
+        MpList* plist = GET_LIST(list);
         list_append(plist, b);
         return string_mod_list(a, list);
     }
@@ -425,7 +425,7 @@ Object string_ops_mod(Object a, Object b) {
 
 Object obj_mod(Object a, Object b) {
     if (a.type == b.type && a.type == TYPE_NUM) {
-        return tm_number((long) GET_NUM(a) % (long) GET_NUM(b));
+        return number_obj((long) GET_NUM(a) % (long) GET_NUM(b));
     } else if (a.type == TYPE_STR) {
         Object *__mod__ = get_builtin("__mod__");
         if (__mod__ == NULL) {
@@ -437,7 +437,7 @@ Object obj_mod(Object a, Object b) {
             return call_function(*__mod__);
         }        
     }
-    tm_raise("obj_mod: can not module %o and %o", a, b);
+    mp_raise("obj_mod: can not module %o and %o", a, b);
     return NONE_OBJECT;
 }
 
@@ -466,7 +466,7 @@ int mp_in(Object child, Object parent) {
         case TYPE_NUM:  return 0;
         case TYPE_FUNCTION: return 0;
         /* TODO DATA */ 
-        default: tm_raise("obj_in: cant handle type (%s)", tm_type(TM_TYPE(parent)));
+        default: mp_raise("obj_in: cant handle type (%s)", mp_type(TM_TYPE(parent)));
     }
     return 0;
 }
@@ -476,7 +476,7 @@ int obj_not_in(Object child, Object parent) {
 }
 
 Object obj_in(Object left, Object right) {
-    return tm_number(mp_in(left, right));
+    return number_obj(mp_in(left, right));
 }
 
 int is_true_obj(Object v) {
@@ -503,7 +503,7 @@ Object obj_neg(Object o) {
         GET_NUM(o) = -GET_NUM(o);
         return o;
     }
-    tm_raise("obj_neg: can not handle %o", o);
+    mp_raise("obj_neg: can not handle %o", o);
     return NONE_OBJECT;
 }
 
@@ -515,7 +515,7 @@ Object iter_new(Object collections) {
         case TYPE_CLASS: return iter_new(GET_CLASS(collections)->attr_dict);
         case TYPE_STR:  return string_iter_new(collections);
         case TYPE_DATA: return collections;
-        default: tm_raise("iter_new(): can not create a iterator of %o", collections);
+        default: mp_raise("iter_new(): can not create a iterator of %o", collections);
     }
     return NONE_OBJECT;
 }
@@ -535,7 +535,7 @@ void obj_del(Object self, Object k) {
             break;
         }
         default:
-            tm_raise("obj_del: not supported type %s", tm_type(self.type));
+            mp_raise("obj_del: not supported type %s", mp_type(self.type));
     }
 }
 
@@ -543,24 +543,24 @@ Object obj_append(Object a, Object item) {
     if (IS_LIST(a)) {
         list_append(GET_LIST(a), item);
     } else {
-        tm_raise("obj_append: not supported type %s", tm_type(a.type));
+        mp_raise("obj_append: not supported type %s", mp_type(a.type));
     }
     return a;
 }
 
-Object tm_get_global(Object globals, char *key) {
+Object mp_get_global(Object globals, char *key) {
     Object okey = string_new(key);
     DictNode* node = dict_get_node(GET_DICT(globals), okey);
     if (node == NULL) {
         node = dict_get_node(GET_DICT(tm->builtins), okey);
         if (node == NULL) {
-            tm_raise("NameError: name %o is not defined", okey);
+            mp_raise("NameError: name %o is not defined", okey);
         }
     }
     return node->val;
 }
 
-int tm_len(Object o) {
+int mp_len(Object o) {
     int len = -1;
     switch (TM_TYPE(o)) {
     case TYPE_STR:
@@ -574,13 +574,13 @@ int tm_len(Object o) {
         break;
     }
     if (len < 0) {
-        tm_raise("tm_len: %o has no attribute len", o);
+        mp_raise("mp_len: %o has no attribute len", o);
     }
     return len;
 }
 
-// func Object tm_str(Object a)
-Object tm_str(Object a) {
+// func Object mp_str(Object a)
+Object mp_str(Object a) {
     char buf[100];
     memset(buf, 0, sizeof(buf));
     switch (TM_TYPE(a)) {
@@ -630,7 +630,7 @@ Object tm_str(Object a) {
     case TYPE_DATA:
         return GET_DATA(a)->str(GET_DATA(a));
     default:
-        tm_raise("str: not supported type %d", a.type);
+        mp_raise("str: not supported type %d", a.type);
     }
     return string_alloc("", 0);
 }
@@ -642,7 +642,7 @@ int get_const_id(Object const_value) {
 }
 
 
-Object tm_call_builtin(BuiltinFunc func, int n, ...) {
+Object mp_call_builtin(BuiltinFunc func, int n, ...) {
     int i = 0;
     va_list ap;
     va_start(ap, n);

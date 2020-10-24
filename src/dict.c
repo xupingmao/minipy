@@ -23,7 +23,7 @@ int js_hash(unsigned char* s, int len) {
  * simple hash function for dict, not used yet.
  * @since 2015-?
  */
-int tm_hash(Object key) {
+int mp_hash(Object key) {
     switch(TM_TYPE(key)) {
     case TYPE_STR:return js_hash((unsigned char*) GET_STR(key), GET_STR_LEN(key));
     case TYPE_NUM:return abs((int) GET_NUM(key));
@@ -36,12 +36,12 @@ int tm_hash(Object key) {
  * init dictionary
  * @since 2015-?
  */
-TmDict* dict_init(){
+MpDict* dict_init(){
     int i;
-    TmDict * dict = tm_malloc(sizeof(TmDict));
+    MpDict * dict = mp_malloc(sizeof(MpDict));
     dict->cap = 3;
     dict->extend = 2;
-    dict->nodes = tm_malloc(sizeof(DictNode) * (dict->cap));
+    dict->nodes = mp_malloc(sizeof(DictNode) * (dict->cap));
     // to mark that the node is not allocated.
     for(i = 0; i < dict->cap; i++){
         dict->nodes[i].used = 0;
@@ -58,7 +58,7 @@ Object dict_new(){
 }
 
 
-void dict_check(TmDict* dict){
+void dict_check(MpDict* dict){
     if(dict->len < dict->cap)
         return;
     int osize = dict->cap;
@@ -68,7 +68,7 @@ void dict_check(TmDict* dict){
     } else {
         nsize = osize + osize / 2 + 1;
     }
-    DictNode* nodes = tm_malloc(nsize * sizeof(DictNode));
+    DictNode* nodes = mp_malloc(nsize * sizeof(DictNode));
     for(i = 0; i < nsize; i++) {
         nodes[i].used = 0;
     }
@@ -82,17 +82,17 @@ void dict_check(TmDict* dict){
     DictNode* temp = dict->nodes;
     dict->nodes = nodes;
     dict->cap = nsize;
-    tm_free(temp, osize * sizeof(DictNode));
+    mp_free(temp, osize * sizeof(DictNode));
 }
 
 /**
  * free dict object
  * @since 2015-?
  */
-void dict_free(TmDict* dict){
+void dict_free(MpDict* dict){
     PRINT_OBJ_GC_INFO_START();
-    tm_free(dict->nodes, (dict->cap) * sizeof(DictNode));
-    tm_free(dict, sizeof(TmDict));
+    mp_free(dict->nodes, (dict->cap) * sizeof(DictNode));
+    mp_free(dict, sizeof(MpDict));
     PRINT_OBJ_GC_INFO_END("dict", dict);
 }
 
@@ -100,7 +100,7 @@ void dict_free(TmDict* dict){
  * find a free entry to put dict node
  * @since 2015-?
  */
-int findfreepos(TmDict* dict) {
+int findfreepos(MpDict* dict) {
     int i;
     for(i = 0; i < dict->cap; i++) {
         if (dict->nodes[i].used == 0) {
@@ -113,7 +113,7 @@ int findfreepos(TmDict* dict) {
 /**
  * @return node index
  */
-int dict_set0(TmDict* dict, Object key, Object val){
+int dict_set0(MpDict* dict, Object key, Object val){
     int i;
     DictNode* node = dict_get_node(dict, key);
     if (node != NULL) {
@@ -132,7 +132,7 @@ int dict_set0(TmDict* dict, Object key, Object val){
 /**
  * @since 2016-11-27
  */
-int dict_get0(TmDict* dict, Object key) {
+int dict_get0(MpDict* dict, Object key) {
     DictNode* node = dict_get_node(dict, key);
     if (node != NULL) {
         return node - dict->nodes;
@@ -140,7 +140,7 @@ int dict_get0(TmDict* dict, Object key) {
     return -1;
 }
 
-int dict_set_attr(TmDict* dict, int const_id, Object val) {
+int dict_set_attr(MpDict* dict, int const_id, Object val) {
     int i;
     DictNode* nodes = dict->nodes;
     const_id += 2; /* start from 2, as 0,1 are used by normal node. */
@@ -156,7 +156,7 @@ int dict_set_attr(TmDict* dict, int const_id, Object val) {
     return i;
 }
 
-int dict_get_attr(TmDict* dict, int const_id) {
+int dict_get_attr(MpDict* dict, int const_id) {
     int i;
     DictNode* nodes = dict->nodes;
     const_id += 2; /* prevent first const to be 0, and normal dict node to be 1. */
@@ -173,7 +173,7 @@ int dict_get_attr(TmDict* dict, int const_id) {
     return -1;
 }
 
-DictNode* dict_get_node(TmDict* dict, Object key){
+DictNode* dict_get_node(MpDict* dict, Object key){
     //int hash = Dict_hash(key);
     //int idx = hash % dict->cap;
     int i;
@@ -186,7 +186,7 @@ DictNode* dict_get_node(TmDict* dict, Object key){
     return NULL;
 }
 
-Object* dict_get_by_str0(TmDict* dict, char* key) {
+Object* dict_get_by_str0(MpDict* dict, char* key) {
     //int hash = hash_sz((unsigned char*) key, strlen(key));
     //int idx = hash % dict->cap;
     int i;
@@ -200,21 +200,21 @@ Object* dict_get_by_str0(TmDict* dict, char* key) {
     return NULL;
 }
 
-void dict_set_by_str0(TmDict* dict, char* key, Object value) {
+void dict_set_by_str0(MpDict* dict, char* key, Object value) {
     dict_set0(dict, string_from_sz(key), value);
 }
 
-void dict_del(TmDict* dict, Object key) {
+void dict_del(MpDict* dict, Object key) {
     DictNode* node = dict_get_node(dict, key);
     if (node == NULL) {
-        tm_raise("obj_del: key_error %o", key);
+        mp_raise("obj_del: key_error %o", key);
     }
     node->used = 0;
     dict->len--;
     return;
 }
 
-Object dict_keys(TmDict* dict){
+Object dict_keys(MpDict* dict){
     Object list = list_new(dict->len);
     int i;
     for(i = 0; i < dict->cap; i++) {
@@ -232,7 +232,7 @@ Object dict_builtin_keys(){
 
 Object dict_builtin_values() {
     Object _d = arg_take_dict_obj("dict.values");
-    TmDict* dict = GET_DICT(_d);
+    MpDict* dict = GET_DICT(_d);
     Object list = list_new(dict->len);
     int i;
     for(i = 0; i < dict->cap; i++) {
@@ -274,7 +274,7 @@ Object dict_builtin_pop() {
         if (arg_has_next()) {
             return arg_take_obj("dict.pop");
         } else {
-            tm_raise("KeyError %o", key);
+            mp_raise("KeyError %o", key);
             return NONE_OBJECT;
         }
     } else {
@@ -306,14 +306,14 @@ Object dict_iter_new(Object dict) {
     Object *__iter__ = dict_get_by_str(dict, "__iter__");
     if (__iter__ != NULL) {
         Object *next = dict_get_by_str(dict, "next");
-        Object data = data_new(sizeof(Tm_base_iterator));
-        Tm_base_iterator* base_iterator = (Tm_base_iterator*)GET_DATA(data);
+        Object data = data_new(sizeof(Mp_base_iterator));
+        Mp_base_iterator* base_iterator = (Mp_base_iterator*)GET_DATA(data);
         base_iterator->func = *next;
         base_iterator->proto = get_base_iter_proto();
         return data;
     }*/
     Object data = data_new(1);
-    TmData* iterator = GET_DATA(data);
+    MpData* iterator = GET_DATA(data);
     iterator->cur = 0;
     iterator->end = DICT_LEN(dict);
     iterator->inc = 1;
@@ -326,8 +326,8 @@ Object dict_iter_new(Object dict) {
  * get next node pointer
  * @since 2015-?
  */
-Object* dict_next(TmData* iterator) {
-    TmDict* dict = GET_DICT(iterator->data_ptr[0]);
+Object* dict_next(MpData* iterator) {
+    MpDict* dict = GET_DICT(iterator->data_ptr[0]);
     if (iterator->cur < dict->cap) {
         int i;
         for(i = iterator->cur; i < dict->cap; i++) {
@@ -346,7 +346,7 @@ Object* dict_next(TmData* iterator) {
  * get attribute by char array
  * @since 2016-09-02
  */
-Object tm_getattr(Object obj, char* key) {
+Object mp_getattr(Object obj, char* key) {
     // TODO optimize string find
     Object obj_key = string_new(key);
     return obj_get(obj, obj_key);
@@ -357,12 +357,12 @@ Object tm_getattr(Object obj, char* key) {
  * get attribute by char array
  * @since 2016-09-02
  */
-void tm_setattr(Object obj, char* key, Object value) {
+void mp_setattr(Object obj, char* key, Object value) {
     Object obj_key = string_new(key);
     obj_set(obj, obj_key, value);
 }
 
-int tm_hasattr(Object obj, char* key) {
+int mp_hasattr(Object obj, char* key) {
     Object obj_key = string_const(key);
     DictNode* node = dict_get_node(GET_DICT(obj), obj_key);
     if (node == NULL) {

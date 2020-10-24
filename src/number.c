@@ -7,7 +7,7 @@
 
 #include "include/mp.h"
 
-Object tm_number(double v){
+Object number_obj(double v){
   Object o;
   TM_TYPE(o) = TYPE_NUM;
   GET_NUM(o) = v;
@@ -23,10 +23,10 @@ void number_format(char* des, Object num){
     }
 }
 
-double number_value(Object num) {
+double number_get_double(Object num) {
     return GET_NUM(num);
 }
 
-long long long_value(Object num) {
+long long number_get_long(Object num) {
     return (long long) GET_NUM(num);
 }

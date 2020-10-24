@@ -8,10 +8,10 @@
 #include "include/mp.h"
 #include <setjmp.h>
 
-void push_exception(TmFrame* f){
+void push_exception(MpFrame* f){
     Object file = get_file_name_obj(f->fnc);
     Object fnc_name = get_func_name_obj(f->fnc);
-    Object ex = tm_format("  File %o: in %o , at line %d", file, fnc_name,
+    Object ex = mp_format("  File %o: in %o , at line %d", file, fnc_name,
             f->lineno);
     list_append(GET_LIST(tm->ex_list), ex);
 }
@@ -22,20 +22,20 @@ void traceback() {
     printf("Traceback (most recent call last):\n");
     int cur = tm->frame - tm->frames;
     for (i = LIST_LEN(exlist) - 1; i >= cur; i--) {
-        tm_println(LIST_NODES(exlist)[i]);
+        mp_println(LIST_NODES(exlist)[i]);
     }
     fprintf(stderr, "Exception:\n  ");
     fprintf(stderr, "%s\n", GET_SZ(tm->ex_line));
 }
 
-void tm_raise(char* fmt, ...) {
+void mp_raise(char* fmt, ...) {
     va_list a;
     va_start(a, fmt);
     list_clear(GET_LIST(tm->ex_list));
-    tm->ex = tm_format_va_list(fmt, a, 0);
+    tm->ex = mp_format_va_list(fmt, a, 0);
     Object file = get_file_name_obj(tm->frame->fnc);
     Object fnc_name = get_func_name_obj(tm->frame->fnc);
-    tm->ex_line = tm_format("File %o: in %o at line %d\n  %os", 
+    tm->ex_line = mp_format("File %o: in %o at line %d\n  %os", 
         file, fnc_name, tm->frame->lineno, tm->ex);
     va_end(a);
     longjmp(tm->frame->buf, 1);

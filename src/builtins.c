@@ -23,7 +23,7 @@ Object* get_builtin(char* key) {
     return dict_get_by_str(tm->builtins, key);
 }
 
-void tm_putchar(int c){
+void mp_putchar(int c){
     static char hex[] = {
         '0','1','2','3','4','5','6','7',
         '8','9','A','B','C','D','E','F'
@@ -42,7 +42,7 @@ void tm_putchar(int c){
     }
 }
 
-void tm_inspect_char(int c) {
+void mp_inspect_char(int c) {
     static char hex[] = {
         '0','1','2','3','4','5','6','7',
         '8','9','A','B','C','D','E','F'
@@ -65,20 +65,20 @@ void tm_inspect_char(int c) {
     }
 }
 
-void tm_print(Object o) {
-    Object str = tm_str(o);
+void mp_print(Object o) {
+    Object str = mp_str(o);
     int i;
     for(i = 0; i < GET_STR_LEN(str); i++) {
-        tm_putchar(GET_STR(str)[i]);
+        mp_putchar(GET_STR(str)[i]);
     }
 }
 
-void tm_println(Object o) {
-    tm_print(o);
+void mp_println(Object o) {
+    mp_print(o);
     puts("");
 }
 
-void tm_inspect_obj0(Object o, int padding) {
+void mp_inspect_obj0(Object o, int padding) {
     int i;
     const int max_len = 20;
     while (--padding>=0) {
@@ -96,7 +96,7 @@ void tm_inspect_obj0(Object o, int padding) {
         case TYPE_STR:
             printf("<string len=%d value=", GET_STR_LEN(o));
             for (i = 0; i < GET_STR_LEN(o) && i <= max_len; i++) {
-                tm_inspect_char(GET_STR(o)[i]);
+                mp_inspect_char(GET_STR(o)[i]);
             }
             printf(">\n");
             break;
@@ -118,26 +118,26 @@ void tm_inspect_obj0(Object o, int padding) {
     }
 }
 
-void tm_inspect_obj(Object o) {
+void mp_inspect_obj(Object o) {
     int i;
     switch(TM_TYPE(o)) {
         case TYPE_LIST:
             printf("[\n");
             for (i = 0; i < LIST_LEN(o); i++) {
-                tm_inspect_obj0(LIST_NODES(o)[i], 2);
+                mp_inspect_obj0(LIST_NODES(o)[i], 2);
             }
             printf("]\n");
             break;
         case TYPE_DICT:
             printf("{\n");
             for (i = 0; i < DICT_LEN(o); i++) {
-                tm_inspect_obj0(DICT_NODES(o)[i].key, 2);
-                tm_inspect_obj0(DICT_NODES(o)[i].val, 4);
+                mp_inspect_obj0(DICT_NODES(o)[i].key, 2);
+                mp_inspect_obj0(DICT_NODES(o)[i].val, 4);
             }
             printf("}\n");
             break;
         default:
-            tm_inspect_obj0(o, 0);
+            mp_inspect_obj0(o, 0);
     }
 }
 
@@ -152,11 +152,11 @@ void tm_inspect_obj(Object o) {
  * o  -> repl(object)
  * os -> object
  */
-Object tm_format_va_list(char* fmt, va_list ap, int append_newline) {
-    return tm_format_va_list_check_length(fmt, ap, -1, append_newline);
+Object mp_format_va_list(char* fmt, va_list ap, int append_newline) {
+    return mp_format_va_list_check_length(fmt, ap, -1, append_newline);
 }
 
-Object tm_format_va_list_check_length(char* fmt, va_list ap, int ap_length, int append_newline) {
+Object mp_format_va_list_check_length(char* fmt, va_list ap, int ap_length, int append_newline) {
     int i;
     int len = strlen(fmt);
     Object str = string_new("");
@@ -176,7 +176,7 @@ Object tm_format_va_list_check_length(char* fmt, va_list ap, int ap_length, int 
             // format arguments
             args_in_fmt += 1;
             if (ap_length != -1 && args_in_fmt > ap_length) {
-                tm_raise("TypeError: not enough arguments for format string");
+                mp_raise("TypeError: not enough arguments for format string");
             }
 
             switch (fmt[i]) {
@@ -219,7 +219,7 @@ Object tm_format_va_list_check_length(char* fmt, va_list ap, int ap_length, int 
                 break;
             }
             default:
-                tm_raise("format: unknown pattern %c", fmt[i]);
+                mp_raise("format: unknown pattern %c", fmt[i]);
                 break;
             }
         } else {
@@ -232,26 +232,26 @@ Object tm_format_va_list_check_length(char* fmt, va_list ap, int ap_length, int 
     return str;
 }
 
-Object tm_format(char* fmt, ...) {
+Object mp_format(char* fmt, ...) {
     va_list a;
     va_start(a, fmt);
-    Object v = tm_format_va_list(fmt, a, 0);
+    Object v = mp_format_va_list(fmt, a, 0);
     va_end(a);
     return v;
 }
 
-Object tm_format_check_length(char* fmt, int ap_length, ...) {
+Object mp_format_check_length(char* fmt, int ap_length, ...) {
     va_list ap;
     va_start(ap, ap_length);
-    Object v = tm_format_va_list_check_length(fmt, ap, ap_length, 0);
+    Object v = mp_format_va_list_check_length(fmt, ap, ap_length, 0);
     va_end(ap);
     return v;
 }
 
-void tm_printf(char* fmt, ...) {
+void mp_printf(char* fmt, ...) {
     va_list a;
     va_start(a, fmt);
-    tm_print(tm_format_va_list(fmt, a, 0));
+    mp_print(mp_format_va_list(fmt, a, 0));
     va_end(a);
 }
 
@@ -275,15 +275,15 @@ long get_rest_size(FILE* fp){
  * @param fpath file path
  * @return file text
  */
-Object tm_load(char* fpath){
+Object mp_load(char* fpath){
     FILE* fp = fopen(fpath, "rb");
     if(fp == NULL){
-        tm_raise("load: can not open file \"%s\"", fpath);
+        mp_raise("load: can not open file \"%s\"", fpath);
         return NONE_OBJECT;
     }
     long len = get_rest_size(fp);
     if(len > MAX_FILE_SIZE){
-        tm_raise("load: file too big to load, size = %d", len);
+        mp_raise("load: file too big to load, size = %d", len);
         return NONE_OBJECT;
     }
     Object text = string_alloc(NULL, len);
@@ -293,10 +293,10 @@ Object tm_load(char* fpath){
     return text;
 }
 
-Object tm_save(char*fname, Object content) {
+Object mp_save(char*fname, Object content) {
     FILE* fp = fopen(fname, "wb");
     if (fp == NULL) {
-        tm_raise("tm_save: can not save to file \"%s\"", fname);
+        mp_raise("mp_save: can not save to file \"%s\"", fname);
     }
     char* txt = GET_STR(content);
     int len = GET_STR_LEN(content);
@@ -309,7 +309,7 @@ Object tm_save(char*fname, Object content) {
 Object bf_input() {
     int i = 0;
     if (arg_has_next()) {
-        tm_print(arg_take_obj("input"));
+        mp_print(arg_take_obj("input"));
     }
     char buf[2048];
     memset(buf, '\0', sizeof(buf));
@@ -325,11 +325,11 @@ Object bf_input() {
 Object bf_int() {
     Object v = arg_take_obj("int");
     if (v.type == TYPE_NUM) {
-        return tm_number((int) GET_NUM(v));
+        return number_obj((int) GET_NUM(v));
     } else if (v.type == TYPE_STR) {
-        return tm_number((int) atof(GET_STR(v)));
+        return number_obj((int) atof(GET_STR(v)));
     }
-    tm_raise("int: %o can not be parsed to int ", v);
+    mp_raise("int: %o can not be parsed to int ", v);
     return NONE_OBJECT;
 }
 
@@ -338,9 +338,9 @@ Object bf_float() {
     if (v.type == TYPE_NUM) {
         return v;
     } else if (v.type == TYPE_STR) {
-        return tm_number(atof(GET_STR(v)));
+        return number_obj(atof(GET_STR(v)));
     }
-    tm_raise("float: %o can not be parsed to float", v);
+    mp_raise("float: %o can not be parsed to float", v);
     return NONE_OBJECT;
 }
 
@@ -382,7 +382,7 @@ Object bf_gettype() {
         case TYPE_CLASS: return string_from_sz("class");
         case TYPE_DATA: return string_from_sz("data");
         case TYPE_NONE: return string_from_sz("None");
-        default: tm_raise("gettype(%o)", obj);
+        default: mp_raise("gettype(%o)", obj);
     }
     return NONE_OBJECT;
 }
@@ -405,9 +405,9 @@ Object bf_istype() {
         case TYPE_FUNCTION: is_type = strcmp(type, "function") == 0;break;
         case TYPE_DATA: is_type = strcmp(type, "data") == 0; break;
         case TYPE_NONE: is_type = strcmp(type, "None") == 0; break;
-        default: tm_raise("gettype(%o)", obj);
+        default: mp_raise("gettype(%o)", obj);
     }
-    return tm_number(is_type);
+    return number_obj(is_type);
 }
 
 Object bf_chr() {
@@ -418,20 +418,20 @@ Object bf_chr() {
 Object bf_ord() {
     Object c = arg_take_str_obj("ord");
     TM_ASSERT(GET_STR_LEN(c) == 1, "ord() expected a character");
-    return tm_number((unsigned char) GET_STR(c)[0]);
+    return number_obj((unsigned char) GET_STR(c)[0]);
 }
 
 Object bf_code8() {
     int n = arg_take_int("code8");
     if (n < 0 || n > 255)
-        tm_raise("code8(): expect number 0-255, but see %d", n);
+        mp_raise("code8(): expect number 0-255, but see %d", n);
     return string_chr(n);
 }
 
 Object bf_code16() {
     int n = arg_take_int("code16");
     if (n < 0 || n > 0xffff)
-        tm_raise("code16(): expect number 0-0xffff, but see %x", n);
+        mp_raise("code16(): expect number 0-0xffff, but see %x", n);
     Object nchar = string_alloc(NULL, 2);
     code16((unsigned char*) GET_STR(nchar), n);
     return nchar;
@@ -446,9 +446,9 @@ Object bf_code32() {
 
 Object bf_raise() {
     if (arg_count() == 0) {
-        tm_raise("raise");
+        mp_raise("raise");
     } else {
-        tm_raise("%s", arg_take_sz("raise"));
+        mp_raise("%s", arg_take_sz("raise"));
     }
     return NONE_OBJECT;
 }
@@ -456,12 +456,12 @@ Object bf_raise() {
 Object bf_system() {
     Object m = arg_take_str_obj("system");
     int rs = system(GET_STR(m));
-    return tm_number(rs);
+    return number_obj(rs);
 }
 
 Object bf_str() {
     Object a = arg_take_obj("str");
-    return tm_str(a);
+    return mp_str(a);
 }
 
 Object bf_bool() {
@@ -475,13 +475,13 @@ Object bf_bool() {
 
 Object bf_len() {
     Object o = arg_take_obj("len");
-    return tm_number(tm_len(o));
+    return number_obj(mp_len(o));
 }
 
 Object bf_print() {
     int i = 0;
     while (arg_has_next()) {
-        tm_print(arg_take_obj("print"));
+        mp_print(arg_take_obj("print"));
         if (arg_has_next()) {
             putchar(' ');
         }
@@ -492,11 +492,11 @@ Object bf_print() {
 
 Object bf_load(Object p){
     Object fname = arg_take_str_obj("load");
-    return tm_load(GET_STR(fname));
+    return mp_load(GET_STR(fname));
 }
 Object bf_save(){
     Object fname = arg_take_str_obj("<save name>");
-    return tm_save(GET_STR(fname), arg_take_str_obj("<save content>"));
+    return mp_save(GET_STR(fname), arg_take_str_obj("<save content>"));
 }
 
 Object bf_file_append() {
@@ -504,7 +504,7 @@ Object bf_file_append() {
     Object content = arg_take_str_obj("file_append");
     FILE* fp = fopen(fname, "ab+");
     if (fp == NULL) {
-        tm_raise("file_append: fail to open file %s", fname);
+        mp_raise("file_append: fail to open file %s", fname);
         return NONE_OBJECT;
     }
     char* txt = GET_STR(content);
@@ -521,16 +521,16 @@ Object bf_remove(){
     Object fname = arg_take_str_obj("remove");
     int flag = remove(GET_STR(fname));
     if(flag) {
-        return tm_number(0);
+        return number_obj(0);
     } else {
-        return tm_number(1);
+        return number_obj(1);
     }
 }
 
 Object bf_apply() {
     Object func = arg_take_obj("apply");
     if (NOT_FUNC(func) && NOT_DICT(func)) {
-        tm_raise("apply: expect function or dict");
+        mp_raise("apply: expect function or dict");
     }
     Object args = arg_take_obj("apply");
     arg_start();
@@ -540,7 +540,7 @@ Object bf_apply() {
             arg_push(LIST_NODES(args)[i]);
         }
     } else {
-        tm_raise("apply: expect list arguments or None, but see %o", args);
+        mp_raise("apply: expect list arguments or None, but see %o", args);
         return NONE_OBJECT;
     }
     return call_function(func);
@@ -548,12 +548,12 @@ Object bf_apply() {
 
 Object bf_write() {
     Object fmt = arg_take_obj("write");
-    Object str = tm_str(fmt);
+    Object str = mp_str(fmt);
     char* s = GET_STR(str);
     int len = GET_STR_LEN(str);
     int i;
     // for(i = 0; i < len; i++) {
-        // tm_putchar(s[i]);
+        // mp_putchar(s[i]);
         // putchar is very very slow
         // when print 80 * 30 chars  
         //     ==>  putchar_time=126, printf_time=2, putc_time=129
@@ -561,26 +561,26 @@ Object bf_write() {
         // buffer[i] = s[i];
     // }
     printf("%s", s);
-    // return list_from_array(2, tm_number(t2-t1), tm_number(t3-t2));
+    // return list_from_array(2, number_obj(t2-t1), number_obj(t3-t2));
     return NONE_OBJECT;
 }
 
 Object bf_pow() {
     double base = arg_take_double("pow");
     double y = arg_take_double("pow");
-    return tm_number(pow(base, y));
+    return number_obj(pow(base, y));
 }
 
 
-Object* range_next(TmData* data) {
+Object* range_next(MpData* data) {
     long cur = data->cur;
     if (data->inc > 0 && cur < data->end) {
         data->cur += data->inc;
-        data->cur_obj = tm_number(cur);
+        data->cur_obj = number_obj(cur);
         return &data->cur_obj;
     } else if (data->inc < 0 && cur > data->end) {
         data->cur += data->inc;
-        data->cur_obj = tm_number(cur);
+        data->cur_obj = number_obj(cur);
         return &data->cur_obj;
     }
     return NULL;
@@ -608,15 +608,15 @@ Object bf_xrange() {
         inc   = (long)arg_take_double(sz_func);
         break;
     default:
-        tm_raise("range([n, [ n, [n]]]), but see %d arguments",
+        mp_raise("range([n, [ n, [n]]]), but see %d arguments",
                 tm->arg_cnt);
     }
     if (inc == 0)
-        tm_raise("range(): increment can not be 0!");
+        mp_raise("range(): increment can not be 0!");
     if (inc * (end - start) < 0)
-        tm_raise("range(%d, %d, %d): not valid range!", start, end, inc);
+        mp_raise("range(%d, %d, %d): not valid range!", start, end, inc);
     Object data = data_new(0);
-    TmData *iterator = GET_DATA(data);
+    MpData *iterator = GET_DATA(data);
     iterator->cur  = start;
     iterator->end  = end;
     iterator->inc  = inc;
@@ -629,7 +629,7 @@ Object bf_range() {
     return bf_xrange();
 }
 
-Object* enumerate_next(TmData* iterator) {
+Object* enumerate_next(MpData* iterator) {
     Object iter = iterator->data_ptr[0];
     Object* next_value = next_ptr(iter);
 
@@ -638,7 +638,7 @@ Object* enumerate_next(TmData* iterator) {
     } else {
         int idx = iterator->cur;
         iterator->cur += 1;
-        iterator->cur_obj = list_from_array(2, tm_number(idx), *next_value);
+        iterator->cur_obj = list_from_array(2, number_obj(idx), *next_value);
         return &iterator->cur_obj;
     }
 }
@@ -648,7 +648,7 @@ Object bf_enumerate() {
     Object origin_iter = iter_new(_it);
 
     Object data = data_new(1);
-    TmData* iterator = GET_DATA(data);
+    MpData* iterator = GET_DATA(data);
     iterator->cur = 0;
     iterator->data_ptr[0] = origin_iter;
     iterator->next = enumerate_next;
@@ -661,10 +661,10 @@ Object bf_mmatch() {
     Object o_dst = arg_take_str_obj("mmatch");
     char* dst = GET_STR(o_dst);
     int size = GET_STR_LEN(o_dst);
-    return tm_number(strncmp(str+start, dst, size) == 0);
+    return number_obj(strncmp(str+start, dst, size) == 0);
 }
 
-long tm_clock() {
+long mp_clock() {
 #ifdef _WIN32
     return clock();
 #else
@@ -685,7 +685,7 @@ Object bf_add_obj_method() {
     } else if (strcmp(s, "dict") == 0) {
         obj_set(tm->dict_proto, fname, fnc);
     } else {
-        tm_raise("add_obj_method: not valid object type, expect str, list, dict");
+        mp_raise("add_obj_method: not valid object type, expect str, list, dict");
     }
     return NONE_OBJECT;
 }
@@ -700,12 +700,12 @@ Object bf_read_file() {
     int end = 0;
     Object func;
     if (nsize < 0 || nsize > 1024) {
-        tm_raise("%s: can not set bufsize beyond [1, 1024]",  sz_func);
+        mp_raise("%s: can not set bufsize beyond [1, 1024]",  sz_func);
     }
     func = arg_take_func_obj(sz_func);
     FILE* fp = fopen(fname, "rb");
     if (fp == NULL) {
-        tm_raise("%s: can not open file %s", sz_func, fname);
+        mp_raise("%s: can not open file %s", sz_func, fname);
     }
     while (1) {
         arg_start();
@@ -736,7 +736,7 @@ Object bf_next() {
     Object iter = arg_take_data_obj("next");
     Object *ret = next_ptr(iter);
     if (ret == NULL) {
-        tm_raise("<<next end>>");
+        mp_raise("<<next end>>");
         return NONE_OBJECT;
     } else {
         return *ret;
@@ -747,7 +747,7 @@ Object bf_next() {
 Object bf_get_const_idx() {
     Object key = arg_take_obj("get_const_idx");
     int i = dict_set(tm->constants, key, NONE_OBJECT);
-    return tm_number(i);
+    return number_obj(i);
 }
 
 Object bf_get_const() {
@@ -757,13 +757,13 @@ Object bf_get_const() {
         idx += DICT_LEN(tm->constants);
     }
     if (idx < 0 || idx >= DICT_LEN(tm->constants)) {
-        tm_raise("get_const(idx): out of range [%d]", num);
+        mp_raise("get_const(idx): out of range [%d]", num);
     }
     return GET_CONST(idx);
 }
 /* for save */
 Object bf_get_const_len() {
-    return tm_number(DICT_LEN(tm->constants));
+    return number_obj(DICT_LEN(tm->constants));
 }
 
 Object bf_get_ex_list() {
@@ -805,7 +805,7 @@ Object bf_random() {
     int n = rand() % 77;
     // printf("%d\n", n);
     double val = (double)((double) n / (double)77);
-    return tm_number(val);
+    return number_obj(val);
 }
 
 Object bf_Exception() {

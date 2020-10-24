@@ -5,19 +5,19 @@
 #define LOG(level, msg, lineno, func_name, value) /* x */
 
 Object obj_LT(Object left, Object right) {
-    return tm_number(mp_cmp(left, right) < 0);
+    return number_obj(mp_cmp(left, right) < 0);
 }
 
 Object obj_LE(Object left, Object right) {
-    return tm_number(mp_cmp(left, right) <= 0);
+    return number_obj(mp_cmp(left, right) <= 0);
 }
 
 Object obj_GT(Object left, Object right) {
-    return tm_number(mp_cmp(left, right) > 0);
+    return number_obj(mp_cmp(left, right) > 0);
 }
 
 Object obj_GE(Object left, Object right) {
-    return tm_number(mp_cmp(left, right) >= 0);
+    return number_obj(mp_cmp(left, right) >= 0);
 }
 
 void gc_local_add(Object object) {
@@ -30,7 +30,7 @@ void gc_check_native_call(int size, Object returnObject) {
 }
 
 
-Object tm_call(Object func, int args, ...) {
+Object mp_call(Object func, int args, ...) {
     int i = 0;
     va_list ap;
     va_start(ap, args);
@@ -39,7 +39,7 @@ Object tm_call(Object func, int args, ...) {
         arg_push(va_arg(ap, Object));
     }
     va_end(ap);
-    // tm_printf("at line %d, try to call %o with %d args\n", lineno, get_func_name_obj(func), args);
+    // mp_printf("at line %d, try to call %o with %d args\n", lineno, get_func_name_obj(func), args);
     // *self* will be resolved in call_function
     Object ret;
     if (IS_DICT(func)) {
@@ -48,7 +48,7 @@ Object tm_call(Object func, int args, ...) {
         if (_fnc != NULL) {
             func = *_fnc;
         } else {
-            goto tm_call_end;
+            goto mp_call_end;
         }
     }
 
@@ -57,16 +57,16 @@ Object tm_call(Object func, int args, ...) {
         /* call native */
         if (GET_FUNCTION(func)->native != NULL) {
             ret = GET_FUNCTION(func)->native();
-            goto tm_call_end;
+            goto mp_call_end;
         } else {
-            tm_raise("can not call py function from tm2c");
+            mp_raise("can not call py function from tm2c");
         }
     } 
 
-    tm_raise("File %o, line=%d: call_function:invalid object %o", GET_FUNCTION_FILE(tm->frame->fnc), 
+    mp_raise("File %o, line=%d: call_function:invalid object %o", GET_FUNCTION_FILE(tm->frame->fnc), 
         tm->frame->lineno, func);
 
-    tm_call_end:
+    mp_call_end:
     gc_local_add(ret);
     return ret;
 }
@@ -78,12 +78,12 @@ Object tm_call(Object func, int args, ...) {
  * @...,  arguments
  * 
  * eg. add('test', wrapper(1))
- *  --> tm_call_native(add, 'test', tm_call_native(wrapper, 1), tm_call_native(wrapper, 2))
- *  <==> t1 = tm_call_native(wrapper, 1)  <local> = ['test', 1, 2]
- *       t1 = tm_call_native(wrapper, 2)  <local> = ['test', 1, 2]
- *       tm_call_native(add, t1, t2)      <local> = ['test', 1, 2]
+ *  --> mp_call_native(add, 'test', mp_call_native(wrapper, 1), mp_call_native(wrapper, 2))
+ *  <==> t1 = mp_call_native(wrapper, 1)  <local> = ['test', 1, 2]
+ *       t1 = mp_call_native(wrapper, 2)  <local> = ['test', 1, 2]
+ *       mp_call_native(add, t1, t2)      <local> = ['test', 1, 2]
  */
-Object tm_call_native(Object (*fn)(), int args, ...) {
+Object mp_call_native(Object (*fn)(), int args, ...) {
     int i = 0;
     va_list ap;
     Object obj_arg;
@@ -107,17 +107,17 @@ Object tm_call_native(Object (*fn)(), int args, ...) {
 }
 
 /**
- * optimization for tm_call_native
+ * optimization for mp_call_native
  * @since 2016-08-27
  */
-Object tm_call_native_0(Object (*fn)()) {
+Object mp_call_native_0(Object (*fn)()) {
     arg_start();
     int size = tm->local_obj_list->len;
     Object ret = fn();
     gc_check_native_call(size, ret);
 }
 
-Object tm_call_native_1(Object (*fn)(), Object arg1) {
+Object mp_call_native_1(Object (*fn)(), Object arg1) {
     arg_start();
     arg_push(arg1);
     int size = tm->local_obj_list->len;
@@ -125,7 +125,7 @@ Object tm_call_native_1(Object (*fn)(), Object arg1) {
     gc_check_native_call(size, ret);
 }
 
-Object tm_call_native_2(Object (*fn)(), Object arg1, Object arg2) {
+Object mp_call_native_2(Object (*fn)(), Object arg1, Object arg2) {
     arg_start();
     arg_push(arg1);
     arg_push(arg2);
@@ -139,7 +139,7 @@ Object tm_call_native_2(Object (*fn)(), Object arg1, Object arg2) {
  * @param lineno current lineno in python file
  * @param func_name function name
  */
-Object tm_call_native_debug(int lineno, char* func_name, Object (*fn)(), int args, ...) {
+Object mp_call_native_debug(int lineno, char* func_name, Object (*fn)(), int args, ...) {
     int i = 0;
     va_list ap;
     Object obj_arg;
@@ -154,7 +154,7 @@ Object tm_call_native_debug(int lineno, char* func_name, Object (*fn)(), int arg
     }
     va_end(ap);
 
-    // tm_inspect_obj(get_tm_local_list());
+    // mp_inspect_obj(get_mp_local_list());
 
     // record the length to restore
     int size = tm->local_obj_list->len; 
@@ -165,7 +165,7 @@ Object tm_call_native_debug(int lineno, char* func_name, Object (*fn)(), int arg
         // gc_native_call_sweep(size, ret); // check whether need full gc.
     // }
 
-    // tm_inspect_obj(get_tm_local_list());
+    // mp_inspect_obj(get_mp_local_list());
     return ret;
 }
 
@@ -181,27 +181,27 @@ void def_native_method(Object dict, Object name, Object (*native)()) {
     obj_set(dict, name, method);
 }
 
-Object tm_take_arg() {
+Object mp_take_arg() {
     return arg_take_obj("getarg");
 }
 
-void tm_def_mod(char* fname, Object mod) {
+void mp_def_mod(char* fname, Object mod) {
     Object o_name = string_from_sz(fname);
     obj_set(tm->modules, o_name, mod);
 }
 
-Object tm_import(Object globals, Object mod_name) {
+Object mp_import(Object globals, Object mod_name) {
     Object mod = obj_get(tm->modules, mod_name);
     obj_set(globals, mod_name, mod);
     return mod;
 }
 
-void tm_import_all(Object globals, Object mod_name) {
+void mp_import_all(Object globals, Object mod_name) {
     int b_has = mp_in(mod_name, tm->modules);
     if (b_has) {
         Object mod_value = obj_get(tm->modules, mod_name);
         // do something here.
-        tm_call_native_2(dict_builtin_update, globals, mod_value);
+        mp_call_native_2(dict_builtin_update, globals, mod_value);
     }
 }
 
@@ -245,7 +245,7 @@ Object argv_to_dict(int n, ...) {
  * run c function
  * @param mod_name mocked module name
  */
-int tm_run_func(int argc, char* argv[], char* mod_name, Object (*func)(void)) {
+int mp_run_func(int argc, char* argv[], char* mod_name, Object (*func)(void)) {
     int ret = vm_init(argc, argv);
     int i;
     if (ret != 0) { 
@@ -259,7 +259,7 @@ int tm_run_func(int argc, char* argv[], char* mod_name, Object (*func)(void)) {
         Object _argv = GET_DICT_ATTR(sys, "argv");
         list_insert(GET_LIST(_argv), 0, string_new(mod_name));
 
-        tm_call_native(func,0);
+        mp_call_native(func,0);
         gc_full();
         // printf("tm->max_allocated = %d\n", tm->max_allocated);
         // printf("tm->allocated = %d\n", tm->allocated);

@@ -13,62 +13,62 @@ static
 Object math_abs() {
     double angle = arg_take_double("math.abs");
     if (angle < 0) { angle = -angle; }
-    return tm_number(angle);
+    return number_obj(angle);
 }
 
 static
 Object math_acos() {
     double angle = arg_take_double("math.acos");
-    return tm_number(acos(angle));
+    return number_obj(acos(angle));
 }
 
 static
 Object math_asin() {
     double angle = arg_take_double("math.asin");
-    return tm_number(asin(angle));
+    return number_obj(asin(angle));
 }
 
 static
 Object math_atan() {
     double angle = arg_take_double("math.atan");
-    return tm_number(atan(angle));
+    return number_obj(atan(angle));
 }
 
 static
 Object math_atan2() {
     double y = arg_take_double("math.atan2");
     double x = arg_take_double("math.atan2");
-    return tm_number(atan2(y,x));
+    return number_obj(atan2(y,x));
 }
 
 static
 Object math_ceil() {
     double value = arg_take_double("math.ceil");
-    return tm_number(ceil(value));
+    return number_obj(ceil(value));
 }
 
 static
 Object math_cos() {
     double angle = arg_take_double("math.cos");
-    return tm_number(cos(angle));
+    return number_obj(cos(angle));
 }
 
 static
 Object math_cosh() {
     double value = arg_take_double("math.cosh");
-    return tm_number(cosh(value));
+    return number_obj(cosh(value));
 }
 
 static
 Object math_sin() {
     double angle = arg_take_double("math.sin");
-    return tm_number(sin(angle));
+    return number_obj(sin(angle));
 }
 
 static
 Object math_tan() {
     double angle = arg_take_double("math.tan");
-    return tm_number(tan(angle));
+    return number_obj(tan(angle));
 }
 
 /**
@@ -78,7 +78,7 @@ Object math_tan() {
 void math_mod_init() {
     Object math = dict_new();
 
-    dict_set_by_str(math, "PI", tm_number(3.141592653589793));
+    dict_set_by_str(math, "PI", number_obj(3.141592653589793));
     reg_mod_func(math, "abs", math_abs);
     reg_mod_func(math, "acos", math_acos);
     reg_mod_func(math, "asin", math_asin);

@@ -9,7 +9,7 @@ from mp_tokenize import *
 if "tm" not in globals():
     from boot import *
 
-_stm_end_list = ['nl', 'dedent']
+_smp_end_list = ['nl', 'dedent']
 _skip_op = ['nl', ';']
 
 
@@ -558,7 +558,7 @@ def parse_class(p):
 def parse_stm1(p, type):
     p.next()
     node = AstNode(type)
-    if p.token.type in _stm_end_list:
+    if p.token.type in _smp_end_list:
         node.first = None
     else:
         expr(p)

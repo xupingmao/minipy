@@ -38,7 +38,7 @@ def convert(code):
             line = "  MP_PUSH(locals[{}]);".format(val)
             writer.writeline(line)
         elif op == OP_NUMBER:
-            line = "  MP_PUSH(tm_number({}));".format(val)
+            line = "  MP_PUSH(number_obj({}));".format(val)
             writer.writeline(line)
         elif op == OP_STRING:
             line = "  MP_PUSH(string_new(\"{}\"));".format(val)

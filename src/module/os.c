@@ -12,7 +12,7 @@ Object os_getcwd() {
             case EACCES: msg = "Read or search permission was denied for a component of the pathname.";break;
             case ENOMEM: msg = "Insufficient storage space is available.";break;
         }
-        tm_raise("%s: error -- %s", sz_func, msg);
+        mp_raise("%s: error -- %s", sz_func, msg);
     }
     return string_new(buf);
 }
@@ -23,7 +23,7 @@ Object os_chdir() {
     char *path = arg_take_sz(sz_func);
     int r = chdir(path);
     if (r != 0) {
-        tm_raise("%s: -- fatal error, can not chdir(\"%s\")", sz_func, path);
+        mp_raise("%s: -- fatal error, can not chdir(\"%s\")", sz_func, path);
     } 
     return NONE_OBJECT;
 }
@@ -37,7 +37,7 @@ Object os_listdir() {
     Object _path = obj_add(path, string_new("\\*.*"));
     HANDLE h_find = FindFirstFile(GET_STR(_path), &Find_file_data);
     if (h_find == INVALID_HANDLE_VALUE) {
-        tm_raise("%s is not a directory", path);
+        mp_raise("%s is not a directory", path);
     }
     do {
         if (strcmp(Find_file_data.cFileName, "..")==0 || strcmp(Find_file_data.cFileName, ".") == 0) {
@@ -51,7 +51,7 @@ Object os_listdir() {
     } while (FindNextFile(h_find, &Find_file_data));
     FindClose(h_find);
 #else
-    tm_raise("listdir not implemented in posix.");
+    mp_raise("listdir not implemented in posix.");
 #endif
     return list;
 }
@@ -61,19 +61,19 @@ Object os_stat(){
     struct stat stbuf;
     if (!stat(s,&stbuf)) { 
         Object st = dict_new();
-        dict_set_by_str(st, "st_mtime", tm_number(stbuf.st_mtime));
-        dict_set_by_str(st, "st_atime", tm_number(stbuf.st_atime));
-        dict_set_by_str(st, "st_ctime", tm_number(stbuf.st_ctime));
-        dict_set_by_str(st, "st_size" , tm_number(stbuf.st_size));
-        dict_set_by_str(st, "st_mode",  tm_number(stbuf.st_mode));
-        dict_set_by_str(st, "st_nlink", tm_number(stbuf.st_nlink));
-        dict_set_by_str(st, "st_dev",   tm_number(stbuf.st_dev));
-        dict_set_by_str(st, "st_ino",   tm_number(stbuf.st_ino));
-        dict_set_by_str(st, "st_uid",   tm_number(stbuf.st_uid));
-        dict_set_by_str(st, "st_gid",   tm_number(stbuf.st_gid));
+        dict_set_by_str(st, "st_mtime", number_obj(stbuf.st_mtime));
+        dict_set_by_str(st, "st_atime", number_obj(stbuf.st_atime));
+        dict_set_by_str(st, "st_ctime", number_obj(stbuf.st_ctime));
+        dict_set_by_str(st, "st_size" , number_obj(stbuf.st_size));
+        dict_set_by_str(st, "st_mode",  number_obj(stbuf.st_mode));
+        dict_set_by_str(st, "st_nlink", number_obj(stbuf.st_nlink));
+        dict_set_by_str(st, "st_dev",   number_obj(stbuf.st_dev));
+        dict_set_by_str(st, "st_ino",   number_obj(stbuf.st_ino));
+        dict_set_by_str(st, "st_uid",   number_obj(stbuf.st_uid));
+        dict_set_by_str(st, "st_gid",   number_obj(stbuf.st_gid));
         return st;
     }
-    tm_raise("stat(%s), file not exists or accessable.",s);
+    mp_raise("stat(%s), file not exists or accessable.",s);
     return NONE_OBJECT;
 }
 
@@ -87,7 +87,7 @@ Object os_exists(){
 }
 
 Object os_path_dirname0(Object fpath) {
-    tm_assert_type(fpath, TYPE_STR, "os_path_dirname");
+    mp_assert_type(fpath, TYPE_STR, "os_path_dirname");
 
     char* fpath_sz = GET_STR(fpath);
     char* end_char = strrchr(fpath_sz, '/');
@@ -107,8 +107,8 @@ Object os_path_dirname0(Object fpath) {
 }
 
 Object os_path_join0(Object dirname, Object fname) {
-    tm_assert_type(dirname, TYPE_STR, "os_path_join");
-    tm_assert_type(dirname, TYPE_STR, "os_path_join");
+    mp_assert_type(dirname, TYPE_STR, "os_path_join");
+    mp_assert_type(dirname, TYPE_STR, "os_path_join");
 
     Object sep  = string_chr('/');
     Object temp = obj_add(dirname, sep);

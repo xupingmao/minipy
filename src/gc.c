@@ -29,8 +29,8 @@ void gc_init() {
     int i;
     
     /* initialize constants */
-    tm->_TRUE  = tm_number(1);
-    tm->_FALSE = tm_number(0);
+    tm->_TRUE  = number_obj(1);
+    tm->_FALSE = number_obj(0);
     NONE_OBJECT.type = TYPE_NONE;
     
     tm->init = 0;
@@ -79,7 +79,7 @@ void frames_init() {
     int i;
     tm->frames_init_done = 0;
     for (i = 0; i < FRAMES_COUNT; i++) {
-        TmFrame* f = tm->frames + i;
+        MpFrame* f = tm->frames + i;
         f->stack = tm->stack;
         f->top   = tm->stack;
         f->lineno = -1;
@@ -92,16 +92,16 @@ void frames_init() {
     }
     tm->frames_init_done = 1;
     tm->frame = tm->frames;
-    tm->stack_end = tm->stack + STACK_SIZE; // set global tm_stack_end
+    tm->stack_end = tm->stack + STACK_SIZE; // set global mp_stack_end
 }
 
 
-void* tm_malloc(size_t size) {
+void* mp_malloc(size_t size) {
     void* block;
     Object* func;
 
     if (size <= 0) {
-        tm_raise("tm_malloc, attempts to allocate a memory block of size %d!", size);
+        mp_raise("mp_malloc, attempts to allocate a memory block of size %d!", size);
         return NULL;
     }
     block = malloc(size);
@@ -109,7 +109,7 @@ void* tm_malloc(size_t size) {
     log_info("malloc,%d,%d,%p", tm->allocated, tm->allocated + size, block);
 
     if (block == NULL) {
-        tm_raise("tm_malloc: fail to malloc memory block of size %d", size);
+        mp_raise("mp_malloc: fail to malloc memory block of size %d", size);
     }
     tm->allocated += size;
     tm->max_allocated = max(tm->max_allocated, tm->allocated);
@@ -117,14 +117,14 @@ void* tm_malloc(size_t size) {
     return block;
 }
 
-void* tm_realloc(void* o, size_t osize, size_t nsize) {
-    void* block = tm_malloc(nsize);
+void* mp_realloc(void* o, size_t osize, size_t nsize) {
+    void* block = mp_malloc(nsize);
     memcpy(block, o, osize);
-    tm_free(o, osize);
+    mp_free(o, osize);
     return block;
 }
 
-void tm_free(void* o, size_t size) {
+void mp_free(void* o, size_t size) {
     if (o == NULL)
         return;
 
@@ -166,7 +166,7 @@ Object gc_track(Object v) {
             GET_CLASS(v)->marked = 0;
             break;
         default:
-            tm_raise("gc_track(), not supported type %d", v.type);
+            mp_raise("gc_track(), not supported type %d", v.type);
             return v;
     }
     if (tm->local_obj_list != NULL) {
@@ -179,7 +179,7 @@ Object gc_track(Object v) {
     return v;
 }
 
-void gc_mark_list(TmList* list) {
+void gc_mark_list(MpList* list) {
     if (list->marked)
         return;
     list->marked = GC_REACHED_SIGN;
@@ -189,7 +189,7 @@ void gc_mark_list(TmList* list) {
     }
 }
  
-void gc_mark_dict(TmDict* dict) {
+void gc_mark_dict(MpDict* dict) {
     if (dict->marked)
         return;
     dict->marked = GC_REACHED_SIGN;
@@ -202,7 +202,7 @@ void gc_mark_dict(TmDict* dict) {
     }
 }
 
-void gc_mark_func(TmFunction* func) {
+void gc_mark_func(MpFunction* func) {
     if (func->marked)
         return;
     func->marked = GC_REACHED_SIGN;
@@ -232,7 +232,7 @@ void gc_mark_single(Object o) {
     GC_MARKED(o) = 1;
 }
 
-void gc_mark_module(TmModule* pmodule) {
+void gc_mark_module(MpModule* pmodule) {
     if (pmodule->marked) {
         return;
     }
@@ -280,7 +280,7 @@ void gc_mark(Object o) {
         // GET_DATA(o)->proto->mark(GET_DATA(o));
         break;
     default:
-        tm_raise("gc_mark(), unknown object type %d", o.type);
+        mp_raise("gc_mark(), unknown object type %d", o.type);
     }
 }
 
@@ -295,7 +295,7 @@ void gc_unmark(Object o) {
  * @since 2015-??
  */
 void gc_mark_locals_and_stack() {
-    TmFrame* f;
+    MpFrame* f;
     for(f = tm->frames + 1; f <= tm->frame; f++) {
         gc_mark(f->fnc);
         int j;
@@ -322,8 +322,8 @@ void gc_sweep() {
     int deleted_cnt = 0;
 
     log_info("sweep,%d,0,start", tm->all->len);
-    TmList* temp = list_new_untracked(200);
-    TmList* all = tm->all;
+    MpList* temp = list_new_untracked(200);
+    MpList* all = tm->all;
 
     for (i = 0; i < all->len; i++) {
         if (GC_MARKED(tm->all->nodes[i])) {
@@ -392,7 +392,7 @@ void gc_full() {
  * destroy, release and free, personal opinion
  */ 
 void gc_destroy() {
-    TmList* all = tm->all;
+    MpList* all = tm->all;
     int i;
     
     // TM_TEST
@@ -456,7 +456,7 @@ Object obj_new(int type, void * value) {
     case TYPE_NONE:
         break;
     default:
-        tm_raise("obj_new: not supported type %d", type);
+        mp_raise("obj_new: not supported type %d", type);
     }
     return o;
 }
@@ -493,30 +493,30 @@ void obj_free(Object o) {
 }
 
 
-Object* data_next(TmData* data) {
-    tm_raise("next is not defined!");
+Object* data_next(MpData* data) {
+    mp_raise("next is not defined!");
     return NULL;
 }
 
-void data_mark(TmData* data) {
+void data_mark(MpData* data) {
     int i;
     for (i = 0; i < data->data_size; i++) {
         gc_mark(data->data_ptr[i]);
     }
 }
 
-void data_free(TmData* data) {
+void data_free(MpData* data) {
     // printf("data_free: %x\n", data);
-    tm_free(data, sizeof(TmData) + (data->data_size-1) * sizeof(Object));
+    mp_free(data, sizeof(MpData) + (data->data_size-1) * sizeof(Object));
 }
 
 Object data_get(Object self, Object key) {
-    tm_raise("data.get not implemented");
+    mp_raise("data.get not implemented");
     return NONE_OBJECT;
 }
 
 void data_set(Object self, Object key, Object value) {
-    tm_raise("data.set not implemented");
+    mp_raise("data.set not implemented");
 }
 
 Object data_str(Object self) {
@@ -531,8 +531,8 @@ Object data_new(size_t data_size) {
     Object data_obj;
     data_obj.type = TYPE_DATA;
     /* there is one slot for default. */
-    GET_DATA(data_obj) = tm_malloc(sizeof(TmData) + (data_size-1) * sizeof(Object));
-    TmData* data = GET_DATA(data_obj);
+    GET_DATA(data_obj) = mp_malloc(sizeof(MpData) + (data_size-1) * sizeof(Object));
+    MpData* data = GET_DATA(data_obj);
 
     data->mark = data_mark;
     data->func_free = data_free;

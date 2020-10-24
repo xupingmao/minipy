@@ -24,56 +24,56 @@
 #include <stdint.h>
 
 /* handle like lua */
-typedef union TmValue {
+typedef union MpValue {
   double dv;
   double num;
   int    iv;
   long   lv;
   void*              ptr;
   struct String*     str;
-  struct TmList*     list;
-  struct TmFunction* func;
-  struct TmDict*     dict;
-  struct TmModule*   mod;
-  struct TmData*     data;
-  struct TmRecycle*  gc;
+  struct MpList*     list;
+  struct MpFunction* func;
+  struct MpDict*     dict;
+  struct MpModule*   mod;
+  struct MpData*     data;
+  struct MpRecycle*  gc;
   struct MpClass*    clazz;
-}TmValue;
+}MpValue;
 
 
 typedef struct Object{
   char type;
-  TmValue value;
+  MpValue value;
 }Object;
 
 
-struct TmRecycle {
+struct MpRecycle {
   int marked;
   /* data */
 };
 
-typedef struct _tm_code_cache {
+typedef struct _mp_code_cache {
     int op;
     union {
         Object obj;
         int ival;
     } v;
     char* sval;
-} TmCodeCache;
+} MpCodeCache;
 
-typedef struct TmModule
+typedef struct MpModule
 {
   int marked;
   int resolved;
   Object globals;
   Object code;
   Object file;
-  TmCodeCache* cache;
+  MpCodeCache* cache;
   int cache_cap;
   int cache_len;
-}TmModule;
+}MpModule;
 
-typedef struct TmFunction{
+typedef struct MpFunction{
   int marked;
   char resolved;
   char modifier;
@@ -81,13 +81,13 @@ typedef struct TmFunction{
   int maxstack;
   unsigned char* code;
   unsigned char* end;
-  TmCodeCache* cache;
-  TmCodeCache* cache_end;
+  MpCodeCache* cache;
+  MpCodeCache* cache_end;
   Object self;
   Object mod; /* module, includes global, constants, etc. */
   Object name;
   Object (*native)();
-}TmFunction;
+}MpFunction;
 
 typedef struct MpClass {
   int marked;
@@ -97,7 +97,7 @@ typedef struct MpClass {
   Object attr_dict;
 } MpClass;
 
-typedef struct TmFrame {
+typedef struct MpFrame {
   Object *locals;
   Object *stack;
   Object *top; /* current stack top; */
@@ -105,7 +105,7 @@ typedef struct TmFrame {
   char* last_code;
   
   unsigned char* pc;
-  TmCodeCache* cache;
+  MpCodeCache* cache;
 
   int stacksize;
   int maxlocals;
@@ -116,15 +116,15 @@ typedef struct TmFrame {
   int idx;
   unsigned char* jmp;
   
-  TmCodeCache* cache_jmp;
+  MpCodeCache* cache_jmp;
   
-}TmFrame;
+}MpFrame;
 
 
 #define FRAMES_COUNT 128
 #define MAX_ARG_COUNT 10
 #define STACK_SIZE 2048
-typedef struct TmVm {
+typedef struct MpVm {
   char* version;
   int   debug;
 
@@ -143,9 +143,9 @@ typedef struct TmVm {
   int    ex_index; /* index of frame where exception was thrown */
 
   int frames_init_done;
-  TmFrame frames[FRAMES_COUNT];
+  MpFrame frames[FRAMES_COUNT];
   /* current frame */
-  TmFrame *frame;
+  MpFrame *frame;
   
   Object *stack_end;
   Object stack[STACK_SIZE];
@@ -172,8 +172,8 @@ typedef struct TmVm {
   int steps;   /* record opcode steps executed */
   int init;    /* modules and builtins init */
 
-  struct TmList* all;
-  struct TmList* local_obj_list;
+  struct MpList* all;
+  struct MpList* local_obj_list;
   int allocated;
   int max_allocated;
   int gc_threshold;
@@ -183,9 +183,9 @@ typedef struct TmVm {
   Object _TRUE;
   Object _FALSE;
   
-} TmVm;
+} MpVm;
 
-typedef struct TmData {
+typedef struct MpData {
     int marked;
     size_t data_size;
     
@@ -207,18 +207,18 @@ typedef struct TmData {
 
     void* extend_data_ptr;
     Object data_ptr[1];
-}TmData;
+}MpData;
 
 /** 
  * definition for list
  */
 
-typedef struct TmList {
+typedef struct MpList {
   int marked;
   int len;
   int cap;
   struct Object* nodes;
-}TmList;
+}MpList;
 
 
 /** 
@@ -232,13 +232,13 @@ typedef struct DictNode{
   int used; /* also used for attr index */
 } DictNode;
 
-typedef struct TmDict {
+typedef struct MpDict {
   int marked;
   int len;
   int cap;
   int extend;
   struct DictNode* nodes;
-} TmDict;
+} MpDict;
 
 
 typedef struct String {
@@ -253,6 +253,6 @@ typedef struct String {
  * global variables
  * only one.
  */ 
-TmVm* tm;
+MpVm* tm;
 
 #endif /* OBJECT_H_ */

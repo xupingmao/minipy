@@ -84,17 +84,17 @@ void log_error(char* fmt, ...) {
 /**
  * @since 2016-11-28
  */
-void tm_log_call(Object func) {
+void mp_log_call(Object func) {
     Object name = GET_FUNCTION(func)->name;
     printf("%s(\n", GET_STR(name));
     int i;
     for (i = 0; i < tm->arg_cnt; i++) {
-        tm_println(tm->arguments[i]);
+        mp_println(tm->arguments[i]);
     }
     printf(");\n");
 }
 #else
-    #define tm_log_call(f) /*tm_log_call*/
+    #define mp_log_call(f) /*mp_log_call*/
 #endif
 
 
@@ -102,7 +102,7 @@ void tm_log_call(Object func) {
 /**
  * @since 2016-11-27
  */
-void tm_log_cache(TmCodeCache* cache) {
+void mp_log_cache(MpCodeCache* cache) {
     int val = cache->v.ival;
     Object obj = cache->v.obj;
 
@@ -158,11 +158,11 @@ void tm_log_cache(TmCodeCache* cache) {
             printf("loadex\n");
             break;
         default:
-            printf("tm_eval: %d\n", cache->op);
+            printf("mp_eval: %d\n", cache->op);
     }
 }
 #else
-    #define tm_log_cache(c) /*tm_log_cache*/
+    #define mp_log_cache(c) /*mp_log_cache*/
 #endif
 
 #endif // _TM_LOG_

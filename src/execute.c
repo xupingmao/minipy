@@ -8,23 +8,23 @@
 
 #include "include/mp.h"
 
-void mp_resolve_code(TmModule* m, char* code);
+void mp_resolve_code(MpModule* m, char* code);
 
 Object call_function(Object func) {
     Object ret;
     if (IS_FUNC(func)) {
         resolve_method_self(func);
-        tm_log_call(func);
+        mp_log_call(func);
         
         /* call native function */
         if (GET_FUNCTION(func)->native != NULL) {
             return GET_FUNCTION(func)->native();
         } else {
-            TmFrame* f = push_frame(func);
+            MpFrame* f = push_frame(func);
 
             L_recall:
             if (setjmp(f->buf)==0) {
-                return tm_eval(f);
+                return mp_eval(f);
             } else {
                 f = tm->frame;
                 /* handle exception in this frame */
@@ -48,7 +48,7 @@ Object call_function(Object func) {
         }
         return ret;
     }
-    tm_raise("File %o, line=%d: call_function:invalid object %o", GET_FUNCTION_FILE(tm->frame->fnc), 
+    mp_raise("File %o, line=%d: call_function:invalid object %o", GET_FUNCTION_FILE(tm->frame->fnc), 
         tm->frame->lineno, func);
     return NONE_OBJECT;
 }
@@ -57,16 +57,16 @@ Object call_function(Object func) {
  * @since 2016-11-24
  * TODO gc problem, still save string to constants dict?
  */
-void mp_resolve_code(TmModule* m, char* code) {
+void mp_resolve_code(MpModule* m, char* code) {
     char* s = code;
     char buf[1024];
     int error = 0;
     char* error_msg = NULL;
 
     memset(buf, 0, sizeof(buf));
-    tm_init_cache(m);
+    mp_init_cache(m);
     
-    TmCodeCache cache;
+    MpCodeCache cache;
     cache.op = 0;
     cache.v.ival = 0;
     cache.sval = NULL;
@@ -74,7 +74,7 @@ void mp_resolve_code(TmModule* m, char* code) {
     while (*s != 0) {
         /* must begin with opcode */
         if (!isdigit(*s)) {
-            tm_raise("loadcode: not digit opcode, char=%c, fname=%o, code=%o", *s, m->file, m->code);
+            mp_raise("loadcode: not digit opcode, char=%c, fname=%o, code=%o", *s, m->file, m->code);
             break;
         }
         // read opcode
@@ -112,7 +112,7 @@ void mp_resolve_code(TmModule* m, char* code) {
             strcpy(buf, "0");
         } else {
             // opcode ended or error
-            tm_raise("loadcode: invalid code %d, %c", op, *s);
+            mp_raise("loadcode: invalid code %d, %c", op, *s);
             break;
             error = 1;
         }
@@ -127,7 +127,7 @@ void mp_resolve_code(TmModule* m, char* code) {
         cache.sval = buf; // temp value, just for print
         switch(op) {
             case OP_NUMBER:
-                cache.v.obj = tm_number(atof(buf)); break;
+                cache.v.obj = number_obj(atof(buf)); break;
             
             /* string value */
             case OP_STRING: 
@@ -160,11 +160,11 @@ void mp_resolve_code(TmModule* m, char* code) {
             default:
                 cache.v.ival = 0; break;
         }
-        tm_push_cache(m, cache);
+        mp_push_cache(m, cache);
     }
     
     if (error) {
-        tm_raise("invalid code");
+        mp_raise("invalid code");
     }
 }
 
@@ -186,22 +186,22 @@ if (tm->allocated > tm->gc_threshold) {   \
     gc_full();                            \
 }
 
-TmFrame* push_frame(Object fnc) {
+MpFrame* push_frame(Object fnc) {
     /* make extra space for self in method call */
     Object *top = tm->frame->top + 2;
     tm->frame ++ ;
-    TmFrame* f = tm->frame;
+    MpFrame* f = tm->frame;
 
     /* check oprand stack */
     if (top >= tm->stack + STACK_SIZE) {
         pop_frame();
-        tm_raise("tm_eval: stack overflow");
+        mp_raise("mp_eval: stack overflow");
     }
     
     /* check frame stack*/
     if (tm->frame >= tm->frames + FRAMES_COUNT-1) {
         pop_frame();
-        tm_raise("tm_eval: frame overflow");
+        mp_raise("mp_eval: frame overflow");
     }
 
     f->pc    = GET_FUNCTION(fnc)->code;
@@ -234,7 +234,7 @@ TmFrame* push_frame(Object fnc) {
         pc += i * 3; \
         continue;\
     } else { \
-        *top = tm_number(flag); \
+        *top = number_obj(flag); \
     }
 
 
@@ -244,10 +244,10 @@ TmFrame* push_frame(Object fnc) {
 ** @param f: Frame
 ** @return evaluated value.
 */
-Object tm_eval(TmFrame* f) {
+Object mp_eval(MpFrame* f) {
     Object* locals, *top;
     Object cur_fnc, globals, x, k, v, ret;
-    TmCodeCache* cache;
+    MpCodeCache* cache;
     int i;
 
 tailcall:
@@ -262,7 +262,7 @@ tailcall:
     ret = NONE_OBJECT;
 
     while (1) {
-        tm_log_cache(cache);
+        mp_log_cache(cache);
         #ifdef TM_PRINT_STEPS
             tm->steps++;
         #endif
@@ -281,7 +281,7 @@ tailcall:
 
         case OP_IMPORT: {
             // _import(des_globals, fname, tar);
-            Object import_func = tm_get_global(globals, "_import");
+            Object import_func = mp_get_global(globals, "_import");
             arg_start();
             arg_push(globals);
             Object modname, attr;
@@ -318,12 +318,12 @@ tailcall:
             break;
 
         case OP_LOAD_GLOBAL: {
-            /* tm_printf("load global %o\n", GET_CONST(i)); */
+            /* mp_printf("load global %o\n", GET_CONST(i)); */
             int idx = dict_get0(GET_DICT(globals), cache->v.obj);
             if (idx == -1) {
                 idx = dict_get0(GET_DICT(tm->builtins), cache->v.obj);
                 if (idx == -1) {
-                    tm_raise("NameError: name %o is not defined", cache->v.obj);
+                    mp_raise("NameError: name %o is not defined", cache->v.obj);
                 } else {
                     Object value = GET_DICT(tm->builtins)->nodes[idx].val;
                     // OPTIMIZE
@@ -372,14 +372,14 @@ tailcall:
         case OP_APPEND:
             v = TM_POP();
             x = TM_TOP();
-            tm_assert(IS_LIST(x), "tm_eval: OP_APPEND require list");
+            mp_assert(IS_LIST(x), "mp_eval: OP_APPEND require list");
             list_append(GET_LIST(x), v);
             break;
         case OP_DICT_SET:
             v = TM_POP();
             k = TM_POP();
             x = TM_TOP();
-            tm_assert(IS_DICT(x), "tm_eval: OP_DICT_SET require dict");
+            mp_assert(IS_DICT(x), "mp_eval: OP_DICT_SET require dict");
             obj_set(x, k, v);
             break;
         case OP_DICT: {
@@ -399,45 +399,45 @@ tailcall:
             *top = obj_slice(*top, first, second);
             break;
         }
-        case OP_EQEQ: { *(top-1) = tm_number(obj_equals(*(top-1), *top)); top--; break; }
-        case OP_NOTEQ: { *(top-1) = tm_number(!obj_equals(*(top-1), *top)); top--; break; }
+        case OP_EQEQ: { *(top-1) = number_obj(obj_equals(*(top-1), *top)); top--; break; }
+        case OP_NOTEQ: { *(top-1) = number_obj(!obj_equals(*(top-1), *top)); top--; break; }
         case OP_LT: {
-            *(top-1) = tm_number(mp_cmp(*(top-1), *top)<0);
+            *(top-1) = number_obj(mp_cmp(*(top-1), *top)<0);
             top--;
             break;
         }
         case OP_LTEQ: {
-            *(top-1) = tm_number(mp_cmp(*(top-1), *top)<=0);
+            *(top-1) = number_obj(mp_cmp(*(top-1), *top)<=0);
             top--;
             break;
         }
         case OP_GT: {
-            *(top-1) = tm_number(mp_cmp(*(top-1), *top)>0);
+            *(top-1) = number_obj(mp_cmp(*(top-1), *top)>0);
             top--;
             break;
         }
         case OP_GTEQ: {
-            *(top-1) = tm_number(mp_cmp(*(top-1), *top)>=0);
+            *(top-1) = number_obj(mp_cmp(*(top-1), *top)>=0);
             top--;
             break;
         }
         case OP_IN: {
-            *(top-1) = tm_number(mp_in(*(top-1), *top));
+            *(top-1) = number_obj(mp_in(*(top-1), *top));
             top--;
             break;
         }
         case OP_AND: {
-            *(top-1) = tm_number(is_true_obj(*(top-1)) && is_true_obj(*top));
+            *(top-1) = number_obj(is_true_obj(*(top-1)) && is_true_obj(*top));
             top--;
             break;
         }
         case OP_OR: {
-            *(top-1) = tm_number(is_true_obj(*(top-1)) || is_true_obj(*top));
+            *(top-1) = number_obj(is_true_obj(*(top-1)) || is_true_obj(*top));
             top--;
             break;
         }
         case OP_NOT:{
-            *top = tm_number(!is_true_obj(*top));
+            *top = number_obj(!is_true_obj(*top));
             break;
         }
         case OP_SET:
@@ -501,7 +501,7 @@ tailcall:
         case OP_APPLY: {
             f->top = top;
             Object args = TM_POP();
-            tm_assert_type(args, TYPE_LIST, "tm_eval: OP_APPLY");
+            mp_assert_type(args, TYPE_LIST, "mp_eval: OP_APPLY");
             arg_set_arguments(LIST_NODES(args), LIST_LEN(args));
             Object func = TM_POP();
             x = call_function(func);
@@ -514,7 +514,7 @@ tailcall:
             int parg = (cache->v.ival >> 8) & 0xff;
             int narg = cache->v.ival & 0xff;
             if (tm->arg_cnt < parg || tm->arg_cnt > parg + narg) {
-                tm_raise("ArgError,parg=%d,narg=%d,given=%d", 
+                mp_raise("ArgError,parg=%d,narg=%d,given=%d", 
                     parg, narg, tm->arg_cnt);
             }
             int i;
@@ -585,7 +585,7 @@ tailcall:
         }
         case OP_UNPACK: {
             x = TM_POP();
-            tm_assert_type(x, TYPE_LIST, "tm_eval:UNPACK");
+            mp_assert_type(x, TYPE_LIST, "mp_eval:UNPACK");
             int j;
             for(j = LIST_LEN(x)-1; j >= 0; j--) {
                 TM_PUSH(LIST_GET(x, j));
@@ -650,9 +650,9 @@ tailcall:
 
         case OP_DEBUG: {
             #if 0
-            Object fdebug = tm_get_global(globals, "__debug__");
+            Object fdebug = mp_get_global(globals, "__debug__");
             f->top = top;
-            tm_call(0, fdebug, 1, tm_number(tm->frame - tm->frames));        
+            mp_call(0, fdebug, 1, number_obj(tm->frame - tm->frames));        
             break;
             #endif
         }
@@ -663,7 +663,7 @@ tailcall:
         }
 
         default:
-            tm_raise("BAD INSTRUCTION, %d\n  globals() = \n%o", cache->op,
+            mp_raise("BAD INSTRUCTION, %d\n  globals() = \n%o", cache->op,
                     GET_FUNCTION_GLOBALS(f->fnc));
             goto end;
         }
@@ -674,7 +674,7 @@ tailcall:
     end:
     /*
     if (top != f->stack) {
-        tm_raise("tm_eval: operand stack overflow");
+        mp_raise("mp_eval: operand stack overflow");
     }*/
     pop_frame();
     return ret;

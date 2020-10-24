@@ -111,7 +111,7 @@ int vm_init(int argc, char* argv[]) {
         ptr_map = PtrMap_new();
     #endif
 
-    tm = malloc(sizeof(TmVm));
+    tm = malloc(sizeof(MpVm));
     if (tm == NULL) {
         fprintf(stderr, "vm init fail");
         return -1;
@@ -125,8 +125,8 @@ int vm_init(int argc, char* argv[]) {
     tm->argv   = argv;
     tm->code   = NULL;
     tm->steps  = 0;
-    tm->_TRUE  = tm_number(1);
-    tm->_FALSE = tm_number(0);
+    tm->_TRUE  = number_obj(1);
+    tm->_FALSE = number_obj(0);
 
     /* set module boot */
     Object boot = dict_new();
@@ -134,9 +134,9 @@ int vm_init(int argc, char* argv[]) {
     obj_set(boot, string_from_sz("__name__"), string_from_sz("boot"));
 
     /* builtins constants */
-    dict_set_by_str(tm->builtins, "tm",    tm_number(1));
-    dict_set_by_str(tm->builtins, "True",  tm_number(1));
-    dict_set_by_str(tm->builtins, "False", tm_number(0));
+    dict_set_by_str(tm->builtins, "tm",    number_obj(1));
+    dict_set_by_str(tm->builtins, "True",  number_obj(1));
+    dict_set_by_str(tm->builtins, "False", number_obj(0));
     dict_set_by_str(tm->builtins, "__builtins__", tm->builtins);
     dict_set_by_str(tm->builtins, "__modules__",  tm->modules);
     

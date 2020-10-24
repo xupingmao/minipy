@@ -9,7 +9,7 @@
  *  structure       . camel case 
  *  method          . like string_builtin_xxx, list_builtin_xxx
  *  macro           . like XXX_XXX
- *  function(used by C)  - tm_xxx  - like tm_get(Object a, const char* key)
+ *  function(used by C)  - mp_xxx  - like mp_get(Object a, const char* key)
  *  function(used by vm) - tmV_xxx - like Object tmV_fnc(Object a, Object b)
  *  built-in function    - bf_xxx
 */
@@ -119,9 +119,9 @@ int uncode16(unsigned char**s);
 
 // gc functions
 #define GC_DEBUG_LIST 0
-void*       tm_malloc(size_t size);
-void*       tm_realloc(void* o, size_t osize, size_t nsize);
-void        tm_free(void* o, size_t size);
+void*       mp_malloc(size_t size);
+void*       mp_realloc(void* o, size_t osize, size_t nsize);
+void        mp_free(void* o, size_t size);
 void        init_memory();
 void        free_memory();
 
@@ -134,8 +134,8 @@ Object      bf_get_malloc_info();
 void        gc_mark(Object);
 void        gc_unmark(Object);
 void        gc_mark_single(Object);
-void        gc_mark_list(TmList*);
-void        gc_mark_dict(TmDict*);
+void        gc_mark_list(MpList*);
+void        gc_mark_dict(MpDict*);
 void        gc_restore_local_obj_list(int size);
 void        gc_native_call_sweep();
 void        gc_check_native_call(int size, Object ret);
@@ -167,49 +167,49 @@ int           string_equals(String*s0, String*s1);
 Object        string_substring(String* str, int start, int end) ;
 void          string_methods_init();
 Object        string_iter_new(Object s);
-Object*       string_next(TmData* iterator);
+Object*       string_next(MpData* iterator);
 
 // number functions
-Object     tm_number(double v);
+Object     number_obj(double v);
 void       number_format(char* des, Object num);
-double     number_value(Object num);
+double     number_get_double(Object num);
 long long  long_value(Object num);
 
 /**
  * list functions
  */
 
-void     list_check(TmList*);
+void     list_check(MpList*);
 Object   list_new(int cap);
-/* create a TmList which not tracked by Garbage Collector. */
-TmList*  list_new_untracked(int cap);
-void     list_set(TmList* list, int n, Object v);
-Object   list_get(TmList* list, int n);
-void     list_free(TmList* );
-void     list_clear(TmList* list);
+/* create a MpList which not tracked by Garbage Collector. */
+MpList*  list_new_untracked(int cap);
+void     list_set(MpList* list, int n, Object v);
+Object   list_get(MpList* list, int n);
+void     list_free(MpList* );
+void     list_clear(MpList* list);
 void     list_methods_init();
 Object   list_iter_new(Object list);
-Object*  list_next(TmData* iterator);
-Object   list_add(TmList*, TmList*);
-void     list_del(TmList*list, Object key);
-void     list_insert(TmList*list, int index, Object value);
-int      list_index(TmList*, Object val);
-void     list_append(TmList* list, Object v);
-void     list_shorten(TmList* list, int len); // shorten list.
+Object*  list_next(MpData* iterator);
+Object   list_add(MpList*, MpList*);
+void     list_del(MpList*list, Object key);
+void     list_insert(MpList*list, int index, Object value);
+int      list_index(MpList*, Object val);
+void     list_append(MpList* list, Object v);
+void     list_shorten(MpList* list, int len); // shorten list.
 Object   list_from_array(int n, ...);
 Object   list_builtin_extend();
 
 // dict functions
 Object           dict_new();
-TmDict*          dict_init();
-void             dict_free(TmDict* dict);
-int              dict_set0(TmDict* dict, Object key, Object val);
-DictNode*        dict_get_node(TmDict* dict, Object key);
-Object*          dict_get_by_str0(TmDict* dict, char* key);
-void             dict_del(TmDict* dict, Object k);
+MpDict*          dict_init();
+void             dict_free(MpDict* dict);
+int              dict_set0(MpDict* dict, Object key, Object val);
+DictNode*        dict_get_node(MpDict* dict, Object key);
+Object*          dict_get_by_str0(MpDict* dict, char* key);
+void             dict_del(MpDict* dict, Object k);
 void             dict_methods_init();
-void             dict_set_by_str0(TmDict* dict, char* key, Object val);
-Object           dict_keys(TmDict* );
+void             dict_set_by_str0(MpDict* dict, char* key, Object val);
+Object           dict_keys(MpDict* );
 
 #define          dict_set(d, k, v)                dict_set0(GET_DICT(d), k, v)
 #define          dict_set_by_str(dict, key, val)  dict_set_by_str0(GET_DICT(dict), key, val)
@@ -219,9 +219,9 @@ Object           dict_keys(TmDict* );
 Object           dict_keys();
 Object           dict_values();
 Object           dict_iter_new(Object dict);
-Object*          dict_next(TmData* iterator);
-int              dict_set_attr(TmDict* dict, int const_id, Object val);
-int              dict_get_attr(TmDict* dict, int const_id);
+Object*          dict_next(MpData* iterator);
+int              dict_set_attr(MpDict* dict, int const_id, Object val);
+int              dict_get_attr(MpDict* dict, int const_id);
 
 
 // arg functions
@@ -230,7 +230,7 @@ String* arg_take_str_ptr(const char* fnc);
 void    arg_start();
 void    arg_push(Object obj) ;
 void    arg_set_arguments(Object* first, int len);
-void    _resolve_method_self(TmFunction *fnc);
+void    _resolve_method_self(MpFunction *fnc);
 #define resolve_method_self(fnc) _resolve_method_self(GET_FUNCTION((fnc)))
 void    print_arguments();
 int     arg_has_next();
@@ -239,7 +239,7 @@ char*   arg_take_sz(const char* fnc);
 Object  arg_take_func_obj(const char* fnc);
 int     arg_take_int(const char* fnc);
 double  arg_take_double(const char* fnc);
-TmList* arg_take_list_ptr(const char* fnc);
+MpList* arg_take_list_ptr(const char* fnc);
 Object  arg_take_list_obj(const char* fnc);
 Object  arg_take_dict_obj(const char* fnc);
 Object  arg_take_obj(const char* fnc);
@@ -250,20 +250,20 @@ int     arg_remains();
 
 // function functions
 Object           func_new(Object mod,Object self,Object (*native_func)());
-Object           func_get_attr(TmFunction* fnc, Object key);
-void             func_free(TmFunction*);
-unsigned char*   func_get_code(TmFunction*);
-Object           func_get_code_obj(TmFunction*);
-void             func_format(char* des, TmFunction* func);
-TmModule*        get_func_mod(TmFunction* func);
-Object           get_function_globals(TmFunction*);
-unsigned char*   func_resolve(TmFunction*, unsigned char*);
+Object           func_get_attr(MpFunction* fnc, Object key);
+void             func_free(MpFunction*);
+unsigned char*   func_get_code(MpFunction*);
+Object           func_get_code_obj(MpFunction*);
+void             func_format(char* des, MpFunction* func);
+MpModule*        get_func_mod(MpFunction* func);
+Object           get_function_globals(MpFunction*);
+unsigned char*   func_resolve(MpFunction*, unsigned char*);
 Object           get_file_name_obj(Object func);
 Object           get_func_name_obj(Object func);
 
 Object           method_new(Object _fnc, Object self);
 Object           module_new(Object file, Object name, Object code);
-void             module_free(TmModule*);
+void             module_free(MpModule*);
 
 Object           class_new(Object name);
 Object           class_instance(Object dict);
@@ -285,7 +285,7 @@ Object      obj_new(int type, void* value);
  *  general object operation
  *  some tools
  */
-const char* tm_type(int type);
+const char* mp_type(int type);
 void        obj_set(Object self, Object key, Object value);
 void        obj_del(Object self, Object k);
 Object      obj_get(Object self, Object key);
@@ -299,7 +299,7 @@ Object      obj_cmp(Object a, Object b);
 Object      obj_in(Object left, Object right);
 Object      obj_slice(Object self, Object first, Object second);
 Object      iter_new(Object collections);
-Object      tm_str(Object obj);
+Object      mp_str(Object obj);
 Object      obj_append(Object a, Object item);
 
 Object*     next_ptr(Object iterator);
@@ -307,11 +307,11 @@ char*       obj_to_sz(Object obj);
 int         mp_cmp(Object a, Object b);
 int         mp_in(Object key, Object collection);
 int         obj_equals(Object a, Object b);
-int         tm_len(Object obj);
+int         mp_len(Object obj);
 int         is_true_obj(Object v);
-int         tm_iter(Object self, Object *k);
-Object      tm_get_global(Object globals, char* key);
-Object      tm_call_builtin(BuiltinFunc func, int n, ...);
+int         mp_iter(Object self, Object *k);
+Object      mp_get_global(Object globals, char* key);
+Object      mp_call_builtin(BuiltinFunc func, int n, ...);
 
 // vm functions
 Object call_module_function(char* mod, char* fnc);
@@ -320,41 +320,41 @@ void   reg_builtin_func(char* name, Object (*native)());
 void   reg_mod_func(Object mod, char* name, Object(*native)());
 void   reg_mod_attr(char* mod_name,char* attr, Object value);
 int    obj_eq_sz(Object str, const char* value);
-void   tm_raise(char*fmt , ...);
+void   mp_raise(char*fmt , ...);
 void   vm_destroy();
 
 
 
-#define  TM_PUSH(x) *(++top) = (x); if(top > tm->stack_end) tm_raise("stack overflow");
+#define  TM_PUSH(x) *(++top) = (x); if(top > tm->stack_end) mp_raise("stack overflow");
 #define  TM_POP() *(top--)
 #define  TM_TOP() (*top)
 #define  GET_CONST(i) GET_DICT(tm->constants)->nodes[i].key
 Object   call_unsafe(Object fnc);
 Object   call_function(Object func);
 Object   load_file_module(Object filename, Object code, Object name);
-Object   tm_eval(TmFrame*);
-TmFrame* push_frame(Object fnc);
+Object   mp_eval(MpFrame*);
+MpFrame* push_frame(Object fnc);
 void     pop_frame();
 
 // exception functions
-void tm_assert_type(Object o, int type, char* msg) ;
-void tm_assert_int(double value, char* msg) ;
-void push_exception(TmFrame* f);
+void mp_assert_type(Object o, int type, char* msg) ;
+void mp_assert_int(double value, char* msg) ;
+void push_exception(MpFrame* f);
 void traceback();
-void tm_raise(char* fmt, ...);
+void mp_raise(char* fmt, ...);
 
 // builtin functions
-void      tm_print(Object v);
-void      tm_println(Object v);
-Object    tm_format_va_list(char* fmt, va_list ap, int appendln);
-Object    tm_format_va_list_check_length(char* fmt, va_list ap, int ap_length, int appendln);
-Object    tm_format(char*fmt, ...);
-Object    tm_format_check_length(char*fmt, int ap_length, ...);
-void      tm_inspect_obj(Object o);
-void      tm_printf(char* fmt, ...);
+void      mp_print(Object v);
+void      mp_println(Object v);
+Object    mp_format_va_list(char* fmt, va_list ap, int appendln);
+Object    mp_format_va_list_check_length(char* fmt, va_list ap, int ap_length, int appendln);
+Object    mp_format(char*fmt, ...);
+Object    mp_format_check_length(char*fmt, int ap_length, ...);
+void      mp_inspect_obj(Object o);
+void      mp_printf(char* fmt, ...);
 /* avoid '\0' in char array, which will be regarded as end by c lang */
 /* Chars     Object_info(char*,Object,int); */
-Object    tm_load(char* fname); // load the content of a file.
+Object    mp_load(char* fname); // load the content of a file.
 Object    bf_load();
 Object    bf_save(); // save(fname, content);
 Object    bf_int();
