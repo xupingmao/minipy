@@ -7,14 +7,14 @@
 
 #include "include/mp.h"
 
-Object number_obj(double v){
-  Object o;
+MpObj number_obj(double v){
+  MpObj o;
   MP_TYPE(o) = TYPE_NUM;
   GET_NUM(o) = v;
   return o;
 }
 
-void number_format(char* des, Object num){
+void number_format(char* des, MpObj num){
     double v = GET_NUM(num);
     if (fabs(v) - fabs((double)(long) v) < 0.000000001) {
         sprintf(des, "%ld", (long) v);
@@ -23,10 +23,10 @@ void number_format(char* des, Object num){
     }
 }
 
-double number_get_double(Object num) {
+double number_get_double(MpObj num) {
     return GET_NUM(num);
 }
 
-long long number_get_long(Object num) {
+long long number_get_long(MpObj num) {
     return (long long) GET_NUM(num);
 }

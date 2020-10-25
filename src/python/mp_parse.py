@@ -180,7 +180,7 @@ def parse_var_list(p):
 #  This is not LL grammar
 #  Assignment = Lvalue '=' Rvalue
 #  Lvalue     = Name | (Rvalue Attr)
-#  Object     = Name | Number | String | True | False | None | '(' Rvalue ')'
+#  MpObj     = Name | Number | String | True | False | None | '(' Rvalue ')'
 #  Rvalue     = Expression
 #  Attr       = ('.' Name) | ('[' Rvalue ']')
 #  Expression = CommaExp ( ',' CommaExp)*

@@ -41,14 +41,14 @@ const char* mp_type(int type) {
     return MP_TYPE_STR;
 }
 
-void mp_assert_type(Object o, int type, char* msg) {
+void mp_assert_type(MpObj o, int type, char* msg) {
     if (MP_TYPE(o) != type) {
         mp_raise("%s, expect %s but see %s", msg, 
             mp_type(type), mp_type(o.type));
     }
 }
 
-void mp_assert_type2(Object o, int type1, int type2, char* msg) {
+void mp_assert_type2(MpObj o, int type1, int type2, char* msg) {
     if (MP_TYPE(o) != type1 && MP_TYPE(o) != type2) {
         mp_raise("%s, expect %s or %s but see %s", msg, 
             mp_type(type1), mp_type(type2), mp_type(o.type));
@@ -62,12 +62,12 @@ void mp_assert_int(double value, char* msg) {
     }
 }
 
-int obj_eq_sz(Object obj, const char* value) {
+int obj_eq_sz(MpObj obj, const char* value) {
     return MP_TYPE(obj) == TYPE_STR
             && (GET_STR(obj) == value || strcmp(GET_STR(obj), value) == 0);
 }
 
-void obj_set(Object self, Object k, Object v) {
+void obj_set(MpObj self, MpObj k, MpObj v) {
     // gc_mark_single(k); // used between gc scan
     // gc_mark_single(v); // only need to mark single.
     switch (MP_TYPE(self)) {
@@ -90,8 +90,8 @@ void obj_set(Object self, Object k, Object v) {
     mp_raise("obj_set: Self %o, Key %o, Val %o", self, k, v);
 }
 
-Object obj_get(Object self, Object k) {
-    Object v;
+MpObj obj_get(MpObj self, MpObj k) {
+    MpObj v;
     switch (MP_TYPE(self)) {
         case TYPE_STR: {
             DictNode* node;
@@ -158,7 +158,7 @@ Object obj_get(Object self, Object k) {
  * 'test'.slice(0,-1) = 'tes'
  * </code>
  */
-Object obj_slice(Object self, Object first, Object second) {
+MpObj obj_slice(MpObj self, MpObj first, MpObj second) {
     int start = GET_NUM(first);
     int end = 0;
     if (IS_NONE(second)) {
@@ -167,7 +167,7 @@ Object obj_slice(Object self, Object first, Object second) {
         end = GET_NUM(second);
     }
 
-    Object ret = NONE_OBJECT;
+    MpObj ret = NONE_OBJECT;
     
     if (IS_STR(self)) {
         int length = GET_STR_LEN(self);
@@ -208,7 +208,7 @@ Object obj_slice(Object self, Object first, Object second) {
     return ret;
 }
 
-Object obj_sub(Object a, Object b) {
+MpObj obj_sub(MpObj a, MpObj b) {
     if (a.type == b.type) {
         if (a.type == TYPE_NUM) {
             GET_NUM(a) -= GET_NUM(b);
@@ -219,7 +219,7 @@ Object obj_sub(Object a, Object b) {
     return NONE_OBJECT;
 }
 
-Object obj_add(Object a, Object b) {
+MpObj obj_add(MpObj a, MpObj b) {
     if (MP_TYPE(a) == MP_TYPE(b)) {
         switch (MP_TYPE(a)) {
             case TYPE_NUM:
@@ -233,7 +233,7 @@ Object obj_add(Object a, Object b) {
                 if (la == 0) {return b;    }
                 if (lb == 0) {return a;    }
                 int len = la + lb;
-                Object des = string_alloc(NULL, len);
+                MpObj des = string_alloc(NULL, len);
                 char*s = GET_STR(des);
                 memcpy(s, sa, la);
                 memcpy(s + la, sb, lb);
@@ -248,7 +248,7 @@ Object obj_add(Object a, Object b) {
     return NONE_OBJECT;
 }
 
-int obj_equals(Object a, Object b){
+int obj_equals(MpObj a, MpObj b){
     if(MP_TYPE(a) != MP_TYPE(b)) return 0;
     switch(MP_TYPE(a)){
         case TYPE_NUM:return GET_NUM(a) == GET_NUM(b);
@@ -263,8 +263,8 @@ int obj_equals(Object a, Object b){
             if(LIST_LEN(a) != LIST_LEN(b)) return 0;
             int i;
             int len = GET_LIST(a)->len;
-            Object* nodes1 = GET_LIST(a)->nodes;
-            Object* nodes2 = GET_LIST(b)->nodes;
+            MpObj* nodes1 = GET_LIST(a)->nodes;
+            MpObj* nodes2 = GET_LIST(b)->nodes;
             for(i = 0; i < len; i++){
                 if(!obj_equals(nodes1[i], nodes2[i]) ){
                     return 0;
@@ -285,11 +285,11 @@ int obj_equals(Object a, Object b){
     return 0;
 }
 
-Object obj_cmp(Object a, Object b) {
+MpObj obj_cmp(MpObj a, MpObj b) {
     return number_obj(mp_cmp(a, b));
 }
 
-int mp_cmp(Object a, Object b) {
+int mp_cmp(MpObj a, MpObj b) {
     if (MP_TYPE(a) == MP_TYPE(b)) {
         switch (MP_TYPE(a)) {
             case TYPE_NUM: {
@@ -308,7 +308,7 @@ int mp_cmp(Object a, Object b) {
     return 0;
 }
 
-Object obj_mul(Object a, Object b) {
+MpObj obj_mul(MpObj a, MpObj b) {
     /* number * number */
     if (a.type == b.type && a.type == TYPE_NUM) {
         GET_NUM(a) *= GET_NUM(b);
@@ -316,13 +316,13 @@ Object obj_mul(Object a, Object b) {
     }
     /* number * string */
     if (a.type == TYPE_NUM && b.type == TYPE_STR) {
-        Object temp = a;
+        MpObj temp = a;
         a = b;
         b = temp;
     }
     if (a.type == TYPE_STR && b.type == TYPE_NUM) {
         int len = GET_STR_LEN(a);
-        Object des;
+        MpObj des;
         if (len == 0)
             return a;
         int times = (int) GET_NUM(b);
@@ -341,7 +341,7 @@ Object obj_mul(Object a, Object b) {
     }
     /* list * number */
     if (a.type == TYPE_NUM && b.type == TYPE_LIST) {
-        Object temp = a;
+        MpObj temp = a;
         a = b;
         b = temp;
     }
@@ -349,7 +349,7 @@ Object obj_mul(Object a, Object b) {
         if (GET_NUM(b) < 1) {
             return list_new(0);
         }
-        Object new_list = list_new(LIST_LEN(a) * GET_NUM(b));
+        MpObj new_list = list_new(LIST_LEN(a) * GET_NUM(b));
         int i = 0;
         for (i = 0; i < GET_NUM(b); i++) {
             mp_call_builtin(list_builtin_extend, 2, new_list, a);
@@ -360,7 +360,7 @@ Object obj_mul(Object a, Object b) {
     return NONE_OBJECT;
 }
 
-Object obj_div(Object a, Object b) {
+MpObj obj_div(MpObj a, MpObj b) {
     if (a.type == b.type && a.type == TYPE_NUM) {
         GET_NUM(a) /= GET_NUM(b);
         return a;
@@ -369,7 +369,7 @@ Object obj_div(Object a, Object b) {
     return NONE_OBJECT;
 }
 
-Object string_mod_list(Object str, Object list) {
+MpObj string_mod_list(MpObj str, MpObj list) {
     assert(MP_TYPE(str)  == TYPE_STR);
     assert(MP_TYPE(list) == TYPE_LIST);
 
@@ -379,7 +379,7 @@ Object string_mod_list(Object str, Object list) {
     int i = 0;
     int arg_index = 0;
 
-    Object result = string_new("");
+    MpObj result = string_new("");
 
     for (i = 0; i < str_length; i++) {
         char c = fmt[i];
@@ -392,7 +392,7 @@ Object string_mod_list(Object str, Object list) {
                     arg_index++;
                     break;
                 case 'd': {
-                    Object item = list_get(plist, arg_index);                 
+                    MpObj item = list_get(plist, arg_index);                 
                     mp_assert_type(item, TYPE_NUM, "obj_mod");  
                     string_append_obj(result, item);
                     arg_index++;
@@ -409,25 +409,25 @@ Object string_mod_list(Object str, Object list) {
     return result;
 }
 
-Object string_ops_mod(Object a, Object b) {
+MpObj string_ops_mod(MpObj a, MpObj b) {
     assert(MP_TYPE(a) == TYPE_STR);
     char* fmt = GET_SZ(a);
 
     if (MP_TYPE(b) == TYPE_LIST) {
         return string_mod_list(a, b);
     } else {
-        Object list = list_new(1);
+        MpObj list = list_new(1);
         MpList* plist = GET_LIST(list);
         list_append(plist, b);
         return string_mod_list(a, list);
     }
 }
 
-Object obj_mod(Object a, Object b) {
+MpObj obj_mod(MpObj a, MpObj b) {
     if (a.type == b.type && a.type == TYPE_NUM) {
         return number_obj((long) GET_NUM(a) % (long) GET_NUM(b));
     } else if (a.type == TYPE_STR) {
-        Object *__mod__ = get_builtin("__mod__");
+        MpObj *__mod__ = get_builtin("__mod__");
         if (__mod__ == NULL) {
             return string_ops_mod(a, b);
         } else {
@@ -445,7 +445,7 @@ Object obj_mod(Object a, Object b) {
 /* parent has child
  * child in parent
  */
-int mp_in(Object child, Object parent) {
+int mp_in(MpObj child, MpObj parent) {
     switch (MP_TYPE(parent)) {
         case TYPE_LIST: {
             return (list_index(GET_LIST(parent), child) != -1);
@@ -471,15 +471,15 @@ int mp_in(Object child, Object parent) {
     return 0;
 }
 
-int obj_not_in(Object child, Object parent) {
+int obj_not_in(MpObj child, MpObj parent) {
     return !mp_in(child, parent);
 }
 
-Object obj_in(Object left, Object right) {
+MpObj obj_in(MpObj left, MpObj right) {
     return number_obj(mp_in(left, right));
 }
 
-int is_true_obj(Object v) {
+int is_true_obj(MpObj v) {
     switch (MP_TYPE(v)) {
     case TYPE_NUM:
         return GET_NUM(v) != 0;
@@ -498,7 +498,7 @@ int is_true_obj(Object v) {
     return 0;
 }
 
-Object obj_neg(Object o) {
+MpObj obj_neg(MpObj o) {
     if (o.type == TYPE_NUM) {
         GET_NUM(o) = -GET_NUM(o);
         return o;
@@ -508,7 +508,7 @@ Object obj_neg(Object o) {
 }
 
 
-Object iter_new(Object collections) {
+MpObj iter_new(MpObj collections) {
     switch(MP_TYPE(collections)) {
         case TYPE_LIST: return list_iter_new(collections);
         case TYPE_DICT: return dict_iter_new(collections);
@@ -520,11 +520,11 @@ Object iter_new(Object collections) {
     return NONE_OBJECT;
 }
 
-Object* next_ptr(Object iterator) {
+MpObj* next_ptr(MpObj iterator) {
     return GET_DATA(iterator)->next(GET_DATA(iterator));
 }
 
-void obj_del(Object self, Object k) {
+void obj_del(MpObj self, MpObj k) {
     switch(MP_TYPE(self)) {
         case TYPE_DICT:{
             dict_del(GET_DICT(self), k);
@@ -539,7 +539,7 @@ void obj_del(Object self, Object k) {
     }
 }
 
-Object obj_append(Object a, Object item) {
+MpObj obj_append(MpObj a, MpObj item) {
     if (IS_LIST(a)) {
         list_append(GET_LIST(a), item);
     } else {
@@ -548,8 +548,8 @@ Object obj_append(Object a, Object item) {
     return a;
 }
 
-Object mp_get_global(Object globals, char *key) {
-    Object okey = string_new(key);
+MpObj mp_get_global(MpObj globals, char *key) {
+    MpObj okey = string_new(key);
     DictNode* node = dict_get_node(GET_DICT(globals), okey);
     if (node == NULL) {
         node = dict_get_node(GET_DICT(tm->builtins), okey);
@@ -560,7 +560,7 @@ Object mp_get_global(Object globals, char *key) {
     return node->val;
 }
 
-int mp_len(Object o) {
+int mp_len(MpObj o) {
     int len = -1;
     switch (MP_TYPE(o)) {
     case TYPE_STR:
@@ -579,8 +579,8 @@ int mp_len(Object o) {
     return len;
 }
 
-// func Object mp_str(Object a)
-Object mp_str(Object a) {
+// func MpObj mp_str(MpObj a)
+MpObj mp_str(MpObj a) {
     char buf[100];
     memset(buf, 0, sizeof(buf));
     switch (MP_TYPE(a)) {
@@ -593,12 +593,12 @@ Object mp_str(Object a) {
         return string_new(s);
     }
     case TYPE_LIST: {
-        Object str = string_new("");
+        MpObj str = string_new("");
 
         str = string_append_char(str, '[');
         int i, l = LIST_LEN(a);
         for (i = 0; i < l; i++) {
-            Object obj = GET_LIST(a)->nodes[i];
+            MpObj obj = GET_LIST(a)->nodes[i];
             /* reference to self in list */
             if (obj_equals(a, obj)) {
                 str = string_append_sz(str, "[...]");
@@ -636,20 +636,20 @@ Object mp_str(Object a) {
 }
 
 /** get const id, this will be used to search the const value */
-int get_const_id(Object const_value) {
+int get_const_id(MpObj const_value) {
     int i = dict_set(tm->constants, const_value, NONE_OBJECT);
     return i;
 }
 
 
-Object mp_call_builtin(BuiltinFunc func, int n, ...) {
+MpObj mp_call_builtin(BuiltinFunc func, int n, ...) {
     int i = 0;
     va_list ap;
     va_start(ap, n);
 
     arg_start();
     for (i = 0; i < n; i++) {
-        arg_push(va_arg(ap, Object));
+        arg_push(va_arg(ap, MpObj));
     }
     return func();
 }

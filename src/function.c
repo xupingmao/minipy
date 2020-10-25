@@ -86,9 +86,9 @@ MpCodeCache* func_resolve_cache(MpFunction* fnc, MpCodeCache* cache) {
     return fnc->cache_end;
 }
 
-Object func_new(Object mod,
-        Object self,
-        Object (*native_func)()){
+MpObj func_new(MpObj mod,
+        MpObj self,
+        MpObj (*native_func)()){
   mp_assert_type2(mod, TYPE_MODULE, TYPE_NONE, "func_new");
 
   MpFunction* f= mp_malloc(sizeof(MpFunction));
@@ -105,10 +105,10 @@ Object func_new(Object mod,
 /**
  * create new method from function
  */
-Object method_new(Object _fnc, Object self){
+MpObj method_new(MpObj _fnc, MpObj self){
   mp_assert_type(_fnc, TYPE_FUNCTION, "method_new");
   MpFunction* fnc = GET_FUNCTION(_fnc);
-  Object nfnc = func_new(fnc->mod, self, fnc->native);
+  MpObj nfnc = func_new(fnc->mod, self, fnc->native);
   GET_FUNCTION(nfnc)->name = GET_FUNCTION(_fnc)->name;
   GET_FUNCTION(nfnc)->maxlocals = GET_FUNCTION(_fnc)->maxlocals;
   GET_FUNCTION(nfnc)->code = GET_FUNCTION(_fnc)->code;
@@ -116,7 +116,7 @@ Object method_new(Object _fnc, Object self){
   return nfnc;
 }
 
-Object class_new(Object name) {
+MpObj class_new(MpObj name) {
   // TODO add class type
   MpClass* clazz = mp_malloc(sizeof(MpClass));
   clazz->name = name;
@@ -125,18 +125,18 @@ Object class_new(Object name) {
 }
 
 
-Object class_instance(Object clazz){
+MpObj class_instance(MpObj clazz){
   MpClass *pclass = GET_CLASS(clazz);
   MpDict* cl = GET_DICT(pclass->attr_dict);
-  Object k,v;
-  Object instance = dict_new();
+  MpObj k,v;
+  MpObj instance = dict_new();
   DictNode* nodes = cl->nodes;
   int i;
   for(i = 0; i < cl->cap; i++) {
       k = nodes[i].key;
       v = nodes[i].val;
       if(nodes[i].used && IS_FUNC(v)){
-        Object method = method_new(v, instance);
+        MpObj method = method_new(v, instance);
         obj_set(instance, k, method);
       }
   }
@@ -147,7 +147,7 @@ void class_free(MpClass* pclass) {
   mp_free(pclass, sizeof(MpClass));
 }
 
-void class_format(char* dest, Object class_obj) {
+void class_format(char* dest, MpObj class_obj) {
   mp_assert_type(class_obj, TYPE_CLASS, "class_format");
   MpClass* clazz = GET_CLASS(class_obj);
   sprintf(dest, "<class %s@%p>", GET_SZ(clazz->name), clazz);
@@ -163,7 +163,7 @@ void func_free(MpFunction* func){
  * @param file filename
  * @name  __name__
  */
-Object module_new(Object file, Object name, Object code){
+MpObj module_new(MpObj file, MpObj name, MpObj code){
   MpModule *mod = mp_malloc(sizeof(MpModule));
   mod->file = file;
   mod->code = code;
@@ -172,7 +172,7 @@ Object module_new(Object file, Object name, Object code){
   /*mod->constants = list_new(20);*/
   /*list_append(GET_LIST(mod->constants), NONE_OBJECT);*/
   mod->globals = dict_new();
-  Object m = gc_track(obj_new(TYPE_MODULE, mod));
+  MpObj m = gc_track(obj_new(TYPE_MODULE, mod));
   /* set module */
   obj_set(tm->modules,  file, mod->globals);
   obj_set(mod->globals, string_static("__name__"), name);
@@ -225,7 +225,7 @@ void func_format(char* des, MpFunction* func){
     }
 }
 
-Object func_get_code_obj(MpFunction* func) {
+MpObj func_get_code_obj(MpFunction* func) {
     if (func->native != NULL) {
         return NONE_OBJECT;
     }
@@ -239,7 +239,7 @@ Object func_get_code_obj(MpFunction* func) {
 }
 
 
-Object func_get_attr(MpFunction* fnc, Object key) {
+MpObj func_get_attr(MpFunction* fnc, MpObj key) {
     if(obj_eq_sz(key, "__name__")) {
         return fnc->name;
     } else if(obj_eq_sz(key, "__self__")) {
@@ -255,7 +255,7 @@ unsigned char* func_get_code(MpFunction *fnc){
     return fnc->code;
 }
 
-Object get_function_globals(MpFunction* fnc) {
+MpObj get_function_globals(MpFunction* fnc) {
     mp_assert_type(fnc->mod, TYPE_MODULE, "get_function_globals");
     return GET_MODULE(fnc->mod)->globals;
 }
@@ -265,7 +265,7 @@ int get_function_max_locals(MpFunction* fnc){
     return fnc->maxlocals;
 }
 
-char* get_func_name_sz(Object func) {
+char* get_func_name_sz(MpObj func) {
     if (IS_FUNC(func)) {
         return GET_STR(GET_FUNCTION(func)->name);
     } else if (IS_CLASS(func)){
@@ -276,17 +276,17 @@ char* get_func_name_sz(Object func) {
 }
 
 /**
- * @param func Object
+ * @param func MpObj
  * @return file_name Obj->string
  */
-Object get_file_name_obj(Object func) {
+MpObj get_file_name_obj(MpObj func) {
   if (IS_FUNC(func)) {
     return GET_MODULE(GET_FUNCTION(func)->mod)->file;
   }
   return NONE_OBJECT;
 }
 
-Object get_func_name_obj(Object func) {
+MpObj get_func_name_obj(MpObj func) {
   if (IS_FUNC(func)) {
     return GET_FUNCTION(func)->name;
   }

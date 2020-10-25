@@ -10,63 +10,63 @@
 
  
 static
-Object math_abs() {
+MpObj math_abs() {
     double angle = arg_take_double("math.abs");
     if (angle < 0) { angle = -angle; }
     return number_obj(angle);
 }
 
 static
-Object math_acos() {
+MpObj math_acos() {
     double angle = arg_take_double("math.acos");
     return number_obj(acos(angle));
 }
 
 static
-Object math_asin() {
+MpObj math_asin() {
     double angle = arg_take_double("math.asin");
     return number_obj(asin(angle));
 }
 
 static
-Object math_atan() {
+MpObj math_atan() {
     double angle = arg_take_double("math.atan");
     return number_obj(atan(angle));
 }
 
 static
-Object math_atan2() {
+MpObj math_atan2() {
     double y = arg_take_double("math.atan2");
     double x = arg_take_double("math.atan2");
     return number_obj(atan2(y,x));
 }
 
 static
-Object math_ceil() {
+MpObj math_ceil() {
     double value = arg_take_double("math.ceil");
     return number_obj(ceil(value));
 }
 
 static
-Object math_cos() {
+MpObj math_cos() {
     double angle = arg_take_double("math.cos");
     return number_obj(cos(angle));
 }
 
 static
-Object math_cosh() {
+MpObj math_cosh() {
     double value = arg_take_double("math.cosh");
     return number_obj(cosh(value));
 }
 
 static
-Object math_sin() {
+MpObj math_sin() {
     double angle = arg_take_double("math.sin");
     return number_obj(sin(angle));
 }
 
 static
-Object math_tan() {
+MpObj math_tan() {
     double angle = arg_take_double("math.tan");
     return number_obj(tan(angle));
 }
@@ -76,7 +76,7 @@ Object math_tan() {
  * @since 2016-08-27
  */
 void math_mod_init() {
-    Object math = dict_new();
+    MpObj math = dict_new();
 
     dict_set_by_str(math, "PI", number_obj(3.141592653589793));
     reg_mod_func(math, "abs", math_abs);

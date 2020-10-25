@@ -10,8 +10,8 @@
 
 void mp_resolve_code(MpModule* m, char* code);
 
-Object call_function(Object func) {
-    Object ret;
+MpObj call_function(MpObj func) {
+    MpObj ret;
     if (IS_FUNC(func)) {
         resolve_method_self(func);
         mp_log_call(func);
@@ -42,7 +42,7 @@ Object call_function(Object func) {
         }
     } else if (IS_CLASS(func)) {
         ret = class_instance(func);
-        Object *_fnc = dict_get_by_str(ret, "__init__");
+        MpObj *_fnc = dict_get_by_str(ret, "__init__");
         if (_fnc != NULL) {
             call_function(*_fnc);
         }
@@ -186,9 +186,9 @@ if (tm->allocated > tm->gc_threshold) {   \
     gc_full();                            \
 }
 
-MpFrame* push_frame(Object fnc) {
+MpFrame* push_frame(MpObj fnc) {
     /* make extra space for self in method call */
-    Object *top = tm->frame->top + 2;
+    MpObj *top = tm->frame->top + 2;
     tm->frame ++ ;
     MpFrame* f = tm->frame;
 
@@ -244,9 +244,9 @@ MpFrame* push_frame(Object fnc) {
 ** @param f: Frame
 ** @return evaluated value.
 */
-Object mp_eval(MpFrame* f) {
-    Object* locals, *top;
-    Object cur_fnc, globals, x, k, v, ret;
+MpObj mp_eval(MpFrame* f) {
+    MpObj* locals, *top;
+    MpObj cur_fnc, globals, x, k, v, ret;
     MpCodeCache* cache;
     int i;
 
@@ -281,10 +281,10 @@ tailcall:
 
         case OP_IMPORT: {
             // _import(des_globals, fname, tar);
-            Object import_func = mp_get_global(globals, "_import");
+            MpObj import_func = mp_get_global(globals, "_import");
             arg_start();
             arg_push(globals);
-            Object modname, attr;
+            MpObj modname, attr;
 
             if (cache->v.ival == 1) {
                 modname = MP_POP();
@@ -325,7 +325,7 @@ tailcall:
                 if (idx == -1) {
                     mp_raise("NameError: name %o is not defined", cache->v.obj);
                 } else {
-                    Object value = GET_DICT(tm->builtins)->nodes[idx].val;
+                    MpObj value = GET_DICT(tm->builtins)->nodes[idx].val;
                     // OPTIMIZE
                     // set the builtin to `globals()`
                     obj_set(globals, cache->v.obj, value);
@@ -394,8 +394,8 @@ tailcall:
         MP_OP(OP_MOD, obj_mod)
         MP_OP(OP_GET, obj_get)
         case OP_SLICE: {
-            Object second = MP_POP();
-            Object first  = MP_POP();
+            MpObj second = MP_POP();
+            MpObj first  = MP_POP();
             *top = obj_slice(*top, first, second);
             break;
         }
@@ -460,7 +460,7 @@ tailcall:
             top -= n;
             /* TODO top+1 can be optimized as locals */
             arg_set_arguments(top + 1, n);
-            Object func = MP_POP();
+            MpObj func = MP_POP();
 
             MP_PUSH(call_function(func));
             tm->frame = f;
@@ -471,9 +471,9 @@ tailcall:
             int n = cache->v.ival;
             f->top = top;
             top -= n;
-            Object* first_arg = top+1;
+            MpObj* first_arg = top+1;
             arg_set_arguments(top+1, n);
-            Object func = MP_POP();
+            MpObj func = MP_POP();
             if (GET_FUNCTION(func)->native == NULL) {
                 /** tail call python function **/
                 arg_start();
@@ -500,10 +500,10 @@ tailcall:
         }
         case OP_APPLY: {
             f->top = top;
-            Object args = MP_POP();
+            MpObj args = MP_POP();
             mp_assert_type(args, TYPE_LIST, "mp_eval: OP_APPLY");
             arg_set_arguments(LIST_NODES(args), LIST_LEN(args));
-            Object func = MP_POP();
+            MpObj func = MP_POP();
             x = call_function(func);
             MP_PUSH(x);
             tm->frame = f;
@@ -532,7 +532,7 @@ tailcall:
         }
         case OP_LOAD_NARG: {
             int arg_index = cache->v.ival;
-            Object list = list_new(tm->arg_cnt);
+            MpObj list = list_new(tm->arg_cnt);
             while (arg_remains() > 0) {
                 obj_append(list, arg_take_obj(func_name_sz));
             }
@@ -544,7 +544,7 @@ tailcall:
             break;
         }
         case OP_NEXT: {
-            Object *next = next_ptr(*top);
+            MpObj *next = next_ptr(*top);
             if (next != NULL) {
                 MP_PUSH(*next);
                 break;
@@ -556,8 +556,8 @@ tailcall:
             break;
         }
         case OP_DEF: {
-            Object mod = GET_FUNCTION(cur_fnc)->mod;
-            Object fnc = func_new(mod, NONE_OBJECT, NULL);
+            MpObj mod = GET_FUNCTION(cur_fnc)->mod;
+            MpObj fnc = func_new(mod, NONE_OBJECT, NULL);
             GET_FUNCTION_NAME(fnc) = cache->v.obj;
             cache = func_resolve_cache(GET_FUNCTION(fnc), cache);
             MP_PUSH(fnc);
@@ -568,16 +568,16 @@ tailcall:
             goto end;
         }
         case OP_CLASS: {
-            Object class_name = cache->v.obj;
-            Object clazz = class_new(class_name);
+            MpObj class_name = cache->v.obj;
+            MpObj clazz = class_new(class_name);
             dict_set0(GET_DICT(globals), class_name, clazz);
             break;
         }
         case OP_ROT: {
-            Object* left = top - cache->v.ival + 1;
-            Object* right = top;
+            MpObj* left = top - cache->v.ival + 1;
+            MpObj* right = top;
             for (; left < right; left++, right--) {
-                Object temp = *left;
+                MpObj temp = *left;
                 *left = *right;
                 *right = temp;
             }
@@ -650,7 +650,7 @@ tailcall:
 
         case OP_DEBUG: {
             #if 0
-            Object fdebug = mp_get_global(globals, "__debug__");
+            MpObj fdebug = mp_get_global(globals, "__debug__");
             f->top = top;
             mp_call(0, fdebug, 1, number_obj(tm->frame - tm->frames));        
             break;

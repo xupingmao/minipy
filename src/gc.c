@@ -98,7 +98,7 @@ void frames_init() {
 
 void* mp_malloc(size_t size) {
     void* block;
-    Object* func;
+    MpObj* func;
 
     if (size <= 0) {
         mp_raise("mp_malloc, attempts to allocate a memory block of size %d!", size);
@@ -139,7 +139,7 @@ void mp_free(void* o, size_t size) {
  * @modified 2016-08-20
  * add to tm->local_obj_list, which will be assumed like frame-locals
  */
-Object gc_track(Object v) {
+MpObj gc_track(MpObj v) {
     switch (v.type) {
         case TYPE_NUM:
         case TYPE_NONE:
@@ -225,7 +225,7 @@ void gc_mark_class(MpClass* pclass) {
  * mark object only once, not cursively
  * @since 2016-08-21
  */
-void gc_mark_single(Object o) {
+void gc_mark_single(MpObj o) {
     if (o.type == TYPE_NUM || o.type == TYPE_NONE) {
         return;
     }
@@ -247,7 +247,7 @@ void gc_mark_module(MpModule* pmodule) {
  * mark object as used
  * @since 2014-??
  */
-void gc_mark(Object o) {
+void gc_mark(MpObj o) {
     if (o.type == TYPE_NUM || o.type == TYPE_NONE)
         return;
     switch (o.type) {
@@ -284,7 +284,7 @@ void gc_mark(Object o) {
     }
 }
 
-void gc_unmark(Object o) {
+void gc_unmark(MpObj o) {
     if (o.type == TYPE_NUM || o.type == TYPE_NONE)
         return;
     GC_MARKED(o) = 0;
@@ -304,7 +304,7 @@ void gc_mark_locals_and_stack() {
             gc_mark(f->locals[j]);
         }
         /* mark operand stack */
-        Object* temp;
+        MpObj* temp;
         for(temp = f->stack; temp <= f->top; temp++) {
             gc_mark(*temp);
         }
@@ -428,8 +428,8 @@ void gc_destroy() {
  * @value object pointer
  * @since ?
  */
-Object obj_new(int type, void * value) {
-    Object o;
+MpObj obj_new(int type, void * value) {
+    MpObj o;
     MP_TYPE(o) = type;
     switch (type) {
     case TYPE_NUM:
@@ -465,7 +465,7 @@ Object obj_new(int type, void * value) {
  * free a object
  * @since ?
  */
-void obj_free(Object o) {
+void obj_free(MpObj o) {
     switch (MP_TYPE(o)) {
     case TYPE_STR:
         string_free(GET_STR_OBJ(o));
@@ -493,7 +493,7 @@ void obj_free(Object o) {
 }
 
 
-Object* data_next(MpData* data) {
+MpObj* data_next(MpData* data) {
     mp_raise("next is not defined!");
     return NULL;
 }
@@ -507,19 +507,19 @@ void data_mark(MpData* data) {
 
 void data_free(MpData* data) {
     // printf("data_free: %x\n", data);
-    mp_free(data, sizeof(MpData) + (data->data_size-1) * sizeof(Object));
+    mp_free(data, sizeof(MpData) + (data->data_size-1) * sizeof(MpObj));
 }
 
-Object data_get(Object self, Object key) {
+MpObj data_get(MpObj self, MpObj key) {
     mp_raise("data.get not implemented");
     return NONE_OBJECT;
 }
 
-void data_set(Object self, Object key, Object value) {
+void data_set(MpObj self, MpObj key, MpObj value) {
     mp_raise("data.set not implemented");
 }
 
-Object data_str(Object self) {
+MpObj data_str(MpObj self) {
     return string_alloc("data", -1);
 }
 
@@ -527,11 +527,11 @@ Object data_str(Object self) {
 /** 
  * data_size is the size of objects contains in the data 
  */
-Object data_new(size_t data_size) {
-    Object data_obj;
+MpObj data_new(size_t data_size) {
+    MpObj data_obj;
     data_obj.type = TYPE_DATA;
     /* there is one slot for default. */
-    GET_DATA(data_obj) = mp_malloc(sizeof(MpData) + (data_size-1) * sizeof(Object));
+    GET_DATA(data_obj) = mp_malloc(sizeof(MpData) + (data_size-1) * sizeof(MpObj));
     MpData* data = GET_DATA(data_obj);
 
     data->mark = data_mark;

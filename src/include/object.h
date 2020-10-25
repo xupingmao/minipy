@@ -41,10 +41,10 @@ typedef union MpValue {
 }MpValue;
 
 
-typedef struct Object{
+typedef struct MpObj{
   char type;
   MpValue value;
-}Object;
+}MpObj;
 
 
 struct MpRecycle {
@@ -55,7 +55,7 @@ struct MpRecycle {
 typedef struct _mp_code_cache {
     int op;
     union {
-        Object obj;
+        MpObj obj;
         int ival;
     } v;
     char* sval;
@@ -65,9 +65,9 @@ typedef struct MpModule
 {
   int marked;
   int resolved;
-  Object globals;
-  Object code;
-  Object file;
+  MpObj globals;
+  MpObj code;
+  MpObj file;
   MpCodeCache* cache;
   int cache_cap;
   int cache_len;
@@ -83,25 +83,25 @@ typedef struct MpFunction{
   unsigned char* end;
   MpCodeCache* cache;
   MpCodeCache* cache_end;
-  Object self;
-  Object mod; /* module, includes global, constants, etc. */
-  Object name;
-  Object (*native)();
+  MpObj self;
+  MpObj mod; /* module, includes global, constants, etc. */
+  MpObj name;
+  MpObj (*native)();
 }MpFunction;
 
 typedef struct MpClass {
   int marked;
   // class name
-  Object name;
+  MpObj name;
   // class attributes
-  Object attr_dict;
+  MpObj attr_dict;
 } MpClass;
 
 typedef struct MpFrame {
-  Object *locals;
-  Object *stack;
-  Object *top; /* current stack top; */
-  Object *last_top;
+  MpObj *locals;
+  MpObj *stack;
+  MpObj *top; /* current stack top; */
+  MpObj *last_top;
   char* last_code;
   
   unsigned char* pc;
@@ -111,7 +111,7 @@ typedef struct MpFrame {
   int maxlocals;
   int maxstack;
   int lineno;
-  Object fnc;
+  MpObj fnc;
   jmp_buf buf;
   int idx;
   unsigned char* jmp;
@@ -137,9 +137,9 @@ typedef struct MpVm {
   
   int exit_code; /* function call exit code, to recognize exceptions */
 
-  Object ex;
-  Object ex_line;
-  Object ex_list;
+  MpObj ex;
+  MpObj ex_line;
+  MpObj ex_list;
   int    ex_index; /* index of frame where exception was thrown */
 
   int frames_init_done;
@@ -147,27 +147,27 @@ typedef struct MpVm {
   /* current frame */
   MpFrame *frame;
   
-  Object *stack_end;
-  Object stack[STACK_SIZE];
+  MpObj *stack_end;
+  MpObj stack[STACK_SIZE];
 
   /* for builtin C functions */
-  Object internal_arg_stack[MAX_ARG_COUNT];
+  MpObj internal_arg_stack[MAX_ARG_COUNT];
   
-  /* Object *top; */
-  Object *arguments;
+  /* MpObj *top; */
+  MpObj *arguments;
   
   // prototypes
-  Object list_proto;
-  Object dict_proto;
-  Object str_proto;
+  MpObj list_proto;
+  MpObj dict_proto;
+  MpObj str_proto;
 
   int arg_cnt;
   int arg_loaded;
 
-  Object constants;
-  Object modules;
-  Object builtins;
-  Object root;
+  MpObj constants;
+  MpObj modules;
+  MpObj builtins;
+  MpObj root;
 
   int steps;   /* record opcode steps executed */
   int init;    /* modules and builtins init */
@@ -180,8 +180,8 @@ typedef struct MpVm {
   int gc_state;
   
   /* constants */
-  Object _TRUE;
-  Object _FALSE;
+  MpObj _TRUE;
+  MpObj _FALSE;
   
 } MpVm;
 
@@ -193,20 +193,20 @@ typedef struct MpData {
     long cur;
     long inc;
     long end;
-    Object cur_obj;
-    Object* (*next)();
+    MpObj cur_obj;
+    MpObj* (*next)();
 
     /* for gc */
     void   (*mark)();
     void   (*func_free)();
 
     /* meta functions */
-    Object (*str)();
-    Object (*get)();
+    MpObj (*str)();
+    MpObj (*get)();
     void   (*set)();
 
     void* extend_data_ptr;
-    Object data_ptr[1];
+    MpObj data_ptr[1];
 }MpData;
 
 /** 
@@ -217,7 +217,7 @@ typedef struct MpList {
   int marked;
   int len;
   int cap;
-  struct Object* nodes;
+  struct MpObj* nodes;
 }MpList;
 
 
@@ -226,8 +226,8 @@ typedef struct MpList {
  */
 
 typedef struct DictNode{
-  Object key;
-  Object val;
+  MpObj key;
+  MpObj val;
   int hash;
   int used; /* also used for attr index */
 } DictNode;

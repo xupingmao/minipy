@@ -23,7 +23,7 @@ int js_hash(unsigned char* s, int len) {
  * simple hash function for dict, not used yet.
  * @since 2015-?
  */
-int mp_hash(Object key) {
+int mp_hash(MpObj key) {
     switch(MP_TYPE(key)) {
     case TYPE_STR:return js_hash((unsigned char*) GET_STR(key), GET_STR_LEN(key));
     case TYPE_NUM:return abs((int) GET_NUM(key));
@@ -50,8 +50,8 @@ MpDict* dict_init(){
     return dict;
 }
 
-Object dict_new(){
-    Object o;
+MpObj dict_new(){
+    MpObj o;
     o.type = TYPE_DICT;
     GET_DICT(o) = dict_init();
     return gc_track(o);
@@ -113,7 +113,7 @@ int findfreepos(MpDict* dict) {
 /**
  * @return node index
  */
-int dict_set0(MpDict* dict, Object key, Object val){
+int dict_set0(MpDict* dict, MpObj key, MpObj val){
     int i;
     DictNode* node = dict_get_node(dict, key);
     if (node != NULL) {
@@ -132,7 +132,7 @@ int dict_set0(MpDict* dict, Object key, Object val){
 /**
  * @since 2016-11-27
  */
-int dict_get0(MpDict* dict, Object key) {
+int dict_get0(MpDict* dict, MpObj key) {
     DictNode* node = dict_get_node(dict, key);
     if (node != NULL) {
         return node - dict->nodes;
@@ -140,7 +140,7 @@ int dict_get0(MpDict* dict, Object key) {
     return -1;
 }
 
-int dict_set_attr(MpDict* dict, int const_id, Object val) {
+int dict_set_attr(MpDict* dict, int const_id, MpObj val) {
     int i;
     DictNode* nodes = dict->nodes;
     const_id += 2; /* start from 2, as 0,1 are used by normal node. */
@@ -150,7 +150,7 @@ int dict_set_attr(MpDict* dict, int const_id, Object val) {
             return i;
         }
     }
-    Object key = GET_CONST(const_id-2);
+    MpObj key = GET_CONST(const_id-2);
     i = dict_set0(dict, key, val);
     dict->nodes[i].used = const_id;
     return i;
@@ -173,7 +173,7 @@ int dict_get_attr(MpDict* dict, int const_id) {
     return -1;
 }
 
-DictNode* dict_get_node(MpDict* dict, Object key){
+DictNode* dict_get_node(MpDict* dict, MpObj key){
     //int hash = Dict_hash(key);
     //int idx = hash % dict->cap;
     int i;
@@ -186,7 +186,7 @@ DictNode* dict_get_node(MpDict* dict, Object key){
     return NULL;
 }
 
-Object* dict_get_by_str0(MpDict* dict, char* key) {
+MpObj* dict_get_by_str0(MpDict* dict, char* key) {
     //int hash = hash_sz((unsigned char*) key, strlen(key));
     //int idx = hash % dict->cap;
     int i;
@@ -200,11 +200,11 @@ Object* dict_get_by_str0(MpDict* dict, char* key) {
     return NULL;
 }
 
-void dict_set_by_str0(MpDict* dict, char* key, Object value) {
+void dict_set_by_str0(MpDict* dict, char* key, MpObj value) {
     dict_set0(dict, string_from_sz(key), value);
 }
 
-void dict_del(MpDict* dict, Object key) {
+void dict_del(MpDict* dict, MpObj key) {
     DictNode* node = dict_get_node(dict, key);
     if (node == NULL) {
         mp_raise("obj_del: key_error %o", key);
@@ -214,8 +214,8 @@ void dict_del(MpDict* dict, Object key) {
     return;
 }
 
-Object dict_keys(MpDict* dict){
-    Object list = list_new(dict->len);
+MpObj dict_keys(MpDict* dict){
+    MpObj list = list_new(dict->len);
     int i;
     for(i = 0; i < dict->cap; i++) {
         if (dict->nodes[i].used) {
@@ -225,15 +225,15 @@ Object dict_keys(MpDict* dict){
     return list;
 }
 
-Object dict_builtin_keys(){
-    Object dict = arg_take_dict_obj("dict.keys");
+MpObj dict_builtin_keys(){
+    MpObj dict = arg_take_dict_obj("dict.keys");
     return dict_keys(GET_DICT(dict));
 }
 
-Object dict_builtin_values() {
-    Object _d = arg_take_dict_obj("dict.values");
+MpObj dict_builtin_values() {
+    MpObj _d = arg_take_dict_obj("dict.values");
     MpDict* dict = GET_DICT(_d);
-    Object list = list_new(dict->len);
+    MpObj list = list_new(dict->len);
     int i;
     for(i = 0; i < dict->cap; i++) {
         if (dict->nodes[i].used) {
@@ -243,9 +243,9 @@ Object dict_builtin_values() {
     return list;
 }
 
-Object dict_builtin_copy() {
-    Object dict = arg_take_dict_obj("dict.copy");
-    Object new_dict = dict_new();
+MpObj dict_builtin_copy() {
+    MpObj dict = arg_take_dict_obj("dict.copy");
+    MpObj new_dict = dict_new();
     int i;
     for(i = 0; i < GET_DICT(dict)->cap; i++) {
         if (GET_DICT(dict)->nodes[i].used) {
@@ -255,9 +255,9 @@ Object dict_builtin_copy() {
     return new_dict;
 }
 
-Object dict_builtin_update() {
-    Object self = arg_take_dict_obj("dict.update");
-    Object other = arg_take_dict_obj("dict.update");
+MpObj dict_builtin_update() {
+    MpObj self = arg_take_dict_obj("dict.update");
+    MpObj other = arg_take_dict_obj("dict.update");
     int i = 0;
 
     for (i = 0; i < DICT_LEN(other); i++) {
@@ -266,9 +266,9 @@ Object dict_builtin_update() {
     return self;
 }
 
-Object dict_builtin_pop() {
-    Object self = arg_take_dict_obj("dict.pop");
-    Object key  = arg_take_obj("dict.pop");
+MpObj dict_builtin_pop() {
+    MpObj self = arg_take_dict_obj("dict.pop");
+    MpObj key  = arg_take_obj("dict.pop");
     DictNode* node = dict_get_node(GET_DICT(self), key);
     if (node == NULL) {    
         if (arg_has_next()) {
@@ -301,18 +301,18 @@ void dict_methods_init() {
  * create a dict iterator from dict object
  * @since 2016-?
  */
-Object dict_iter_new(Object dict) {
+MpObj dict_iter_new(MpObj dict) {
     /*
-    Object *__iter__ = dict_get_by_str(dict, "__iter__");
+    MpObj *__iter__ = dict_get_by_str(dict, "__iter__");
     if (__iter__ != NULL) {
-        Object *next = dict_get_by_str(dict, "next");
-        Object data = data_new(sizeof(Mp_base_iterator));
+        MpObj *next = dict_get_by_str(dict, "next");
+        MpObj data = data_new(sizeof(Mp_base_iterator));
         Mp_base_iterator* base_iterator = (Mp_base_iterator*)GET_DATA(data);
         base_iterator->func = *next;
         base_iterator->proto = get_base_iter_proto();
         return data;
     }*/
-    Object data = data_new(1);
+    MpObj data = data_new(1);
     MpData* iterator = GET_DATA(data);
     iterator->cur = 0;
     iterator->end = DICT_LEN(dict);
@@ -326,7 +326,7 @@ Object dict_iter_new(Object dict) {
  * get next node pointer
  * @since 2015-?
  */
-Object* dict_next(MpData* iterator) {
+MpObj* dict_next(MpData* iterator) {
     MpDict* dict = GET_DICT(iterator->data_ptr[0]);
     if (iterator->cur < dict->cap) {
         int i;
@@ -346,9 +346,9 @@ Object* dict_next(MpData* iterator) {
  * get attribute by char array
  * @since 2016-09-02
  */
-Object mp_getattr(Object obj, char* key) {
+MpObj mp_getattr(MpObj obj, char* key) {
     // TODO optimize string find
-    Object obj_key = string_new(key);
+    MpObj obj_key = string_new(key);
     return obj_get(obj, obj_key);
 }
 
@@ -357,13 +357,13 @@ Object mp_getattr(Object obj, char* key) {
  * get attribute by char array
  * @since 2016-09-02
  */
-void mp_setattr(Object obj, char* key, Object value) {
-    Object obj_key = string_new(key);
+void mp_setattr(MpObj obj, char* key, MpObj value) {
+    MpObj obj_key = string_new(key);
     obj_set(obj, obj_key, value);
 }
 
-int mp_hasattr(Object obj, char* key) {
-    Object obj_key = string_const(key);
+int mp_hasattr(MpObj obj, char* key) {
+    MpObj obj_key = string_const(key);
     DictNode* node = dict_get_node(GET_DICT(obj), obj_key);
     if (node == NULL) {
         return 0;

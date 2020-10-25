@@ -84,8 +84,8 @@ void log_error(char* fmt, ...) {
 /**
  * @since 2016-11-28
  */
-void mp_log_call(Object func) {
-    Object name = GET_FUNCTION(func)->name;
+void mp_log_call(MpObj func) {
+    MpObj name = GET_FUNCTION(func)->name;
     printf("%s(\n", GET_STR(name));
     int i;
     for (i = 0; i < tm->arg_cnt; i++) {
@@ -104,7 +104,7 @@ void mp_log_call(Object func) {
  */
 void mp_log_cache(MpCodeCache* cache) {
     int val = cache->v.ival;
-    Object obj = cache->v.obj;
+    MpObj obj = cache->v.obj;
 
     tm->steps++;
 

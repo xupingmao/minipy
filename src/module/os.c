@@ -1,6 +1,6 @@
 #include "../include/mp.h"
 
-Object os_getcwd() {
+MpObj os_getcwd() {
     const char* sz_func = "getcwd";
     char buf[1025];
     char* r = getcwd(buf, 1024);
@@ -18,7 +18,7 @@ Object os_getcwd() {
 }
 
 
-Object os_chdir() {
+MpObj os_chdir() {
     const char* sz_func = "chdir";
     char *path = arg_take_sz(sz_func);
     int r = chdir(path);
@@ -29,12 +29,12 @@ Object os_chdir() {
 }
 
 
-Object os_listdir() {
-    Object list = list_new(10);
-    Object path = arg_take_str_obj("listdir");
+MpObj os_listdir() {
+    MpObj list = list_new(10);
+    MpObj path = arg_take_str_obj("listdir");
 #ifdef _WIN32
     WIN32_FIND_DATA Find_file_data;
-    Object _path = obj_add(path, string_new("\\*.*"));
+    MpObj _path = obj_add(path, string_new("\\*.*"));
     HANDLE h_find = FindFirstFile(GET_STR(_path), &Find_file_data);
     if (h_find == INVALID_HANDLE_VALUE) {
         mp_raise("%s is not a directory", path);
@@ -46,7 +46,7 @@ Object os_listdir() {
         if (Find_file_data.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) {
             // do nothing.
         }
-        Object file = string_new(Find_file_data.cFileName);
+        MpObj file = string_new(Find_file_data.cFileName);
         obj_append(list, file);
     } while (FindNextFile(h_find, &Find_file_data));
     FindClose(h_find);
@@ -56,11 +56,11 @@ Object os_listdir() {
     return list;
 }
 
-Object os_stat(){
+MpObj os_stat(){
     const char *s = arg_take_sz("stat");
     struct stat stbuf;
     if (!stat(s,&stbuf)) { 
-        Object st = dict_new();
+        MpObj st = dict_new();
         dict_set_by_str(st, "st_mtime", number_obj(stbuf.st_mtime));
         dict_set_by_str(st, "st_atime", number_obj(stbuf.st_atime));
         dict_set_by_str(st, "st_ctime", number_obj(stbuf.st_ctime));
@@ -77,8 +77,8 @@ Object os_stat(){
     return NONE_OBJECT;
 }
 
-Object os_exists(){
-    Object _fname = arg_take_str_obj("exists");
+MpObj os_exists(){
+    MpObj _fname = arg_take_str_obj("exists");
     char* fname = GET_STR(_fname);
     FILE*fp = fopen(fname, "rb");
     if(fp == NULL) return tm->_FALSE;
@@ -86,7 +86,7 @@ Object os_exists(){
     return tm->_TRUE;
 }
 
-Object os_path_dirname0(Object fpath) {
+MpObj os_path_dirname0(MpObj fpath) {
     mp_assert_type(fpath, TYPE_STR, "os_path_dirname");
 
     char* fpath_sz = GET_STR(fpath);
@@ -106,17 +106,17 @@ Object os_path_dirname0(Object fpath) {
     return string_static("");
 }
 
-Object os_path_join0(Object dirname, Object fname) {
+MpObj os_path_join0(MpObj dirname, MpObj fname) {
     mp_assert_type(dirname, TYPE_STR, "os_path_join");
     mp_assert_type(dirname, TYPE_STR, "os_path_join");
 
-    Object sep  = string_chr('/');
-    Object temp = obj_add(dirname, sep);
+    MpObj sep  = string_chr('/');
+    MpObj temp = obj_add(dirname, sep);
     return obj_add(temp, fname);
 }
 
 void os_mod_init() {
-    Object os_mod = dict_new();
+    MpObj os_mod = dict_new();
     dict_set_by_str(tm->modules, "os", os_mod);
     reg_mod_func(os_mod, "getcwd",  os_getcwd);
     reg_mod_func(os_mod, "listdir", os_listdir);

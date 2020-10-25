@@ -37,9 +37,9 @@ int uncode32(unsigned char** src) {
  * allocate a new string of length 1
  * @since 2015
  */
-Object string_char_new(int c) {
+MpObj string_char_new(int c) {
     String* str = mp_malloc(sizeof(String));
-    struct Object obj;
+    struct MpObj obj;
     str->stype = 2; // marked as char type;
     str->value = mp_malloc(2);
     str->len = 1;
@@ -54,9 +54,9 @@ Object string_char_new(int c) {
  * allocate new string
  * use constant char if size <= 0
  */
-Object string_alloc(char *s, int size) {
+MpObj string_alloc(char *s, int size) {
     String* str = mp_malloc(sizeof(String));
-    Object v;
+    MpObj v;
     if (size > 0) {
         /* copy string data to new memory */
         str->stype = 1;
@@ -86,7 +86,7 @@ Object string_alloc(char *s, int size) {
     return gc_track(v);
 }
 
-Object string_new(char* s) {
+MpObj string_new(char* s) {
     return string_alloc(s, strlen(s));
 }
 
@@ -95,8 +95,8 @@ Object string_new(char* s) {
  * this object will not be tracked by gc
  * @since 2016-08-22
  */
-Object string_const(char* s) {
-    Object str_obj = string_new(s);
+MpObj string_const(char* s) {
+    MpObj str_obj = string_new(s);
     int i = dict_set(tm->constants, str_obj, NONE_OBJECT);
     return DICT_NODES(tm->constants)[i].key;
 }
@@ -105,13 +105,13 @@ Object string_const(char* s) {
 /**
  * @since 2016-11-27
  */
-Object string_const2(char* s, int len) {
-    Object str_obj = string_alloc(s, len);
+MpObj string_const2(char* s, int len) {
+    MpObj str_obj = string_alloc(s, len);
     int i = dict_set(tm->constants, str_obj, NONE_OBJECT);
     return DICT_NODES(tm->constants)[i].key;
 }
 
-Object string_chr(int n) {
+MpObj string_chr(int n) {
     // use static str_pool to optimize
     // TODO, need handle GC problems
     return list_get(GET_LIST(ARRAY_CHARS), n);
@@ -165,7 +165,7 @@ int string_rfind(String* s1, String* s2) {
  * which is not a string_chr();
  * so we can just change the str->value;
  */
-Object string_append_char(Object string, char c) {
+MpObj string_append_char(MpObj string, char c) {
     // return obj_add(string, string_chr(c));
     String* str = GET_STR_OBJ(string);
     if (str->stype) {
@@ -184,7 +184,7 @@ Object string_append_char(Object string, char c) {
 /**
  * must be assigned
  */
-Object string_append_sz(Object string, char* sz) {
+MpObj string_append_sz(MpObj string, char* sz) {
     // return obj_add(string, string_new(sz));
     String* str = GET_STR_OBJ(string);
     int sz_len = strlen(sz);
@@ -201,13 +201,13 @@ Object string_append_sz(Object string, char* sz) {
     return string;
 }
 
-Object string_append_obj(Object string, Object obj) {
-    Object obj_str = mp_str(obj);
+MpObj string_append_obj(MpObj string, MpObj obj) {
+    MpObj obj_str = mp_str(obj);
     char* sz = GET_STR(obj_str);
     return string_append_sz(string, sz);
 }
 
-Object string_append_int(Object string, int64_t num) {
+MpObj string_append_int(MpObj string, int64_t num) {
     // the maxium length of long is 20
     char buf[30];
     sprintf(buf, "%lld", (long long int)num);
@@ -217,10 +217,10 @@ Object string_append_int(Object string, int64_t num) {
 }
 
 
-Object string_substring(String* str, int start, int end) {
+MpObj string_substring(String* str, int start, int end) {
     int max_end, len, i;
     char* s;
-    Object new_str;
+    MpObj new_str;
     start = start >= 0 ? start : start + str->len;
     end = end >= 0 ? end : end + str->len;
     max_end = str->len;
@@ -236,33 +236,33 @@ Object string_substring(String* str, int start, int end) {
     return new_str;
 }
 
-Object string_builtin_find() {
+MpObj string_builtin_find() {
     static const char* sz_func = "find";
-    Object self = arg_take_str_obj(sz_func);
-    Object str = arg_take_str_obj(sz_func);
+    MpObj self = arg_take_str_obj(sz_func);
+    MpObj str = arg_take_str_obj(sz_func);
     return number_obj(string_index(self.value.str, str.value.str, 0));
 }
 
-Object string_builtin_rfind() {
-    Object self = arg_take_str_obj("rfind");
-    Object  str = arg_take_str_obj("rfind");
+MpObj string_builtin_rfind() {
+    MpObj self = arg_take_str_obj("rfind");
+    MpObj  str = arg_take_str_obj("rfind");
     return number_obj(string_rfind(self.value.str, str.value.str));
 }
 
-Object string_builtin_substring() {
+MpObj string_builtin_substring() {
     static const char* sz_func = "substring";
-    Object self = arg_take_str_obj(sz_func);
+    MpObj self = arg_take_str_obj(sz_func);
     int start = arg_take_int(sz_func);
     int end = arg_take_int(sz_func);
     return string_substring(self.value.str, start, end);
 }
 
-Object string_builtin_upper() {
-    Object self = arg_take_str_obj("upper");
+MpObj string_builtin_upper() {
+    MpObj self = arg_take_str_obj("upper");
     int i;
     char*s = GET_STR(self);
     int len = GET_STR_LEN(self);
-    Object nstr = string_alloc(NULL, len);
+    MpObj nstr = string_alloc(NULL, len);
     char*news = GET_STR(nstr);
     for (i = 0; i < len; i++) {
         news[i] = toupper(s[i]);
@@ -270,12 +270,12 @@ Object string_builtin_upper() {
     return nstr;
 }
 
-Object string_builtin_lower() {
-    Object self = arg_take_str_obj("lower");
+MpObj string_builtin_lower() {
+    MpObj self = arg_take_str_obj("lower");
     int i;
     char*s = GET_STR(self);
     int len = GET_STR_LEN(self);
-    Object nstr = string_alloc(NULL, len);
+    MpObj nstr = string_alloc(NULL, len);
     char*news = GET_STR(nstr);
     for (i = 0; i < len; i++) {
         news[i] = tolower(s[i]);
@@ -284,13 +284,13 @@ Object string_builtin_lower() {
 }
 
 
-Object string_builtin_replace() {
+MpObj string_builtin_replace() {
     static const char* sz_func;
-    Object self = arg_take_str_obj(sz_func);
-    Object src = arg_take_str_obj(sz_func);
-    Object des = arg_take_str_obj(sz_func);
+    MpObj self = arg_take_str_obj(sz_func);
+    MpObj src = arg_take_str_obj(sz_func);
+    MpObj des = arg_take_str_obj(sz_func);
 
-    Object nstr = string_alloc("", 0);
+    MpObj nstr = string_alloc("", 0);
     int pos = string_index(self.value.str, src.value.str, 0);
     int lastpos = 0;
     while (pos >=0 && pos < GET_STR_LEN(self)) {
@@ -307,12 +307,12 @@ Object string_builtin_replace() {
     return nstr;
 }
 
-Object string_builtin_split() {
+MpObj string_builtin_split() {
     const char* sz_func = "split";
-    Object self    = arg_take_str_obj(sz_func);
-    Object pattern = arg_take_str_obj(sz_func);
+    MpObj self    = arg_take_str_obj(sz_func);
+    MpObj pattern = arg_take_str_obj(sz_func);
     int pos, lastpos;
-    Object nstr, list;
+    MpObj nstr, list;
     if (GET_STR_LEN(pattern) == 0) {
         /* currently return none */
         return NONE_OBJECT;
@@ -325,7 +325,7 @@ Object string_builtin_split() {
         if (pos == 0) {
             obj_append(list, string_alloc("", -1));
         } else {
-            Object str = string_substring(self.value.str, lastpos, pos);
+            MpObj str = string_substring(self.value.str, lastpos, pos);
             obj_append(list, str);
         }
         lastpos = pos + GET_STR_LEN(pattern);
@@ -335,16 +335,16 @@ Object string_builtin_split() {
     return list;
 }
 
-Object string_builtin_startswith() {
-    Object self = arg_take_str_obj("str.startswith");
-    Object arg0 = arg_take_str_obj("str.startswith");
+MpObj string_builtin_startswith() {
+    MpObj self = arg_take_str_obj("str.startswith");
+    MpObj arg0 = arg_take_str_obj("str.startswith");
     return number_obj(string_index(GET_STR_OBJ(self), GET_STR_OBJ(arg0), 0) == 0);
 }
 
-Object string_builtin_endswith() {
+MpObj string_builtin_endswith() {
     const char* func_name = "str.endswith";
-    Object self = arg_take_str_obj(func_name);
-    Object arg0 = arg_take_str_obj(func_name);
+    MpObj self = arg_take_str_obj(func_name);
+    MpObj arg0 = arg_take_str_obj(func_name);
     int idx = string_index(GET_STR_OBJ(self), GET_STR_OBJ(arg0), 0);
     if (idx < 0) {
         return number_obj(0);
@@ -352,18 +352,18 @@ Object string_builtin_endswith() {
     return number_obj(idx + mp_len(arg0) == mp_len(self));
 }
 
-Object string_builtin_format() {
+MpObj string_builtin_format() {
     const char* func_name = "str.format";
-    Object self = arg_take_str_obj(func_name);
-    // Object fmt  = arg_take_str_obj(func_name);
-    Object nstr = string_alloc("", 0);
+    MpObj self = arg_take_str_obj(func_name);
+    // MpObj fmt  = arg_take_str_obj(func_name);
+    MpObj nstr = string_alloc("", 0);
     int i = 0;
     int start   = 0;
     for (i = 0; i < self.value.str->len; i++) {
         char c = self.value.str->value[i];
         if (c == '}') {
             if (start == 1) {
-                Object obj = arg_take_obj(func_name);
+                MpObj obj = arg_take_obj(func_name);
                 string_append_obj(nstr, obj);
                 start = 0;
             } else {
@@ -398,7 +398,7 @@ void string_methods_init() {
     reg_mod_func(tm->str_proto, "format",     string_builtin_format);
 }
 
-Object* string_next(MpData* iterator) {
+MpObj* string_next(MpData* iterator) {
     if (iterator->cur >= iterator->end) {
         return NULL;
     }
@@ -409,8 +409,8 @@ Object* string_next(MpData* iterator) {
 }
 
 
-Object string_iter_new(Object str) {
-    Object data = data_new(1);
+MpObj string_iter_new(MpObj str) {
+    MpObj data = data_new(1);
     MpData* iterator = GET_DATA(data);
     iterator->cur  = 0;
     iterator->end  = GET_STR_LEN(str);

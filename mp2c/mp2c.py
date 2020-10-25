@@ -2,8 +2,8 @@ import sys
 import os
 from mp_parse import *
 
-mp_obj               = "Object "
-mp_const             = "Object const_"
+mp_obj               = "MpObj "
+mp_const             = "MpObj const_"
 mp_pusharg           = "mp_pusharg("
 mp_call              = "mp_call("
 mp_num               = "number_obj("
@@ -275,12 +275,12 @@ def set_py_func_name(item, name):
 def gen_constants_def(env):
     """generate constants definition"""
     if env.readable:
-        return "Object " + env.get_globals() + ";\n"
+        return "MpObj " + env.get_globals() + ";\n"
 
     head = ""
     for const in env.consts:
-        head += "Object " + env.get_const(const) + ";\n";
-    head += "Object " + env.get_globals() + ";\n"
+        head += "MpObj " + env.get_const(const) + ";\n";
+    head += "MpObj " + env.get_globals() + ";\n"
     return head
 
 def gen_constants_init(env):
@@ -313,7 +313,7 @@ class Generator:
         lines = ["/* Function Definition */"]
         env = self.env
         for py_func in self.env.py_func_list:
-            line = "Object {}();".format(env.get_c_func_def(py_func))
+            line = "MpObj {}();".format(env.get_c_func_def(py_func))
             lines.append(line)
         lines.append("/* Function Definition End */")
         return "\n".join(lines) + "\n\n"
@@ -343,7 +343,7 @@ class Generator:
         head += gen_constants_def(env)
         # do vars
         for var in env.locals():
-            head += "Object " + env.get_var_name(var) + ";\n"
+            head += "MpObj " + env.get_var_name(var) + ";\n"
         head += "/* DEFINE END */\n\n"
         
         head += self.gen_clang_declare_list()
@@ -354,7 +354,7 @@ class Generator:
         
         # globals
         head += "/* Module: {} */\n".format(env.mod_name)
-        head += "Object " + env.prefix + "0(){\n  "
+        head += "MpObj " + env.prefix + "0(){\n  "
         body = "\n  ".join(lines)+"\n  return NONE_OBJECT;\n}\n"
         code = head + body
 
@@ -531,7 +531,7 @@ def do_for(item, env, indent=0):
     
     key = do_name(names[0], env);
     init = sformat("%s = iter_new(%s);", temp, iterator)
-    init += "\n" + "Object* " + temp_ptr + ";";
+    init += "\n" + "MpObj* " + temp_ptr + ";";
     get_next = "{} = next_ptr({})".format(temp_ptr, temp)
     # head = "while ({} != NULL)".format(temp_ptr)
     key_assignment = "{} = *{};".format(keyname, temp_ptr)
@@ -626,8 +626,8 @@ def do_def(item, env, obj=None):
     locs = env.locals()
     vars = ["  // Function: " + name]
     for var in locs:
-        vars.append("  Object " + env.get_var_name(var) + ";")
-    vars.append("  Object ret = {};".format(mp_None))
+        vars.append("  MpObj " + env.get_var_name(var) + ";")
+    vars.append("  MpObj ret = {};".format(mp_None))
 
     # gc handle
     if env.enable_gc:
@@ -640,7 +640,7 @@ def do_def(item, env, obj=None):
         lines.append("gc_pop_locals({});".format(len(locs)))
     # return
     lines.append("  return ret;")
-    func_define = "Object " + cname + "() " + format_block(vars+lines, 0)
+    func_define = "MpObj " + cname + "() " + format_block(vars+lines, 0)
 
     env.exit_scope(func_define)
 
@@ -665,7 +665,7 @@ def do_class(item, env):
     obj = newobj()
     lines = []
     env.new_scope()
-    lines.append("Object d = dict_new();");
+    lines.append("MpObj d = dict_new();");
     init_func = None
 
     for class_item in item.second:
@@ -687,7 +687,7 @@ def do_class(item, env):
         lines.append("{}();".format(init_func))
 
     lines.append("return d;");
-    class_def = "Object {} () {} ".format(env.get_c_func_def(clz_name_str), format_block(lines))
+    class_def = "MpObj {} () {} ".format(env.get_c_func_def(clz_name_str), format_block(lines))
     env.exit_scope(class_def);
 
     # text = class_define + "\n"

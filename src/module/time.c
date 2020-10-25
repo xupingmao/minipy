@@ -4,7 +4,7 @@
     #include <sys/time.h>
 #endif
 
-Object bf_time_time() {
+MpObj bf_time_time() {
     #ifdef _WIN32
         // FILETIME system_time;
         /* Contains a 64-bit value representing the number of 100-nanosecond intervals since January 1, 1601 (UTC). */
@@ -29,19 +29,19 @@ Object bf_time_time() {
     #endif
 }
 
-Object bf_time_clock() {
+MpObj bf_time_clock() {
     return number_obj((double)clock()/CLOCKS_PER_SEC);
 }
 
 
-Object bf_time_ctime() {
+MpObj bf_time_ctime() {
     time_t rawtime;
     time(&rawtime);
     char* ct = ctime(&rawtime); // ct ends with \n
     return string_alloc(ct, strlen(ct)-1);
 }
 
-Object bf_time_sleep() {
+MpObj bf_time_sleep() {
     int i = 0;
     int t = arg_take_int("sleep");
 #ifdef _WIN32
@@ -52,7 +52,7 @@ Object bf_time_sleep() {
     return NONE_OBJECT;
 }
 
-Object bf_time_asctime() {
+MpObj bf_time_asctime() {
     time_t rawtime;
     struct tm* timeinfo;
     
@@ -63,7 +63,7 @@ Object bf_time_asctime() {
 }
 
 void time_mod_init() {
-    Object time_mod = dict_new();
+    MpObj time_mod = dict_new();
     reg_mod_func(time_mod, "time",  bf_time_time);
     reg_mod_func(time_mod, "clock", bf_time_clock);
     reg_mod_func(time_mod, "ctime", bf_time_ctime);

@@ -26,8 +26,8 @@
  * register module function
  * @param mod, module object, dict
  */
-void reg_mod_func(Object mod, char* name, Object (*native)()) {
-    Object func = func_new(NONE_OBJECT, NONE_OBJECT, native);
+void reg_mod_func(MpObj mod, char* name, MpObj (*native)()) {
+    MpObj func = func_new(NONE_OBJECT, NONE_OBJECT, native);
     GET_FUNCTION(func)->name = string_from_sz(name);
     obj_set(mod,GET_FUNCTION(func)->name, func);
 }
@@ -35,16 +35,16 @@ void reg_mod_func(Object mod, char* name, Object (*native)()) {
 /**
  * register built-in function
  */
-void reg_builtin_func(char* name, Object (*native)()) {
+void reg_builtin_func(char* name, MpObj (*native)()) {
     reg_mod_func(tm->builtins, name, native);
 }
 
 /**
  * load module
  */
-void load_module(Object name, Object code) {
-    Object mod = module_new(name, name, code);
-    Object fnc = func_new(mod, NONE_OBJECT, NULL);
+void load_module(MpObj name, MpObj code) {
+    MpObj mod = module_new(name, name, code);
+    MpObj fnc = func_new(mod, NONE_OBJECT, NULL);
     GET_FUNCTION(fnc)->code = (unsigned char*) GET_STR(code);
     GET_FUNCTION(fnc)->name = string_from_sz("#main");
     call_function(fnc);
@@ -53,12 +53,12 @@ void load_module(Object name, Object code) {
 /**
  * @since 2016-11-20
  */
-Object load_file_module(Object file, Object code, Object name) {
-    Object mod = module_new(file, name, code);
+MpObj load_file_module(MpObj file, MpObj code, MpObj name) {
+    MpObj mod = module_new(file, name, code);
     // resolve cache
     mp_resolve_code(GET_MODULE(mod), GET_STR(code));
 
-    Object fnc = func_new(mod, NONE_OBJECT, NULL);
+    MpObj fnc = func_new(mod, NONE_OBJECT, NULL);
     GET_FUNCTION(fnc)->code = (unsigned char*) GET_STR(code);
     GET_FUNCTION(fnc)->name = string_new("#main");
     GET_FUNCTION(fnc)->cache = GET_MODULE(mod)->cache;
@@ -69,14 +69,14 @@ Object load_file_module(Object file, Object code, Object name) {
 /**
  * @since 2016-11-27
  */
-Object load_boot_module(char* sz_filename, char* sz_code) {
-    Object name = string_new(sz_filename);
-    Object file = name;
-    Object code = string_new("");
-    Object mod  = module_new(file, name, code);
+MpObj load_boot_module(char* sz_filename, char* sz_code) {
+    MpObj name = string_new(sz_filename);
+    MpObj file = name;
+    MpObj code = string_new("");
+    MpObj mod  = module_new(file, name, code);
 
     mp_resolve_code(GET_MODULE(mod), sz_code);
-    Object fnc = func_new(mod, NONE_OBJECT, NULL);
+    MpObj fnc = func_new(mod, NONE_OBJECT, NULL);
     GET_FUNCTION(fnc)->code = (unsigned char*) GET_STR(code);
     GET_FUNCTION(fnc)->name = string_new("#main");
     GET_FUNCTION(fnc)->cache = GET_MODULE(mod)->cache;
@@ -90,9 +90,9 @@ Object load_boot_module(char* sz_filename, char* sz_code) {
  * @param mod, module name
  * @param sz_fnc, function name
  */
-Object call_mod_func(char* mod, char* sz_fnc) {
-    Object m = obj_get(tm->modules, string_new(mod));
-    Object fnc = obj_get(m, string_new(sz_fnc));
+MpObj call_mod_func(char* mod, char* sz_fnc) {
+    MpObj m = obj_get(tm->modules, string_new(mod));
+    MpObj fnc = obj_get(m, string_new(sz_fnc));
     arg_start();
     return call_function(fnc);
 }
@@ -129,7 +129,7 @@ int vm_init(int argc, char* argv[]) {
     tm->_FALSE = number_obj(0);
 
     /* set module boot */
-    Object boot = dict_new();
+    MpObj boot = dict_new();
     obj_set(tm->modules, string_from_sz("boot"), boot);
     obj_set(boot, string_from_sz("__name__"), string_from_sz("boot"));
 

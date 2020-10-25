@@ -26,10 +26,10 @@ def convert(code):
     for op, val in inst_list:
         # print(op, val)
         if op == OP_FILE:
-            writer.writeline("Object module_file = string_new(\"%s\");" % val)
+            writer.writeline("MpObj module_file = string_new(\"%s\");" % val)
             module_name = val.replace(".", "_")
         elif op == OP_DEF:
-            line = "Object {}_{}() {".format(module_name, val)
+            line = "MpObj {}_{}() {".format(module_name, val)
             writer.writeline(line)
         elif op == OP_LOAD_PARAMS:
             line = "  /* OP_LOAD_PARAMS */"
