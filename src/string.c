@@ -38,7 +38,7 @@ int uncode32(unsigned char** src) {
  * @since 2015
  */
 MpObj string_char_new(int c) {
-    String* str = mp_malloc(sizeof(String));
+    MpStr* str = mp_malloc(sizeof(MpStr));
     struct MpObj obj;
     str->stype = 2; // marked as char type;
     str->value = mp_malloc(2);
@@ -55,7 +55,7 @@ MpObj string_char_new(int c) {
  * use constant char if size <= 0
  */
 MpObj string_alloc(char *s, int size) {
-    String* str = mp_malloc(sizeof(String));
+    MpStr* str = mp_malloc(sizeof(MpStr));
     MpObj v;
     if (size > 0) {
         /* copy string data to new memory */
@@ -117,14 +117,14 @@ MpObj string_chr(int n) {
     return list_get(GET_LIST(ARRAY_CHARS), n);
 }
 
-void string_free(String *str) {
+void string_free(MpStr *str) {
     if (str->stype) {
         mp_free(str->value, str->len + 1);
     }
-    mp_free(str, sizeof(String));
+    mp_free(str, sizeof(MpStr));
 }
 
-int string_index(String* s1, String* s2, int start) {
+int string_index(MpStr* s1, MpStr* s2, int start) {
     char* ss1 = s1->value;
     char* ss2 = s2->value;
     // char* p = strstr(ss1 + start, ss2);
@@ -140,7 +140,7 @@ int string_index(String* s1, String* s2, int start) {
 }
 
 
-int string_rfind(String* s1, String* s2) {
+int string_rfind(MpStr* s1, MpStr* s2) {
     char* ss1 = s1->value;
     char* ss2 = s2->value;
 
@@ -167,7 +167,7 @@ int string_rfind(String* s1, String* s2) {
  */
 MpObj string_append_char(MpObj string, char c) {
     // return obj_add(string, string_chr(c));
-    String* str = GET_STR_OBJ(string);
+    MpStr* str = GET_STR_OBJ(string);
     if (str->stype) {
         str->value = mp_realloc(str->value, str->len+1, str->len+2);
     } else {
@@ -186,7 +186,7 @@ MpObj string_append_char(MpObj string, char c) {
  */
 MpObj string_append_sz(MpObj string, char* sz) {
     // return obj_add(string, string_new(sz));
-    String* str = GET_STR_OBJ(string);
+    MpStr* str = GET_STR_OBJ(string);
     int sz_len = strlen(sz);
     if (str->stype) {
         str->value = mp_realloc(str->value, str->len+1, str->len+1+sz_len);
@@ -217,7 +217,7 @@ MpObj string_append_int(MpObj string, int64_t num) {
 }
 
 
-MpObj string_substring(String* str, int start, int end) {
+MpObj string_substring(MpStr* str, int start, int end) {
     int max_end, len, i;
     char* s;
     MpObj new_str;
@@ -403,7 +403,7 @@ MpObj* string_next(MpData* iterator) {
         return NULL;
     }
     iterator->cur += 1;
-    String* str = GET_STR_OBJ(iterator->data_ptr[0]);
+    MpStr* str = GET_STR_OBJ(iterator->data_ptr[0]);
     iterator->cur_obj = string_chr(str->value[iterator->cur-1]);
     return &iterator->cur_obj;
 }

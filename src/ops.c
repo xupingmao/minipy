@@ -102,7 +102,7 @@ MpObj obj_get(MpObj self, MpObj k) {
                     n += GET_STR_LEN(self);
                 }
                 if (n >= GET_STR_LEN(self) || n < 0)
-                    mp_raise("String_get: index overflow ,len=%d,index=%d, str=%o",
+                    mp_raise("MpStr_get: index overflow ,len=%d,index=%d, str=%o",
                             GET_STR_LEN(self), n, self);
                 return string_chr(0xff & GET_STR(self)[n]);
             }
@@ -253,8 +253,8 @@ int obj_equals(MpObj a, MpObj b){
     switch(MP_TYPE(a)){
         case TYPE_NUM:return GET_NUM(a) == GET_NUM(b);
         case TYPE_STR: {
-            String* s1 = GET_STR_OBJ(a);
-            String* s2 = GET_STR_OBJ(b);
+            MpStr* s1 = GET_STR_OBJ(a);
+            MpStr* s2 = GET_STR_OBJ(b);
             return s1->value == s2->value || 
                 (s1->len == s2->len && strncmp(s1->value, s2->value, s1->len) == 0);
         }

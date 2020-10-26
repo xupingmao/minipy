@@ -162,9 +162,9 @@ MpObj        string_new(char*s);
 #define       string_from_sz(s) string_alloc(s, -1)
 #define       string_static(s)  string_alloc(s, -1)
 MpObj        string_const(char*);
-void          string_free(String*);
-int           string_equals(String*s0, String*s1);
-MpObj        string_substring(String* str, int start, int end) ;
+void          string_free(MpStr*);
+int           string_equals(MpStr*s0, MpStr*s1);
+MpObj        string_substring(MpStr* str, int start, int end) ;
 void          string_methods_init();
 MpObj        string_iter_new(MpObj s);
 MpObj*       string_next(MpData* iterator);
@@ -226,7 +226,7 @@ int              dict_get_attr(MpDict* dict, int const_id);
 
 // arg functions
 void    arg_insert(MpObj arg);
-String* arg_take_str_ptr(const char* fnc);
+MpStr* arg_take_str_ptr(const char* fnc);
 void    arg_start();
 void    arg_push(MpObj obj) ;
 void    arg_set_arguments(MpObj* first, int len);

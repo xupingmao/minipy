@@ -30,7 +30,7 @@ typedef union MpValue {
   int    iv;
   long   lv;
   void*              ptr;
-  struct String*     str;
+  struct MpStr*     str;
   struct MpList*     list;
   struct MpFunction* func;
   struct MpDict*     dict;
@@ -241,12 +241,12 @@ typedef struct MpDict {
 } MpDict;
 
 
-typedef struct String {
+typedef struct MpStr {
     int marked;
     int len;
     int stype; /* string type, static or not */
     char *value;
-} String;
+} MpStr;
 
 
 /**

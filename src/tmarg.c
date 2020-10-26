@@ -77,7 +77,7 @@ MpObj arg_take_str_obj(const char* fnc) {
     return value;
 }
 
-String* arg_take_str_ptr(const char* fnc) {
+MpStr* arg_take_str_ptr(const char* fnc) {
     MpObj value = get_arg_from_vm0(fnc);
     if (NOT_STR(value)) {
         mp_raise("%s: expect string but see %s", fnc, mp_type(value.type));
