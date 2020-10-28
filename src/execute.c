@@ -544,7 +544,7 @@ tailcall:
             break;
         }
         case OP_NEXT: {
-            MpObj *next = next_ptr(*top);
+            MpObj *next = obj_next(*top);
             if (next != NULL) {
                 MP_PUSH(*next);
                 break;

@@ -2,7 +2,7 @@
  * description here
  * @author xupingmao <578749341@qq.com>
  * @since 2016
- * @modified 2020/10/23 00:42:49
+ * @modified 2020/10/29 00:30:11
  */
 #include "include/mp.h"
 #include <ctype.h>
@@ -464,6 +464,24 @@ MpObj bf_str() {
     return mp_str(a);
 }
 
+MpObj bf_list() {
+    int args = arg_count();
+    if (args != 1) {
+        mp_raise("list expected at most 1 arguments, got %d", args);
+    }
+
+    MpObj iterable = arg_take_obj("list");
+    MpObj iter   = iter_new(iterable);
+    MpObj result = list_new(10);
+
+    MpObj* next = obj_next(iter);
+    while (next != NULL) {
+        obj_append(result, *next);
+        next = obj_next(iter);
+    }
+    return result;
+}
+
 MpObj bf_bool() {
     MpObj a = arg_take_obj("bool");
     if (is_true_obj(a)) {
@@ -631,7 +649,7 @@ MpObj bf_range() {
 
 MpObj* enumerate_next(MpData* iterator) {
     MpObj iter = iterator->data_ptr[0];
-    MpObj* next_value = next_ptr(iter);
+    MpObj* next_value = obj_next(iter);
 
     if (next_value == NULL) {
         return NULL;
@@ -734,7 +752,7 @@ MpObj bf_iter() {
 
 MpObj bf_next() {
     MpObj iter = arg_take_data_obj("next");
-    MpObj *ret = next_ptr(iter);
+    MpObj *ret = obj_next(iter);
     if (ret == NULL) {
         mp_raise("<<next end>>");
         return NONE_OBJECT;
@@ -852,10 +870,14 @@ void builtins_init() {
     reg_builtin_func("len", bf_len);
     reg_builtin_func("exit", bf_exit);
     reg_builtin_func("input", bf_input);
+
+    /* builtin type */
     reg_builtin_func("str", bf_str);
     reg_builtin_func("int", bf_int);
     reg_builtin_func("float", bf_float);
     reg_builtin_func("bool", bf_bool);
+    reg_builtin_func("list", bf_list);
+
     reg_builtin_func("print", bf_print);
     reg_builtin_func("chr", bf_chr);
     reg_builtin_func("ord", bf_ord);

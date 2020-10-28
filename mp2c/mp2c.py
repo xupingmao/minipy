@@ -532,7 +532,7 @@ def do_for(item, env, indent=0):
     key = do_name(names[0], env);
     init = sformat("%s = iter_new(%s);", temp, iterator)
     init += "\n" + "MpObj* " + temp_ptr + ";";
-    get_next = "{} = next_ptr({})".format(temp_ptr, temp)
+    get_next = "{} = obj_next({})".format(temp_ptr, temp)
     # head = "while ({} != NULL)".format(temp_ptr)
     key_assignment = "{} = *{};".format(keyname, temp_ptr)
 

@@ -520,7 +520,7 @@ MpObj iter_new(MpObj collections) {
     return NONE_OBJECT;
 }
 
-MpObj* next_ptr(MpObj iterator) {
+MpObj* obj_next(MpObj iterator) {
     return GET_DATA(iterator)->next(GET_DATA(iterator));
 }
 

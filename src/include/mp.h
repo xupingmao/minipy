@@ -126,11 +126,11 @@ void        init_memory();
 void        free_memory();
 
 void        gc_init();
-MpObj      gc_track(MpObj obj);
+MpObj       gc_track(MpObj obj);
 void        gc_destroy();
 void        gc_full();
 void        gc_sweep_local(int start);
-MpObj      bf_get_malloc_info();
+MpObj       bf_get_malloc_info();
 void        gc_mark(MpObj);
 void        gc_unmark(MpObj);
 void        gc_mark_single(MpObj);
@@ -272,12 +272,12 @@ void             class_free(MpClass* pclass);
 
 
 MpObj      data_new(size_t size);
-void        data_mark();
-void        data_free();
-void        data_set(MpObj, MpObj, MpObj);
+void       data_mark();
+void       data_free();
+void       data_set(MpObj, MpObj, MpObj);
 MpObj      data_get(MpObj, MpObj);
 MpObj      data_str(MpObj self);
-void        obj_free(MpObj o);
+void       obj_free(MpObj o);
 MpObj      obj_new(int type, void* value);
 
 
@@ -302,7 +302,7 @@ MpObj      iter_new(MpObj collections);
 MpObj      mp_str(MpObj obj);
 MpObj      obj_append(MpObj a, MpObj item);
 
-MpObj*     next_ptr(MpObj iterator);
+MpObj*      obj_next(MpObj iterator);
 char*       obj_to_sz(MpObj obj);
 int         mp_cmp(MpObj a, MpObj b);
 int         mp_in(MpObj key, MpObj collection);
@@ -310,11 +310,11 @@ int         obj_equals(MpObj a, MpObj b);
 int         mp_len(MpObj obj);
 int         is_true_obj(MpObj v);
 int         mp_iter(MpObj self, MpObj *k);
-MpObj      mp_get_global(MpObj globals, char* key);
-MpObj      mp_call_builtin(BuiltinFunc func, int n, ...);
+MpObj       mp_get_global(MpObj globals, char* key);
+MpObj       mp_call_builtin(BuiltinFunc func, int n, ...);
 
 // vm functions
-MpObj call_module_function(char* mod, char* fnc);
+MpObj  call_module_function(char* mod, char* fnc);
 void   reg_builtin(char* name, MpObj value);
 void   reg_builtin_func(char* name, MpObj (*native)());
 void   reg_mod_func(MpObj mod, char* name, MpObj(*native)());
@@ -329,10 +329,10 @@ void   vm_destroy();
 #define  MP_POP() *(top--)
 #define  MP_TOP() (*top)
 #define  GET_CONST(i) GET_DICT(tm->constants)->nodes[i].key
-MpObj   call_unsafe(MpObj fnc);
-MpObj   call_function(MpObj func);
-MpObj   load_file_module(MpObj filename, MpObj code, MpObj name);
-MpObj   mp_eval(MpFrame*);
+MpObj    call_unsafe(MpObj fnc);
+MpObj    call_function(MpObj func);
+MpObj    load_file_module(MpObj filename, MpObj code, MpObj name);
+MpObj    mp_eval(MpFrame*);
 MpFrame* push_frame(MpObj fnc);
 void     pop_frame();
 

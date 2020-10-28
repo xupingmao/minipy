@@ -2,7 +2,7 @@
  * description here
  * @author xupingmao
  * @since 2016
- * @modified 2020/10/23 00:42:47
+ * @modified 2020/10/26 22:54:37
  */
 
 #include "include/mp.h"
@@ -91,8 +91,8 @@ MpObj load_boot_module(char* sz_filename, char* sz_code) {
  * @param sz_fnc, function name
  */
 MpObj call_mod_func(char* mod, char* sz_fnc) {
-    MpObj m = obj_get(tm->modules, string_new(mod));
-    MpObj fnc = obj_get(m, string_new(sz_fnc));
+    MpObj module = obj_get(tm->modules, string_new(mod));
+    MpObj fnc = obj_get(module, string_new(sz_fnc));
     arg_start();
     return call_function(fnc);
 }

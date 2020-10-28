@@ -2,7 +2,7 @@
  * description here
  * @author xupingmao
  * @since 2016
- * @modified 2020/10/23 00:37:03
+ * @modified 2020/10/26 22:54:31
  */
 #include "vm.c"
 #include "bin.c"
@@ -27,15 +27,8 @@ int main(int argc, char *argv[])
         load_boot_module("pyeval",      pyeval_bin);
         load_boot_module("repl",        repl_bin);
         dict_set_by_str(tm->builtins, "MP_USE_CACHE", number_obj(1));
- 
-        if (mp_hasattr(tm->modules, "mp_init")) {
-            call_mod_func("mp_init", "boot");
-        } else if (mp_hasattr(tm->modules, "main")) {
-            // adjust sys.argv
-            call_mod_func("main", "_main");
-        } else {
-            mp_raise("no entry found");
-        }
+        // call boot function
+        call_mod_func("mp_init", "boot");
     } else if (code == 1){
         /* handle exceptions */
         traceback();
