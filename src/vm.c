@@ -134,11 +134,11 @@ int vm_init(int argc, char* argv[]) {
     obj_set(boot, string_from_cstr("__name__"), string_from_cstr("boot"));
 
     /* builtins constants */
-    dict_set_by_str(tm->builtins, "tm",    number_obj(1));
-    dict_set_by_str(tm->builtins, "True",  number_obj(1));
-    dict_set_by_str(tm->builtins, "False", number_obj(0));
-    dict_set_by_str(tm->builtins, "__builtins__", tm->builtins);
-    dict_set_by_str(tm->builtins, "__modules__",  tm->modules);
+    obj_set_by_cstr(tm->builtins, "tm",    number_obj(1));
+    obj_set_by_cstr(tm->builtins, "True",  number_obj(1));
+    obj_set_by_cstr(tm->builtins, "False", number_obj(0));
+    obj_set_by_cstr(tm->builtins, "__builtins__", tm->builtins);
+    obj_set_by_cstr(tm->builtins, "__modules__",  tm->modules);
     
     list_methods_init();
     string_methods_init();

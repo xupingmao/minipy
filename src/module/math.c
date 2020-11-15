@@ -78,7 +78,7 @@ MpObj math_tan() {
 void math_mod_init() {
     MpObj math = dict_new();
 
-    dict_set_by_str(math, "PI", number_obj(3.141592653589793));
+    obj_set_by_cstr(math, "PI", number_obj(3.141592653589793));
     reg_mod_func(math, "abs", math_abs);
     reg_mod_func(math, "acos", math_acos);
     reg_mod_func(math, "asin", math_asin);
@@ -92,5 +92,5 @@ void math_mod_init() {
     reg_mod_func(math, "sin", math_sin);
     reg_mod_func(math, "tan", math_tan);
 
-    dict_set_by_str(tm->modules, "math", math);
+    obj_set_by_cstr(tm->modules, "math", math);
 }

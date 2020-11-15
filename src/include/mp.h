@@ -225,7 +225,6 @@ void             dict_set_by_cstr(MpDict* dict, char* key, MpObj val);
 MpObj           dict_keys(MpDict* );
 
 #define          dict_set(d, k, v)                dict_set0(GET_DICT(d), k, v)
-#define          dict_set_by_str(dict, key, val)  dict_set_by_cstr(GET_DICT(dict), key, val)
 #define          dict_get_by_str(dict, key)       dict_get_by_cstr(GET_DICT(dict), key)
 
 /** dict methods **/
@@ -299,6 +298,7 @@ MpObj      obj_new(int type, void* value);
 const char* get_type_cstr(int type);
 const char* get_object_type_cstr(MpObj object);
 void        obj_set(MpObj self, MpObj key, MpObj value);
+void        obj_set_by_cstr(MpObj self, char* key, MpObj value);
 void        obj_del(MpObj self, MpObj k);
 MpObj      obj_get(MpObj self, MpObj key);
 MpObj      obj_add(MpObj a, MpObj b);

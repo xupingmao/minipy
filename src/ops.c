@@ -2,7 +2,7 @@
  * opeartor implementions
  * @author xupingmao
  * @since 2016
- * @modified 2020/11/12 15:17:36
+ * @modified 2020/11/15 23:09:19
  */
 
 #include <assert.h>
@@ -94,6 +94,11 @@ void obj_set(MpObj self, MpObj k, MpObj v) {
         }
     }
     mp_raise("obj_set: Self %o, Key %o, Val %o", self, k, v);
+}
+
+inline
+void obj_set_by_cstr(MpObj self, char* key, MpObj value) {
+    obj_set(self, string_static(key), value);
 }
 
 MpObj obj_get(MpObj self, MpObj k) {

@@ -69,5 +69,5 @@ void time_mod_init() {
     reg_mod_func(time_mod, "ctime", bf_time_ctime);
     reg_mod_func(time_mod, "sleep", bf_time_sleep);
     reg_mod_func(time_mod, "asctime", bf_time_asctime);
-    dict_set_by_str(tm->modules, "time", time_mod);
+    obj_set_by_cstr(tm->modules, "time", time_mod);
 }
