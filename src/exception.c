@@ -16,7 +16,7 @@ void push_exception(MpFrame* f){
     list_append(GET_LIST(tm->ex_list), ex);
 }
 
-void traceback() {
+void mp_traceback() {
     int i;
     MpObj exlist = tm->ex_list;
     printf("Traceback (most recent call last):\n");
@@ -25,7 +25,7 @@ void traceback() {
         mp_println(LIST_NODES(exlist)[i]);
     }
     fprintf(stderr, "Exception:\n  ");
-    fprintf(stderr, "%s\n", GET_SZ(tm->ex_line));
+    fprintf(stderr, "%s\n", GET_CSTR(tm->ex_line));
 }
 
 void mp_raise(char* fmt, ...) {

@@ -107,7 +107,7 @@ def repl():
                 if v != None:
                     repl_print(v)
             except Exception as e:
-                traceback()
+                mp_traceback()
                 # print(e)
 if __name__ == '__main__':
     repl()

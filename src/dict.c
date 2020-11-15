@@ -25,7 +25,7 @@ int js_hash(unsigned char* s, int len) {
  */
 int mp_hash(MpObj key) {
     switch(MP_TYPE(key)) {
-    case TYPE_STR:return js_hash((unsigned char*) GET_STR(key), GET_STR_LEN(key));
+    case TYPE_STR:return js_hash((unsigned char*) GET_CSTR(key), GET_STR_LEN(key));
     case TYPE_NUM:return abs((int) GET_NUM(key));
     default: return 0;
     }
@@ -186,22 +186,22 @@ DictNode* dict_get_node(MpDict* dict, MpObj key){
     return NULL;
 }
 
-MpObj* dict_get_by_str0(MpDict* dict, char* key) {
-    //int hash = hash_sz((unsigned char*) key, strlen(key));
+MpObj* dict_get_by_cstr(MpDict* dict, char* key) {
+    //int hash = hash_cstr((unsigned char*) key, strlen(key));
     //int idx = hash % dict->cap;
     int i;
     DictNode* nodes = dict->nodes;
     for (i = 0; i < dict->cap; i++) {
         if (nodes[i].used && IS_STR(nodes[i].key)
-                && strcmp(GET_STR(nodes[i].key), key) == 0) {
+                && strcmp(GET_CSTR(nodes[i].key), key) == 0) {
             return &nodes[i].val;
         }
     } 
     return NULL;
 }
 
-void dict_set_by_str0(MpDict* dict, char* key, MpObj value) {
-    dict_set0(dict, string_from_sz(key), value);
+void dict_set_by_cstr(MpDict* dict, char* key, MpObj value) {
+    dict_set0(dict, string_from_cstr(key), value);
 }
 
 void dict_del(MpDict* dict, MpObj key) {

@@ -3,7 +3,7 @@
  *
  *  Created on: 2014/8/25
  *  @author: xupingmao
- *  @modified 2020/10/21 01:05:46
+ *  @modified 2020/11/12 15:03:17
  */
 
 #ifndef _OBJECT_H_
@@ -244,7 +244,7 @@ typedef struct MpDict {
 typedef struct MpStr {
     int marked;
     int len;
-    int stype; /* string type, static or not */
+    int stype; /* string type, 1: memory; 0: static */
     char *value;
 } MpStr;
 

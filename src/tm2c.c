@@ -237,7 +237,7 @@ int mp_run_func(int argc, char* argv[], char* mod_name, MpObj (*func)(void)) {
         // fgetc(stdin);
 
     } else if (code == 1){
-        traceback();
+        mp_traceback();
     } else if (code == 2){
         
     }

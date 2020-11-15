@@ -86,7 +86,7 @@ void log_error(char* fmt, ...) {
  */
 void mp_log_call(MpObj func) {
     MpObj name = GET_FUNCTION(func)->name;
-    printf("%s(\n", GET_STR(name));
+    printf("%s(\n", GET_CSTR(name));
     int i;
     for (i = 0; i < tm->arg_cnt; i++) {
         mp_println(tm->arguments[i]);
@@ -128,7 +128,7 @@ void mp_log_cache(MpCodeCache* cache) {
             printf("return\n");
             break;
         case OP_STRING:
-            printf("string: '%s'\n", GET_STR(cache->v.obj));
+            printf("string: '%s'\n", GET_CSTR(cache->v.obj));
             break;
         case OP_LOAD_LOCAL:
             printf("loadl: %d\n", val);
@@ -137,10 +137,10 @@ void mp_log_cache(MpCodeCache* cache) {
             printf("storel: %d\n", val);
             break;
         case OP_LOAD_GLOBAL:
-            printf("loadg: %s\n", GET_STR(obj));
+            printf("loadg: %s\n", GET_CSTR(obj));
             break;
         case OP_STORE_GLOBAL:
-            printf("storeg: %s\n", GET_STR(obj));
+            printf("storeg: %s\n", GET_CSTR(obj));
             break;
         case OP_POP:
             printf("pop\n");

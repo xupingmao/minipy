@@ -31,7 +31,7 @@ int main(int argc, char *argv[])
         call_mod_func("mp_init", "boot");
     } else if (code == 1){
         /* handle exceptions */
-        traceback();
+        mp_traceback();
     } else if (code == 2){
         /* minipy call exit() */
     }

@@ -2,7 +2,7 @@
  * description here
  * @author xupingmao
  * @since 2018/02/19 16:49:28
- * @modified 2020/10/21 01:18:05
+ * @modified 2020/11/12 15:01:30
  */
 
 #include "include/mp.h"
@@ -88,6 +88,11 @@ MpObj string_alloc(char *s, int size) {
 
 MpObj string_new(char* s) {
     return string_alloc(s, strlen(s));
+}
+
+MP_INLINE
+MpObj string_static(char* s) {
+    return string_alloc(s, -1);
 }
 
 /**
@@ -184,7 +189,7 @@ MpObj string_append_char(MpObj string, char c) {
 /**
  * must be assigned
  */
-MpObj string_append_sz(MpObj string, char* sz) {
+MpObj string_append_cstr(MpObj string, const char* sz) {
     // return obj_add(string, string_new(sz));
     MpStr* str = GET_STR_OBJ(string);
     int sz_len = strlen(sz);
@@ -202,16 +207,16 @@ MpObj string_append_sz(MpObj string, char* sz) {
 }
 
 MpObj string_append_obj(MpObj string, MpObj obj) {
-    MpObj obj_str = mp_str(obj);
-    char* sz = GET_STR(obj_str);
-    return string_append_sz(string, sz);
+    MpObj str = obj_str(obj);
+    char* sz = GET_CSTR(str);
+    return string_append_cstr(string, sz);
 }
 
 MpObj string_append_int(MpObj string, int64_t num) {
     // the maxium length of long is 20
     char buf[30];
     sprintf(buf, "%lld", (long long int)num);
-    string = string_append_sz(string, buf); 
+    string = string_append_cstr(string, buf); 
     // not use tail-call, prevent buf destroyed by compiler
     return string;
 }
@@ -227,9 +232,9 @@ MpObj string_substring(MpStr* str, int start, int end) {
     end = max_end < end ? max_end : end;
     len = end - start;
     if (len <= 0)
-        return string_from_sz("");
+        return string_from_cstr("");
     new_str = string_alloc(NULL, len);
-    s = GET_STR(new_str);
+    s = GET_CSTR(new_str);
     for (i = start; i < end; i++) {
         *(s++) = str->value[i];
     }
@@ -260,10 +265,10 @@ MpObj string_builtin_substring() {
 MpObj string_builtin_upper() {
     MpObj self = arg_take_str_obj("upper");
     int i;
-    char*s = GET_STR(self);
+    char*s = GET_CSTR(self);
     int len = GET_STR_LEN(self);
     MpObj nstr = string_alloc(NULL, len);
-    char*news = GET_STR(nstr);
+    char*news = GET_CSTR(nstr);
     for (i = 0; i < len; i++) {
         news[i] = toupper(s[i]);
     }
@@ -273,10 +278,10 @@ MpObj string_builtin_upper() {
 MpObj string_builtin_lower() {
     MpObj self = arg_take_str_obj("lower");
     int i;
-    char*s = GET_STR(self);
+    char*s = GET_CSTR(self);
     int len = GET_STR_LEN(self);
     MpObj nstr = string_alloc(NULL, len);
-    char*news = GET_STR(nstr);
+    char*news = GET_CSTR(nstr);
     for (i = 0; i < len; i++) {
         news[i] = tolower(s[i]);
     }

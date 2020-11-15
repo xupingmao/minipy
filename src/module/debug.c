@@ -89,11 +89,11 @@ MpObj bf_set_vm_state() {
 }
 
 MpObj bf_vmopt() {
-    char* opt = arg_take_sz("vminfo");
+    char* opt = arg_take_cstr("vminfo");
     if (strcmp(opt, "gc") == 0) {
         gc_full();
     } else if (strcmp(opt, "help") == 0) {
-        return string_from_sz("gc, help");
+        return string_from_cstr("gc, help");
     } else if (strcmp(opt, "frame.local") == 0) {
         int fidx = arg_take_int("vminfo");
         int lidx = arg_take_int("vminfo");

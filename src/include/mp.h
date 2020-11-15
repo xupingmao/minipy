@@ -9,10 +9,23 @@
  *  structure       . camel case 
  *  method          . like string_builtin_xxx, list_builtin_xxx
  *  macro           . like XXX_XXX
- *  function(used by C)  - mp_xxx  - like mp_get(MpObj a, const char* key)
- *  function(used by vm) - tmV_xxx - like MpObj tmV_fnc(MpObj a, MpObj b)
+ *  function(used by C)  - mp_xxx    - like mp_get(MpObj a, const char* key)
+ *  function(used by vm) - mp_vm_xxx - like MpObj mp_vm_func(MpObj a, MpObj b)
  *  built-in function    - bf_xxx
-*/
+ * 
+ *  C-language Types abbr:
+ *    cstr: char*
+ *  
+ *  Minipy Types abbr:
+ *    obj : MpObj
+ *    pobj: MpObj*
+ *    list: MpList
+ *    str : MpStr*
+ *    list: MpList*
+ *    dict: MpDict*
+ *    clazz: MpClass*
+ *    func: MpFunction*
+ */
 
 /* #pragma pack(4) */
 #define DEBUG_GC 0
@@ -159,8 +172,8 @@ MpObj        string_char_new(int c);
 MpObj        string_chr(int n); // get a char from char_list.
 MpObj        string_alloc(char* s, int size);
 MpObj        string_new(char*s);
-#define       string_from_sz(s) string_alloc(s, -1)
-#define       string_static(s)  string_alloc(s, -1)
+MpObj        string_static(char*s);
+#define      string_from_cstr(s) string_static(s)
 MpObj        string_const(char*);
 void          string_free(MpStr*);
 int           string_equals(MpStr*s0, MpStr*s1);
@@ -205,19 +218,17 @@ MpDict*          dict_init();
 void             dict_free(MpDict* dict);
 int              dict_set0(MpDict* dict, MpObj key, MpObj val);
 DictNode*        dict_get_node(MpDict* dict, MpObj key);
-MpObj*          dict_get_by_str0(MpDict* dict, char* key);
+MpObj*          dict_get_by_cstr(MpDict* dict, char* key);
 void             dict_del(MpDict* dict, MpObj k);
 void             dict_methods_init();
-void             dict_set_by_str0(MpDict* dict, char* key, MpObj val);
+void             dict_set_by_cstr(MpDict* dict, char* key, MpObj val);
 MpObj           dict_keys(MpDict* );
 
 #define          dict_set(d, k, v)                dict_set0(GET_DICT(d), k, v)
-#define          dict_set_by_str(dict, key, val)  dict_set_by_str0(GET_DICT(dict), key, val)
-#define          dict_get_by_str(dict, key)       dict_get_by_str0(GET_DICT(dict), key)
+#define          dict_set_by_str(dict, key, val)  dict_set_by_cstr(GET_DICT(dict), key, val)
+#define          dict_get_by_str(dict, key)       dict_get_by_cstr(GET_DICT(dict), key)
 
 /** dict methods **/
-MpObj           dict_keys();
-MpObj           dict_values();
 MpObj           dict_iter_new(MpObj dict);
 MpObj*          dict_next(MpData* iterator);
 int              dict_set_attr(MpDict* dict, int const_id, MpObj val);
@@ -235,7 +246,7 @@ void    _resolve_method_self(MpFunction *fnc);
 void    print_arguments();
 int     arg_has_next();
 MpObj  arg_take_str_obj(const char* fnc);
-char*   arg_take_sz(const char* fnc);
+char*   arg_take_cstr(const char* fnc);
 MpObj  arg_take_func_obj(const char* fnc);
 int     arg_take_int(const char* fnc);
 double  arg_take_double(const char* fnc);
@@ -285,7 +296,8 @@ MpObj      obj_new(int type, void* value);
  *  general object operation
  *  some tools
  */
-const char* mp_type(int type);
+const char* get_type_cstr(int type);
+const char* get_object_type_cstr(MpObj object);
 void        obj_set(MpObj self, MpObj key, MpObj value);
 void        obj_del(MpObj self, MpObj k);
 MpObj      obj_get(MpObj self, MpObj key);
@@ -299,11 +311,11 @@ MpObj      obj_cmp(MpObj a, MpObj b);
 MpObj      obj_in(MpObj left, MpObj right);
 MpObj      obj_slice(MpObj self, MpObj first, MpObj second);
 MpObj      iter_new(MpObj collections);
-MpObj      mp_str(MpObj obj);
+MpObj      obj_str(MpObj obj);
 MpObj      obj_append(MpObj a, MpObj item);
 
 MpObj*      obj_next(MpObj iterator);
-char*       obj_to_sz(MpObj obj);
+char*       obj_to_cstr(MpObj obj);
 int         mp_cmp(MpObj a, MpObj b);
 int         mp_in(MpObj key, MpObj collection);
 int         obj_equals(MpObj a, MpObj b);
@@ -319,7 +331,7 @@ void   reg_builtin(char* name, MpObj value);
 void   reg_builtin_func(char* name, MpObj (*native)());
 void   reg_mod_func(MpObj mod, char* name, MpObj(*native)());
 void   reg_mod_attr(char* mod_name,char* attr, MpObj value);
-int    obj_eq_sz(MpObj str, const char* value);
+int    obj_eq_cstr(MpObj str, const char* value);
 void   mp_raise(char*fmt , ...);
 void   vm_destroy();
 
@@ -337,10 +349,11 @@ MpFrame* push_frame(MpObj fnc);
 void     pop_frame();
 
 // exception functions
+void mp_assert(int value, char*msg);
 void mp_assert_type(MpObj o, int type, char* msg) ;
 void mp_assert_int(double value, char* msg) ;
 void push_exception(MpFrame* f);
-void traceback();
+void mp_traceback();
 void mp_raise(char* fmt, ...);
 
 // builtin functions
@@ -352,6 +365,7 @@ MpObj    mp_format(char*fmt, ...);
 MpObj    mp_format_check_length(char*fmt, int ap_length, ...);
 void      mp_inspect_obj(MpObj o);
 void      mp_printf(char* fmt, ...);
+
 /* avoid '\0' in char array, which will be regarded as end by c lang */
 /* Chars     MpObj_info(char*,MpObj,int); */
 MpObj    mp_load(char* fname); // load the content of a file.
@@ -361,7 +375,7 @@ MpObj    bf_int();
 MpObj    bf_float();
 MpObj    bf_system();
 MpObj    bf_print();
-void      builtins_init();
+void     builtins_init();
 MpObj*   get_builtin(char* key);
 
 

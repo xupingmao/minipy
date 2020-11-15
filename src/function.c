@@ -150,7 +150,7 @@ void class_free(MpClass* pclass) {
 void class_format(char* dest, MpObj class_obj) {
   mp_assert_type(class_obj, TYPE_CLASS, "class_format");
   MpClass* clazz = GET_CLASS(class_obj);
-  sprintf(dest, "<class %s@%p>", GET_SZ(clazz->name), clazz);
+  sprintf(dest, "<class %s@%p>", GET_CSTR(clazz->name), clazz);
 }
 
 
@@ -214,7 +214,7 @@ void module_free(MpModule* mod){
 
 void func_format(char* des, MpFunction* func){
     char sz_buf[20];
-    char* sz_fnc = GET_STR(func->name);
+    char* sz_fnc = GET_CSTR(func->name);
     strncpy(sz_buf, sz_fnc, 19);
     if (func->self.type != TYPE_NONE) {
         sprintf(des, "<method %p %s>", func, sz_buf);
@@ -240,11 +240,11 @@ MpObj func_get_code_obj(MpFunction* func) {
 
 
 MpObj func_get_attr(MpFunction* fnc, MpObj key) {
-    if(obj_eq_sz(key, "__name__")) {
+    if(obj_eq_cstr(key, "__name__")) {
         return fnc->name;
-    } else if(obj_eq_sz(key, "__self__")) {
+    } else if(obj_eq_cstr(key, "__self__")) {
         return fnc->self;
-    } else if (obj_eq_sz(key, "__code__")) {
+    } else if (obj_eq_cstr(key, "__code__")) {
         return func_get_code_obj(fnc);
     }
     return NONE_OBJECT;
@@ -265,9 +265,9 @@ int get_function_max_locals(MpFunction* fnc){
     return fnc->maxlocals;
 }
 
-char* get_func_name_sz(MpObj func) {
+char* get_func_name_cstr(MpObj func) {
     if (IS_FUNC(func)) {
-        return GET_STR(GET_FUNCTION(func)->name);
+        return GET_CSTR(GET_FUNCTION(func)->name);
     } else if (IS_CLASS(func)){
         return "<class>";
     } else {

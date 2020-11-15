@@ -2,7 +2,7 @@
  * description here
  * @author xupingmao
  * @since 2016
- * @modified 2020/10/26 22:54:37
+ * @modified 2020/11/12 10:58:46
  */
 
 #include "include/mp.h"
@@ -15,7 +15,7 @@
 #include "dict.c"
 #include "function.c"
 #include "exception.c"
-#include "tmarg.c"
+#include "argument.c"
 #include "execute.c"
 #include "module/time.c"
 #include "module/sys.c"
@@ -28,7 +28,7 @@
  */
 void reg_mod_func(MpObj mod, char* name, MpObj (*native)()) {
     MpObj func = func_new(NONE_OBJECT, NONE_OBJECT, native);
-    GET_FUNCTION(func)->name = string_from_sz(name);
+    GET_FUNCTION(func)->name = string_from_cstr(name);
     obj_set(mod,GET_FUNCTION(func)->name, func);
 }
 
@@ -45,8 +45,8 @@ void reg_builtin_func(char* name, MpObj (*native)()) {
 void load_module(MpObj name, MpObj code) {
     MpObj mod = module_new(name, name, code);
     MpObj fnc = func_new(mod, NONE_OBJECT, NULL);
-    GET_FUNCTION(fnc)->code = (unsigned char*) GET_STR(code);
-    GET_FUNCTION(fnc)->name = string_from_sz("#main");
+    GET_FUNCTION(fnc)->code = (unsigned char*) GET_CSTR(code);
+    GET_FUNCTION(fnc)->name = string_from_cstr("#main");
     call_function(fnc);
 }
 
@@ -56,10 +56,10 @@ void load_module(MpObj name, MpObj code) {
 MpObj load_file_module(MpObj file, MpObj code, MpObj name) {
     MpObj mod = module_new(file, name, code);
     // resolve cache
-    mp_resolve_code(GET_MODULE(mod), GET_STR(code));
+    mp_resolve_code(GET_MODULE(mod), GET_CSTR(code));
 
     MpObj fnc = func_new(mod, NONE_OBJECT, NULL);
-    GET_FUNCTION(fnc)->code = (unsigned char*) GET_STR(code);
+    GET_FUNCTION(fnc)->code = (unsigned char*) GET_CSTR(code);
     GET_FUNCTION(fnc)->name = string_new("#main");
     GET_FUNCTION(fnc)->cache = GET_MODULE(mod)->cache;
     call_function(fnc);
@@ -77,7 +77,7 @@ MpObj load_boot_module(char* sz_filename, char* sz_code) {
 
     mp_resolve_code(GET_MODULE(mod), sz_code);
     MpObj fnc = func_new(mod, NONE_OBJECT, NULL);
-    GET_FUNCTION(fnc)->code = (unsigned char*) GET_STR(code);
+    GET_FUNCTION(fnc)->code = (unsigned char*) GET_CSTR(code);
     GET_FUNCTION(fnc)->name = string_new("#main");
     GET_FUNCTION(fnc)->cache = GET_MODULE(mod)->cache;
     
@@ -130,8 +130,8 @@ int vm_init(int argc, char* argv[]) {
 
     /* set module boot */
     MpObj boot = dict_new();
-    obj_set(tm->modules, string_from_sz("boot"), boot);
-    obj_set(boot, string_from_sz("__name__"), string_from_sz("boot"));
+    obj_set(tm->modules, string_from_cstr("boot"), boot);
+    obj_set(boot, string_from_cstr("__name__"), string_from_cstr("boot"));
 
     /* builtins constants */
     dict_set_by_str(tm->builtins, "tm",    number_obj(1));

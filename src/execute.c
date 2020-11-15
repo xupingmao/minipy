@@ -257,7 +257,7 @@ tailcall:
     globals = GET_GLOBALS(cur_fnc);
     cache   = f->cache;
 
-    const char* func_name_sz = get_func_name_sz(cur_fnc);
+    const char* func_name_cstr = get_func_name_cstr(cur_fnc);
 
     ret = NONE_OBJECT;
 
@@ -526,7 +526,7 @@ tailcall:
         case OP_LOAD_PARG: {
             int parg = cache->v.ival;
             for (i = 0; i < parg; i++) {
-                locals[i] = arg_take_obj(func_name_sz);
+                locals[i] = arg_take_obj(func_name_cstr);
             }
             break;
         }
@@ -534,7 +534,7 @@ tailcall:
             int arg_index = cache->v.ival;
             MpObj list = list_new(tm->arg_cnt);
             while (arg_remains() > 0) {
-                obj_append(list, arg_take_obj(func_name_sz));
+                obj_append(list, arg_take_obj(func_name_cstr));
             }
             locals[arg_index] = list;
             break;

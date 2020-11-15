@@ -1,7 +1,7 @@
 # -*- coding:utf-8 -*-
 # @author xupingmao
 # @since 2016
-# @modified 2020/09/23 01:48:50
+# @modified 2020/11/12 10:24:26
 
 import mp_encode
 compile         = mp_encode.compile
@@ -39,7 +39,7 @@ def _op_in(a,b):
 def _op_del(a,b):
     del a[b]
 
-op_dict = {
+OP_FUNC_DICT_2 = {
     OP_ADD: _op_add,
     OP_SUB: _op_sub,
     OP_DIV: _op_div,
@@ -54,6 +54,13 @@ op_dict = {
     OP_NOTEQ: _op_ne,
     OP_IN: _op_in,
     OP_DEL: _op_del
+}
+
+def _op_neg(v):
+    return -v
+
+OP_FUNC_DICT_1 = {
+    OP_NEG: _op_neg
 }
 
 op_skip = {
@@ -136,11 +143,14 @@ def pyeval(src, glo_vars = None, debug = False):
                 b = stack.pop()
                 a = stack.pop()
                 r = _import(glo_vars, a, b)
-        elif op in op_dict:
+        elif op in OP_FUNC_DICT_2:
             y = stack.pop()
             x = stack.pop()
-            r = op_dict[op](x,y)
+            r = OP_FUNC_DICT_2[op](x,y)
             stack.append(r)
+        elif op in OP_FUNC_DICT_1:
+            v = stack.pop()
+            r = OP_FUNC_DICT_1[op](v)
         elif op == OP_POP:
             r = stack.pop()
         elif op == OP_CALL:

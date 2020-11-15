@@ -3,7 +3,7 @@
  *
  *  Created on: 2020/09/21
  *  @author: xupingmao
- *  @modified 2020/10/13 00:04:38
+ *  @modified 2020/11/12 15:09:43
  */
 
 #ifndef MP_MICRO_H_
@@ -13,10 +13,11 @@
 #define strequals(a, b) (a == b || strcmp(a,b) == 0)
 #define max(a, b) (a) > (b) ? (a) : (b)
 
+#define MP_INLINE inline
+
 
 /* macros */
-#define GET_STR(obj) (obj).value.str->value
-#define GET_SZ(obj)  (obj).value.str->value
+#define GET_CSTR(obj)    (obj).value.str->value
 #define GET_STR_OBJ(obj) (obj).value.str
 #define GET_STR_LEN(obj) (obj).value.str->len
 
@@ -45,7 +46,7 @@
 #define GET_DATA(obj) (obj).value.data
 #define GET_DATA_PROTO(obj) (obj).value.data->proto
 #define GET_DICT(obj) GET_VAL(obj).dict
-#define GET_DICT_ATTR(dict, key)  *dict_get_by_str0(GET_DICT(dict), key)
+#define GET_DICT_ATTR(dict, key)  *dict_get_by_cstr(GET_DICT(dict), key)
 #define GET_MODULE(obj) GET_VAL(obj).mod
 #define GET_MOD(obj) GET_VAL(obj).mod
 #define GET_LIST(obj) GET_VAL(obj).list
@@ -78,7 +79,7 @@
 
 #define ASSERT_TYPE_WITH_INFO(obj, type, info) \
     if(MP_TYPE(obj)!=type){                    \
-        mp_raise(info, obj);                    \
+        mp_raise(info, obj);                   \
     }
 
 

@@ -2,7 +2,7 @@
  * description here
  * @author xupingmao <578749341@qq.com>
  * @since 2016
- * @modified 2020/10/29 00:30:11
+ * @modified 2020/11/12 10:30:53
  */
 #include "include/mp.h"
 #include <ctype.h>
@@ -66,10 +66,10 @@ void mp_inspect_char(int c) {
 }
 
 void mp_print(MpObj o) {
-    MpObj str = mp_str(o);
+    MpObj str = obj_str(o);
     int i;
     for(i = 0; i < GET_STR_LEN(str); i++) {
-        mp_putchar(GET_STR(str)[i]);
+        mp_putchar(GET_CSTR(str)[i]);
     }
 }
 
@@ -96,7 +96,7 @@ void mp_inspect_obj0(MpObj o, int padding) {
         case TYPE_STR:
             printf("<string len=%d value=", GET_STR_LEN(o));
             for (i = 0; i < GET_STR_LEN(o) && i <= max_len; i++) {
-                mp_inspect_char(GET_STR(o)[i]);
+                mp_inspect_char(GET_CSTR(o)[i]);
             }
             printf(">\n");
             break;
@@ -182,39 +182,44 @@ MpObj mp_format_va_list_check_length(char* fmt, va_list ap, int ap_length, int a
             switch (fmt[i]) {
             case 'd':
                 sprintf(buf, "%d", va_arg(ap, int));
-                str = string_append_sz(str, buf);
+                str = string_append_cstr(str, buf);
                 break;
             case 'f':
                 /* ... will pass float as double */
                 sprintf(buf, "%lf", va_arg(ap, double));
-                str = string_append_sz(str, buf);
+                str = string_append_cstr(str, buf);
                 break;
                 /* ... will pass char  as int */
             case 'c':
                 str = string_append_char(str, va_arg(ap, int));
                 break;
             case 's': {
-                str = string_append_sz(str, va_arg(ap, char*));
+                str = string_append_cstr(str, va_arg(ap, char*));
                 break;
             }
             case 'P':
             case 'p': {
                 sprintf(buf, "%p", va_arg(ap, void*));
-                str = string_append_sz(str, buf);
+                str = string_append_cstr(str, buf);
                 break;
             }
             case 'o': {
                 int next = fmt[i+1];
-                MpObj v = va_arg(ap, MpObj);
-                if (IS_STR(v) && next != 's') {
-                    str = string_append_char(str, '"');
-                }
-                str = string_append_obj(str, v);
-                if (IS_STR(v) && next != 's') {
-                    str = string_append_char(str, '"');
-                }
+                MpObj v  = va_arg(ap, MpObj);
                 if (next == 's') {
+                    str = string_append_obj(str, v);
                     i++;
+                } else if (next == 't') {
+                    str = string_append_cstr(str, get_object_type_cstr(v));
+                    i++;
+                } else {
+                    if (IS_STR(v)) {
+                        str = string_append_char(str, '"');
+                        str = string_append_obj(str, v);
+                        str = string_append_char(str, '"');
+                    } else {
+                        str = string_append_obj(str, v);
+                    }
                 }
                 break;
             }
@@ -287,7 +292,7 @@ MpObj mp_load(char* fpath){
         return NONE_OBJECT;
     }
     MpObj text = string_alloc(NULL, len);
-    char* s = GET_STR(text);
+    char* s = GET_CSTR(text);
     fread(s, 1, len, fp);
     fclose(fp);
     return text;
@@ -298,7 +303,7 @@ MpObj mp_save(char*fname, MpObj content) {
     if (fp == NULL) {
         mp_raise("mp_save: can not save to file \"%s\"", fname);
     }
-    char* txt = GET_STR(content);
+    char* txt = GET_CSTR(content);
     int len = GET_STR_LEN(content);
     fwrite(txt, 1, len, fp);
     fclose(fp);
@@ -327,7 +332,7 @@ MpObj bf_int() {
     if (v.type == TYPE_NUM) {
         return number_obj((int) GET_NUM(v));
     } else if (v.type == TYPE_STR) {
-        return number_obj((int) atof(GET_STR(v)));
+        return number_obj((int) atof(GET_CSTR(v)));
     }
     mp_raise("int: %o can not be parsed to int ", v);
     return NONE_OBJECT;
@@ -338,7 +343,7 @@ MpObj bf_float() {
     if (v.type == TYPE_NUM) {
         return v;
     } else if (v.type == TYPE_STR) {
-        return number_obj(atof(GET_STR(v)));
+        return number_obj(atof(GET_CSTR(v)));
     }
     mp_raise("float: %o can not be parsed to float", v);
     return NONE_OBJECT;
@@ -374,14 +379,14 @@ MpObj bf_exit() {
 MpObj bf_gettype() {
     MpObj obj = arg_take_obj("gettype");
     switch(MP_TYPE(obj)) {
-        case TYPE_STR: return string_from_sz("string");
-        case TYPE_NUM: return string_from_sz("number");
-        case TYPE_LIST: return string_from_sz("list");
-        case TYPE_DICT: return string_from_sz("dict");
-        case TYPE_FUNCTION: return string_from_sz("function");
-        case TYPE_CLASS: return string_from_sz("class");
-        case TYPE_DATA: return string_from_sz("data");
-        case TYPE_NONE: return string_from_sz("None");
+        case TYPE_STR: return string_from_cstr("string");
+        case TYPE_NUM: return string_from_cstr("number");
+        case TYPE_LIST: return string_from_cstr("list");
+        case TYPE_DICT: return string_from_cstr("dict");
+        case TYPE_FUNCTION: return string_from_cstr("function");
+        case TYPE_CLASS: return string_from_cstr("class");
+        case TYPE_DATA: return string_from_cstr("data");
+        case TYPE_NONE: return string_from_cstr("None");
         default: mp_raise("gettype(%o)", obj);
     }
     return NONE_OBJECT;
@@ -395,7 +400,7 @@ MpObj bf_gettype() {
  */
 MpObj bf_istype() {
     MpObj obj = arg_take_obj("istype");
-    char* type = arg_take_sz("istype");
+    char* type = arg_take_cstr("istype");
     int is_type = 0;
     switch(MP_TYPE(obj)) {
         case TYPE_STR: is_type = strcmp(type, "string") == 0 ; break;
@@ -404,6 +409,7 @@ MpObj bf_istype() {
         case TYPE_DICT: is_type = strcmp(type, "dict") == 0; break;
         case TYPE_FUNCTION: is_type = strcmp(type, "function") == 0;break;
         case TYPE_DATA: is_type = strcmp(type, "data") == 0; break;
+        case TYPE_CLASS: is_type = strcmp(type, "class") == 0; break;
         case TYPE_NONE: is_type = strcmp(type, "None") == 0; break;
         default: mp_raise("gettype(%o)", obj);
     }
@@ -418,7 +424,7 @@ MpObj bf_chr() {
 MpObj bf_ord() {
     MpObj c = arg_take_str_obj("ord");
     MP_ASSERT(GET_STR_LEN(c) == 1, "ord() expected a character");
-    return number_obj((unsigned char) GET_STR(c)[0]);
+    return number_obj((unsigned char) GET_CSTR(c)[0]);
 }
 
 MpObj bf_code8() {
@@ -433,14 +439,14 @@ MpObj bf_code16() {
     if (n < 0 || n > 0xffff)
         mp_raise("code16(): expect number 0-0xffff, but see %x", n);
     MpObj nchar = string_alloc(NULL, 2);
-    code16((unsigned char*) GET_STR(nchar), n);
+    code16((unsigned char*) GET_CSTR(nchar), n);
     return nchar;
 }
 
 MpObj bf_code32() {
     int n = arg_take_int("code32");
     MpObj c = string_alloc(NULL, 4);
-    code32((unsigned char*) GET_STR(c), n);
+    code32((unsigned char*) GET_CSTR(c), n);
     return c;
 }
 
@@ -448,20 +454,20 @@ MpObj bf_raise() {
     if (arg_count() == 0) {
         mp_raise("raise");
     } else {
-        mp_raise("%s", arg_take_sz("raise"));
+        mp_raise("%s", arg_take_cstr("raise"));
     }
     return NONE_OBJECT;
 }
 
 MpObj bf_system() {
     MpObj m = arg_take_str_obj("system");
-    int rs = system(GET_STR(m));
+    int rs = system(GET_CSTR(m));
     return number_obj(rs);
 }
 
 MpObj bf_str() {
     MpObj a = arg_take_obj("str");
-    return mp_str(a);
+    return obj_str(a);
 }
 
 MpObj bf_list() {
@@ -510,22 +516,22 @@ MpObj bf_print() {
 
 MpObj bf_load(MpObj p){
     MpObj fname = arg_take_str_obj("load");
-    return mp_load(GET_STR(fname));
+    return mp_load(GET_CSTR(fname));
 }
 MpObj bf_save(){
     MpObj fname = arg_take_str_obj("<save name>");
-    return mp_save(GET_STR(fname), arg_take_str_obj("<save content>"));
+    return mp_save(GET_CSTR(fname), arg_take_str_obj("<save content>"));
 }
 
 MpObj bf_file_append() {
-    char* fname = arg_take_sz("file_append");
+    char* fname = arg_take_cstr("file_append");
     MpObj content = arg_take_str_obj("file_append");
     FILE* fp = fopen(fname, "ab+");
     if (fp == NULL) {
         mp_raise("file_append: fail to open file %s", fname);
         return NONE_OBJECT;
     }
-    char* txt = GET_STR(content);
+    char* txt = GET_CSTR(content);
     int len = GET_STR_LEN(content);
     fwrite(txt, 1, len, fp);
     fclose(fp);
@@ -537,7 +543,7 @@ MpObj bf_file_append() {
 //============
 MpObj bf_remove(){
     MpObj fname = arg_take_str_obj("remove");
-    int flag = remove(GET_STR(fname));
+    int flag = remove(GET_CSTR(fname));
     if(flag) {
         return number_obj(0);
     } else {
@@ -566,8 +572,8 @@ MpObj bf_apply() {
 
 MpObj bf_write() {
     MpObj fmt = arg_take_obj("write");
-    MpObj str = mp_str(fmt);
-    char* s = GET_STR(str);
+    MpObj str = obj_str(fmt);
+    char* s = GET_CSTR(str);
     int len = GET_STR_LEN(str);
     int i;
     // for(i = 0; i < len; i++) {
@@ -674,10 +680,10 @@ MpObj bf_enumerate() {
 }
 
 MpObj bf_mmatch() {
-    char* str = arg_take_sz("mmatch");
+    char* str = arg_take_cstr("mmatch");
     int start = arg_take_int("mmatch");
     MpObj o_dst = arg_take_str_obj("mmatch");
-    char* dst = GET_STR(o_dst);
+    char* dst = GET_CSTR(o_dst);
     int size = GET_STR_LEN(o_dst);
     return number_obj(strncmp(str+start, dst, size) == 0);
 }
@@ -695,7 +701,7 @@ MpObj bf_add_obj_method() {
     MpObj type = arg_take_str_obj(sz_func);
     MpObj fname = arg_take_str_obj(sz_func);
     MpObj fnc = arg_take_func_obj(sz_func);
-    char*s = GET_STR(type);
+    char*s = GET_CSTR(type);
     if (strcmp(s, "str") == 0) {
         obj_set(tm->str_proto, fname, fnc);
     } else if (strcmp(s, "list") == 0) {
@@ -711,7 +717,7 @@ MpObj bf_add_obj_method() {
 MpObj bf_read_file() {
     static const char* sz_func = "read_file";
     char c;
-    char* fname = arg_take_sz(sz_func);
+    char* fname = arg_take_cstr(sz_func);
     int nsize = arg_take_int(sz_func);
     char buf[1024];
     int i;
@@ -792,14 +798,14 @@ MpObj bf_get_ex_list() {
 MpObj bf_get_os_name() {
     const char* sz_func = "getosname";
 #ifdef _WINDOWS_H
-    return string_from_sz("nt");
+    return string_from_cstr("nt");
 #else
-    return string_from_sz("posix");
+    return string_from_cstr("posix");
 #endif
 }
 
-MpObj bf_traceback() {
-    traceback();
+MpObj bf_mp_traceback() {
+    mp_traceback();
     return NONE_OBJECT;
 }
 
@@ -837,16 +843,16 @@ MpObj bf_getattr() {
 }
 
 MpObj bf_setattr() {
-    MpObj self = arg_take_obj("getattr");
-    MpObj key  = arg_take_obj("getattr");
-    MpObj val  = arg_take_obj("getattr");
+    MpObj self = arg_take_obj("setattr");
+    MpObj key  = arg_take_obj("setattr");
+    MpObj val  = arg_take_obj("setattr");
     obj_set(self, key, val);
     return NONE_OBJECT;
 }
 
 MpObj bf_hasattr() {
-    MpObj self = arg_take_obj("getattr");
-    MpObj key  = arg_take_obj("getattr");
+    MpObj self = arg_take_obj("hasattr");
+    MpObj key  = arg_take_obj("hasattr");
     return obj_in(self, key);
 }
 
@@ -898,7 +904,7 @@ void builtins_init() {
     reg_builtin_func("get_const_idx", bf_get_const_idx);
     reg_builtin_func("get_const", bf_get_const);
     reg_builtin_func("get_const_len", bf_get_const_len);
-    reg_builtin_func("traceback", bf_traceback);
+    reg_builtin_func("mp_traceback", bf_mp_traceback);
 
     reg_builtin_func("add_obj_method", bf_add_obj_method);
     reg_builtin_func("read_file", bf_read_file);

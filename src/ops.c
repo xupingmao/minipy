@@ -2,24 +2,25 @@
  * opeartor implementions
  * @author xupingmao
  * @since 2016
- * @modified 2020/10/23 00:35:36
+ * @modified 2020/11/12 15:17:36
  */
 
 #include <assert.h>
 #include "include/mp.h"
 
+inline
 void mp_assert(int value, char* msg) {
     if (!value) {
         mp_raise("assertion failed, %s", msg);
     }
 }
 
-const char* mp_type(int type) {
+const char* get_type_cstr(int type) {
     static char MP_TYPE_STR[64];
 
     switch (type) {
         case TYPE_STR:
-            return "string";
+            return "str";
         case TYPE_NUM:
             return "number";
         case TYPE_LIST:
@@ -41,17 +42,22 @@ const char* mp_type(int type) {
     return MP_TYPE_STR;
 }
 
+inline
+const char* get_object_type_cstr(MpObj o) {
+    return get_type_cstr(o.type);
+}
+
 void mp_assert_type(MpObj o, int type, char* msg) {
     if (MP_TYPE(o) != type) {
         mp_raise("%s, expect %s but see %s", msg, 
-            mp_type(type), mp_type(o.type));
+            get_type_cstr(type), get_type_cstr(o.type));
     }
 }
 
 void mp_assert_type2(MpObj o, int type1, int type2, char* msg) {
     if (MP_TYPE(o) != type1 && MP_TYPE(o) != type2) {
         mp_raise("%s, expect %s or %s but see %s", msg, 
-            mp_type(type1), mp_type(type2), mp_type(o.type));
+            get_type_cstr(type1), get_type_cstr(type2), get_type_cstr(o.type));
     }
 }
 
@@ -62,9 +68,9 @@ void mp_assert_int(double value, char* msg) {
     }
 }
 
-int obj_eq_sz(MpObj obj, const char* value) {
+int obj_eq_cstr(MpObj obj, const char* value) {
     return MP_TYPE(obj) == TYPE_STR
-            && (GET_STR(obj) == value || strcmp(GET_STR(obj), value) == 0);
+            && (GET_CSTR(obj) == value || strcmp(GET_CSTR(obj), value) == 0);
 }
 
 void obj_set(MpObj self, MpObj k, MpObj v) {
@@ -104,7 +110,7 @@ MpObj obj_get(MpObj self, MpObj k) {
                 if (n >= GET_STR_LEN(self) || n < 0)
                     mp_raise("MpStr_get: index overflow ,len=%d,index=%d, str=%o",
                             GET_STR_LEN(self), n, self);
-                return string_chr(0xff & GET_STR(self)[n]);
+                return string_chr(0xff & GET_CSTR(self)[n]);
             }
             // string method
             if ((node = dict_get_node(GET_DICT(tm->str_proto), k)) != NULL) {
@@ -182,7 +188,7 @@ MpObj obj_slice(MpObj self, MpObj first, MpObj second) {
         if (end <= start) {
             return string_alloc("", 0);
         }
-        return string_alloc(GET_STR(self) + start, end - start);
+        return string_alloc(GET_CSTR(self) + start, end - start);
     } else if (IS_LIST(self)) {
         int length = LIST_LEN(self);
         if (start < 0) {
@@ -203,7 +209,7 @@ MpObj obj_slice(MpObj self, MpObj first, MpObj second) {
             obj_append(ret, LIST_GET(self, i));
         }
     } else {
-        mp_raise("slice not implemented for type %s", mp_type(self.type));
+        mp_raise("slice not implemented for type %s", get_type_cstr(self.type));
     }
     return ret;
 }
@@ -226,15 +232,15 @@ MpObj obj_add(MpObj a, MpObj b) {
                 GET_NUM(a) += GET_NUM(b);
                 return a;
             case TYPE_STR: {
-                char* sa = GET_STR(a);
-                char* sb = GET_STR(b);
+                char* sa = GET_CSTR(a);
+                char* sb = GET_CSTR(b);
                 int la = GET_STR_LEN(a);
                 int lb = GET_STR_LEN(b);
                 if (la == 0) {return b;    }
                 if (lb == 0) {return a;    }
                 int len = la + lb;
                 MpObj des = string_alloc(NULL, len);
-                char*s = GET_STR(des);
+                char*s = GET_CSTR(des);
                 memcpy(s, sa, la);
                 memcpy(s + la, sb, lb);
                 return des;
@@ -277,8 +283,8 @@ int obj_equals(MpObj a, MpObj b){
         case TYPE_FUNCTION: return GET_FUNCTION(a) == GET_FUNCTION(b);
         case TYPE_CLASS: return GET_CLASS(a) == GET_CLASS(b);
         default: {
-            const char* ltype = mp_type(a.type);
-            const char* rtype = mp_type(b.type);
+            const char* ltype = get_type_cstr(a.type);
+            const char* rtype = get_type_cstr(b.type);
             mp_raise("obj_equals: not supported type %d:%s and %d:%s", MP_TYPE(a), ltype, MP_TYPE(b), rtype);
         } 
     }
@@ -301,7 +307,7 @@ int mp_cmp(MpObj a, MpObj b) {
                 }
                 return 0;
             }
-            case TYPE_STR: return strcmp(GET_STR(a), GET_STR(b));
+            case TYPE_STR: return strcmp(GET_CSTR(a), GET_CSTR(b));
         }
     }
     mp_raise("obj_cmp: can not compare %o and %o", a, b);
@@ -327,14 +333,14 @@ MpObj obj_mul(MpObj a, MpObj b) {
             return a;
         int times = (int) GET_NUM(b);
         if (times <= 0)
-            return string_from_sz("");
+            return string_from_cstr("");
         if (times == 1)
             return a;
         des = string_alloc(NULL, len * times);
-        char* s = GET_STR(des);
+        char* s = GET_CSTR(des);
         int i;
         for (i = 0; i < times; i++) {
-            strncpy(s, GET_STR(a), len);
+            strncpy(s, GET_CSTR(a), len);
             s += len;
         }
         return des;
@@ -373,7 +379,7 @@ MpObj string_mod_list(MpObj str, MpObj list) {
     assert(MP_TYPE(str)  == TYPE_STR);
     assert(MP_TYPE(list) == TYPE_LIST);
 
-    char* fmt = GET_SZ(str);
+    char* fmt = GET_CSTR(str);
     int str_length = GET_STR_LEN(str);
     MpList* plist = GET_LIST(list);
     int i = 0;
@@ -411,7 +417,7 @@ MpObj string_mod_list(MpObj str, MpObj list) {
 
 MpObj string_ops_mod(MpObj a, MpObj b) {
     assert(MP_TYPE(a) == TYPE_STR);
-    char* fmt = GET_SZ(a);
+    char* fmt = GET_CSTR(a);
 
     if (MP_TYPE(b) == TYPE_LIST) {
         return string_mod_list(a, b);
@@ -466,7 +472,7 @@ int mp_in(MpObj child, MpObj parent) {
         case TYPE_NUM:  return 0;
         case TYPE_FUNCTION: return 0;
         /* TODO DATA */ 
-        default: mp_raise("obj_in: cant handle type (%s)", mp_type(MP_TYPE(parent)));
+        default: mp_raise("obj_in: cant handle type (%s)", get_type_cstr(MP_TYPE(parent)));
     }
     return 0;
 }
@@ -481,20 +487,21 @@ MpObj obj_in(MpObj left, MpObj right) {
 
 int is_true_obj(MpObj v) {
     switch (MP_TYPE(v)) {
-    case TYPE_NUM:
-        return GET_NUM(v) != 0;
-    case TYPE_NONE:
-        return 0;
-    case TYPE_STR:
-        return GET_STR_LEN(v) > 0;
-    case TYPE_LIST:
-        return LIST_LEN(v) > 0;
-    case TYPE_DICT:
-        return DICT_LEN(v) > 0;
-    case TYPE_FUNCTION:
-    case TYPE_DATA:
-        return 1;
-    }
+        case TYPE_NUM:
+            return GET_NUM(v) != 0;
+        case TYPE_NONE:
+            return 0;
+        case TYPE_STR:
+            return GET_STR_LEN(v) > 0;
+        case TYPE_LIST:
+            return LIST_LEN(v) > 0;
+        case TYPE_DICT:
+            return DICT_LEN(v) > 0;
+        case TYPE_FUNCTION:
+        case TYPE_CLASS:
+        case TYPE_DATA:
+            return 1;
+        }
     return 0;
 }
 
@@ -503,7 +510,7 @@ MpObj obj_neg(MpObj o) {
         GET_NUM(o) = -GET_NUM(o);
         return o;
     }
-    mp_raise("obj_neg: can not handle %o", o);
+    mp_raise("TypeError: bad operand type for unary -: %ot", o);
     return NONE_OBJECT;
 }
 
@@ -535,7 +542,7 @@ void obj_del(MpObj self, MpObj k) {
             break;
         }
         default:
-            mp_raise("obj_del: not supported type %s", mp_type(self.type));
+            mp_raise("obj_del: not supported type %s", get_type_cstr(self.type));
     }
 }
 
@@ -543,7 +550,7 @@ MpObj obj_append(MpObj a, MpObj item) {
     if (IS_LIST(a)) {
         list_append(GET_LIST(a), item);
     } else {
-        mp_raise("obj_append: not supported type %s", mp_type(a.type));
+        mp_raise("obj_append: not supported type %s", get_type_cstr(a.type));
     }
     return a;
 }
@@ -579,8 +586,8 @@ int mp_len(MpObj o) {
     return len;
 }
 
-// func MpObj mp_str(MpObj a)
-MpObj mp_str(MpObj a) {
+// func MpObj obj_str(MpObj a)
+MpObj obj_str(MpObj a) {
     char buf[100];
     memset(buf, 0, sizeof(buf));
     switch (MP_TYPE(a)) {
@@ -601,7 +608,7 @@ MpObj mp_str(MpObj a) {
             MpObj obj = GET_LIST(a)->nodes[i];
             /* reference to self in list */
             if (obj_equals(a, obj)) {
-                str = string_append_sz(str, "[...]");
+                str = string_append_cstr(str, "[...]");
             } else if (obj.type == TYPE_STR) {
                 str = string_append_char(str, '"');
                 str = string_append_obj(str, obj);
@@ -626,7 +633,7 @@ MpObj mp_str(MpObj a) {
         class_format(buf, a);
         return string_new(buf);
     case TYPE_NONE:
-        return string_from_sz("None");
+        return string_static("None");
     case TYPE_DATA:
         return GET_DATA(a)->str(GET_DATA(a));
     default:

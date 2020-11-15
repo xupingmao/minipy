@@ -22,6 +22,9 @@ if str(1.0) == "1.0":
     sleep = _sleep
     clock = _clock
     printf = _printf
+else:
+    import time
+    clock = time.clock()
 
 def make_list(cnt):
     list = []

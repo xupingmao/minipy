@@ -20,7 +20,7 @@ MpObj os_getcwd() {
 
 MpObj os_chdir() {
     const char* sz_func = "chdir";
-    char *path = arg_take_sz(sz_func);
+    char *path = arg_take_cstr(sz_func);
     int r = chdir(path);
     if (r != 0) {
         mp_raise("%s: -- fatal error, can not chdir(\"%s\")", sz_func, path);
@@ -35,7 +35,7 @@ MpObj os_listdir() {
 #ifdef _WIN32
     WIN32_FIND_DATA Find_file_data;
     MpObj _path = obj_add(path, string_new("\\*.*"));
-    HANDLE h_find = FindFirstFile(GET_STR(_path), &Find_file_data);
+    HANDLE h_find = FindFirstFile(GET_CSTR(_path), &Find_file_data);
     if (h_find == INVALID_HANDLE_VALUE) {
         mp_raise("%s is not a directory", path);
     }
@@ -57,7 +57,7 @@ MpObj os_listdir() {
 }
 
 MpObj os_stat(){
-    const char *s = arg_take_sz("stat");
+    const char *s = arg_take_cstr("stat");
     struct stat stbuf;
     if (!stat(s,&stbuf)) { 
         MpObj st = dict_new();
@@ -79,7 +79,7 @@ MpObj os_stat(){
 
 MpObj os_exists(){
     MpObj _fname = arg_take_str_obj("exists");
-    char* fname = GET_STR(_fname);
+    char* fname = GET_CSTR(_fname);
     FILE*fp = fopen(fname, "rb");
     if(fp == NULL) return tm->_FALSE;
     fclose(fp);
@@ -89,17 +89,17 @@ MpObj os_exists(){
 MpObj os_path_dirname0(MpObj fpath) {
     mp_assert_type(fpath, TYPE_STR, "os_path_dirname");
 
-    char* fpath_sz = GET_STR(fpath);
-    char* end_char = strrchr(fpath_sz, '/');
+    char* fpath_cstr = GET_CSTR(fpath);
+    char* end_char = strrchr(fpath_cstr, '/');
 
     if (end_char) {
-        int end = end_char - fpath_sz;
+        int end = end_char - fpath_cstr;
         return string_substring(GET_STR_OBJ(fpath), 0, end);
     }
 
-    end_char = strrchr(fpath_sz, '\\');
+    end_char = strrchr(fpath_cstr, '\\');
     if (end_char) {
-        int end = end_char - fpath_sz;
+        int end = end_char - fpath_cstr;
         return string_substring(GET_STR_OBJ(fpath), 0, end);
     }
 

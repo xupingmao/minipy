@@ -13,3 +13,6 @@ assertEquals([1,2,3][:-2], [1])
 assertEquals([1]*3, [1,1,1])
 assertEquals([1,2], [1,2][:])
 
+# test list function
+assertEquals(list([1,2]), [1,2])
+assertEquals(list("ab"), ["a", "b"])
