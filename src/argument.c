@@ -45,7 +45,7 @@ void arg_insert(MpObj first) {
     tm->arg_cnt += 1;
 }
 
-void _resolve_method_self(MpFunction *fnc) {
+void resolve_self_by_func_ptr(MpFunction *fnc) {
     if(IS_NONE(fnc->self)) {
         return;
     }

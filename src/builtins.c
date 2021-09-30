@@ -2,7 +2,7 @@
  * description here
  * @author xupingmao <578749341@qq.com>
  * @since 2016
- * @modified 2020/11/12 10:30:53
+ * @modified 2021/09/30 22:20:32
  */
 #include "include/mp.h"
 #include <ctype.h>
@@ -553,7 +553,7 @@ MpObj bf_remove(){
 
 MpObj bf_apply() {
     MpObj func = arg_take_obj("apply");
-    if (NOT_FUNC(func) && NOT_DICT(func)) {
+    if (NOT_FUNC(func) && NOT_DICT(func) && NOT_CLASS(func)) {
         mp_raise("apply: expect function or dict");
     }
     MpObj args = arg_take_obj("apply");
@@ -853,7 +853,7 @@ MpObj bf_setattr() {
 MpObj bf_hasattr() {
     MpObj self = arg_take_obj("hasattr");
     MpObj key  = arg_take_obj("hasattr");
-    return obj_in(self, key);
+    return obj_is_in(self, key);
 }
 
 void builtins_init() {

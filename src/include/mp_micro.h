@@ -3,7 +3,7 @@
  *
  *  Created on: 2020/09/21
  *  @author: xupingmao
- *  @modified 2020/11/12 15:09:43
+ *  @modified 2021/09/30 22:21:12
  */
 
 #ifndef MP_MICRO_H_
@@ -37,10 +37,11 @@
 #define GET_FUNC_MOD_NAME(fnc) GET_FUNCTIONTION_MODULE_PTR(fnc)->file
 #define GET_FUNC_CONSTANTS_NODES(fnc) LIST_NODES(GET_FUNC_CONSTANTS(fnc))
 #define GET_FUNCTION_NAME(fnc) GET_FUNCTION(fnc)->name
-#define GET_GLOBALS(func) get_function_globals(GET_FUNCTION(func))
+#define GET_GLOBALS(func) func_get_globals(GET_FUNCTION(func))
 #define FUNCTION_FORMAT(des, func) func_format(des, GET_FUNCTION(func))
 
 
+/* Get value micros */
 #define GET_VAL(obj) (obj).value
 #define GET_PTR(obj) (obj).value.ptr
 #define GET_DATA(obj) (obj).value.data
@@ -57,7 +58,7 @@
 #define ptr_addr(ptr) (long) (ptr) / sizeof(char*)
 #define GET_NUM(obj) (obj).value.dv
 
-
+/* Check object type micros */
 #define IS_NONE(obj)   MP_TYPE(obj) == TYPE_NONE
 #define IS_LIST(obj)   MP_TYPE(obj) == TYPE_LIST
 #define IS_FUNC(obj)   MP_TYPE(obj) == TYPE_FUNCTION
@@ -74,6 +75,7 @@
 #define NOT_FUNC(obj) MP_TYPE(obj) != TYPE_FUNCTION
 #define NOT_STR(obj)  MP_TYPE(obj) != TYPE_STR
 #define NOT_NATIVE(obj) GET_FUNCTION(obj)->native == NULL
+#define NOT_CLASS(obj) MP_TYPE(obj) != TYPE_CLASS
 
 
 
@@ -91,6 +93,7 @@
 
 /* assert macro */
 #define MP_ASSERT(cond, msg) if(!(cond)) {mp_raise( msg );}
+#define RESOLVE_METHOD_SELF(fnc) resolve_self_by_func_ptr(GET_FUNCTION((fnc)))
 
 /* gcc process ++ from right to left */
 #define READ_BYTE(s) *s++

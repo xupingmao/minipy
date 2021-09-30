@@ -2,7 +2,7 @@
  * opeartor implementions
  * @author xupingmao
  * @since 2016
- * @modified 2020/11/15 23:09:19
+ * @modified 2021/09/30 22:02:07
  */
 
 #include <assert.h>
@@ -49,14 +49,14 @@ const char* get_object_type_cstr(MpObj o) {
 
 void mp_assert_type(MpObj o, int type, char* msg) {
     if (MP_TYPE(o) != type) {
-        mp_raise("%s, expect %s but see %s", msg, 
+        mp_raise("%s: expect %s but see %s", msg, 
             get_type_cstr(type), get_type_cstr(o.type));
     }
 }
 
 void mp_assert_type2(MpObj o, int type1, int type2, char* msg) {
     if (MP_TYPE(o) != type1 && MP_TYPE(o) != type2) {
-        mp_raise("%s, expect %s or %s but see %s", msg, 
+        mp_raise("%s: expect %s or %s but see %s", msg, 
             get_type_cstr(type1), get_type_cstr(type2), get_type_cstr(o.type));
     }
 }
@@ -373,6 +373,10 @@ MpObj obj_mul(MpObj a, MpObj b) {
 
 MpObj obj_div(MpObj a, MpObj b) {
     if (a.type == b.type && a.type == TYPE_NUM) {
+        double bv = GET_NUM(b);
+        if (bv == 0.0f) {
+            mp_raise("ZeroDivisionError: float division by zero");
+        }
         GET_NUM(a) /= GET_NUM(b);
         return a;
     }
@@ -399,18 +403,34 @@ MpObj string_mod_list(MpObj str, MpObj list) {
             i++;
             switch(fmt[i]) {
                 case 's':
+                {
                     string_append_obj(result, list_get(plist, arg_index));
                     arg_index++;
                     break;
-                case 'd': {
+                }
+                case 'd': 
+                {
                     MpObj item = list_get(plist, arg_index);                 
                     mp_assert_type(item, TYPE_NUM, "obj_mod");  
                     string_append_obj(result, item);
                     arg_index++;
                     break;
                 }
+                case 'r': 
+                {
+                    MpObj item = list_get(plist, arg_index);
+                    if (IS_STR(item)) {
+                        string_append_char(result, '\'');
+                        string_append_obj(result, item);
+                        string_append_char(result, '\'');
+                    } else {
+                        string_append_obj(result, item);
+                    }
+                    arg_index++;
+                    break;
+                }
                 default:
-                    mp_raise("obj_mod: unknown format type %c", fmt[i]);
+                    mp_raise("obj_mod: unsupported format type '%c'(0x%x)", fmt[i], fmt[i]);
             }
         } else {
             string_append_char(result, c);
@@ -456,7 +476,7 @@ MpObj obj_mod(MpObj a, MpObj b) {
 /* parent has child
  * child in parent
  */
-int mp_in(MpObj child, MpObj parent) {
+int mp_is_in(MpObj child, MpObj parent) {
     switch (MP_TYPE(parent)) {
         case TYPE_LIST: {
             return (list_index(GET_LIST(parent), child) != -1);
@@ -477,17 +497,17 @@ int mp_in(MpObj child, MpObj parent) {
         case TYPE_NUM:  return 0;
         case TYPE_FUNCTION: return 0;
         /* TODO DATA */ 
-        default: mp_raise("obj_in: cant handle type (%s)", get_type_cstr(MP_TYPE(parent)));
+        default: mp_raise("obj_is_in: cant handle type (%s)", get_type_cstr(MP_TYPE(parent)));
     }
     return 0;
 }
 
-int obj_not_in(MpObj child, MpObj parent) {
-    return !mp_in(child, parent);
+int mp_is_not_in(MpObj child, MpObj parent) {
+    return !mp_is_in(child, parent);
 }
 
-MpObj obj_in(MpObj left, MpObj right) {
-    return number_obj(mp_in(left, right));
+MpObj obj_is_in(MpObj left, MpObj right) {
+    return number_obj(mp_is_in(left, right));
 }
 
 int is_true_obj(MpObj v) {
@@ -519,6 +539,9 @@ MpObj obj_neg(MpObj o) {
     return NONE_OBJECT;
 }
 
+MpObj obj_or(MpObj a, MpObj b) {
+    return number_obj(is_true_obj(a) || is_true_obj(a));
+}
 
 MpObj iter_new(MpObj collections) {
     switch(MP_TYPE(collections)) {

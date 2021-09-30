@@ -2,7 +2,7 @@
  * description here
  * @author xupingmao
  * @since 2016
- * @modified 2020/10/23 00:49:20
+ * @modified 2021/09/30 22:18:05
  */
 #include "include/mp.h"
 
@@ -124,6 +124,11 @@ MpObj class_new(MpObj name) {
   return gc_track(obj_new(TYPE_CLASS, clazz));
 }
 
+MpObj class_new_by_cstr(char* name) {
+  MpObj name_obj = string_new(name);
+  return class_new(name_obj);
+}
+
 
 MpObj class_instance(MpObj clazz){
   MpClass *pclass = GET_CLASS(clazz);
@@ -214,7 +219,14 @@ void module_free(MpModule* mod){
 
 void func_format(char* des, MpFunction* func){
     char sz_buf[20];
-    char* sz_fnc = GET_CSTR(func->name);
+    char* sz_fnc;
+
+    if (NOT_STR(func->name)) {
+      sz_fnc = "None";
+    } else {
+      sz_fnc = GET_CSTR(func->name);
+    }
+
     strncpy(sz_buf, sz_fnc, 19);
     if (func->self.type != TYPE_NONE) {
         sprintf(des, "<method %p %s>", func, sz_buf);
@@ -255,17 +267,17 @@ unsigned char* func_get_code(MpFunction *fnc){
     return fnc->code;
 }
 
-MpObj get_function_globals(MpFunction* fnc) {
-    mp_assert_type(fnc->mod, TYPE_MODULE, "get_function_globals");
+MpObj func_get_globals(MpFunction* fnc) {
+    mp_assert_type(fnc->mod, TYPE_MODULE, "func_get_globals");
     return GET_MODULE(fnc->mod)->globals;
 }
 
-int get_function_max_locals(MpFunction* fnc){
+int func_get_max_locals(MpFunction* fnc){
     //resolve_module(GET_MODULE(fnc->mod), fnc);
     return fnc->maxlocals;
 }
 
-char* get_func_name_cstr(MpObj func) {
+char* func_get_name_cstr(MpObj func) {
     if (IS_FUNC(func)) {
         return GET_CSTR(GET_FUNCTION(func)->name);
     } else if (IS_CLASS(func)){
@@ -279,14 +291,14 @@ char* get_func_name_cstr(MpObj func) {
  * @param func MpObj
  * @return file_name Obj->string
  */
-MpObj get_file_name_obj(MpObj func) {
+MpObj func_get_file_name_obj(MpObj func) {
   if (IS_FUNC(func)) {
     return GET_MODULE(GET_FUNCTION(func)->mod)->file;
   }
   return NONE_OBJECT;
 }
 
-MpObj get_func_name_obj(MpObj func) {
+MpObj func_get_name_obj(MpObj func) {
   if (IS_FUNC(func)) {
     return GET_FUNCTION(func)->name;
   }

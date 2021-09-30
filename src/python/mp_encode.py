@@ -1,7 +1,7 @@
 # -*- coding:utf-8 -*-
 # @author xupingmao
 # @since 2016
-# @modified 2020/10/20 01:31:37
+# @modified 2021/09/30 20:16:40
 
 if "tm" not in globals():
     from boot import *
@@ -180,7 +180,7 @@ def emit_load(v):
         print('LOAD_LOCAL ' + str(v.val))
         
 
-def find_tag(code, val):
+def find_label(code, val):
     cur = 0
     for ins in code:
         if ins[0] == OP_TAG and ins[1] == val:
@@ -189,13 +189,13 @@ def find_tag(code, val):
         if ins[0] != OP_TAG:
             cur+=1
 
-def resolve_tags(code):
+def resolve_labels(code):
     code_size = len(code)
     cur = 0
     new_code = []
     for ins in code:
         if ins[0] in _jmp_list:
-            pos = find_tag(code, ins[1])
+            pos = find_label(code, ins[1])
             gap = pos - cur
             if gap < 0:ins = [OP_UP_JUMP, -gap]
             else:ins[1] = gap
@@ -207,7 +207,7 @@ def resolve_tags(code):
 def optimize(x, optimize_jmp = False):
     last = 0
     tag = 0
-    nx = resolve_tags(x)
+    nx = resolve_labels(x)
     return nx
     
 def join_code():

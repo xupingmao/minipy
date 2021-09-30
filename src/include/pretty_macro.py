@@ -35,6 +35,7 @@ def pretty(text):
 
 if __name__ == "__main__":
     if len(sys.argv) != 2:
+        print ("美化宏函数")
         print ("usage:%s filename" % sys.argv[0])
     else:
         text = open(sys.argv[1]).read()

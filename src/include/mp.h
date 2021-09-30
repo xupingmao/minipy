@@ -213,23 +213,24 @@ MpObj   list_from_array(int n, ...);
 MpObj   list_builtin_extend();
 
 // dict functions
-MpObj           dict_new();
+MpObj            dict_new();
+MpObj            dict_new_obj();
 MpDict*          dict_init();
 void             dict_free(MpDict* dict);
 int              dict_set0(MpDict* dict, MpObj key, MpObj val);
 DictNode*        dict_get_node(MpDict* dict, MpObj key);
-MpObj*          dict_get_by_cstr(MpDict* dict, char* key);
+MpObj*           dict_get_by_cstr(MpDict* dict, char* key);
 void             dict_del(MpDict* dict, MpObj k);
 void             dict_methods_init();
 void             dict_set_by_cstr(MpDict* dict, char* key, MpObj val);
-MpObj           dict_keys(MpDict* );
+MpObj            dict_keys(MpDict* );
 
 #define          dict_set(d, k, v)                dict_set0(GET_DICT(d), k, v)
 #define          dict_get_by_str(dict, key)       dict_get_by_cstr(GET_DICT(dict), key)
 
 /** dict methods **/
-MpObj           dict_iter_new(MpObj dict);
-MpObj*          dict_next(MpData* iterator);
+MpObj            dict_iter_new(MpObj dict);
+MpObj*           dict_next(MpData* iterator);
 int              dict_set_attr(MpDict* dict, int const_id, MpObj val);
 int              dict_get_attr(MpDict* dict, int const_id);
 
@@ -240,13 +241,12 @@ MpStr* arg_take_str_ptr(const char* fnc);
 void    arg_start();
 void    arg_push(MpObj obj) ;
 void    arg_set_arguments(MpObj* first, int len);
-void    _resolve_method_self(MpFunction *fnc);
-#define resolve_method_self(fnc) _resolve_method_self(GET_FUNCTION((fnc)))
+void    resolve_self_by_func_ptr(MpFunction *fnc);
 void    print_arguments();
 int     arg_has_next();
-MpObj  arg_take_str_obj(const char* fnc);
+MpObj   arg_take_str_obj(const char* fnc);
 char*   arg_take_cstr(const char* fnc);
-MpObj  arg_take_func_obj(const char* fnc);
+MpObj   arg_take_func_obj(const char* fnc);
 int     arg_take_int(const char* fnc);
 double  arg_take_double(const char* fnc);
 MpList* arg_take_list_ptr(const char* fnc);
@@ -266,19 +266,20 @@ unsigned char*   func_get_code(MpFunction*);
 MpObj           func_get_code_obj(MpFunction*);
 void             func_format(char* des, MpFunction* func);
 MpModule*        get_func_mod(MpFunction* func);
-MpObj           get_function_globals(MpFunction*);
+MpObj           func_get_globals(MpFunction*);
 unsigned char*   func_resolve(MpFunction*, unsigned char*);
-MpObj           get_file_name_obj(MpObj func);
-MpObj           get_func_name_obj(MpObj func);
+MpObj           func_get_file_name_obj(MpObj func);
+MpObj           func_get_name_obj(MpObj func);
 
 MpObj           method_new(MpObj _fnc, MpObj self);
 MpObj           module_new(MpObj file, MpObj name, MpObj code);
-void             module_free(MpModule*);
+void            module_free(MpModule*);
 
 MpObj           class_new(MpObj name);
+MpObj           class_new_by_cstr(char* name);
 MpObj           class_instance(MpObj dict);
-void             class_format(char* dest, MpObj clazz);
-void             class_free(MpClass* pclass);
+void            class_format(char* dest, MpObj clazz);
+void            class_free(MpClass* pclass);
 
 
 MpObj      data_new(size_t size);
@@ -291,7 +292,8 @@ void       obj_free(MpObj o);
 MpObj      obj_new(int type, void* value);
 
 
-/** ops functions
+/** 
+ * ops functions
  *  general object operation
  *  some tools
  */
@@ -306,9 +308,10 @@ MpObj      obj_sub(MpObj a, MpObj b);
 MpObj      obj_mul(MpObj a, MpObj b);
 MpObj      obj_div(MpObj a, MpObj b);
 MpObj      obj_mod(MpObj a, MpObj b);
-MpObj      obj_neg(MpObj o) ;
+MpObj      obj_or (MpObj a, MpObj b);
+MpObj      obj_neg(MpObj o);
 MpObj      obj_cmp(MpObj a, MpObj b);
-MpObj      obj_in(MpObj left, MpObj right);
+MpObj      obj_is_in(MpObj left, MpObj right);
 MpObj      obj_slice(MpObj self, MpObj first, MpObj second);
 MpObj      iter_new(MpObj collections);
 MpObj      obj_str(MpObj obj);
@@ -317,7 +320,7 @@ MpObj      obj_append(MpObj a, MpObj item);
 MpObj*      obj_next(MpObj iterator);
 char*       obj_to_cstr(MpObj obj);
 int         mp_cmp(MpObj a, MpObj b);
-int         mp_in(MpObj key, MpObj collection);
+int         mp_is_in(MpObj key, MpObj collection);
 int         obj_equals(MpObj a, MpObj b);
 int         mp_len(MpObj obj);
 int         is_true_obj(MpObj v);
@@ -328,9 +331,10 @@ MpObj       mp_call_builtin(BuiltinFunc func, int n, ...);
 // vm functions
 MpObj  call_module_function(char* mod, char* fnc);
 void   reg_builtin(char* name, MpObj value);
-void   reg_builtin_func(char* name, MpObj (*native)());
-void   reg_mod_func(MpObj mod, char* name, MpObj(*native)());
+void   reg_builtin_func(char* name, MpObj(*native_func)());
+void   reg_mod_func(MpObj mod, char* name, MpObj(*native_func)());
 void   reg_mod_attr(char* mod_name,char* attr, MpObj value);
+void   reg_method_by_cstr(MpObj clazz, char* name, MpObj(*native_func)());
 int    obj_eq_cstr(MpObj str, const char* value);
 void   mp_raise(char*fmt , ...);
 void   vm_destroy();
@@ -352,7 +356,7 @@ void     pop_frame();
 void mp_assert(int value, char*msg);
 void mp_assert_type(MpObj o, int type, char* msg) ;
 void mp_assert_int(double value, char* msg) ;
-void push_exception(MpFrame* f);
+void mp_push_exception(MpFrame* f);
 void mp_traceback();
 void mp_raise(char* fmt, ...);
 

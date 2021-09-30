@@ -2,7 +2,7 @@
  * description here
  * @author xupingmao
  * @since 2018/02/19 16:49:28
- * @modified 2020/11/12 15:01:30
+ * @modified 2021/09/30 00:31:53
  */
 
 #include "include/mp.h"
@@ -360,10 +360,11 @@ MpObj string_builtin_endswith() {
 MpObj string_builtin_format() {
     const char* func_name = "str.format";
     MpObj self = arg_take_str_obj(func_name);
-    // MpObj fmt  = arg_take_str_obj(func_name);
     MpObj nstr = string_alloc("", 0);
     int i = 0;
-    int start   = 0;
+
+    /* mark `{` */
+    int start = 0;
     for (i = 0; i < self.value.str->len; i++) {
         char c = self.value.str->value[i];
         if (c == '}') {
@@ -375,7 +376,13 @@ MpObj string_builtin_format() {
                 string_append_char(nstr, c);
             }
         } else if (c == '{') {
-            start = 1;
+            if (start == 1) {
+                // 转义字符
+                string_append_char(nstr, c);
+                start = 0;
+            } else {
+                start = 1;
+            }
         } else {
             start = 0;
             string_append_char(nstr, c);
@@ -383,7 +390,8 @@ MpObj string_builtin_format() {
     }
 
     if (start == 1) {
-        string_append_char(nstr, '{');
+        // string_append_char(nstr, '{');
+        mp_raise("ValueError: Single '{' encountered in format string");
     }
     
     return nstr;

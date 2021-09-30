@@ -2,7 +2,7 @@
  * description here
  * @author xupingmao
  * @since 2016
- * @modified 2020/11/12 10:58:46
+ * @modified 2021/09/30 22:16:10
  */
 
 #include "include/mp.h"
@@ -13,6 +13,7 @@
 #include "builtins.c"
 #include "ops.c"
 #include "dict.c"
+#include "dictset.c"
 #include "function.c"
 #include "exception.c"
 #include "argument.c"
@@ -37,6 +38,17 @@ void reg_mod_func(MpObj mod, char* name, MpObj (*native)()) {
  */
 void reg_builtin_func(char* name, MpObj (*native)()) {
     reg_mod_func(tm->builtins, name, native);
+}
+
+void reg_method_by_cstr(MpObj class_obj, char* name, MpObj (*native)()) {
+    mp_assert_type(class_obj, TYPE_CLASS, "reg_method_by_cstr");
+    MpClass* clazz = GET_CLASS(class_obj);
+    MpObj attr_dict = clazz->attr_dict;
+
+    MpObj func = func_new(NONE_OBJECT, NONE_OBJECT, native);
+    GET_FUNCTION(func)->name = string_new(name);
+    
+    obj_set_by_cstr(attr_dict, name, func);
 }
 
 /**
@@ -143,6 +155,7 @@ int vm_init(int argc, char* argv[]) {
     list_methods_init();
     string_methods_init();
     dict_methods_init();
+    dictset_methods_init();
     builtins_init();
 
     /* init c modules */

@@ -6,7 +6,7 @@
  * 5. release objects which are marked unused (0).
  * 
  * @since 2015
- * @modified 2020/10/21 01:09:28
+ * @modified 2021/09/30 00:08:59
  */
 
 #include "include/mp.h"
@@ -101,7 +101,7 @@ void* mp_malloc(size_t size) {
     MpObj* func;
 
     if (size <= 0) {
-        mp_raise("mp_malloc, attempts to allocate a memory block of size %d!", size);
+        mp_raise("mp_malloc: attempts to allocate a memory block of size %d!", size);
         return NULL;
     }
     block = malloc(size);
@@ -166,7 +166,7 @@ MpObj gc_track(MpObj v) {
             GET_CLASS(v)->marked = 0;
             break;
         default:
-            mp_raise("gc_track(), not supported type %d", v.type);
+            mp_raise("gc_track: unsupported type %d", v.type);
             return v;
     }
     if (tm->local_obj_list != NULL) {
@@ -280,7 +280,7 @@ void gc_mark(MpObj o) {
         // GET_DATA(o)->proto->mark(GET_DATA(o));
         break;
     default:
-        mp_raise("gc_mark(), unknown object type %d", o.type);
+        mp_raise("gc_mark: unknown object type %d", o.type);
     }
 }
 

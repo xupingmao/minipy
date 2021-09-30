@@ -3,7 +3,7 @@
  *
  *  Created on: 2014/8/25
  *  @author: xupingmao
- *  @modified 2020/11/12 15:03:17
+ *  @modified 2021/09/30 22:10:35
  */
 
 #ifndef _OBJECT_H_
@@ -140,10 +140,11 @@ typedef struct MpVm {
   MpObj ex;
   MpObj ex_line;
   MpObj ex_list;
-  int    ex_index; /* index of frame where exception was thrown */
+  int   ex_index; /* index of frame where exception was thrown */
 
   int frames_init_done;
   MpFrame frames[FRAMES_COUNT];
+
   /* current frame */
   MpFrame *frame;
   
@@ -164,9 +165,9 @@ typedef struct MpVm {
   int arg_cnt;
   int arg_loaded;
 
-  MpObj constants;
-  MpObj modules;
-  MpObj builtins;
+  MpObj constants;  /* type: dict */
+  MpObj modules;    /* type: dict */
+  MpObj builtins;   /* type: dict */
   MpObj root;
 
   int steps;   /* record opcode steps executed */

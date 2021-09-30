@@ -774,7 +774,7 @@ def do_not(item, env):
     return sformat("!(%s)", value)
 
 def do_notin(item, env):
-    return do_op(item, env, "obj_not_in")
+    return do_op(item, env, "mp_is_not_in")
 
 def do_neg(item, env):
     return sformat("%s(%s)", func_neg, do_item(item.first, env))
@@ -793,7 +793,7 @@ def do_attr(item, env):
 
 def do_in(item, env):
     # TODO a in a,b,c
-    return do_op(item, env, "obj_in")
+    return do_op(item, env, "obj_is_in")
 
 def do_is(item, env):
     return do_op(item, env, "obj_is")

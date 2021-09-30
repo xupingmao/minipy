@@ -8,9 +8,9 @@
 #include "include/mp.h"
 #include <setjmp.h>
 
-void push_exception(MpFrame* f){
-    MpObj file = get_file_name_obj(f->fnc);
-    MpObj fnc_name = get_func_name_obj(f->fnc);
+void mp_push_exception(MpFrame* f){
+    MpObj file = func_get_file_name_obj(f->fnc);
+    MpObj fnc_name = func_get_name_obj(f->fnc);
     MpObj ex = mp_format("  File %o: in %o , at line %d", file, fnc_name,
             f->lineno);
     list_append(GET_LIST(tm->ex_list), ex);
@@ -33,8 +33,8 @@ void mp_raise(char* fmt, ...) {
     va_start(a, fmt);
     list_clear(GET_LIST(tm->ex_list));
     tm->ex = mp_format_va_list(fmt, a, 0);
-    MpObj file = get_file_name_obj(tm->frame->fnc);
-    MpObj fnc_name = get_func_name_obj(tm->frame->fnc);
+    MpObj file = func_get_file_name_obj(tm->frame->fnc);
+    MpObj fnc_name = func_get_name_obj(tm->frame->fnc);
     tm->ex_line = mp_format("File %o: in %o at line %d\n  %os", 
         file, fnc_name, tm->frame->lineno, tm->ex);
     va_end(a);

@@ -3,7 +3,7 @@
  * too many interfaces with similar function will confuse the users.
  * @author xupingmao <578749341@qq.com>
  * @since 2016
- * @modified 2020/09/23 02:05:00
+ * @modified 2021/09/30 20:46:53
  */
 #include "include/mp.h"
 
@@ -11,6 +11,7 @@
 *   better not similar to computer binary size ( as to say 2 ), 
 *   such as 2, 10 etc.
 */
+static 
 int js_hash(unsigned char* s, int len) {
     int hash = 1315423911;
     int i = 0;
@@ -23,6 +24,7 @@ int js_hash(unsigned char* s, int len) {
  * simple hash function for dict, not used yet.
  * @since 2015-?
  */
+static
 int mp_hash(MpObj key) {
     switch(MP_TYPE(key)) {
     case TYPE_STR:return js_hash((unsigned char*) GET_CSTR(key), GET_STR_LEN(key));
@@ -57,7 +59,11 @@ MpObj dict_new(){
     return gc_track(o);
 }
 
+MpObj dict_new_obj() {
+    return dict_new();
+}
 
+static
 void dict_check(MpDict* dict){
     if(dict->len < dict->cap)
         return;
@@ -100,6 +106,7 @@ void dict_free(MpDict* dict){
  * find a free entry to put dict node
  * @since 2015-?
  */
+static
 int findfreepos(MpDict* dict) {
     int i;
     for(i = 0; i < dict->cap; i++) {

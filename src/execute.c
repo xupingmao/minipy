@@ -1,7 +1,7 @@
 /**
   * execute minipy bytecode
   * @since 2014-9-2
-  * @modified 2020/10/23 00:41:37
+  * @modified 2021/09/30 00:31:39
   *
   * 2015-6-16: interpreter for tinyvm bytecode.
  **/
@@ -13,7 +13,7 @@ void mp_resolve_code(MpModule* m, char* code);
 MpObj call_function(MpObj func) {
     MpObj ret;
     if (IS_FUNC(func)) {
-        resolve_method_self(func);
+        RESOLVE_METHOD_SELF(func);
         mp_log_call(func);
         
         /* call native function */
@@ -34,7 +34,7 @@ MpObj call_function(MpObj func) {
                     goto L_recall;
                 } else {
                     /* there is no handler, throw to prev frame */
-                    push_exception(f);
+                    mp_push_exception(f);
                     pop_frame();
                     longjmp(tm->frame->buf, 1);
                 }
@@ -207,7 +207,7 @@ MpFrame* push_frame(MpObj fnc) {
     f->pc    = GET_FUNCTION(fnc)->code;
     f->cache = GET_FUNCTION(fnc)->cache;
 
-    f->maxlocals = get_function_max_locals(GET_FUNCTION(fnc));
+    f->maxlocals = func_get_max_locals(GET_FUNCTION(fnc));
 
     f->locals = top;
     /* stack starts after locals */
@@ -257,7 +257,7 @@ tailcall:
     globals = GET_GLOBALS(cur_fnc);
     cache   = f->cache;
 
-    const char* func_name_cstr = get_func_name_cstr(cur_fnc);
+    const char* func_name_cstr = func_get_name_cstr(cur_fnc);
 
     ret = NONE_OBJECT;
 
@@ -422,7 +422,7 @@ tailcall:
             break;
         }
         case OP_IN: {
-            *(top-1) = number_obj(mp_in(*(top-1), *top));
+            *(top-1) = number_obj(mp_is_in(*(top-1), *top));
             top--;
             break;
         }
@@ -481,11 +481,11 @@ tailcall:
                 for (i = 0; i < n; i++) {
                     arg_push(first_arg[i]);
                 }
-                resolve_method_self(func);
+                RESOLVE_METHOD_SELF(func);
                 f->fnc = func;
                 f->pc = GET_FUNCTION(func)->code;
                 f->cache = GET_FUNCTION(func)->cache;
-                f->maxlocals = get_function_max_locals(GET_FUNCTION(func));
+                f->maxlocals = func_get_max_locals(GET_FUNCTION(func));
                 f->stack = f->locals + f->maxlocals;
                 f->top = f->stack;
                 // clear locals
@@ -514,7 +514,7 @@ tailcall:
             int parg = (cache->v.ival >> 8) & 0xff;
             int narg = cache->v.ival & 0xff;
             if (tm->arg_cnt < parg || tm->arg_cnt > parg + narg) {
-                mp_raise("ArgError,parg=%d,narg=%d,given=%d", 
+                mp_raise("ArgError: parg=%d,narg=%d,given=%d", 
                     parg, narg, tm->arg_cnt);
             }
             int i;
@@ -585,7 +585,7 @@ tailcall:
         }
         case OP_UNPACK: {
             x = MP_POP();
-            mp_assert_type(x, TYPE_LIST, "mp_eval:UNPACK");
+            mp_assert_type(x, TYPE_LIST, "mp_eval: UNPACK");
             int j;
             for(j = LIST_LEN(x)-1; j >= 0; j--) {
                 MP_PUSH(LIST_GET(x, j));

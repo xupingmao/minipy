@@ -10,7 +10,7 @@ MpObj mp_call(MpObj func, int args, ...) {
         arg_push(va_arg(ap, MpObj));
     }
     va_end(ap);
-    // mp_printf("at line %d, try to call %o with %d args\n", lineno, get_func_name_obj(func), args);
+    // mp_printf("at line %d, try to call %o with %d args\n", lineno, func_get_name_obj(func), args);
     // *self* will be resolved in call_function
     MpObj ret;
     if (IS_DICT(func)) {
@@ -24,7 +24,7 @@ MpObj mp_call(MpObj func, int args, ...) {
     }
 
     if (IS_FUNC(func)) {
-        resolve_method_self(func);
+        RESOLVE_METHOD_SELF(func);
         /* call native */
         if (GET_FUNCTION(func)->native != NULL) {
             ret = GET_FUNCTION(func)->native();
@@ -168,7 +168,7 @@ MpObj mp_import(MpObj globals, MpObj mod_name) {
 }
 
 void mp_import_all(MpObj globals, MpObj mod_name) {
-    int b_has = obj_in(mod_name, tm->modules);
+    int b_has = obj_is_in(mod_name, tm->modules);
     if (b_has) {
         MpObj mod_value = obj_get(tm->modules, mod_name);
         // do something here.
