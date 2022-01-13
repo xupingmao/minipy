@@ -1,7 +1,7 @@
 # -*- coding:utf-8 -*-
 # @author xupingmao
 # @since 2016
-# @modified 2020/10/20 01:27:21
+# @modified 2021/10/01 11:47:40
 """Parse minipy code, grammar see minipy.grammar"""
 
 from mp_tokenize import *
@@ -22,6 +22,7 @@ class AstNode:
     
 class ParserCtx:
     def __init__(self, r, txt):
+        # current token
         self.token = Token("nl", 'nl', None)
         self.eof = Token("eof", 'eof', None)
         r.append(self.token)
@@ -552,7 +553,14 @@ def parse_class(p):
         p.next()
         expect(p, ')')
     expect(p, ':')
+
     clazz.second = p.visit_block()
+
+    if len(clazz.second) > 0 and clazz.second[0].type == "string":
+        doc = clazz.second[0]
+        del clazz.second[0]
+        clazz.doc = doc
+
     p.add(clazz)
 
 def parse_stm1(p, type):
@@ -682,7 +690,7 @@ def parse(content):
         raise(e)
 
 def xml_item(type, value):
-    return "<" + type + ">" + str(value) + "</" + type + ">"
+    return "<" + type + ">" + ("%r" % value) + "</" + type + ">"
 
 def xml_start(type):
     return "<" + type + ">"
@@ -741,6 +749,8 @@ def print_ast_obj(tree, n=0):
 
     if hasattr(tree, "first"):
         print_ast(tree.first, n+2)
+    if hasattr(tree, "doc"):
+        print_ast(tree.doc, n+2)
     if hasattr(tree, "second"):
         print_ast(tree.second, n+2)
     if hasattr(tree, "third"):

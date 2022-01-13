@@ -3,7 +3,7 @@
  *
  *  Created on: 2020/09/21
  *  @author: xupingmao
- *  @modified 2021/09/30 22:21:12
+ *  @modified 2021/11/04 00:12:27
  */
 
 #ifndef MP_MICRO_H_
@@ -12,6 +12,7 @@
 /* c micros */
 #define strequals(a, b) (a == b || strcmp(a,b) == 0)
 #define max(a, b) (a) > (b) ? (a) : (b)
+#define string_const2 string_const_with_len
 
 #define MP_INLINE inline
 
@@ -20,6 +21,7 @@
 #define GET_CSTR(obj)    (obj).value.str->value
 #define GET_STR_OBJ(obj) (obj).value.str
 #define GET_STR_LEN(obj) (obj).value.str->len
+#define GET_STR_CHAR(obj, index) (obj).value.str->value[index]
 
 
 /* list micros */

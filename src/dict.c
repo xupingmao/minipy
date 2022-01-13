@@ -3,7 +3,7 @@
  * too many interfaces with similar function will confuse the users.
  * @author xupingmao <578749341@qq.com>
  * @since 2016
- * @modified 2021/09/30 20:46:53
+ * @modified 2022/01/12 23:20:41
  */
 #include "include/mp.h"
 
@@ -49,6 +49,7 @@ MpDict* dict_init(){
         dict->nodes[i].used = 0;
     }
     dict->len = 0;
+    dict->conflict_nodes = NULL;
     return dict;
 }
 
@@ -67,18 +68,23 @@ static
 void dict_check(MpDict* dict){
     if(dict->len < dict->cap)
         return;
+
     int osize = dict->cap;
-    int i, j, nsize;
+    int i = 0;
+    int j = 0;
+    int nsize = 0;
+    
     if (osize < 10) {
         nsize = osize + 2;
     } else {
         nsize = osize + osize / 2 + 1;
     }
+    
     DictNode* nodes = mp_malloc(nsize * sizeof(DictNode));
     for(i = 0; i < nsize; i++) {
         nodes[i].used = 0;
     }
-    j = 0;
+
     for(i = 0; i < osize; i++) {
         if (dict->nodes[i].used) {
             nodes[j] = dict->nodes[i];
@@ -164,7 +170,8 @@ int dict_set_attr(MpDict* dict, int const_id, MpObj val) {
 }
 
 int dict_get_attr(MpDict* dict, int const_id) {
-    int i;
+    int i = 0;
+
     DictNode* nodes = dict->nodes;
     const_id += 2; /* prevent first const to be 0, and normal dict node to be 1. */
     for (i = 0; i < dict->cap; i++) {
@@ -181,9 +188,9 @@ int dict_get_attr(MpDict* dict, int const_id) {
 }
 
 DictNode* dict_get_node(MpDict* dict, MpObj key){
-    //int hash = Dict_hash(key);
-    //int idx = hash % dict->cap;
-    int i;
+    int i = 0;
+    int hash = mp_hash(key);
+    
     DictNode* nodes = dict->nodes;
     for (i = 0; i < dict->cap; i++) {
         if (nodes[i].used && obj_equals(nodes[i].key, key)) {
@@ -196,7 +203,7 @@ DictNode* dict_get_node(MpDict* dict, MpObj key){
 MpObj* dict_get_by_cstr(MpDict* dict, char* key) {
     //int hash = hash_cstr((unsigned char*) key, strlen(key));
     //int idx = hash % dict->cap;
-    int i;
+    int i = 0;
     DictNode* nodes = dict->nodes;
     for (i = 0; i < dict->cap; i++) {
         if (nodes[i].used && IS_STR(nodes[i].key)

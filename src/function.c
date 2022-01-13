@@ -2,7 +2,7 @@
  * description here
  * @author xupingmao
  * @since 2016
- * @modified 2021/09/30 22:18:05
+ * @modified 2021/10/01 12:34:21
  */
 #include "include/mp.h"
 
@@ -179,7 +179,7 @@ MpObj module_new(MpObj file, MpObj name, MpObj code){
   mod->globals = dict_new();
   MpObj m = gc_track(obj_new(TYPE_MODULE, mod));
   /* set module */
-  obj_set(tm->modules,  file, mod->globals);
+  obj_set(tm->modules, file, mod->globals);
   obj_set(mod->globals, string_static("__name__"), name);
   return m;
 }
@@ -268,7 +268,9 @@ unsigned char* func_get_code(MpFunction *fnc){
 }
 
 MpObj func_get_globals(MpFunction* fnc) {
-    mp_assert_type(fnc->mod, TYPE_MODULE, "func_get_globals");
+    if (MP_TYPE(fnc->mod) != TYPE_MODULE) {
+        mp_raise("func_get_globals: expect module but see type:%d (func:%o)", MP_TYPE(fnc->mod), fnc->name);
+    }
     return GET_MODULE(fnc->mod)->globals;
 }
 

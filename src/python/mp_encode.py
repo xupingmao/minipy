@@ -1,7 +1,7 @@
 # -*- coding:utf-8 -*-
 # @author xupingmao
 # @since 2016
-# @modified 2021/09/30 20:16:40
+# @modified 2021/10/01 11:51:39
 
 if "tm" not in globals():
     from boot import *
@@ -813,23 +813,35 @@ def encode(content):
     encode_item(r)
 
 class EncodeCtx:
-    def __init__(self, src):
-        self.src = src
+    """编码器上下文
+    TODO: 改造成完整的编码器
+    """
+    def __init__(self, src_code):
+        self.src = src_code
+        self.code_list = []
+
+    def set_file_name(self, filename):
+        name = filename.split(".")[0]
+        emit(OP_FILE, name)
+
+    def compile(self):
+        self.ast = encode(self.src)
+        return self.ast
+
+    def gen_code(self):
+        code = join_code()
+        return code
 
 def _compile(src, filename, des = None):
     global _ctx
     # lock here
     asm_init()
     _ctx = EncodeCtx(src)
-    name = filename.split(".")[0]
-    emit(OP_FILE, name)
-    encode(src)
-    _ctx = None
-    code = join_code()
-    # unlock
-    return code
+    _ctx.set_file_name(name)
+    _ctx.compie()
+    return _ctx.gen_code()
 
-def compile_escape(s):
+def escape_for_compile(s):
     s = str(s)
     s = s.replace("\\", "\\\\")
     s = s.replace("\r", "\\r")
@@ -865,7 +877,7 @@ def compile(src, filename, des = None):
         if item[1] == 0:
             dest += str(item[0]) + '\n'
         else:
-            dest += str(item[0]) + '#' + compile_escape(item[1])+'\n'
+            dest += str(item[0]) + '#' + escape_for_compile(item[1])+'\n'
     return dest;
   
 def convert_to_cstring(filename, code):

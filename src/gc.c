@@ -6,14 +6,14 @@
  * 5. release objects which are marked unused (0).
  * 
  * @since 2015
- * @modified 2021/09/30 00:08:59
+ * @modified 2022/01/14 00:15:30
  */
 
 #include "include/mp.h"
 #include "log.c"
 
 void chars_init();
-void frames_init();
+void gc_init_frames();
 
 #define GC_CONSTANS_LEN 10
 #define GC_REACHED_SIGN 1
@@ -25,9 +25,7 @@ void frames_init();
  * init garbage collector
  * @since 2016
  */
-void gc_init() {
-    int i;
-    
+void gc_init() {    
     /* initialize constants */
     tm->_TRUE  = number_obj(1);
     tm->_FALSE = number_obj(0);
@@ -44,9 +42,9 @@ void gc_init() {
     // object allocated in local scope. which can be sweeped simply.
     tm->local_obj_list = NULL;
     // tm->gc_deleted = NULL;
-    tm->list_proto.type = TYPE_NONE;
-    tm->dict_proto.type = TYPE_NONE;
-    tm->str_proto.type = TYPE_NONE;
+    tm->list_proto = NONE_OBJECT;
+    tm->dict_proto = NONE_OBJECT;
+    tm->str_proto  = NONE_OBJECT;
     
     tm->root = list_new(100);
     tm->builtins = dict_new();
@@ -63,11 +61,11 @@ void gc_init() {
     chars_init();
     
     /* initialize frames */
-    frames_init();
+    gc_init_frames();
 }
 
 void chars_init() {
-    int i;
+    int i = 0;
     ARRAY_CHARS = list_new(256); // init global ARRAY_CHARS
     for (i = 0; i < 256; i++) {
         obj_append(ARRAY_CHARS, string_char_new(i));
@@ -75,8 +73,8 @@ void chars_init() {
     obj_append(tm->root, ARRAY_CHARS);
 }
 
-void frames_init() {
-    int i;
+void gc_init_frames() {
+    int i = 0;
     tm->frames_init_done = 0;
     for (i = 0; i < FRAMES_COUNT; i++) {
         MpFrame* f = tm->frames + i;
@@ -92,13 +90,15 @@ void frames_init() {
     }
     tm->frames_init_done = 1;
     tm->frame = tm->frames;
-    tm->stack_end = tm->stack + STACK_SIZE; // set global mp_stack_end
+
+    // set global mp_stack_end
+    tm->stack_end = tm->stack + STACK_SIZE;
 }
 
 
 void* mp_malloc(size_t size) {
-    void* block;
-    MpObj* func;
+    void* block = NULL;
+    MpObj* func = NULL;
 
     if (size <= 0) {
         mp_raise("mp_malloc: attempts to allocate a memory block of size %d!", size);
@@ -106,7 +106,7 @@ void* mp_malloc(size_t size) {
     }
     block = malloc(size);
     
-    log_info("malloc,%d,%d,%p", tm->allocated, tm->allocated + size, block);
+    log_info("mp_malloc: %d,%d,%p", tm->allocated, tm->allocated + size, block);
 
     if (block == NULL) {
         mp_raise("mp_malloc: fail to malloc memory block of size %d", size);
@@ -129,6 +129,9 @@ void mp_free(void* o, size_t size) {
         return;
 
     log_info("free,%d,%d,%p", tm->allocated, tm->allocated - size, o);
+    
+    memset(o, 5, size);
+
     free(o);
     tm->allocated -= size;
 }
@@ -295,10 +298,12 @@ void gc_unmark(MpObj o) {
  * @since 2015-??
  */
 void gc_mark_locals_and_stack() {
-    MpFrame* f;
+    MpFrame* f = NULL;
+    int j = 0;
+
+    // why frames + 1 ?
     for(f = tm->frames + 1; f <= tm->frame; f++) {
         gc_mark(f->fnc);
-        int j;
         /* mark locals */
         for(j = 0; j < f->maxlocals; j++) {
             gc_mark(f->locals[j]);

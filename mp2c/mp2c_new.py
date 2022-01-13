@@ -1,7 +1,7 @@
 # -*- coding:utf-8 -*-
 # @author xupingmao <578749341@qq.com>
 # @since 2020/10/18 00:32:28
-# @modified 2021/09/30 22:34:23
+# @modified 2021/10/01 10:52:01
 
 from mp_encode import *
 from mp_opcode import *
@@ -58,7 +58,7 @@ def convert(code):
             line = "MpObj {}_{}() {{".format(module_name, val)
             writer.writeline(line)
         elif op == OP_LOAD_PARAMS:
-            line = "  /* OP_LOAD_PARAMS */"
+            line = "  /* OP_LOAD_PARAMS(%s) */" % val
             writer.writeline(line)
             writer.writeline("  MpObj t1, t2;")
         elif op == OP_LOAD_LOCAL:

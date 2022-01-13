@@ -2,7 +2,7 @@
  * description here
  * @author xupingmao
  * @since 2016
- * @modified 2021/09/30 22:16:10
+ * @modified 2022/01/13 00:18:09
  */
 
 #include "include/mp.h"
@@ -13,7 +13,7 @@
 #include "builtins.c"
 #include "ops.c"
 #include "dict.c"
-#include "dictset.c"
+#include "dict_set.c"
 #include "function.c"
 #include "exception.c"
 #include "argument.c"
@@ -22,6 +22,15 @@
 #include "module/sys.c"
 #include "module/math.c"
 #include "module/os.c"
+
+
+/**
+ * register module
+ */
+void reg_mod(char* name, MpObj mod) {
+    mp_assert_type(mod, TYPE_DICT, "reg_module");
+    obj_set(tm->modules, string_new(name), mod);
+}
 
 /**
  * register module function
@@ -86,7 +95,7 @@ MpObj load_boot_module(char* sz_filename, char* sz_code) {
     MpObj file = name;
     MpObj code = string_new("");
     MpObj mod  = module_new(file, name, code);
-
+    
     mp_resolve_code(GET_MODULE(mod), sz_code);
     MpObj fnc = func_new(mod, NONE_OBJECT, NULL);
     GET_FUNCTION(fnc)->code = (unsigned char*) GET_CSTR(code);
@@ -142,8 +151,9 @@ int vm_init(int argc, char* argv[]) {
 
     /* set module boot */
     MpObj boot = dict_new();
-    obj_set(tm->modules, string_from_cstr("boot"), boot);
     obj_set(boot, string_from_cstr("__name__"), string_from_cstr("boot"));
+
+    reg_mod("boot", boot);
 
     /* builtins constants */
     obj_set_by_cstr(tm->builtins, "tm",    number_obj(1));

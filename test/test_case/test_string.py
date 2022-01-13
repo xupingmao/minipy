@@ -22,3 +22,11 @@ assertEquals('test'[1:], 'est')
 assertEquals('"'.replace('"', '\\"'), '\\"')
 assertEquals('abc'.replace("\0", "abc"), "abc")
 assertEquals('a\0c'.replace('\0', 'b'), 'abc')
+
+a = "%r" % "a\nb"
+print(a, len(a))
+
+b = "'a\nb'"
+print(b, len(b))
+
+assertEquals("%r" % "a\nb", "'a\\nb'")

@@ -2,13 +2,12 @@
  * description here
  * @author xupingmao
  * @since 2016
- * @modified 2020/10/26 22:54:31
+ * @modified 2022/01/13 00:20:06
  */
 #include "vm.c"
 #include "bin.c"
 
-int main(int argc, char *argv[])
-{
+int main(int argc, char *argv[]) {
     /* start vm with bin */
     int ret = vm_init(argc, argv);
     if (ret != 0) { 
@@ -26,6 +25,7 @@ int main(int argc, char *argv[])
         load_boot_module("mp_encode",   mp_encode_bin);
         load_boot_module("pyeval",      pyeval_bin);
         load_boot_module("repl",        repl_bin);
+        
         obj_set_by_cstr(tm->builtins, "MP_USE_CACHE", number_obj(1));
         // call boot function
         call_mod_func("mp_init", "boot");

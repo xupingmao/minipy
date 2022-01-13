@@ -3,7 +3,7 @@
  *
  *  Created on: 2014/8/25
  *  @author: xupingmao
- *  @modified 2021/09/30 22:10:35
+ *  @modified 2022/01/13 00:16:59
  */
 
 #ifndef _OBJECT_H_
@@ -30,7 +30,7 @@ typedef union MpValue {
   int    iv;
   long   lv;
   void*              ptr;
-  struct MpStr*     str;
+  struct MpStr*      str;
   struct MpList*     list;
   struct MpFunction* func;
   struct MpDict*     dict;
@@ -142,7 +142,7 @@ typedef struct MpVm {
   MpObj ex_list;
   int   ex_index; /* index of frame where exception was thrown */
 
-  int frames_init_done;
+  int     frames_init_done;
   MpFrame frames[FRAMES_COUNT];
 
   /* current frame */
@@ -168,7 +168,7 @@ typedef struct MpVm {
   MpObj constants;  /* type: dict */
   MpObj modules;    /* type: dict */
   MpObj builtins;   /* type: dict */
-  MpObj root;
+  MpObj root;       /* type: list */
 
   int steps;   /* record opcode steps executed */
   int init;    /* modules and builtins init */
@@ -204,7 +204,7 @@ typedef struct MpData {
     /* meta functions */
     MpObj (*str)();
     MpObj (*get)();
-    void   (*set)();
+    void  (*set)();
 
     void* extend_data_ptr;
     MpObj data_ptr[1];
@@ -239,6 +239,8 @@ typedef struct MpDict {
   int cap;
   int extend;
   struct DictNode* nodes;
+  /** hash冲突的节点 **/
+  struct DictNode* conflict_nodes;
 } MpDict;
 
 

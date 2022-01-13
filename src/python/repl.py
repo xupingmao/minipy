@@ -1,7 +1,7 @@
 # -*- coding:utf-8 -*-
 # @author xupingmao
 # @since 2016
-# @modified 2020/10/13 00:15:52
+# @modified 2021/10/01 12:38:36
 
 import mp_encode
 
@@ -107,7 +107,7 @@ def repl():
                 if v != None:
                     repl_print(v)
             except Exception as e:
-                mp_traceback()
+                traceback()
                 # print(e)
 if __name__ == '__main__':
     repl()

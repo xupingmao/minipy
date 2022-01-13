@@ -1,7 +1,7 @@
 # -*- coding:utf-8 -*-
 # @author xupingmao
 # @since 2016
-# @modified 2020/10/20 01:14:39
+# @modified 2022/01/12 22:47:02
 """Minipy初始化, 这里_import函数还没准备好，无法调用"""
 
 def add_builtin(name, func):
@@ -135,6 +135,12 @@ def mtime(fname):
 
 def find_module_path(name):
     import sys
+    # try load from working dir
+    fpath = name + ".py"
+    if exists(fpath):
+        return fpath
+
+    # try load from sys.path
     for dirname in sys.path:
         fpath = dirname + FILE_SEP + name + ".py"
         if exists(fpath):
@@ -145,9 +151,9 @@ def _import(des_glo, fname, tar = None):
     """import module, *WARN* this _import function can not prevent import circle
     Python根据sys.path路径来依次加载模块
 
-    @param dict des_glo, target globals
-    @param str  fname, fpath
-    @param str  tar, import one attribute
+    @param {dict} des_glo, target globals
+    @param {str}  fname, fpath
+    @param {str}  tar, import one attribute
     """
     if fname in __modules__:
         pass
@@ -332,7 +338,18 @@ add_builtin("assert", _assert)
 add_builtin("__debug__", __debug__)
 add_builtin("require", require)
 
+
+def print_init_help():
+    print("usage: minipy [options] [fpath]\n")
     
+    print("# execute .py file")
+    print("./minipy hello.py\n")
+
+    print("# print bytecode of .py file")
+    print("./minipy -dis hello.py\n")
+
+    sys.exit(0)
+
 LIB_PATH = ''
 def boot(loadlibs=True):
     from mp_encode import *
@@ -346,6 +363,9 @@ def boot(loadlibs=True):
     pathes = split_path(os.getcwd())
     pathes.append("libs")
     LIB_PATH = join_path(pathes)
+
+    # print(argv, argc)
+
     if argc == 0:
         repl()
     else:
@@ -354,6 +374,8 @@ def boot(loadlibs=True):
             execfile(argv[0])
         elif argv[0] == "-dis":
             dis(argv[1])
+        elif argv[0] == "-h" or argv[0] == "--help":
+            print_init_help()
         else:
             print("file not exists, exit")
             

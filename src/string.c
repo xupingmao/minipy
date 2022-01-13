@@ -2,10 +2,12 @@
  * description here
  * @author xupingmao
  * @since 2018/02/19 16:49:28
- * @modified 2021/09/30 00:31:53
+ * @modified 2022/01/12 22:43:09
  */
 
 #include "include/mp.h"
+
+static MpObj string_rstrip_chars(MpStr* self, char* chars, int chars_len);
 
 /* code two bytes to string, Big-Endian */
 void code16(unsigned char* src, int value) {
@@ -110,7 +112,7 @@ MpObj string_const(char* s) {
 /**
  * @since 2016-11-27
  */
-MpObj string_const2(char* s, int len) {
+MpObj string_const_with_len(char* s, int len) {
     MpObj str_obj = string_alloc(s, len);
     int i = dict_set(tm->constants, str_obj, NONE_OBJECT);
     return DICT_NODES(tm->constants)[i].key;
@@ -142,6 +144,23 @@ int string_index(MpStr* s1, MpStr* s2, int start) {
         }
     }
     return -1;
+}
+
+static int string_size(MpStr* s) {
+    return s->len;
+}
+
+static char string_char_at(MpStr* s, int index) {
+    if (index < 0) {
+        index += string_size(s);
+    }
+    if (index < 0) {
+        return 0;
+    }
+    if (index >= string_size(s)) {
+        return 0;
+    }
+    return s->value[index];
 }
 
 
@@ -397,6 +416,51 @@ MpObj string_builtin_format() {
     return nstr;
 }
 
+static MpObj string_rstrip_blank(MpStr* self) {
+    return string_rstrip_chars(self, "\x20\x09", 2);
+}
+
+static MpObj string_rstrip_chars(MpStr* self, 
+                            char* chars, 
+                            int chars_len) {
+    int length = 0;
+    int i = 0;
+    int j = 0;
+
+    for (i = self->len - 1; i >= 0; i--) {
+        char c = string_char_at(self, i);
+
+        int match = 0;
+        for (j = 0; j<chars_len; j++) {
+            if (c == chars[j]) {
+                match = 1;
+                break;
+            }
+        }
+
+        if (match) {
+            length++;
+        } else {
+            break;
+        }
+    }
+    char* value = self->value;
+    return string_alloc(value, string_size(self) - length);   
+}
+
+MpObj string_builtin_rstrip() {
+    MpObj self = arg_take_obj("str.rstrip");
+    int argc = arg_count();
+    if (argc == 1) {
+        // strip blank chars
+        return string_rstrip_blank(GET_STR_OBJ(self));
+    } else {
+        MpObj chars = arg_take_str_obj("str.rstrip");
+        return string_rstrip_chars(GET_STR_OBJ(self), 
+            GET_CSTR(chars), GET_STR_LEN(chars));
+    }
+}
+
 void string_methods_init() {
     tm->str_proto = dict_new();
     reg_mod_func(tm->str_proto, "replace",    string_builtin_replace);
@@ -409,6 +473,7 @@ void string_methods_init() {
     reg_mod_func(tm->str_proto, "startswith", string_builtin_startswith);
     reg_mod_func(tm->str_proto, "endswith",   string_builtin_endswith);
     reg_mod_func(tm->str_proto, "format",     string_builtin_format);
+    reg_mod_func(tm->str_proto, "rstrip",     string_builtin_rstrip);
 }
 
 MpObj* string_next(MpData* iterator) {

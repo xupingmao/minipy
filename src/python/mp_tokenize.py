@@ -1,7 +1,7 @@
 # -*- coding:utf-8 -*-
 # @author xupingmao
 # @since 2016
-# @modified 2020/09/30 17:12:53
+# @modified 2021/11/03 23:47:17
 
 # MP_TEST
 try:
@@ -58,16 +58,20 @@ def compile_error(ctx, s, token, e_msg = ""):
     #raise
 
 SYMBOL_CHARS = '-=[];,./!%*()+{}:<>@^'
+
 KEYWORDS = [
     'as','def','class', 'return','pass','and','or','not','in','import',
     'is','while','break','for','continue','if','else','elif','try',
-    'except','raise','global','del','from','None', "assert"]
+    'except','raise','global','del','from','None', "assert"
+]
+
 SYMBOLS = [
     '-=','+=','*=','/=','==','!=','<=','>=',
     '=','-','+','*', '/', '%',
     '<','>',
     '[',']','{','}','(',')','.',':',',',';',
-    ]
+]
+
 B_BEGIN = ['[','(','{']
 B_END   = [']',')','}']
 
@@ -226,8 +230,13 @@ def do_name(s,i,l):
     return i
 
 def do_string(s,i,l):
-    v = ''; q=s[i]; i+=1
-    if (l-i) >= 5 and s[i] == q and s[i+1] == q: # """
+    v = ''
+    q = s[i]  # quote char
+    i += 1
+    rest = l - i
+
+    if rest >= 5 and s[i] == q and s[i+1] == q:
+        # check long string """
         i += 2
         while i<l-2:
             c = s[i]
@@ -276,11 +285,12 @@ def _main():
         print("error arguments, arguments = ", ARGV)
         return
     fname = ARGV[1]
-    print("try to tokenize file ", fname)
+    print("tokenize file: %s ..." % fname)
     content = load(fname)
     list = tokenize(content)
     for i in list:
-        print(i.pos, i.type, i.val)
+        info = "%s %s %r" % (i.pos, i.type, i.val)
+        print(info)
 
 if __name__ == "__main__":
     _main()

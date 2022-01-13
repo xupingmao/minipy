@@ -1,4 +1,5 @@
 #include "../include/mp.h"
+#include <dirent.h>
 
 MpObj os_getcwd() {
     const char* sz_func = "getcwd";
@@ -28,6 +29,34 @@ MpObj os_chdir() {
     return NONE_OBJECT;
 }
 
+#ifndef _WIN32
+static void os_listdir_unix(MpObj result, char *path) {
+    DIR *db = NULL;
+    char filename[128];
+    struct dirent *p;
+
+    // 打开文件夹
+    db = opendir(path);
+    if(db==NULL) {
+        mp_raise("os.listdir: opendir failed");
+        return;
+    }
+
+    memset(filename,0,128);
+
+    while ((p=readdir(db))) {
+        if((strcmp(p->d_name,".")==0)||(strcmp(p->d_name,"..")==0)) {
+            continue;
+        } else {
+            MpObj name_obj = string_new(p->d_name);
+            obj_append(result, name_obj);
+        }
+        memset(filename,0,64);
+    }
+    closedir(db);
+}
+#endif
+
 
 MpObj os_listdir() {
     MpObj list = list_new(10);
@@ -37,7 +66,7 @@ MpObj os_listdir() {
     MpObj _path = obj_add(path, string_new("\\*.*"));
     HANDLE h_find = FindFirstFile(GET_CSTR(_path), &Find_file_data);
     if (h_find == INVALID_HANDLE_VALUE) {
-        mp_raise("%s is not a directory", path);
+        mp_raise("os.listdir: %s is not a directory", path);
     }
     do {
         if (strcmp(Find_file_data.cFileName, "..")==0 || strcmp(Find_file_data.cFileName, ".") == 0) {
@@ -51,7 +80,7 @@ MpObj os_listdir() {
     } while (FindNextFile(h_find, &Find_file_data));
     FindClose(h_find);
 #else
-    mp_raise("listdir not implemented in posix.");
+    os_listdir_unix(list, GET_CSTR(path));
 #endif
     return list;
 }
@@ -73,7 +102,7 @@ MpObj os_stat(){
         obj_set_by_cstr(st, "st_gid",   number_obj(stbuf.st_gid));
         return st;
     }
-    mp_raise("stat(%s), file not exists or accessable.",s);
+    mp_raise("stat(%s): file not exists or accessable.",s);
     return NONE_OBJECT;
 }
 
@@ -81,7 +110,9 @@ MpObj os_exists(){
     MpObj _fname = arg_take_str_obj("exists");
     char* fname = GET_CSTR(_fname);
     FILE*fp = fopen(fname, "rb");
-    if(fp == NULL) return tm->_FALSE;
+    if(fp == NULL) {
+        return tm->_FALSE;
+    }
     fclose(fp);
     return tm->_TRUE;
 }
@@ -117,7 +148,8 @@ MpObj os_path_join0(MpObj dirname, MpObj fname) {
 
 void os_mod_init() {
     MpObj os_mod = dict_new();
-    obj_set_by_cstr(tm->modules, "os", os_mod);
+    reg_mod("os", os_mod);
+
     reg_mod_func(os_mod, "getcwd",  os_getcwd);
     reg_mod_func(os_mod, "listdir", os_listdir);
     reg_mod_func(os_mod, "chdir",   os_chdir);

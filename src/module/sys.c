@@ -11,6 +11,12 @@ void sys_mod_argv_init(MpObj sys_mod) {
     obj_set_by_cstr(sys_mod, "argv", p);
 }
 
+MpObj sys_exit() {
+    int code = arg_take_int("sys.exit");
+    exit(code);
+    return NONE_OBJECT;
+}
+
 void sys_mod_modules_init(MpObj sys_mod) {
     obj_set_by_cstr(sys_mod, "modules", tm->modules);
     obj_set_by_cstr(sys_mod, "version", string_new("minipy"));
@@ -22,8 +28,9 @@ void sys_mod_init() {
     sys_mod_argv_init(sys_mod);
     sys_mod_modules_init(sys_mod);
     obj_set_by_cstr(sys_mod, "path", sys_path);
+    reg_mod_func(sys_mod, "exit", sys_exit);
 
     // register to modules
-    obj_set_by_cstr(tm->modules, "sys",  sys_mod);
+    reg_mod("sys", sys_mod);
 }
 

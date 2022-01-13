@@ -1,7 +1,7 @@
 /**
   * execute minipy bytecode
   * @since 2014-9-2
-  * @modified 2021/09/30 00:31:39
+  * @modified 2022/01/14 00:19:42
   *
   * 2015-6-16: interpreter for tinyvm bytecode.
  **/
@@ -127,7 +127,8 @@ void mp_resolve_code(MpModule* m, char* code) {
         cache.sval = buf; // temp value, just for print
         switch(op) {
             case OP_NUMBER:
-                cache.v.obj = number_obj(atof(buf)); break;
+                cache.v.obj = number_obj(atof(buf)); 
+                break;
             
             /* string value */
             case OP_STRING: 
@@ -136,7 +137,8 @@ void mp_resolve_code(MpModule* m, char* code) {
             case OP_FILE: 
             case OP_DEF:
             case OP_CLASS:
-                cache.v.obj = string_const2(buf, len); break;
+                cache.v.obj = string_const2(buf, len); 
+                break;
             
             /* int value */
             case OP_LOAD_LOCAL:
@@ -156,9 +158,11 @@ void mp_resolve_code(MpModule* m, char* code) {
             case OP_IMPORT:
             case OP_NEXT:
             case OP_SETJUMP:
-                cache.v.ival = atoi(buf); break;
+                cache.v.ival = atoi(buf); 
+                break;
             default:
-                cache.v.ival = 0; break;
+                cache.v.ival = 0; 
+                break;
         }
         mp_push_cache(m, cache);
     }
@@ -195,13 +199,13 @@ MpFrame* push_frame(MpObj fnc) {
     /* check oprand stack */
     if (top >= tm->stack + STACK_SIZE) {
         pop_frame();
-        mp_raise("mp_eval: stack overflow");
+        mp_raise("mp_eval: stack overflow (%d)", STACK_SIZE);
     }
     
     /* check frame stack*/
     if (tm->frame >= tm->frames + FRAMES_COUNT-1) {
         pop_frame();
-        mp_raise("mp_eval: frame overflow");
+        mp_raise("mp_eval: frame overflow (%d)", FRAMES_COUNT-1);
     }
 
     f->pc    = GET_FUNCTION(fnc)->code;
@@ -573,6 +577,7 @@ tailcall:
             dict_set0(GET_DICT(globals), class_name, clazz);
             break;
         }
+        /* rotate stack */
         case OP_ROT: {
             MpObj* left = top - cache->v.ival + 1;
             MpObj* right = top;
@@ -639,7 +644,12 @@ tailcall:
            goto end;
         }
 
-        case OP_LOAD_EX: { top = f->last_top; MP_PUSH(tm->ex); break; }
+        case OP_LOAD_EX: { 
+            top = f->last_top; 
+            MP_PUSH(tm->ex); 
+            break; 
+        }
+        
         case OP_SETJUMP: { 
             f->last_top = top; 
             f->cache_jmp = cache + cache->v.ival;

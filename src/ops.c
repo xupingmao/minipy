@@ -2,7 +2,7 @@
  * opeartor implementions
  * @author xupingmao
  * @since 2016
- * @modified 2021/09/30 22:02:07
+ * @modified 2022/01/12 21:41:33
  */
 
 #include <assert.h>
@@ -290,7 +290,8 @@ int obj_equals(MpObj a, MpObj b){
         default: {
             const char* ltype = get_type_cstr(a.type);
             const char* rtype = get_type_cstr(b.type);
-            mp_raise("obj_equals: not supported type %d:%s and %d:%s", MP_TYPE(a), ltype, MP_TYPE(b), rtype);
+            mp_raise("obj_equals: not supported type %d:%s and %d:%s", 
+                MP_TYPE(a), ltype, MP_TYPE(b), rtype);
         } 
     }
     return 0;
@@ -421,7 +422,14 @@ MpObj string_mod_list(MpObj str, MpObj list) {
                     MpObj item = list_get(plist, arg_index);
                     if (IS_STR(item)) {
                         string_append_char(result, '\'');
-                        string_append_obj(result, item);
+                        for (int j = 0; j < GET_STR_LEN(item); j++) {
+                            char c1 = GET_STR_CHAR(item, j);
+                            if (c1 == '\n') {
+                                string_append_cstr(result, "\\n");
+                            } else {
+                                string_append_char(result, c1);
+                            }
+                        }
                         string_append_char(result, '\'');
                     } else {
                         string_append_obj(result, item);

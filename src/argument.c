@@ -2,7 +2,7 @@
  * minipy arguments module
  * @author xupingmao
  * @since 2016
- * @modified 2020/09/22 00:09:34
+ * @modified 2022/01/12 22:17:11
  */
 
 #include "include/mp.h"
@@ -152,6 +152,7 @@ MpObj arg_take_data_obj(const char* fnc) {
     }
     return v;
 }
+
 int arg_count() {
     return tm->arg_cnt;
 }

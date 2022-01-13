@@ -2,7 +2,7 @@
  * description here
  * @author xupingmao <578749341@qq.com>
  * @since 2016
- * @modified 2021/09/30 22:20:32
+ * @modified 2021/10/01 11:54:53
  */
 #include "include/mp.h"
 #include <ctype.h>
@@ -904,7 +904,7 @@ void builtins_init() {
     reg_builtin_func("get_const_idx", bf_get_const_idx);
     reg_builtin_func("get_const", bf_get_const);
     reg_builtin_func("get_const_len", bf_get_const_len);
-    reg_builtin_func("mp_traceback", bf_mp_traceback);
+    reg_builtin_func("traceback", bf_mp_traceback);
 
     reg_builtin_func("add_obj_method", bf_add_obj_method);
     reg_builtin_func("read_file", bf_read_file);

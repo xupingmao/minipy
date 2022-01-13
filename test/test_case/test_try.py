@@ -1,3 +1,4 @@
+# skip
 try:
     print("try 1")
     try:
@@ -6,3 +7,4 @@ try:
         print("try 2 end")
 except:
     print("try 1 end")
+

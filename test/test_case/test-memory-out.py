@@ -6,7 +6,8 @@ def newlist(size):
         list.append(i)
     return list
 
-for i in range(10):
+for i in range(5):
     n = pow(10, i)
-    print("%s: list(%s)".format(i+1, n))
+    print("%s: list(%s)" % (i+1, n))
     x = newlist(n)
+

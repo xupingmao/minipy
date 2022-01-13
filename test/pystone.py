@@ -43,11 +43,14 @@ LOOPS = 50000
 
 # from time import clock
 import time
-clock = time.clock
+# clock = time.clock
 
 __version__ = "1.2"
 
 Ident1, Ident2, Ident3, Ident4, Ident5 = 1,2,3,4,5 # range(1, 6)
+
+def clock():
+    return time.time() * 1000
 
 class Record:
 

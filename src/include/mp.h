@@ -175,10 +175,10 @@ MpObj        string_new(char*s);
 MpObj        string_static(char*s);
 #define      string_from_cstr(s) string_static(s)
 MpObj        string_const(char*);
-void          string_free(MpStr*);
-int           string_equals(MpStr*s0, MpStr*s1);
+void         string_free(MpStr*);
+int          string_equals(MpStr*s0, MpStr*s1);
 MpObj        string_substring(MpStr* str, int start, int end) ;
-void          string_methods_init();
+void         string_methods_init();
 MpObj        string_iter_new(MpObj s);
 MpObj*       string_next(MpData* iterator);
 
@@ -332,6 +332,7 @@ MpObj       mp_call_builtin(BuiltinFunc func, int n, ...);
 MpObj  call_module_function(char* mod, char* fnc);
 void   reg_builtin(char* name, MpObj value);
 void   reg_builtin_func(char* name, MpObj(*native_func)());
+void   reg_mod(char* name, MpObj module);
 void   reg_mod_func(MpObj mod, char* name, MpObj(*native_func)());
 void   reg_mod_attr(char* mod_name,char* attr, MpObj value);
 void   reg_method_by_cstr(MpObj clazz, char* name, MpObj(*native_func)());
