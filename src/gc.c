@@ -6,7 +6,7 @@
  * 5. release objects which are marked unused (0).
  * 
  * @since 2015
- * @modified 2022/01/14 00:15:30
+ * @modified 2022/01/15 15:52:08
  */
 
 #include "include/mp.h"
@@ -101,12 +101,14 @@ void* mp_malloc(size_t size) {
     MpObj* func = NULL;
 
     if (size <= 0) {
-        mp_raise("mp_malloc: attempts to allocate a memory block of size %d!", size);
+        mp_raise(
+            "mp_malloc: attempts to allocate a memory block of size %d!", size);
         return NULL;
     }
     block = malloc(size);
     
-    log_info("mp_malloc: %d,%d,%p", tm->allocated, tm->allocated + size, block);
+    log_debug("mp_malloc: %p %d->%d +%d", 
+        block, tm->allocated, tm->allocated + size, size);
 
     if (block == NULL) {
         mp_raise("mp_malloc: fail to malloc memory block of size %d", size);
@@ -124,15 +126,16 @@ void* mp_realloc(void* o, size_t osize, size_t nsize) {
     return block;
 }
 
-void mp_free(void* o, size_t size) {
-    if (o == NULL)
+void mp_free(void* ptr, size_t size) {
+    if (ptr == NULL)
         return;
 
-    log_info("free,%d,%d,%p", tm->allocated, tm->allocated - size, o);
+    log_debug("mp_free: %p %d->%d -%d", ptr, 
+        tm->allocated, tm->allocated - size, size);
     
-    memset(o, 5, size);
+    memset(ptr, 0, size);
 
-    free(o);
+    free(ptr);
     tm->allocated -= size;
 }
 
@@ -295,9 +298,9 @@ void gc_unmark(MpObj o) {
 
 /**
  * mark objects in frame-local and frame-stack
- * @since 2015-??
+ * @since 2015
  */
-void gc_mark_locals_and_stack() {
+void gc_mark_frames() {
     MpFrame* f = NULL;
     int j = 0;
 
@@ -325,8 +328,9 @@ void gc_sweep() {
     int n, i;
     
     int deleted_cnt = 0;
+    int64_t start_time  = time_get_milli_seconds();
 
-    log_info("sweep,%d,0,start", tm->all->len);
+    log_info("gc_sweep: %d start", tm->all->len);
     MpList* temp = list_new_untracked(200);
     MpList* all = tm->all;
 
@@ -341,35 +345,27 @@ void gc_sweep() {
     }
     list_free(tm->all);
     tm->all = temp;
+
+    int64_t cost_time = time_get_milli_seconds() - start_time;
     
-    log_info("deleted_cnt: %d", deleted_cnt);
-    log_info("sweep,%d,0,end", tm->all->len);
+    log_info("gc_sweep: delete objects: %d", deleted_cnt);
+    log_info("gc_sweep: active objects: %d end, cost:%lldms", 
+        tm->all->len, cost_time);
 }
 
-/**
- * mark and sweep garbage collection
- *
- * TODO maybe we can mark the object with different value to
- * recognize the GC type of the object.
- */
-void gc_full() {
-    int i;
-    long t1, t2;
-    t1 = clock();
-
-    int old = tm->allocated;
-    tm->max_allocated = max(tm->allocated, tm->max_allocated);
-    
-    // disable gc.
-    if (tm->gc_state == 0) {
-        return;
-    }
-
+void gc_reset_all() {
+    int64_t t1 = time_get_milli_seconds();
     /* mark all objects to be unused */
-    for (i = 0; i < tm->all->len; i++) {
+    for (int i = 0; i < tm->all->len; i++) {
         GC_MARKED(tm->all->nodes[i]) = 0;
     }
-    
+    int64_t cost_time = time_get_milli_seconds() - t1;
+    log_info("gc_reset_all: cost %lldms", cost_time);
+}
+
+void gc_mark_all() {
+    int64_t start_time = time_get_milli_seconds();
+
     /* mark protoes */
     gc_mark(tm->list_proto);
     gc_mark(tm->dict_proto);
@@ -379,16 +375,45 @@ void gc_full() {
     gc_mark(tm->constants);
     
     gc_mark(tm->root);
-    gc_mark_locals_and_stack();
+    gc_mark_frames();
     gc_mark(tm->ex);
     gc_mark(tm->ex_line);
+
+    int64_t cost_time = time_get_milli_seconds() - start_time;
+    log_info("gc_mark_all: cost:%lldms", cost_time);
+}
+
+/**
+ * mark and sweep garbage collection
+ *
+ * TODO maybe we can mark the object with different value to
+ * recognize the GC type of the object.
+ */
+void gc_full() {
+    #ifdef GC_DISABLED
+        return;
+    #endif
+
+    int64_t t1 = time_get_milli_seconds();
+
+    int old = tm->allocated;
+    tm->max_allocated = max(tm->allocated, tm->max_allocated);
     
+    // disable gc.
+    if (tm->gc_state == 0) {
+        return;
+    }
+
+    gc_reset_all();
+
+    gc_mark_all();
+
     /* sweep garbage */
     gc_sweep();
     tm->gc_threshold = tm->allocated + tm->allocated / 2;
-    t2 = clock();
     
-    log_info("full,old:%d,now:%d", old, tm->allocated);
+    int64_t cost_time = time_get_milli_seconds() - t1;
+    log_info("gc_full: old:%d, now:%d, cost:%lldms", old, tm->allocated, cost_time);
 }
 
 /**
@@ -401,12 +426,14 @@ void gc_destroy() {
     int i;
     
     // MP_TEST
-    log_info("destroy gc ...");
-    log_info("max allocated memory: %d K", tm->max_allocated / 1024);
-    log_info("current all->len: %d", tm->all->len);
+    log_info("gc_destroy: start ...");
+    log_info("gc_destroy: max allocated memory: %d K", 
+        tm->max_allocated / 1024);
+    log_info("gc_destroy: current all->len: %d", tm->all->len);
 
     if (tm->local_obj_list) {
-        log_info("current local_obj_list->len: %d", tm->local_obj_list->len);
+        log_info("gc_destroy: current local_obj_list->len: %d", 
+            tm->local_obj_list->len);
     }
     // MP_TEST_END
 
@@ -431,9 +458,8 @@ void gc_destroy() {
  * create new object
  * @param type object type
  * @value object pointer
- * @since ?
  */
-MpObj obj_new(int type, void * value) {
+MpObj obj_new(int type, void* value) {
     MpObj o;
     MP_TYPE(o) = type;
     switch (type) {
@@ -468,7 +494,7 @@ MpObj obj_new(int type, void * value) {
 
 /**
  * free a object
- * @since ?
+ * @since 2016
  */
 void obj_free(MpObj o) {
     switch (MP_TYPE(o)) {

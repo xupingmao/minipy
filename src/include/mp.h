@@ -316,6 +316,7 @@ MpObj      obj_slice(MpObj self, MpObj first, MpObj second);
 MpObj      iter_new(MpObj collections);
 MpObj      obj_str(MpObj obj);
 MpObj      obj_append(MpObj a, MpObj item);
+MpObj      obj_get_globals(MpObj obj);
 
 MpObj*      obj_next(MpObj iterator);
 char*       obj_to_cstr(MpObj obj);
@@ -385,8 +386,12 @@ MpObj*   get_builtin(char* key);
 
 
 // vm.c
-MpObj    call_mod_func(char* modname, char* funcname);
+MpObj    vm_call_mod_func(char* modname, char* funcname);
+
+// time.c
+int64_t  time_get_milli_seconds();
 
 #include "mp_micro.h"
+#include "mp_log.h"
 
 #endif

@@ -2,7 +2,7 @@
  * opeartor implementions
  * @author xupingmao
  * @since 2016
- * @modified 2022/01/12 21:41:33
+ * @modified 2022/01/15 15:07:49
  */
 
 #include <assert.h>
@@ -98,7 +98,7 @@ void obj_set(MpObj self, MpObj k, MpObj v) {
 
 inline
 void obj_set_by_cstr(MpObj self, char* key, MpObj value) {
-    obj_set(self, string_static(key), value);
+    obj_set(self, string_new(key), value);
 }
 
 MpObj obj_get(MpObj self, MpObj k) {
@@ -157,6 +157,10 @@ MpObj obj_get(MpObj self, MpObj k) {
     }
     mp_raise("keyError %o", k);
     return NONE_OBJECT;
+}
+
+MpObj obj_get_by_cstr(MpObj obj, char* key) {
+    return obj_get(obj, string_new(key));
 }
 
 /**
@@ -627,6 +631,8 @@ MpObj obj_str(MpObj a) {
     char buf[100];
     memset(buf, 0, sizeof(buf));
     switch (MP_TYPE(a)) {
+    case 0:
+        return string_from_cstr("type(0)");
     case TYPE_STR:
         return a;
     case TYPE_NUM: {
@@ -696,3 +702,9 @@ MpObj mp_call_builtin(BuiltinFunc func, int n, ...) {
     }
     return func();
 }
+
+MpObj obj_get_globals(MpObj fnc) {
+    mp_assert_type(fnc, TYPE_FUNCTION, "obj_get_globals");
+    return func_get_globals(GET_FUNCTION(fnc));
+}
+

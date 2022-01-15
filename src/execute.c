@@ -1,7 +1,7 @@
 /**
   * execute minipy bytecode
   * @since 2014-9-2
-  * @modified 2022/01/14 00:19:42
+  * @modified 2022/01/15 15:39:08
   *
   * 2015-6-16: interpreter for tinyvm bytecode.
  **/
@@ -11,7 +11,7 @@
 void mp_resolve_code(MpModule* m, char* code);
 
 MpObj call_function(MpObj func) {
-    MpObj ret;
+    MpObj ret = NONE_OBJECT;
     if (IS_FUNC(func)) {
         RESOLVE_METHOD_SELF(func);
         mp_log_call(func);
@@ -48,8 +48,10 @@ MpObj call_function(MpObj func) {
         }
         return ret;
     }
-    mp_raise("File %o, line=%d: call_function:invalid object %o", GET_FUNCTION_FILE(tm->frame->fnc), 
-        tm->frame->lineno, func);
+    mp_raise("File %o, line=%d: call_function:invalid object %o", 
+        GET_FUNCTION_FILE(tm->frame->fnc), 
+        tm->frame->lineno, 
+        func);
     return NONE_OBJECT;
 }
 
@@ -220,7 +222,7 @@ MpFrame* push_frame(MpObj fnc) {
     f->fnc    = fnc;
  
     // clear local variables
-    int i;
+    int i = 0;
     for(i = 0; i < f->maxlocals; i++) {
         f->locals[i] = NONE_OBJECT;
     }
@@ -252,13 +254,17 @@ MpObj mp_eval(MpFrame* f) {
     MpObj* locals, *top;
     MpObj cur_fnc, globals, x, k, v, ret;
     MpCodeCache* cache;
-    int i;
+    int i = 0;
+
+    if (MP_TYPE(f->fnc) != TYPE_FUNCTION) {
+        mp_raise("mp_eval: expect func but see type:%d", MP_TYPE(f->fnc));
+    }
 
 tailcall:
     locals  = f->locals;
     top     = f->stack;
     cur_fnc = f->fnc;
-    globals = GET_GLOBALS(cur_fnc);
+    globals = obj_get_globals(cur_fnc);
     cache   = f->cache;
 
     const char* func_name_cstr = func_get_name_cstr(cur_fnc);
@@ -457,6 +463,8 @@ tailcall:
         case OP_NEG:
             MP_TOP() = obj_neg(MP_TOP());
             break;
+
+        // 函数调用
         case OP_CALL: {
             int n = cache->v.ival;
             
@@ -471,6 +479,8 @@ tailcall:
             FRAME_CHECK_GC();
             break;
         }
+
+        // 尾递归调用
         case OP_TAILCALL: {
             int n = cache->v.ival;
             f->top = top;
@@ -478,7 +488,13 @@ tailcall:
             MpObj* first_arg = top+1;
             arg_set_arguments(top+1, n);
             MpObj func = MP_POP();
-            if (GET_FUNCTION(func)->native == NULL) {
+
+            if (NOT_FUNC(func) && NOT_CLASS(func)) {
+                mp_raise("OP_TAILCALL: invalid callable object %o", func);
+            }
+
+            // class也可以直接调用
+            if (IS_FUNC(func) && GET_FUNCTION(func)->native == NULL) {
                 /** tail call python function **/
                 arg_start();
                 int i = 0;
@@ -649,7 +665,7 @@ tailcall:
             MP_PUSH(tm->ex); 
             break; 
         }
-        
+
         case OP_SETJUMP: { 
             f->last_top = top; 
             f->cache_jmp = cache + cache->v.ival;
@@ -674,7 +690,7 @@ tailcall:
 
         default:
             mp_raise("BAD INSTRUCTION, %d\n  globals() = \n%o", cache->op,
-                    GET_FUNCTION_GLOBALS(f->fnc));
+                    obj_get_globals(f->fnc));
             goto end;
         }
 

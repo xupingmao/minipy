@@ -3,7 +3,7 @@
  *
  *  Created on: 2020/09/21
  *  @author: xupingmao
- *  @modified 2021/11/04 00:12:27
+ *  @modified 2022/01/15 15:07:04
  */
 
 #ifndef MP_MICRO_H_
@@ -12,6 +12,7 @@
 /* c micros */
 #define strequals(a, b) (a == b || strcmp(a,b) == 0)
 #define max(a, b) (a) > (b) ? (a) : (b)
+#define MAX(a, b) (a) > (b) ? (a) : (b)
 #define string_const2 string_const_with_len
 
 #define MP_INLINE inline
@@ -33,13 +34,13 @@
 /* function micros */
 #define GET_FUNCTION(obj) (obj.value.func)
 #define GET_FUNC(obj) ((obj).value.func)
-#define IS_FUNCTION(o) MP_TYPE(o)==TYPE_FUNCTION
+#define IS_FUNCTION(o) (MP_TYPE(o)==TYPE_FUNCTION)
 #define GET_FUNCTIONTION_MODULE_PTR(fnc) GET_MODULE(GET_FUNCTION(fnc)->mod)
 #define GET_FUNC_CONSTANTS(fnc) GET_FUNCTIONTION_MODULE_PTR(fnc)->constants
 #define GET_FUNC_MOD_NAME(fnc) GET_FUNCTIONTION_MODULE_PTR(fnc)->file
 #define GET_FUNC_CONSTANTS_NODES(fnc) LIST_NODES(GET_FUNC_CONSTANTS(fnc))
 #define GET_FUNCTION_NAME(fnc) GET_FUNCTION(fnc)->name
-#define GET_GLOBALS(func) func_get_globals(GET_FUNCTION(func))
+// #define GET_GLOBALS(func) func_get_globals(GET_FUNCTION(func))
 #define FUNCTION_FORMAT(des, func) func_format(des, GET_FUNCTION(func))
 
 
@@ -61,23 +62,23 @@
 #define GET_NUM(obj) (obj).value.dv
 
 /* Check object type micros */
-#define IS_NONE(obj)   MP_TYPE(obj) == TYPE_NONE
-#define IS_LIST(obj)   MP_TYPE(obj) == TYPE_LIST
-#define IS_FUNC(obj)   MP_TYPE(obj) == TYPE_FUNCTION
-#define IS_CLASS(obj)  MP_TYPE(obj) == TYPE_CLASS
-#define IS_DICT(o)     MP_TYPE(o)==TYPE_DICT
-#define IS_STR(obj)    MP_TYPE(obj) == TYPE_STR
-#define IS_NUM(obj)    MP_TYPE(obj) == TYPE_NUM
-#define IS_DATA(obj)   MP_TYPE(obj) == TYPE_DATA
-#define IS_NATIVE(obj) GET_FUNCTION(obj)->native != NULL
+#define IS_NONE(obj)   (MP_TYPE(obj) == TYPE_NONE)
+#define IS_LIST(obj)   (MP_TYPE(obj) == TYPE_LIST)
+#define IS_FUNC(obj)   (MP_TYPE(obj) == TYPE_FUNCTION)
+#define IS_CLASS(obj)  (MP_TYPE(obj) == TYPE_CLASS)
+#define IS_DICT(o)     (MP_TYPE(o)==TYPE_DICT)
+#define IS_STR(obj)    (MP_TYPE(obj) == TYPE_STR)
+#define IS_NUM(obj)    (MP_TYPE(obj) == TYPE_NUM)
+#define IS_DATA(obj)   (MP_TYPE(obj) == TYPE_DATA)
+#define IS_NATIVE(obj) (GET_FUNCTION(obj)->native != NULL)
 
-#define NOT_NONE(obj) MP_TYPE(obj) != TYPE_NONE
-#define NOT_LIST(obj) MP_TYPE(obj) != TYPE_LIST
-#define NOT_DICT(obj) MP_TYPE(obj) != TYPE_DICT
-#define NOT_FUNC(obj) MP_TYPE(obj) != TYPE_FUNCTION
-#define NOT_STR(obj)  MP_TYPE(obj) != TYPE_STR
-#define NOT_NATIVE(obj) GET_FUNCTION(obj)->native == NULL
-#define NOT_CLASS(obj) MP_TYPE(obj) != TYPE_CLASS
+#define NOT_NONE(obj) (MP_TYPE(obj) != TYPE_NONE)
+#define NOT_LIST(obj) (MP_TYPE(obj) != TYPE_LIST)
+#define NOT_DICT(obj) (MP_TYPE(obj) != TYPE_DICT)
+#define NOT_FUNC(obj) (MP_TYPE(obj) != TYPE_FUNCTION)
+#define NOT_STR(obj)  (MP_TYPE(obj) != TYPE_STR)
+#define NOT_NATIVE(obj) (GET_FUNCTION(obj)->native == NULL)
+#define NOT_CLASS(obj) (MP_TYPE(obj) != TYPE_CLASS)
 
 
 
@@ -91,7 +92,7 @@
 
 #define GET_FUNCTION_FILE(fnc) GET_MODULE(GET_FUNCTION(fnc)->mod)->file
 #define GET_FUNCTION_NAME(fnc) GET_FUNCTION(fnc)->name
-#define GET_FUNCTION_GLOBALS(fnc) GET_MODULE(GET_FUNCTION(fnc)->mod)->globals
+// #define GET_FUNCTION_GLOBALS(fnc) GET_MODULE(GET_FUNCTION(fnc)->mod)->globals
 
 /* assert macro */
 #define MP_ASSERT(cond, msg) if(!(cond)) {mp_raise( msg );}
@@ -101,15 +102,6 @@
 #define READ_BYTE(s) *s++
 #define READ_SHORT(s) ((*s) << 8 | *(s+1)); s+= 2;
 /* #define next_short( s ) (((*s++) << 8) + *(s++)); */
-
-/* debug and log functions */
-#define DEBUG(msg) \
-    printf("--DEBUG %s\n", msg);
-
-#define DEBUG2(msg1, msg2) \
-    printf("--DEBUG %s %s\n", msg1, msg2);
-
-#define LOG_INFO printf
 
 #if LIGHT_DEBUG_GC
     #define TRACE_GC(out) ;

@@ -2,7 +2,7 @@
  * description here
  * @author xupingmao
  * @since 2016
- * @modified 2022/01/13 00:20:06
+ * @modified 2022/01/15 13:07:11
  */
 #include "vm.c"
 #include "bin.c"
@@ -28,7 +28,7 @@ int main(int argc, char *argv[]) {
         
         obj_set_by_cstr(tm->builtins, "MP_USE_CACHE", number_obj(1));
         // call boot function
-        call_mod_func("mp_init", "boot");
+        vm_call_mod_func("mp_init", "boot");
     } else if (code == 1){
         /* handle exceptions */
         mp_traceback();

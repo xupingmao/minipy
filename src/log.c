@@ -2,45 +2,86 @@
  * description here
  * @author xupingmao
  * @since 2016
- * @modified 2018/02/19 16:41:31
+ * @modified 2022/01/15 15:37:49
  */
 #ifndef _MP_LOG_
 #define _MP_LOG_
 
 #include <stdio.h>
 #include <stdarg.h>
-#include <time.h>
 #include <string.h>
+#include <time.h>
 
 #define MP_LOG_CACHE 0
 #define MP_LOG_CALL  0
 
 /** 
- * 1: info,
- * 2: warn,
- * else: error
+ * log level: with higher level, we keep more log
+ * 0: no log
+ * 1: error
+ * 2: warn
+ * 3: info
+ * 4: debug
  */
+
 #define LOG_LEVEL 2
+
+#define kLogNone  0
+#define kLogError 1
+#define kLogWarn  2
+#define kLogInfo  3
+#define kLogDebug 4
+
+// enum {
+//     kLogNone = 0,
+//     kLogError,
+//     kLogWarn,
+//     kLogInfo,
+//     kLogDebug
+// };
+
+#define LOG_LEVEL 2
+
+void log_init() {
+    log_debug("log_init: logLevel=%d", LOG_LEVEL);
+    log_debug("log_init: kLogDebug=%d", kLogDebug);
+}
+
 
 
 /**
- * 
+ * log time
  */
 static void _log_time(FILE* fp) {
     time_t cur_time;
     time(&cur_time);
     char* t_str   = ctime(&cur_time);
     t_str[strlen(t_str)-1] = '\0';
-    fprintf(fp, "%s,", t_str);
+    fprintf(fp, "%s|", t_str);
 }
 
 /**
  * @since 2016-11-13
  */
 void log_info(char* fmt, ...) {
-#if LOG_LEVEL <=1
+#if LOG_LEVEL >= kLogInfo
     _log_time(stdout);
+    printf("INFO|");
     
+    va_list ap;
+    va_start(ap, fmt);
+    vprintf(fmt, ap);
+    va_end(ap);
+    
+    printf("\n");
+#endif
+}
+
+void log_debug(char* fmt, ...) {
+#if LOG_LEVEL >= kLogDebug
+    _log_time(stdout);
+    printf("DEBUG|");
+
     va_list ap;
     va_start(ap, fmt);
     vprintf(fmt, ap);
@@ -54,8 +95,9 @@ void log_info(char* fmt, ...) {
  * @since 2016-11-13
  */
 void log_warn(char* fmt, ...) {
-#if LOG_LEVEL <= 2
+#if LOG_LEVEL >= kLogWarn
     _log_time(stdout);
+    printf("WARN|");
 
     va_list ap;
     va_start(ap, fmt);
@@ -71,6 +113,7 @@ void log_warn(char* fmt, ...) {
  */
 void log_error(char* fmt, ...) {
     _log_time(stdout);
+    printf("ERROR|");
     
     va_list ap;
     va_start(ap, fmt);

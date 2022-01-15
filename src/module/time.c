@@ -1,32 +1,28 @@
 #include "../include/mp.h"
 
-#ifndef _WIN32
+#ifdef _WIN32
+    #include <Windows.h>
+#else
     #include <sys/time.h>
 #endif
 
+int64_t time_get_milli_seconds() {
+#ifdef _WIN32
+    SYSTEMTIME st;
+    GetLocalTime(&st);
+    return st.wMilliseconds;
+#else
+    struct timeval tv;
+    gettimeofday(&tv, NULL);
+    long sec = tv.tv_sec;
+    long micro_sec = tv.tv_usec;
+    return (int64_t)sec * 1000 + (int64_t)micro_sec/1000;
+#endif
+}
+
 MpObj bf_time_time() {
-    #ifdef _WIN32
-        // FILETIME system_time;
-        /* Contains a 64-bit value representing the number of 100-nanosecond intervals since January 1, 1601 (UTC). */
-        // GetSystemTimeAsFileTime(&system_time);
-        // double seconds = 0;
-        // DWORD lowDateTime  = system_time.dwLowDateTime;
-        // DWORD highDateTime = system_time.dwHighDateTime;
-        // int64_t ms;
-        // ms = lowDateTime;
-        // ms += (((int64_t)highDateTime) << 32);
-        
-        // SYSTEMTIME stime;
-        // GetLocalTime(&stime);
-        // stime.wMilliseconds
-        
-        // just return seconds
-        return number_obj(time(NULL));
-    #else
-        struct timeval tv;
-        gettimeofday(&tv, NULL);
-        return number_obj((double)tv.tv_usec / 1000000.f);
-    #endif
+    double ms = (double) time_get_milli_seconds();
+    return number_obj(ms / 1000.f);
 }
 
 MpObj bf_time_clock() {

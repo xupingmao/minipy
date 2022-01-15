@@ -3,7 +3,7 @@
  *
  *  Created on: 2014/8/25
  *  @author: xupingmao
- *  @modified 2022/01/13 00:16:59
+ *  @modified 2022/01/15 12:55:08
  */
 
 #ifndef _OBJECT_H_
@@ -84,10 +84,12 @@ typedef struct MpFunction{
   MpCodeCache* cache;
   MpCodeCache* cache_end;
   MpObj self;
-  MpObj mod; /* module, includes global, constants, etc. */
+  // type: None or MpModule
+  // desc: Includes globals, constants, etc.
+  MpObj mod; 
   MpObj name;
   MpObj (*native)();
-}MpFunction;
+} MpFunction;
 
 typedef struct MpClass {
   int marked;

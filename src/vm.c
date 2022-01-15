@@ -2,7 +2,7 @@
  * description here
  * @author xupingmao
  * @since 2016
- * @modified 2022/01/13 00:18:09
+ * @modified 2022/01/15 15:09:35
  */
 
 #include "include/mp.h"
@@ -11,7 +11,7 @@
 #include "number.c"
 #include "gc.c"
 #include "builtins.c"
-#include "ops.c"
+#include "obj_ops.c"
 #include "dict.c"
 #include "dict_set.c"
 #include "function.c"
@@ -111,7 +111,7 @@ MpObj load_boot_module(char* sz_filename, char* sz_code) {
  * @param mod, module name
  * @param sz_fnc, function name
  */
-MpObj call_mod_func(char* mod, char* sz_fnc) {
+MpObj vm_call_mod_func(char* mod, char* sz_fnc) {
     MpObj module = obj_get(tm->modules, string_new(mod));
     MpObj fnc = obj_get(module, string_new(sz_fnc));
     arg_start();
@@ -138,6 +138,8 @@ int vm_init(int argc, char* argv[]) {
         return -1;
     }
 
+    log_init();
+    
     // vm init done at gc_init()
     // init gc
     gc_init();

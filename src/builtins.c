@@ -2,7 +2,7 @@
  * description here
  * @author xupingmao <578749341@qq.com>
  * @since 2016
- * @modified 2021/10/01 11:54:53
+ * @modified 2022/01/15 15:17:56
  */
 #include "include/mp.h"
 #include <ctype.h>
@@ -366,7 +366,7 @@ MpObj bf_load_module() {
 
 /* get globals */
 MpObj bf_globals() {
-    return GET_FUNCTION_GLOBALS(tm->frame->fnc);
+    return obj_get_globals(tm->frame->fnc);
 }
 
 /* get object type */

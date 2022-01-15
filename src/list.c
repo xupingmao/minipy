@@ -2,7 +2,7 @@
  * description here
  * @author xupingmao
  * @since 2016
- * @modified 2020/10/21 01:33:45
+ * @modified 2022/01/14 00:22:02
  */
 #include "include/mp.h"
 
@@ -60,7 +60,7 @@ void list_clear(MpList* list) {
 }
 
 
-void _list_check(MpList* list) {
+static void _list_check_cap(MpList* list) {
     if (list->len >= list->cap) {
         int ocap = list->cap;
         int newsize;
@@ -81,7 +81,7 @@ void _list_check(MpList* list) {
 }
 
 void list_append(MpList* list, MpObj obj) {
-    _list_check(list);
+    _list_check_cap(list);
     list->nodes[list->len] = obj;
     list->len++;
 }
@@ -105,7 +105,7 @@ MpObj list_from_array(int n, ...) {
  after node at index of *n*
  */
 void list_insert(MpList* list, int n, MpObj obj) {
-    _list_check(list);
+    _list_check_cap(list);
     if (n < 0)
         n += list->len;
     if (n < list->len || n < 0) {

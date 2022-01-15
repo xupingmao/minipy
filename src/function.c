@@ -2,7 +2,7 @@
  * description here
  * @author xupingmao
  * @since 2016
- * @modified 2021/10/01 12:34:21
+ * @modified 2022/01/15 15:07:39
  */
 #include "include/mp.h"
 
@@ -89,79 +89,79 @@ MpCodeCache* func_resolve_cache(MpFunction* fnc, MpCodeCache* cache) {
 MpObj func_new(MpObj mod,
         MpObj self,
         MpObj (*native_func)()){
-  mp_assert_type2(mod, TYPE_MODULE, TYPE_NONE, "func_new");
+    mp_assert_type2(mod, TYPE_MODULE, TYPE_NONE, "func_new");
 
-  MpFunction* f= mp_malloc(sizeof(MpFunction));
-  f->resolved = 0;
-  f->mod = mod;
-  f->code = NULL;
-  f->native = native_func;
-  f->maxlocals = 0;
-  f->self = self;
-  f->name = NONE_OBJECT;
-  return gc_track(obj_new(TYPE_FUNCTION, f));
+    MpFunction* f= mp_malloc(sizeof(MpFunction));
+    f->resolved = 0;
+    f->mod = mod;
+    f->code = NULL;
+    f->native = native_func;
+    f->maxlocals = 0;
+    f->self = self;
+    f->name = NONE_OBJECT;
+    return gc_track(obj_new(TYPE_FUNCTION, f));
 }
 
 /**
  * create new method from function
  */
 MpObj method_new(MpObj _fnc, MpObj self){
-  mp_assert_type(_fnc, TYPE_FUNCTION, "method_new");
-  MpFunction* fnc = GET_FUNCTION(_fnc);
-  MpObj nfnc = func_new(fnc->mod, self, fnc->native);
-  GET_FUNCTION(nfnc)->name = GET_FUNCTION(_fnc)->name;
-  GET_FUNCTION(nfnc)->maxlocals = GET_FUNCTION(_fnc)->maxlocals;
-  GET_FUNCTION(nfnc)->code = GET_FUNCTION(_fnc)->code;
-  GET_FUNCTION(nfnc)->cache = GET_FUNCTION(_fnc)->cache;
-  return nfnc;
+    mp_assert_type(_fnc, TYPE_FUNCTION, "method_new");
+    MpFunction* fnc = GET_FUNCTION(_fnc);
+    MpObj nfnc = func_new(fnc->mod, self, fnc->native);
+    GET_FUNCTION(nfnc)->name = GET_FUNCTION(_fnc)->name;
+    GET_FUNCTION(nfnc)->maxlocals = GET_FUNCTION(_fnc)->maxlocals;
+    GET_FUNCTION(nfnc)->code = GET_FUNCTION(_fnc)->code;
+    GET_FUNCTION(nfnc)->cache = GET_FUNCTION(_fnc)->cache;
+    return nfnc;
 }
 
 MpObj class_new(MpObj name) {
-  // TODO add class type
-  MpClass* clazz = mp_malloc(sizeof(MpClass));
-  clazz->name = name;
-  clazz->attr_dict = dict_new();
-  return gc_track(obj_new(TYPE_CLASS, clazz));
+    // TODO add class type
+    MpClass* clazz = mp_malloc(sizeof(MpClass));
+    clazz->name = name;
+    clazz->attr_dict = dict_new();
+    return gc_track(obj_new(TYPE_CLASS, clazz));
 }
 
 MpObj class_new_by_cstr(char* name) {
-  MpObj name_obj = string_new(name);
-  return class_new(name_obj);
+    MpObj name_obj = string_new(name);
+    return class_new(name_obj);
 }
 
 
 MpObj class_instance(MpObj clazz){
-  MpClass *pclass = GET_CLASS(clazz);
-  MpDict* cl = GET_DICT(pclass->attr_dict);
-  MpObj k,v;
-  MpObj instance = dict_new();
-  DictNode* nodes = cl->nodes;
-  int i;
-  for(i = 0; i < cl->cap; i++) {
-      k = nodes[i].key;
-      v = nodes[i].val;
-      if(nodes[i].used && IS_FUNC(v)){
-        MpObj method = method_new(v, instance);
-        obj_set(instance, k, method);
-      }
-  }
-  return instance;
+    MpClass *pclass = GET_CLASS(clazz);
+    MpDict* cl = GET_DICT(pclass->attr_dict);
+    MpObj k,v;
+    MpObj instance = dict_new();
+    DictNode* nodes = cl->nodes;
+    int i;
+    for(i = 0; i < cl->cap; i++) {
+        k = nodes[i].key;
+        v = nodes[i].val;
+        if(nodes[i].used && IS_FUNC(v)){
+          MpObj method = method_new(v, instance);
+          obj_set(instance, k, method);
+        }
+    }
+    return instance;
 }
 
 void class_free(MpClass* pclass) {
-  mp_free(pclass, sizeof(MpClass));
+   mp_free(pclass, sizeof(MpClass));
 }
 
 void class_format(char* dest, MpObj class_obj) {
-  mp_assert_type(class_obj, TYPE_CLASS, "class_format");
-  MpClass* clazz = GET_CLASS(class_obj);
-  sprintf(dest, "<class %s@%p>", GET_CSTR(clazz->name), clazz);
+    mp_assert_type(class_obj, TYPE_CLASS, "class_format");
+    MpClass* clazz = GET_CLASS(class_obj);
+    sprintf(dest, "<class %s@%p>", GET_CSTR(clazz->name), clazz);
 }
 
 
 void func_free(MpFunction* func){
-  // the references will be tracked by gc collecter
-  mp_free(func, sizeof(MpFunction));
+    // the references will be tracked by gc collecter
+    mp_free(func, sizeof(MpFunction));
 }
 
 /**
@@ -269,7 +269,11 @@ unsigned char* func_get_code(MpFunction *fnc){
 
 MpObj func_get_globals(MpFunction* fnc) {
     if (MP_TYPE(fnc->mod) != TYPE_MODULE) {
-        mp_raise("func_get_globals: expect module but see type:%d (func:%o)", MP_TYPE(fnc->mod), fnc->name);
+        mp_raise(
+          "func_get_globals: expect module but see type:%d (func:%o) func_addr:%p", 
+          MP_TYPE(fnc->mod), 
+          fnc->name,
+          fnc);
     }
     return GET_MODULE(fnc->mod)->globals;
 }
@@ -294,15 +298,15 @@ char* func_get_name_cstr(MpObj func) {
  * @return file_name Obj->string
  */
 MpObj func_get_file_name_obj(MpObj func) {
-  if (IS_FUNC(func)) {
-    return GET_MODULE(GET_FUNCTION(func)->mod)->file;
-  }
-  return NONE_OBJECT;
+    if (IS_FUNC(func)) {
+        return GET_MODULE(GET_FUNCTION(func)->mod)->file;
+    }
+    return NONE_OBJECT;
 }
 
 MpObj func_get_name_obj(MpObj func) {
-  if (IS_FUNC(func)) {
-    return GET_FUNCTION(func)->name;
-  }
-  return NONE_OBJECT;
+    if (IS_FUNC(func)) {
+        return GET_FUNCTION(func)->name;
+    }
+    return NONE_OBJECT;
 }
