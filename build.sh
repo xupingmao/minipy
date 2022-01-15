@@ -1,5 +1,5 @@
 
-set -x
+# set -x
 
 prog=python
 
@@ -14,8 +14,8 @@ esac
 pushd src/python
 rm ../bin.c
 
-echo "current path: $(pwd)"
-echo "use python interpreter: $prog"
+echo "Current path: $(pwd)"
+echo "Python interpreter: $prog"
 
 $prog mp_encode.py mp_init.py >> bin.c
 $prog mp_encode.py mp_tokenize.py >> bin.c

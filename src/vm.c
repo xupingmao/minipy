@@ -2,7 +2,7 @@
  * description here
  * @author xupingmao
  * @since 2016
- * @modified 2022/01/15 15:09:35
+ * @modified 2022/01/15 17:42:32
  */
 
 #include "include/mp.h"
@@ -189,6 +189,8 @@ void vm_destroy() {
 #endif
     gc_destroy();
     free(tm);
+
+    log_destroy();
 
 #ifdef MP_CHECK_MEM
     PtrMap_free(ptr_map);

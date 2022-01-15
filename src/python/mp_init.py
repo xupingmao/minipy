@@ -1,7 +1,7 @@
 # -*- coding:utf-8 -*-
 # @author xupingmao
 # @since 2016
-# @modified 2022/01/12 22:47:02
+# @modified 2022/01/15 17:55:54
 """Minipy初始化, 这里_import函数还没准备好，无法调用"""
 
 def add_builtin(name, func):
@@ -284,7 +284,8 @@ def dis(path):
     ins_list = compile_to_list(load(path), path)
     for index, item in enumerate(ins_list):
         op = int(item[0])
-        line = to_fixed(index+1, 4) + ' ' + opcodes[op].ljust(22) + str(item[1])
+        line = "%04d %22d %r" % (index+1, opcodes[op], item[1])
+        # line = to_fixed(index+1, 4) + ' ' + opcodes[op].ljust(22) + str(item[1])
         print(line)
 
 def _assert(exp, err = None):

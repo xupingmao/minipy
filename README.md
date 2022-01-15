@@ -52,28 +52,29 @@ make && make test
 
 
 ### 代码结构
-01. `vm.c` 虚拟机入口
-02. `execute.c` 解释器
-03. `builtins.c` 一些常用的内置方法
-04. `ops.c` 操作符实现
-05. `tmarg.c` 函数调用参数API
-06. `exception.c` 异常处理
-07. `gc.c` 垃圾回收器
-08. `string.c` 字符串处理
-09. `number.c` 数字处理
-10. `list.c`   列表处理
-11. `dict.c`   字典处理
-12. `function.c` 函数/方法处理
+01. `main.c` 程序入口
+02. `vm.c` 虚拟机入口
+03. `execute.c` 解释器
+04. `builtins.c` 一些常用的内置方法
+05. `obj_ops.c` 对象的操作符实现
+06. `argument.c` 函数调用参数API
+07. `exception.c` 异常处理
+08. `gc.c` 垃圾回收器
+09. `string.c` 字符串处理
+10. `number.c` 数字处理
+11. `list.c`   列表处理
+12. `dict.c`   字典处理
+13. `function.c` 函数/方法处理
 
 ### 类型系统
-1. string, 是不可变对象
-2. number, 全部使用double类型
-3. list, 列表
-4. dict, dict对象目前不是使用hashtable实现的，
-5. function, 包括native的C函数和自定义的Python函数
-6. class, 类
-7. None
-8. data, data类型可以使用C语言自由扩展
+1. `string`, 是不可变对象
+2. `number`, 全部使用double类型
+3. `list`, 列表
+4. `dict`, dict对象目前不是使用hashtable实现的，
+5. `function`, 包括native的C函数和自定义的Python函数
+6. `class`, 类
+7. `None`, None类型
+8. `data`, data类型可以使用C语言自由扩展
 
 ### 协议
 

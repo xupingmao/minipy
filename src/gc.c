@@ -6,13 +6,13 @@
  * 5. release objects which are marked unused (0).
  * 
  * @since 2015
- * @modified 2022/01/15 15:52:08
+ * @modified 2022/01/15 17:48:48
  */
 
 #include "include/mp.h"
 #include "log.c"
 
-void chars_init();
+void gc_init_chars();
 void gc_init_frames();
 
 #define GC_CONSTANS_LEN 10
@@ -58,13 +58,13 @@ void gc_init() {
     tm->ex_line = NONE_OBJECT;
     
     /* initialize chars */
-    chars_init();
+    gc_init_chars();
     
     /* initialize frames */
     gc_init_frames();
 }
 
-void chars_init() {
+void gc_init_chars() {
     int i = 0;
     ARRAY_CHARS = list_new(256); // init global ARRAY_CHARS
     for (i = 0; i < 256; i++) {

@@ -1,7 +1,7 @@
 # -*- coding:utf-8 -*-
 # @author xupingmao
 # @since 2016
-# @modified 2021/10/01 11:47:40
+# @modified 2022/01/15 17:26:31
 """Parse minipy code, grammar see minipy.grammar"""
 
 from mp_tokenize import *
@@ -69,7 +69,8 @@ class ParserCtx:
 
 def expect(ctx, v, msg=None):
     if ctx.token.type != v:
-        compile_error("parse", ctx.src, ctx.token, "expect " + v + " but now is " + ctx.token.type + str(msg))
+        error_msg = "expect %r but now is %r::%s" % (v, ctx.token.type, msg)
+        compile_error("parse", ctx.src, ctx.token, error_msg)
     ctx.next()
 
 def assert_type(p, type, msg):
@@ -130,12 +131,15 @@ def baseitem(p):
             exp(p, 'or')
             expect(p, ':')
             exp(p, 'or')
+
             v = p.pop()
             k = p.pop()
             items.append([k,v])
             if p.token.type == '}':
                 break
             expect(p, ',')
+        if p.token.type == ',':
+            p.next()
         expect(p, '}')
         node.first = items
         p.add(node)
@@ -234,7 +238,8 @@ def exp(p, level):
             exp(p, 'cmp')
     elif level == 'cmp':
         exp(p, '+-')
-        while p.token.type in ('>', '<', '==', 'is', '!=', '>=', '<=', 'in', 'notin', 'isnot'):
+        while p.token.type in ('>', '<', '==', 'is', '!=', 
+                '>=', '<=', 'in', 'notin', 'isnot'):
             t = p.token.type
             p.next()
             exp(p, '+-')
@@ -249,7 +254,7 @@ def exp(p, level):
     elif level == 'factor':
         fnc = call_or_get_exp
         fnc(p)
-        while p.token.type in ('*','/', '%'):
+        while p.token.type in ('*','/','%'):
             t = p.token.type
             p.next()
             fnc(p)

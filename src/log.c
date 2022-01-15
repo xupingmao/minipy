@@ -2,7 +2,7 @@
  * description here
  * @author xupingmao
  * @since 2016
- * @modified 2022/01/15 15:37:49
+ * @modified 2022/01/15 18:14:45
  */
 #ifndef _MP_LOG_
 #define _MP_LOG_
@@ -24,7 +24,9 @@
  * 4: debug
  */
 
-#define LOG_LEVEL 2
+#ifndef LOG_LEVEL
+    #define LOG_LEVEL 2
+#endif
 
 #define kLogNone  0
 #define kLogError 1
@@ -40,24 +42,49 @@
 //     kLogDebug
 // };
 
-#define LOG_LEVEL 2
+static FILE* log_fp = NULL;
 
 void log_init() {
     log_debug("log_init: logLevel=%d", LOG_LEVEL);
     log_debug("log_init: kLogDebug=%d", kLogDebug);
 }
 
+void log_destroy() {
+    if (log_fp != NULL && log_fp != stdout) {
+        fclose(log_fp);
+    }
+}
 
+static FILE* log_get_fp() {
+    if (log_fp == NULL) {
+        log_fp = fopen("minipy.log", "w+");
+        if (log_fp == NULL) {
+            log_fp = stdout;
+        }
+    }
+
+    return log_fp;
+}
 
 /**
  * log time
  */
-static void _log_time(FILE* fp) {
+static void _log_time(char* level) {
     time_t cur_time;
+    FILE *fp = log_get_fp();
+
     time(&cur_time);
-    char* t_str   = ctime(&cur_time);
+    char* t_str = ctime(&cur_time);
     t_str[strlen(t_str)-1] = '\0';
-    fprintf(fp, "%s|", t_str);
+    fprintf(fp, "%s|%s|", t_str, level);
+}
+
+static void _log_write(char* fmt, va_list ap) {
+    vfprintf(log_get_fp(), fmt, ap);
+}
+
+static void _log_newline() {
+    fprintf(log_get_fp(), "\n");
 }
 
 /**
@@ -65,29 +92,27 @@ static void _log_time(FILE* fp) {
  */
 void log_info(char* fmt, ...) {
 #if LOG_LEVEL >= kLogInfo
-    _log_time(stdout);
-    printf("INFO|");
+    _log_time("INFO");
     
     va_list ap;
     va_start(ap, fmt);
-    vprintf(fmt, ap);
+    _log_write(fmt, ap);
     va_end(ap);
     
-    printf("\n");
+    _log_newline();
 #endif
 }
 
 void log_debug(char* fmt, ...) {
 #if LOG_LEVEL >= kLogDebug
-    _log_time(stdout);
-    printf("DEBUG|");
+    _log_time("DEBUG");
 
     va_list ap;
     va_start(ap, fmt);
-    vprintf(fmt, ap);
+    _log_write(fmt, ap);
     va_end(ap);
     
-    printf("\n");
+    _log_newline();
 #endif
 }
 
@@ -96,15 +121,14 @@ void log_debug(char* fmt, ...) {
  */
 void log_warn(char* fmt, ...) {
 #if LOG_LEVEL >= kLogWarn
-    _log_time(stdout);
-    printf("WARN|");
+    _log_time("WARN");
 
     va_list ap;
     va_start(ap, fmt);
-    vprintf(fmt, ap);
+    _log_write(fmt, ap);
     va_end(ap);
     
-    printf("\n");
+    _log_newline();
 #endif
 }
 
@@ -112,15 +136,14 @@ void log_warn(char* fmt, ...) {
  * @since 2016-11-13
  */
 void log_error(char* fmt, ...) {
-    _log_time(stdout);
-    printf("ERROR|");
+    _log_time("ERROR");
     
     va_list ap;
     va_start(ap, fmt);
-    vprintf(fmt, ap);
+    _log_write(fmt, ap);
     va_end(ap);
     
-    printf("\n");
+    _log_newline();
 }
 
 #if MP_LOG_CALL == 1

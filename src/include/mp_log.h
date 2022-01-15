@@ -10,6 +10,7 @@
 #define LOG_INFO printf
 
 void log_init();
+void log_destroy();
 void log_debug(char* fmt, ...);
 void log_info(char* fmt, ...);
 void log_warn(char* fmt, ...);
