@@ -342,10 +342,6 @@ void   mp_raise(char*fmt , ...);
 void   vm_destroy();
 
 
-
-#define  MP_PUSH(x) *(++top) = (x); if(top > tm->stack_end) mp_raise("stack overflow");
-#define  MP_POP() *(top--)
-#define  MP_TOP() (*top)
 #define  GET_CONST(i) GET_DICT(tm->constants)->nodes[i].key
 MpObj    call_unsafe(MpObj fnc);
 MpObj    call_function(MpObj func);

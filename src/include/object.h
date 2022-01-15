@@ -3,7 +3,7 @@
  *
  *  Created on: 2014/8/25
  *  @author: xupingmao
- *  @modified 2022/01/15 12:55:08
+ *  @modified 2022/01/15 22:07:06
  */
 
 #ifndef _OBJECT_H_
@@ -59,6 +59,13 @@ typedef struct _mp_code_cache {
         int ival;
     } v;
     char* sval;
+
+    #ifdef MP_PROFILE
+      // 性能分析埋点
+      int64_t start_time;
+      int64_t total_time;
+      int64_t times;
+    #endif
 } MpCodeCache;
 
 typedef struct MpModule

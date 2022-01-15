@@ -1,7 +1,12 @@
 # -*- coding:utf-8 -*-
 # @author xupingmao
 # @since 2016
-# @modified 2021/10/01 11:51:39
+# @modified 2022/01/15 22:22:04
+
+"""使用说明
+dis_code: 反编译代码为字节码
+compile:  将Python代码编译成C语言字符串
+"""
 
 if "tm" not in globals():
     from boot import *
@@ -567,7 +572,7 @@ def encode_continue(tk):
 def encode_break(tk):
     jump(_end_tag_list[-1])
 
-def encode_imp_it_one(mod, item):
+def encode_import_one(mod, item):
     # encode_item(Token("name", "_import"))
     encode_item(mod)
     item.type = 'string'
@@ -585,16 +590,16 @@ def _import_name2str(mod):
     elif mod.type == 'string':
         return mod
     
-def encode_import_many(mod, items):
+def encode_import_multi(mod, items):
     mod = _import_name2str(mod)
     if items.type == ',':
-        encode_import_many(mod, items.first)
-        encode_import_many(mod, items.second)
+        encode_import_multi(mod, items.first)
+        encode_import_multi(mod, items.second)
     else:
-        encode_imp_it_one(mod, items)
+        encode_import_one(mod, items)
 
 def encode_from(tk):
-    encode_import_many(tk.first, tk.second)
+    encode_import_multi(tk.first, tk.second)
 
 def _encode_import(item):
     item.type = 'string'

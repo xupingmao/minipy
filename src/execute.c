@@ -1,12 +1,13 @@
 /**
   * execute minipy bytecode
   * @since 2014-9-2
-  * @modified 2022/01/15 15:39:08
+  * @modified 2022/01/15 23:41:45
   *
   * 2015-6-16: interpreter for tinyvm bytecode.
  **/
 
 #include "include/mp.h"
+#include "execute_profile.c"
 
 void mp_resolve_code(MpModule* m, char* code);
 
@@ -182,8 +183,24 @@ void pop_frame() {
     tm->frame --;
 }
 
+#define MP_PUSH(x) *(++top) = (x); \
+    if(top > tm->stack_end) \
+        mp_raise("mp_eval: stack overflow");
+
+
+#define MP_PUSH_TEST(x) ++top;   \
+    top->type = (x).type;   \
+    top->value = (x).value; \
+    if(top > tm->stack_end)        \
+        mp_raise("mp_eval: stack overflow");
+
+#define MP_POP() *(top--)
+#define MP_TOP() (*top)
+
 #define MP_OP(OP_CODE, OP_FUNC) case OP_CODE: \
+    PROFILE_START(cache); \
     *(top-1) = OP_FUNC(*(top-1), *top);--top;\
+    PROFILE_END(cache); \
     break;
     
 #define FRAME_CHECK_GC()  \
@@ -272,6 +289,10 @@ tailcall:
     ret = NONE_OBJECT;
 
     while (1) {
+        // 用于统计性能分析函数本身的性能
+        PROFILE_NULL_START();
+        PROFILE_NULL_END();
+
         mp_log_cache(cache);
         #ifdef MP_PRINT_STEPS
             tm->steps++;
@@ -280,12 +301,16 @@ tailcall:
         switch (cache->op) {
 
         case OP_NUMBER: {
+            PROFILE_START(cache);
             MP_PUSH(cache->v.obj);
+            PROFILE_END(cache);
             break;
         }
 
         case OP_STRING: {
+            PROFILE_START(cache);
             MP_PUSH(cache->v.obj);
+            PROFILE_END(cache);
             break;
         }
 
@@ -309,25 +334,34 @@ tailcall:
             break;
         }
         case OP_CONSTANT: {
+            PROFILE_START(cache);
             MP_PUSH(GET_CONST(cache->v.ival));
+            PROFILE_END(cache);
             break;
         }
         
         case OP_NONE: {
+            PROFILE_START(cache);
             MP_PUSH(NONE_OBJECT);
+            PROFILE_END(cache);
             break;
         }
 
         case OP_LOAD_LOCAL: {
+            PROFILE_START(cache);
             MP_PUSH(locals[cache->v.ival]);
+            PROFILE_END(cache);
             break;
         }
 
         case OP_STORE_LOCAL:
+            PROFILE_START(cache);
             locals[cache->v.ival] = MP_POP();
+            PROFILE_END(cache);
             break;
 
         case OP_LOAD_GLOBAL: {
+            PROFILE_START(cache);
             /* mp_printf("load global %o\n", GET_CONST(i)); */
             int idx = dict_get0(GET_DICT(globals), cache->v.obj);
             if (idx == -1) {
@@ -355,23 +389,31 @@ tailcall:
                 cache->op = OP_FAST_LD_GLO;
                 cache->v.ival = idx;
             }
+
+            PROFILE_END(cache);
             break;
         }
         case OP_STORE_GLOBAL: {
+            PROFILE_START(cache);
             x = MP_POP();
             int idx = dict_set0(GET_DICT(globals), cache->v.obj, x);
             // pc[0] = OP_FAST_ST_GLO;
             // code16(pc+1, idx);
             cache->op = OP_FAST_ST_GLO;
             cache->v.ival = idx;
+            PROFILE_END(cache);
             break;
         }
         case OP_FAST_LD_GLO: {
+            PROFILE_START(cache);
             MP_PUSH(GET_DICT(globals)->nodes[cache->v.ival].val);
+            PROFILE_END(cache);
             break;
         }
         case OP_FAST_ST_GLO: {
+            PROFILE_START(cache);
             GET_DICT(globals)->nodes[cache->v.ival].val = MP_POP();
+            PROFILE_END(cache);
             break;
         }
         case OP_LIST: {
@@ -386,11 +428,15 @@ tailcall:
             list_append(GET_LIST(x), v);
             break;
         case OP_DICT_SET:
+            PROFILE_START(cache);
             v = MP_POP();
             k = MP_POP();
             x = MP_TOP();
-            mp_assert(IS_DICT(x), "mp_eval: OP_DICT_SET require dict");
+            if (NOT_DICT(x)) {
+                mp_raise("OP_DICT_SET: expect dict but see %o", x);
+            }
             obj_set(x, k, v);
+            PROFILE_END(cache);
             break;
         case OP_DICT: {
             MP_PUSH(dict_new());
@@ -403,14 +449,28 @@ tailcall:
         MP_OP(OP_DIV, obj_div)
         MP_OP(OP_MOD, obj_mod)
         MP_OP(OP_GET, obj_get)
+        
         case OP_SLICE: {
             MpObj second = MP_POP();
             MpObj first  = MP_POP();
             *top = obj_slice(*top, first, second);
             break;
         }
-        case OP_EQEQ: { *(top-1) = number_obj(obj_equals(*(top-1), *top)); top--; break; }
-        case OP_NOTEQ: { *(top-1) = number_obj(!obj_equals(*(top-1), *top)); top--; break; }
+        
+        case OP_EQEQ: {
+            PROFILE_START(cache);
+            *(top-1) = number_obj(obj_equals(*(top-1), *top)); 
+            top--; 
+            PROFILE_END(cache);
+            break; 
+        }
+        
+        case OP_NOTEQ: { 
+            *(top-1) = number_obj(!obj_equals(*(top-1), *top)); 
+            top--; 
+            break; 
+        }
+        
         case OP_LT: {
             *(top-1) = number_obj(mp_cmp(*(top-1), *top)<0);
             top--;
@@ -451,13 +511,17 @@ tailcall:
             break;
         }
         case OP_SET:
+            PROFILE_START(cache);
             k = MP_POP();
             x = MP_POP();
             v = MP_POP();
             obj_set(x, k, v);
+            PROFILE_END(cache);
             break;
         case OP_POP: {
+            PROFILE_START(cache);
             top--;
+            PROFILE_END(cache);
             break;
         }
         case OP_NEG:
@@ -466,6 +530,7 @@ tailcall:
 
         // 函数调用
         case OP_CALL: {
+            PROFILE_START(cache);
             int n = cache->v.ival;
             
             f->top = top;
@@ -473,10 +538,15 @@ tailcall:
             /* TODO top+1 can be optimized as locals */
             arg_set_arguments(top + 1, n);
             MpObj func = MP_POP();
+            PROFILE_END(cache);
 
+            // 调用函数的时间不算到 OP_CALL的执行时间内
             MP_PUSH(call_function(func));
+
+            PROFILE_START(cache);
             tm->frame = f;
             FRAME_CHECK_GC();
+            PROFILE_END(cache);
             break;
         }
 
@@ -631,17 +701,25 @@ tailcall:
         }
 
         case OP_JUMP_ON_TRUE: {
+            PROFILE_START(cache);
             if (is_true_obj(MP_TOP())) {
+                PROFILE_END(cache);
                 cache += cache->v.ival;
                 continue;
+            } else {
+                PROFILE_END(cache);
             }
             break;
         }
 
         case OP_JUMP_ON_FALSE: {
+            PROFILE_START(cache);
             if (!is_true_obj(MP_TOP())) {
+                PROFILE_END(cache);
                 cache += cache->v.ival;
                 continue;
+            } else {
+                PROFILE_END(cache);
             }
             break;
         }
@@ -671,8 +749,19 @@ tailcall:
             f->cache_jmp = cache + cache->v.ival;
             break; 
         }
-        case OP_CLR_JUMP: { f->jmp = NULL; f->cache_jmp = NULL; break;}
-        case OP_LINE: { f->lineno = cache->v.ival; break;}
+
+        case OP_CLR_JUMP: { 
+            f->jmp = NULL; 
+            f->cache_jmp = NULL; 
+            break;
+        }
+
+        case OP_LINE: {
+            PROFILE_START(cache);
+            f->lineno = cache->v.ival; 
+            PROFILE_END(cache);
+            break;
+        }
 
         case OP_DEBUG: {
             #if 0

@@ -2,7 +2,13 @@
 # stack based opcodes
 # @author xupingmao
 # @since 2016
-# @modified 2020/10/12 23:46:45
+# @modified 2022/01/15 23:28:13
+
+"""使用说明
+在`minipy`的根目录执行
+
+minipy> python3 src/python/mp_opcode.py
+"""
 
 from boot import *
 cheader = '''/*
@@ -78,6 +84,9 @@ _opcode_names = [
     'OP_FAST_LD_GLO',
 
     'OP_FILE',
+
+    # 专门用于性能分析的字节码
+    'OP_PROFILE',
     # unused instructions
     #'LT_JUMP_ON_FALSE', 
     #'GT_JUMP_ON_FALSE',
@@ -96,6 +105,22 @@ while i < len(_opcode_names):
     opcodes[i+1] = name
     i += 1
 
+def build_get_name_by_code():
+    i = 0
+    codes = []
+    codes.append("const char* inst_get_name_by_code(int code) {")
+    codes.append("  switch(code) {")
+    while i < len(_opcode_names):
+        op_name  = _opcode_names[i]
+        op_value = i+1
+        codes.append("    case %s:return \"%s\";" % (op_value, op_name))
+        i += 1
+
+    codes.append("  }");
+    codes.append("  return \"UNKNOWN\";")
+    codes.append("}");
+    return "\n".join(codes)
+
 def export_clang_define(des, self = None):
     # check modified time
     # if src is modified before des and cdes, do not convert.
@@ -112,6 +137,7 @@ def export_clang_define(des, self = None):
         defines.append('#define '+ x + ' ' + str(i+1))
         i += 1
     ctext = cheader % str(asctime()) + '\n'.join(defines) + ctail
+    ctext += build_get_name_by_code()
     save(des, ctext)
     # save('../include/instruction.h', ctext)
 

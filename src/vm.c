@@ -2,7 +2,7 @@
  * description here
  * @author xupingmao
  * @since 2016
- * @modified 2022/01/15 17:42:32
+ * @modified 2022/01/15 22:54:17
  */
 
 #include "include/mp.h"
@@ -144,6 +144,9 @@ int vm_init(int argc, char* argv[]) {
     // init gc
     gc_init();
 
+    // 初始化Profile
+    PROFILE_INIT();
+
     tm->argc   = argc;
     tm->argv   = argv;
     tm->code   = NULL;
@@ -194,5 +197,9 @@ void vm_destroy() {
 
 #ifdef MP_CHECK_MEM
     PtrMap_free(ptr_map);
+#endif
+
+#if MP_PROFILE
+    profile_print_detail();
 #endif
 }

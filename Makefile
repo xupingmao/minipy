@@ -1,9 +1,12 @@
 
 cc = gcc
 LOG_LEVEL?=2
+MP_PROFILE?=0
 
 minipy: src/*.c src/include/*.h
-	$(cc) -DTM_USE_CACHE -DLOG_LEVEL=$(LOG_LEVEL) -o minipy src/main.c -lm
+	$(cc) -DTM_USE_CACHE -DLOG_LEVEL=$(LOG_LEVEL)\
+		-DMP_PROFILE=$(MP_PROFILE)\
+		-o minipy src/main.c -lm
 
 .PHONY: clean test
 
