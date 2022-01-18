@@ -1,7 +1,7 @@
 /**
   * execute minipy bytecode
   * @since 2014-9-2
-  * @modified 2022/01/15 23:41:45
+  * @modified 2022/01/18 20:33:26
   *
   * 2015-6-16: interpreter for tinyvm bytecode.
  **/
@@ -10,51 +10,6 @@
 #include "execute_profile.c"
 
 void mp_resolve_code(MpModule* m, char* code);
-
-MpObj call_function(MpObj func) {
-    MpObj ret = NONE_OBJECT;
-    if (IS_FUNC(func)) {
-        RESOLVE_METHOD_SELF(func);
-        mp_log_call(func);
-        
-        /* call native function */
-        if (GET_FUNCTION(func)->native != NULL) {
-            return GET_FUNCTION(func)->native();
-        } else {
-            MpFrame* f = push_frame(func);
-
-            L_recall:
-            if (setjmp(f->buf)==0) {
-                return mp_eval(f);
-            } else {
-                f = tm->frame;
-                /* handle exception in this frame */
-                if (f->cache_jmp != NULL) {
-                    f->cache = f->cache_jmp;
-                    f->cache_jmp = NULL;
-                    goto L_recall;
-                } else {
-                    /* there is no handler, throw to prev frame */
-                    mp_push_exception(f);
-                    pop_frame();
-                    longjmp(tm->frame->buf, 1);
-                }
-            }
-        }
-    } else if (IS_CLASS(func)) {
-        ret = class_instance(func);
-        MpObj *_fnc = dict_get_by_str(ret, "__init__");
-        if (_fnc != NULL) {
-            call_function(*_fnc);
-        }
-        return ret;
-    }
-    mp_raise("File %o, line=%d: call_function:invalid object %o", 
-        GET_FUNCTION_FILE(tm->frame->fnc), 
-        tm->frame->lineno, 
-        func);
-    return NONE_OBJECT;
-}
 
 /**
  * @since 2016-11-24
@@ -316,21 +271,23 @@ tailcall:
 
         case OP_IMPORT: {
             // _import(des_globals, fname, tar);
-            MpObj import_func = mp_get_global(globals, "_import");
+            MpObj import_func = mp_get_global_by_cstr(globals, "_import");
             arg_start();
             arg_push(globals);
             MpObj modname, attr;
 
             if (cache->v.ival == 1) {
+                // import name
                 modname = MP_POP();
                 arg_push(modname); // arg1
             } else {
+                // from name import attr
                 attr = MP_POP();
                 modname = MP_POP();
                 arg_push(modname);
                 arg_push(attr);
             }
-            call_function(import_func);
+            obj_call(import_func);
             break;
         }
         case OP_CONSTANT: {
@@ -531,17 +488,21 @@ tailcall:
         // 函数调用
         case OP_CALL: {
             PROFILE_START(cache);
+            // n是参数的个数
             int n = cache->v.ival;
             
             f->top = top;
             top -= n;
-            /* TODO top+1 can be optimized as locals */
+
+            // 当前的*top就是函数对象, top+1开始是参数
+            // TODO top+1 can be optimized as locals
             arg_set_arguments(top + 1, n);
             MpObj func = MP_POP();
+
             PROFILE_END(cache);
 
             // 调用函数的时间不算到 OP_CALL的执行时间内
-            MP_PUSH(call_function(func));
+            MP_PUSH(obj_call(func));
 
             PROFILE_START(cache);
             tm->frame = f;
@@ -584,7 +545,7 @@ tailcall:
                 }
                 goto tailcall;
             } else {
-                return call_function(func);
+                return obj_call(func);
             }
             break;
         }
@@ -594,7 +555,7 @@ tailcall:
             mp_assert_type(args, TYPE_LIST, "mp_eval: OP_APPLY");
             arg_set_arguments(LIST_NODES(args), LIST_LEN(args));
             MpObj func = MP_POP();
-            x = call_function(func);
+            x = obj_call(func);
             MP_PUSH(x);
             tm->frame = f;
             FRAME_CHECK_GC();
@@ -663,7 +624,9 @@ tailcall:
             dict_set0(GET_DICT(globals), class_name, clazz);
             break;
         }
-        /* rotate stack */
+
+        // 翻转堆栈
+        // rotate stack
         case OP_ROT: {
             MpObj* left = top - cache->v.ival + 1;
             MpObj* right = top;
@@ -765,7 +728,7 @@ tailcall:
 
         case OP_DEBUG: {
             #if 0
-            MpObj fdebug = mp_get_global(globals, "__debug__");
+            MpObj fdebug = mp_get_global_by_cstr(globals, "__debug__");
             f->top = top;
             mp_call(0, fdebug, 1, number_obj(tm->frame - tm->frames));        
             break;

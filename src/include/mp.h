@@ -54,6 +54,10 @@
 MpObj NONE_OBJECT;
 MpObj ARRAY_CHARS;
 
+// 函数指针
+typedef MpObj (* MpNativeFunc ) ();
+
+
 #include "instruction.h"
 
 #ifdef MP_CHECK_MEM
@@ -153,18 +157,6 @@ void        gc_restore_local_obj_list(int size);
 void        gc_native_call_sweep();
 void        gc_check_native_call(int size, MpObj ret);
 
-#if 0
-    #define PRINT_OBJ_GC_INFO_START() int _gc_old = tm->allocated;
-    #define PRINT_OBJ_GC_INFO_END(str, addr) \
-        printf("free %s at 0x%p, %d => %d, ", str, addr, _gc_old, tm->allocated);
-    #else
-    #define PRINT_OBJ_GC_INFO_START()
-    #define PRINT_OBJ_GC_INFO_END(str, addr)
-
-    #define GC_LOG_START(ptr, desc)
-    #define GC_LOG_END(ptr, desc)
-#endif
-
 /**
  * string functions
  */
@@ -183,7 +175,7 @@ MpObj        string_iter_new(MpObj s);
 MpObj*       string_next(MpData* iterator);
 
 // number functions
-MpObj     number_obj(double v);
+MpObj      number_obj(double v);
 void       number_format(char* des, MpObj num);
 double     number_get_double(MpObj num);
 long long  long_value(MpObj num);
@@ -191,19 +183,18 @@ long long  long_value(MpObj num);
 /**
  * list functions
  */
-
 void     list_check(MpList*);
-MpObj   list_new(int cap);
+MpObj    list_new(int cap);
 /* create a MpList which not tracked by Garbage Collector. */
 MpList*  list_new_untracked(int cap);
 void     list_set(MpList* list, int n, MpObj v);
-MpObj   list_get(MpList* list, int n);
+MpObj    list_get(MpList* list, int n);
 void     list_free(MpList* );
 void     list_clear(MpList* list);
 void     list_methods_init();
-MpObj   list_iter_new(MpObj list);
-MpObj*  list_next(MpData* iterator);
-MpObj   list_add(MpList*, MpList*);
+MpObj    list_iter_new(MpObj list);
+MpObj*   list_next(MpData* iterator);
+MpObj    list_add(MpList*, MpList*);
 void     list_del(MpList*list, MpObj key);
 void     list_insert(MpList*list, int index, MpObj value);
 int      list_index(MpList*, MpObj val);
@@ -237,7 +228,7 @@ int              dict_get_attr(MpDict* dict, int const_id);
 
 // arg functions
 void    arg_insert(MpObj arg);
-MpStr* arg_take_str_ptr(const char* fnc);
+MpStr*  arg_take_str_ptr(const char* fnc);
 void    arg_start();
 void    arg_push(MpObj obj) ;
 void    arg_set_arguments(MpObj* first, int len);
@@ -254,8 +245,8 @@ MpObj  arg_take_list_obj(const char* fnc);
 MpObj  arg_take_dict_obj(const char* fnc);
 MpObj  arg_take_obj(const char* fnc);
 MpObj  arg_take_data_obj(const char* fnc);
-int     arg_count() ;
-int     arg_remains();
+int arg_count() ;
+int arg_remains();
 
 
 // function functions
@@ -326,7 +317,7 @@ int         obj_equals(MpObj a, MpObj b);
 int         mp_len(MpObj obj);
 int         is_true_obj(MpObj v);
 int         mp_iter(MpObj self, MpObj *k);
-MpObj       mp_get_global(MpObj globals, char* key);
+MpObj       mp_get_global_by_cstr(MpObj globals, char* key);
 MpObj       mp_call_builtin(BuiltinFunc func, int n, ...);
 
 // vm functions
@@ -335,7 +326,7 @@ void   reg_builtin(char* name, MpObj value);
 void   reg_builtin_func(char* name, MpObj(*native_func)());
 void   reg_mod(char* name, MpObj module);
 void   reg_mod_func(MpObj mod, char* name, MpObj(*native_func)());
-void   reg_mod_attr(char* mod_name,char* attr, MpObj value);
+void   reg_mod_attr(MpObj mod, char* attr, MpObj value);
 void   reg_method_by_cstr(MpObj clazz, char* name, MpObj(*native_func)());
 int    obj_eq_cstr(MpObj str, const char* value);
 void   mp_raise(char*fmt , ...);
@@ -344,7 +335,7 @@ void   vm_destroy();
 
 #define  GET_CONST(i) GET_DICT(tm->constants)->nodes[i].key
 MpObj    call_unsafe(MpObj fnc);
-MpObj    call_function(MpObj func);
+MpObj    obj_call(MpObj func);
 MpObj    load_file_module(MpObj filename, MpObj code, MpObj name);
 MpObj    mp_eval(MpFrame*);
 MpFrame* push_frame(MpObj fnc);

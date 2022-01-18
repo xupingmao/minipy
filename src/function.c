@@ -2,7 +2,7 @@
  * description here
  * @author xupingmao
  * @since 2016
- * @modified 2022/01/15 15:07:39
+ * @modified 2022/01/18 20:03:54
  */
 #include "include/mp.h"
 
@@ -87,8 +87,9 @@ MpCodeCache* func_resolve_cache(MpFunction* fnc, MpCodeCache* cache) {
 }
 
 MpObj func_new(MpObj mod,
-        MpObj self,
-        MpObj (*native_func)()){
+               MpObj self,
+               MpNativeFunc native_func){
+    // module可以为空或者Module类型
     mp_assert_type2(mod, TYPE_MODULE, TYPE_NONE, "func_new");
 
     MpFunction* f= mp_malloc(sizeof(MpFunction));
@@ -168,9 +169,9 @@ void func_free(MpFunction* func){
  * @param file filename
  * @name  __name__
  */
-MpObj module_new(MpObj file, MpObj name, MpObj code){
+MpObj module_new(MpObj fname, MpObj name, MpObj code){
   MpModule *mod = mp_malloc(sizeof(MpModule));
-  mod->file = file;
+  mod->file = fname;
   mod->code = code;
   mod->resolved = 0;
   mod->cache = NULL;
@@ -179,7 +180,7 @@ MpObj module_new(MpObj file, MpObj name, MpObj code){
   mod->globals = dict_new();
   MpObj m = gc_track(obj_new(TYPE_MODULE, mod));
   /* set module */
-  obj_set(tm->modules, file, mod->globals);
+  obj_set(tm->modules, fname, mod->globals);
   obj_set(mod->globals, string_static("__name__"), name);
   return m;
 }
@@ -308,5 +309,51 @@ MpObj func_get_name_obj(MpObj func) {
     if (IS_FUNC(func)) {
         return GET_FUNCTION(func)->name;
     }
+    return NONE_OBJECT;
+}
+
+
+MpObj obj_call(MpObj func) {
+    MpObj ret = NONE_OBJECT;
+    if (IS_FUNC(func)) {
+        RESOLVE_METHOD_SELF(func);
+        mp_log_call(func);
+        
+        /* call native function */
+        if (GET_FUNCTION(func)->native != NULL) {
+            return GET_FUNCTION(func)->native();
+        } else {
+            MpFrame* f = push_frame(func);
+
+            L_recall:
+            if (setjmp(f->buf)==0) {
+                return mp_eval(f);
+            } else {
+                f = tm->frame;
+                /* handle exception in this frame */
+                if (f->cache_jmp != NULL) {
+                    f->cache = f->cache_jmp;
+                    f->cache_jmp = NULL;
+                    goto L_recall;
+                } else {
+                    /* there is no handler, throw to prev frame */
+                    mp_push_exception(f);
+                    pop_frame();
+                    longjmp(tm->frame->buf, 1);
+                }
+            }
+        }
+    } else if (IS_CLASS(func)) {
+        ret = class_instance(func);
+        MpObj *_fnc = dict_get_by_str(ret, "__init__");
+        if (_fnc != NULL) {
+            obj_call(*_fnc);
+        }
+        return ret;
+    }
+    mp_raise("File %o, line=%d: obj_call:invalid object %o", 
+        GET_FUNCTION_FILE(tm->frame->fnc), 
+        tm->frame->lineno, 
+        func);
     return NONE_OBJECT;
 }

@@ -567,7 +567,7 @@ MpObj bf_apply() {
         mp_raise("apply: expect list arguments or None, but see %o", args);
         return NONE_OBJECT;
     }
-    return call_function(func);
+    return obj_call(func);
 }
 
 MpObj bf_write() {
@@ -742,7 +742,7 @@ MpObj bf_read_file() {
             }
         }
         arg_push(string_alloc(buf, i));
-        call_function(func);
+        obj_call(func);
         if (end) {
             break;
         }

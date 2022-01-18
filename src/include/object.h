@@ -3,7 +3,7 @@
  *
  *  Created on: 2014/8/25
  *  @author: xupingmao
- *  @modified 2022/01/15 22:07:06
+ *  @modified 2022/01/18 09:04:17
  */
 
 #ifndef _OBJECT_H_
@@ -242,12 +242,18 @@ typedef struct DictNode{
   int used; /* also used for attr index */
 } DictNode;
 
+typedef struct hash_slot_t {
+  int index[5];
+} HashSlot;
+
 typedef struct MpDict {
   int marked;
   int len;
   int cap;
   int extend;
   struct DictNode* nodes;
+  struct HashSlot* slots;
+
   /** hash冲突的节点 **/
   struct DictNode* conflict_nodes;
 } MpDict;

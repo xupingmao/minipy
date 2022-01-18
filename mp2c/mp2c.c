@@ -1,8 +1,20 @@
+#include "../src/vm.c"
+
 #ifndef TM2C_C
 #define TM2C_C
 
 #define LEVEL_ERROR 0
 #define LOG(level, msg, lineno, func_name, value) /* x */
+
+// 操作栈相关的宏函数
+#define MP2C_PUSH(x)  *(++top) = (x);
+#define MP2C_POP()    *(top--)
+#define MP2C_TOP()    (top[0])
+#define MP2C_FIRST()  (top[0])
+#define MP2C_SECOND() (top[-1])
+#define MP2C_THIDRD() (top[-2])
+
+MpObj obj_call_narg(MpObj callee, int n, MpObj* args);
 
 MpObj obj_LT(MpObj left, MpObj right) {
     return number_obj(mp_cmp(left, right) < 0);
@@ -18,6 +30,14 @@ MpObj obj_GT(MpObj left, MpObj right) {
 
 MpObj obj_GE(MpObj left, MpObj right) {
     return number_obj(mp_cmp(left, right) >= 0);
+}
+
+MpObj obj_EQEQ(MpObj left, MpObj right) {
+    return number_obj(mp_cmp(left, right) == 0);
+}
+
+MpObj obj_LTEQ(MpObj left, MpObj right) {
+    return number_obj(mp_cmp(left, right) <= 0);
 }
 
 void gc_local_add(MpObj object) {
@@ -40,7 +60,7 @@ MpObj mp_call(MpObj func, int args, ...) {
     }
     va_end(ap);
     // mp_printf("at line %d, try to call %o with %d args\n", lineno, func_get_name_obj(func), args);
-    // *self* will be resolved in call_function
+    // *self* will be resolved in obj_call
     MpObj ret;
     if (IS_DICT(func)) {
         ret = class_new(func);
@@ -63,7 +83,7 @@ MpObj mp_call(MpObj func, int args, ...) {
         }
     } 
 
-    mp_raise("File %o, line=%d: call_function:invalid object %o", GET_FUNCTION_FILE(tm->frame->fnc), 
+    mp_raise("File %o, line=%d: obj_call:invalid object %o", GET_FUNCTION_FILE(tm->frame->fnc), 
         tm->frame->lineno, func);
 
     mp_call_end:
@@ -115,6 +135,7 @@ MpObj mp_call_native_0(MpObj (*fn)()) {
     int size = tm->local_obj_list->len;
     MpObj ret = fn();
     gc_check_native_call(size, ret);
+    return NONE_OBJECT;
 }
 
 MpObj mp_call_native_1(MpObj (*fn)(), MpObj arg1) {
@@ -123,6 +144,7 @@ MpObj mp_call_native_1(MpObj (*fn)(), MpObj arg1) {
     int size = tm->local_obj_list->len;
     MpObj ret = fn();
     gc_check_native_call(size, ret);
+    return NONE_OBJECT;
 }
 
 MpObj mp_call_native_2(MpObj (*fn)(), MpObj arg1, MpObj arg2) {
@@ -132,6 +154,7 @@ MpObj mp_call_native_2(MpObj (*fn)(), MpObj arg1, MpObj arg2) {
     int size = tm->local_obj_list->len;
     MpObj ret = fn();
     gc_check_native_call(size, ret);
+    return NONE_OBJECT;
 }
 
 /**
@@ -186,7 +209,7 @@ MpObj mp_take_arg() {
 }
 
 void mp_def_mod(char* fname, MpObj mod) {
-    MpObj o_name = string_from_sz(fname);
+    MpObj o_name = string_from_cstr(fname);
     obj_set(tm->modules, o_name, mod);
 }
 
@@ -196,14 +219,14 @@ MpObj mp_import(MpObj globals, MpObj mod_name) {
     return mod;
 }
 
-void mp_import_all(MpObj globals, MpObj mod_name) {
-    int b_has = mp_is_in(mod_name, tm->modules);
-    if (b_has) {
-        MpObj mod_value = obj_get(tm->modules, mod_name);
-        // do something here.
-        mp_call_native_2(dict_builtin_update, globals, mod_value);
-    }
-}
+// void mp_import_all(MpObj globals, MpObj mod_name) {
+//     int b_has = mp_is_in(mod_name, tm->modules);
+//     if (b_has) {
+//         MpObj mod_value = obj_get(tm->modules, mod_name);
+//         // do something here.
+//         mp_call_native_2(dict_builtin_update, globals, mod_value);
+//     }
+// }
 
 /**
  * convert argv to list
@@ -245,13 +268,13 @@ MpObj argv_to_dict(int n, ...) {
  * run c function
  * @param mod_name mocked module name
  */
-int mp_run_func(int argc, char* argv[], char* mod_name, MpObj (*func)(void)) {
+int mp2c_run_func(int argc, char* argv[], char* mod_name, MpNativeFunc func) {
     int ret = vm_init(argc, argv);
     int i;
     if (ret != 0) { 
         return ret;
     }
-    tm->local_obj_list = untracked_list_new(100);
+    tm->local_obj_list = list_new_untracked(100);
     /* use first frame */
     int code = setjmp(tm->frames->buf);
     if (code == 0) {
@@ -259,14 +282,15 @@ int mp_run_func(int argc, char* argv[], char* mod_name, MpObj (*func)(void)) {
         MpObj _argv = GET_DICT_ATTR(sys, "argv");
         list_insert(GET_LIST(_argv), 0, string_new(mod_name));
 
-        mp_call_native(func,0);
+        func();
+        
         gc_full();
         // printf("tm->max_allocated = %d\n", tm->max_allocated);
         // printf("tm->allocated = %d\n", tm->allocated);
         // fgetc(stdin);
 
     } else if (code == 1){
-        traceback();
+        mp_traceback();
     } else if (code == 2){
         
     }
@@ -296,5 +320,39 @@ void tm2c_set(MpObj obj, char* key, MpObj value) {
 //     return GET_NUM(num);
 // }
 
+MpObj obj_call_narg(MpObj callee, int n, MpObj* args) {
+    arg_set_arguments(args, n);
+    return obj_call(callee);
+}
+
+
+MpObj mp2c_def_func(MpObj module, char* func_name, MpNativeFunc natvie_func) {
+    mp_assert_type(module, TYPE_MODULE, "mp2c_def_func");
+
+    MpObj globals  = obj_get_globals_from_module(module);
+    MpObj func_obj = func_new(module, NONE_OBJECT, natvie_func);
+    obj_set_by_cstr(globals, func_name, func_obj);
+    return func_obj;
+}
+
+MpObj mp2c_load_global(MpObj globals, char* name) {
+    mp_assert_type(globals, TYPE_DICT, "mp2c_load_global");
+    MpObj name_obj = string_static(name);
+
+    int idx = dict_get0(GET_DICT(globals), name_obj);
+
+    if (idx == -1) {
+        idx = dict_get0(GET_DICT(tm->builtins), name_obj);
+        if (idx == -1) {
+            mp_raise("NameError: name %o is not defined", name_obj);
+        } else {
+            return GET_DICT(tm->builtins)->nodes[idx].val;
+        }
+    } else {
+        return GET_DICT(globals)->nodes[idx].val;
+    }
+
+    return NONE_OBJECT;
+}
 
 #endif /* TM2C_C */

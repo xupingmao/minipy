@@ -3,14 +3,15 @@
  * too many interfaces with similar function will confuse the users.
  * @author xupingmao <578749341@qq.com>
  * @since 2016
- * @modified 2022/01/12 23:20:41
+ * @modified 2022/01/16 00:32:21
  */
 #include "include/mp.h"
 
-/** new hashdict instance, with initial allocated size set to 7.
-*   better not similar to computer binary size ( as to say 2 ), 
-*   such as 2, 10 etc.
-*/
+/** 
+ *   New hashdict instance, with initial allocated size set to 7.
+ *   better not similar to computer binary size ( as to say 2 ), 
+ *   such as 2, 10 etc.
+ */
 static 
 int js_hash(unsigned char* s, int len) {
     int hash = 1315423911;
@@ -21,7 +22,7 @@ int js_hash(unsigned char* s, int len) {
 }
 
 /**
- * simple hash function for dict, not used yet.
+ * simple hash function for dict
  * @since 2015-?
  */
 static
@@ -156,7 +157,8 @@ int dict_get0(MpDict* dict, MpObj key) {
 int dict_set_attr(MpDict* dict, int const_id, MpObj val) {
     int i;
     DictNode* nodes = dict->nodes;
-    const_id += 2; /* start from 2, as 0,1 are used by normal node. */
+    /* start from 2, as 0,1 are used by normal node. */
+    const_id += 2; 
     for (i = 0; i < dict->cap; i++) {
         if (nodes[i].used == const_id) {
             nodes[i].val = val;
@@ -173,7 +175,8 @@ int dict_get_attr(MpDict* dict, int const_id) {
     int i = 0;
 
     DictNode* nodes = dict->nodes;
-    const_id += 2; /* prevent first const to be 0, and normal dict node to be 1. */
+    /* prevent first const to be 0, and normal dict node to be 1. */
+    const_id += 2; 
     for (i = 0; i < dict->cap; i++) {
         if (nodes[i].used == const_id) {
             return i;

@@ -2,7 +2,7 @@
  * opeartor implementions
  * @author xupingmao
  * @since 2016
- * @modified 2022/01/15 15:07:49
+ * @modified 2022/01/18 20:27:17
  */
 
 #include <assert.h>
@@ -430,6 +430,8 @@ MpObj string_mod_list(MpObj str, MpObj list) {
                             char c1 = GET_STR_CHAR(item, j);
                             if (c1 == '\n') {
                                 string_append_cstr(result, "\\n");
+                            } else if (c1 == '\r') {
+                                string_append_cstr(result, "\\r");
                             } else {
                                 string_append_char(result, c1);
                             }
@@ -477,7 +479,7 @@ MpObj obj_mod(MpObj a, MpObj b) {
             arg_start();
             arg_push(a);
             arg_push(b);
-            return call_function(*__mod__);
+            return obj_call(*__mod__);
         }        
     }
     mp_raise("obj_mod: can not module %o and %o", a, b);
@@ -595,7 +597,7 @@ MpObj obj_append(MpObj a, MpObj item) {
     return a;
 }
 
-MpObj mp_get_global(MpObj globals, char *key) {
+MpObj mp_get_global_by_cstr(MpObj globals, char *key) {
     MpObj okey = string_new(key);
     DictNode* node = dict_get_node(GET_DICT(globals), okey);
     if (node == NULL) {
@@ -706,5 +708,10 @@ MpObj mp_call_builtin(BuiltinFunc func, int n, ...) {
 MpObj obj_get_globals(MpObj fnc) {
     mp_assert_type(fnc, TYPE_FUNCTION, "obj_get_globals");
     return func_get_globals(GET_FUNCTION(fnc));
+}
+
+MpObj obj_get_globals_from_module(MpObj module) {
+    mp_assert_type(module, TYPE_MODULE, "obj_get_globals_from_module");
+    return GET_MODULE(module)->globals;
 }
 

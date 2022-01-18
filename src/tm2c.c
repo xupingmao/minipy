@@ -11,7 +11,7 @@ MpObj mp_call(MpObj func, int args, ...) {
     }
     va_end(ap);
     // mp_printf("at line %d, try to call %o with %d args\n", lineno, func_get_name_obj(func), args);
-    // *self* will be resolved in call_function
+    // *self* will be resolved in obj_call
     MpObj ret;
     if (IS_DICT(func)) {
         ret = class_new(func);
@@ -34,7 +34,7 @@ MpObj mp_call(MpObj func, int args, ...) {
         }
     } 
 
-    mp_raise("File %o, line=%d: call_function:invalid object %o", GET_FUNCTION_FILE(tm->frame->fnc), 
+    mp_raise("File %o, line=%d: obj_call:invalid object %o", GET_FUNCTION_FILE(tm->frame->fnc), 
         tm->frame->lineno, func);
 
     mp_call_end:

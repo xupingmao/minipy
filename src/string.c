@@ -2,7 +2,7 @@
  * description here
  * @author xupingmao
  * @since 2018/02/19 16:49:28
- * @modified 2022/01/12 22:43:09
+ * @modified 2022/01/18 20:36:56
  */
 
 #include "include/mp.h"
@@ -417,7 +417,7 @@ MpObj string_builtin_format() {
 }
 
 static MpObj string_rstrip_blank(MpStr* self) {
-    return string_rstrip_chars(self, "\x20\x09", 2);
+    return string_rstrip_chars(self, "\t\r\n ", 4);
 }
 
 static MpObj string_rstrip_chars(MpStr* self, 

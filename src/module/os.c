@@ -146,6 +146,20 @@ MpObj os_path_join0(MpObj dirname, MpObj fname) {
     return obj_add(temp, fname);
 }
 
+MpObj os_get_name() {
+#ifdef _WINDOWS_H
+    return string_from_cstr("nt");
+#else
+    return string_from_cstr("posix");
+#endif
+}
+
+static MpObj os_system() {
+    char* command = arg_take_cstr("os.system");
+    int ret_code = system(command);
+    return number_obj(ret_code);
+}
+
 void os_mod_init() {
     MpObj os_mod = dict_new();
     reg_mod("os", os_mod);
@@ -155,6 +169,10 @@ void os_mod_init() {
     reg_mod_func(os_mod, "chdir",   os_chdir);
     reg_mod_func(os_mod, "stat",    os_stat);
     reg_mod_func(os_mod, "exists",  os_exists);
+    reg_mod_func(os_mod, "system",  os_system);
+
+    // 注册os模块的属性
+    reg_mod_attr(os_mod, "name", os_get_name());
     
     reg_builtin_func("exists", os_exists);
 }

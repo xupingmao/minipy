@@ -2,7 +2,7 @@
  * description here
  * @author xupingmao
  * @since 2016
- * @modified 2022/01/15 22:54:17
+ * @modified 2022/01/17 23:52:02
  */
 
 #include "include/mp.h"
@@ -42,6 +42,11 @@ void reg_mod_func(MpObj mod, char* name, MpObj (*native)()) {
     obj_set(mod,GET_FUNCTION(func)->name, func);
 }
 
+// 注册模块的变量
+void reg_mod_attr(MpObj module, char* name, MpObj value) {
+    obj_set(module, string_from_cstr(name), value);
+}
+
 /**
  * register built-in function
  */
@@ -68,7 +73,7 @@ void load_module(MpObj name, MpObj code) {
     MpObj fnc = func_new(mod, NONE_OBJECT, NULL);
     GET_FUNCTION(fnc)->code = (unsigned char*) GET_CSTR(code);
     GET_FUNCTION(fnc)->name = string_from_cstr("#main");
-    call_function(fnc);
+    obj_call(fnc);
 }
 
 /**
@@ -83,7 +88,7 @@ MpObj load_file_module(MpObj file, MpObj code, MpObj name) {
     GET_FUNCTION(fnc)->code = (unsigned char*) GET_CSTR(code);
     GET_FUNCTION(fnc)->name = string_new("#main");
     GET_FUNCTION(fnc)->cache = GET_MODULE(mod)->cache;
-    call_function(fnc);
+    obj_call(fnc);
     return GET_MODULE(mod)->globals;
 }
 
@@ -102,7 +107,8 @@ MpObj load_boot_module(char* sz_filename, char* sz_code) {
     GET_FUNCTION(fnc)->name = string_new("#main");
     GET_FUNCTION(fnc)->cache = GET_MODULE(mod)->cache;
     
-    call_function(fnc);
+    obj_call(fnc);
+    
     return GET_MODULE(mod)->globals;
 }
 
@@ -115,7 +121,7 @@ MpObj vm_call_mod_func(char* mod, char* sz_fnc) {
     MpObj module = obj_get(tm->modules, string_new(mod));
     MpObj fnc = obj_get(module, string_new(sz_fnc));
     arg_start();
-    return call_function(fnc);
+    return obj_call(fnc);
 }
 
 /**
@@ -170,7 +176,7 @@ int vm_init(int argc, char* argv[]) {
     list_methods_init();
     string_methods_init();
     dict_methods_init();
-    dictset_methods_init();
+    dict_set_methods_init();
     builtins_init();
 
     /* init c modules */

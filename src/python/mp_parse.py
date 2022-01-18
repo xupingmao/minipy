@@ -1,7 +1,7 @@
 # -*- coding:utf-8 -*-
 # @author xupingmao
 # @since 2016
-# @modified 2022/01/15 17:26:31
+# @modified 2022/01/16 16:27:25
 """Parse minipy code, grammar see minipy.grammar"""
 
 from mp_tokenize import *
@@ -649,7 +649,7 @@ stmt_map = {
     "global": parse_global,
     "del": parse_del,
     ';': parse_skip,
-    "@":parse_annotation,
+    "@": parse_annotation,
 }
 
 
