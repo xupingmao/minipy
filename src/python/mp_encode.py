@@ -1,7 +1,7 @@
 # -*- coding:utf-8 -*-
 # @author xupingmao
 # @since 2016
-# @modified 2022/01/18 22:22:34
+# @modified 2022/01/18 22:40:52
 
 """使用说明
 dis_code: 反编译代码为字节码
@@ -408,10 +408,10 @@ def encode_if(tk):
     else_tag,end_tag = newtag(), newtag()
     jump(else_tag, OP_POP_JUMP_ON_FALSE)
     # optimize for `if x in const_list`
-    encode_item(tk.second)
+    encode_item(tk.second)  # TRUE的逻辑
     jump(end_tag)
     emit_tag(else_tag)
-    encode_item(tk.third)
+    encode_item(tk.third)   # ELSE的逻辑
     emit_tag(end_tag)
     
 def encode_assign_to(item_list, n):
