@@ -1,7 +1,7 @@
 # -*- coding:utf-8 -*-
 # @author xupingmao <578749341@qq.com>
 # @since 2020/10/18 00:32:28
-# @modified 2022/01/18 21:36:56
+# @modified 2022/01/18 22:09:49
 
 import sys
 import os
@@ -162,7 +162,7 @@ def convert(code, writer):
             writer.goto_label(op_index + val, 4)
             writer.writeline("  }")
         elif op == OP_JUMP_ON_TRUE:
-            writer.writeline("  if (is_true_obj(MP2C_POP())) {");
+            writer.writeline("  if (is_true_obj(MP2C_TOP())) {");
             writer.goto_label(op_index + val, 4)
             writer.writeline("  }");
         elif op == OP_RETURN:
@@ -228,7 +228,15 @@ def main():
     print("saved to %s" % c_file_path)
 
     print("start build...")
-    os.system("gcc build/mp2c_main.c -o build/mp2c")
+    result = os.system("gcc build/mp2c_main.c -o build/mp2c")
+    if result == 0:
+        print("build success!")
+    else:
+        print("build failed")
+        sys.exit(1)
+
+    print("run build/mp2c ...")
+    os.system("./build/mp2c")
 
 
 if __name__ == '__main__':

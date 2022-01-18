@@ -33,7 +33,7 @@ MpObj obj_GE(MpObj left, MpObj right) {
 }
 
 MpObj obj_EQEQ(MpObj left, MpObj right) {
-    return number_obj(mp_cmp(left, right) == 0);
+    return number_obj(is_obj_equals(left, right));
 }
 
 MpObj obj_LTEQ(MpObj left, MpObj right) {

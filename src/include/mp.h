@@ -313,7 +313,7 @@ MpObj*      obj_next(MpObj iterator);
 char*       obj_to_cstr(MpObj obj);
 int         mp_cmp(MpObj a, MpObj b);
 int         mp_is_in(MpObj key, MpObj collection);
-int         obj_equals(MpObj a, MpObj b);
+int         is_obj_equals(MpObj a, MpObj b);
 int         mp_len(MpObj obj);
 int         is_true_obj(MpObj v);
 int         mp_iter(MpObj self, MpObj *k);

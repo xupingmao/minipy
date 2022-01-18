@@ -2,7 +2,7 @@
  * opeartor implementions
  * @author xupingmao
  * @since 2016
- * @modified 2022/01/18 20:27:17
+ * @modified 2022/01/18 22:29:45
  */
 
 #include <assert.h>
@@ -263,7 +263,7 @@ MpObj obj_add(MpObj a, MpObj b) {
     return NONE_OBJECT;
 }
 
-int obj_equals(MpObj a, MpObj b){
+int is_obj_equals(MpObj a, MpObj b){
     if(MP_TYPE(a) != MP_TYPE(b)) return 0;
     switch(MP_TYPE(a)){
         case TYPE_NUM:return GET_NUM(a) == GET_NUM(b);
@@ -281,7 +281,7 @@ int obj_equals(MpObj a, MpObj b){
             MpObj* nodes1 = GET_LIST(a)->nodes;
             MpObj* nodes2 = GET_LIST(b)->nodes;
             for(i = 0; i < len; i++){
-                if(!obj_equals(nodes1[i], nodes2[i]) ){
+                if(!is_obj_equals(nodes1[i], nodes2[i]) ){
                     return 0;
                 }
             }
@@ -294,7 +294,7 @@ int obj_equals(MpObj a, MpObj b){
         default: {
             const char* ltype = get_type_cstr(a.type);
             const char* rtype = get_type_cstr(b.type);
-            mp_raise("obj_equals: not supported type %d:%s and %d:%s", 
+            mp_raise("is_obj_equals: not supported type %d:%s and %d:%s", 
                 MP_TYPE(a), ltype, MP_TYPE(b), rtype);
         } 
     }
@@ -554,7 +554,7 @@ MpObj obj_neg(MpObj o) {
 }
 
 MpObj obj_or(MpObj a, MpObj b) {
-    return number_obj(is_true_obj(a) || is_true_obj(a));
+    return number_obj(is_true_obj(a) || is_true_obj(b));
 }
 
 MpObj iter_new(MpObj collections) {
@@ -651,7 +651,7 @@ MpObj obj_str(MpObj a) {
         for (i = 0; i < l; i++) {
             MpObj obj = GET_LIST(a)->nodes[i];
             /* reference to self in list */
-            if (obj_equals(a, obj)) {
+            if (is_obj_equals(a, obj)) {
                 str = string_append_cstr(str, "[...]");
             } else if (obj.type == TYPE_STR) {
                 str = string_append_char(str, '"');
@@ -681,7 +681,9 @@ MpObj obj_str(MpObj a) {
     case TYPE_DATA:
         return GET_DATA(a)->str(GET_DATA(a));
     default:
-        mp_raise("str: not supported type %d", a.type);
+        sprintf(buf, "<unknown(%d)>", a.type);
+        return string_new(buf);
+        // mp_raise("str: not supported type %d", a.type);
     }
     return string_alloc("", 0);
 }

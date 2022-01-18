@@ -23,3 +23,8 @@ a = [1,2,3]
 assertEquals(a[1:2], [2])
 assertEquals(a[0:-1], [1,2])
 
+print("TEST logic OR")
+assertEquals(1 or 0, 1)
+assertEquals(0 or 1, 1)
+assertEquals(0 and 0, 0)
+assertEquals(0 and 1, 0)

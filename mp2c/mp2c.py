@@ -760,10 +760,10 @@ def do_ge(item, env):
     return do_op(item, env, func_GE)
 
 def do_ne(item, env):
-    return "(" + do_op(item, env, "!obj_equals", "!=") + ")"
+    return "(" + do_op(item, env, "!is_obj_equals", "!=") + ")"
     
 def do_eq(item, env):
-    return do_op(item, env, "obj_equals", "==")
+    return do_op(item, env, "is_obj_equals", "==")
     
 def do_not(item, env):
     value = do_item(item.first, env)

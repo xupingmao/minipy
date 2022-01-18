@@ -416,14 +416,14 @@ tailcall:
         
         case OP_EQEQ: {
             PROFILE_START(cache);
-            *(top-1) = number_obj(obj_equals(*(top-1), *top)); 
+            *(top-1) = number_obj(is_obj_equals(*(top-1), *top)); 
             top--; 
             PROFILE_END(cache);
             break; 
         }
         
         case OP_NOTEQ: { 
-            *(top-1) = number_obj(!obj_equals(*(top-1), *top)); 
+            *(top-1) = number_obj(!is_obj_equals(*(top-1), *top)); 
             top--; 
             break; 
         }

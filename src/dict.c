@@ -196,7 +196,7 @@ DictNode* dict_get_node(MpDict* dict, MpObj key){
     
     DictNode* nodes = dict->nodes;
     for (i = 0; i < dict->cap; i++) {
-        if (nodes[i].used && obj_equals(nodes[i].key, key)) {
+        if (nodes[i].used && is_obj_equals(nodes[i].key, key)) {
             return nodes + i;
         }
     }

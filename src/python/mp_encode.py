@@ -1,7 +1,7 @@
 # -*- coding:utf-8 -*-
 # @author xupingmao
 # @since 2016
-# @modified 2022/01/15 22:22:04
+# @modified 2022/01/18 22:22:34
 
 """使用说明
 dis_code: 反编译代码为字节码
@@ -622,7 +622,7 @@ def encode_and(tk):
     encode_item(tk.second)
     emit(OP_AND)
     emit_tag(end)
-    
+
 
 def encode_or(tk):
     end = newtag()

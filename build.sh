@@ -27,5 +27,5 @@ $prog mp_encode.py repl.py >> bin.c
 mv bin.c ../
 popd
 
-make debug
+make && make test
 set +x
