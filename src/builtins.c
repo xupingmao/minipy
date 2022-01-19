@@ -770,29 +770,6 @@ MpObj bf_next() {
     }
 }
 
-
-MpObj bf_get_const_idx() {
-    MpObj key = arg_take_obj("get_const_idx");
-    int i = dict_set(tm->constants, key, NONE_OBJECT);
-    return number_obj(i);
-}
-
-MpObj bf_get_const() {
-    int num = arg_take_int("get_const");
-    int idx = num;
-    if (num < 0) {
-        idx += DICT_LEN(tm->constants);
-    }
-    if (idx < 0 || idx >= DICT_LEN(tm->constants)) {
-        mp_raise("get_const(idx): out of range [%d]", num);
-    }
-    return GET_CONST(idx);
-}
-/* for save */
-MpObj bf_get_const_len() {
-    return number_obj(DICT_LEN(tm->constants));
-}
-
 MpObj bf_get_ex_list() {
     return tm->ex_list;
 }
@@ -909,9 +886,9 @@ void builtins_init() {
     reg_builtin_func("hasattr", bf_hasattr);
     
     /* functions which has impact on vm follow camel case */
-    reg_builtin_func("get_const_idx", bf_get_const_idx);
-    reg_builtin_func("get_const", bf_get_const);
-    reg_builtin_func("get_const_len", bf_get_const_len);
+    // reg_builtin_func("get_const_idx", bf_get_const_idx);
+    // reg_builtin_func("get_const", bf_get_const);
+    // reg_builtin_func("get_const_len", bf_get_const_len);
     reg_builtin_func("traceback", bf_mp_traceback);
 
     reg_builtin_func("add_obj_method", bf_add_obj_method);

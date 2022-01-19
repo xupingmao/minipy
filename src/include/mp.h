@@ -50,6 +50,8 @@
 
 #include "object.h"
 #define OBJ_SIZE sizeof(MpObj)
+#define TRUE  1
+#define FALSE 0
 
 MpObj NONE_OBJECT;
 MpObj ARRAY_CHARS;
@@ -223,7 +225,7 @@ MpObj            dict_keys(MpDict* );
 
 #define          dict_set(d, k, v)                dict_set0(GET_DICT(d), k, v)
 #define          dict_get_by_str(dict, key)       dict_get_by_cstr(GET_DICT(dict), key)
-#define          dict_get_node dict_get_node_old
+#define          dict_get_node dict_get_node_new
 
 /** dict methods **/
 MpObj            dict_iter_new(MpObj dict);

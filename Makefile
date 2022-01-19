@@ -16,8 +16,11 @@ o2:
 o3:
 	$(cc) -DTM_USE_CACHE -o minipy -O3 -lm src/main.c
 
+debuggc:
+	$(cc) -g -DLOG_LEVEL=5 -DMP_DEBUG -o minipy src/main.c -lm
+
 debug:
-	$(cc) -g -DLOG_LEVEL=5 -o minipy src/main.c -lm
+	$(cc) -g -DMP_DEBUG -o minipy src/main.c -lm
 
 nogc:
 	$(cc) -g -DGC_DESABLED -o minipy src/main.c -lm
