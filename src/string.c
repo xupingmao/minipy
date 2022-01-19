@@ -2,12 +2,14 @@
  * description here
  * @author xupingmao
  * @since 2018/02/19 16:49:28
- * @modified 2022/01/18 20:36:56
+ * @modified 2022/01/19 20:11:18
  */
 
 #include "include/mp.h"
 
 static MpObj string_rstrip_chars(MpStr* self, char* chars, int chars_len);
+static void string_update_hash(MpStr* str);
+MpObj string_to_obj(MpStr* str);
 
 /* code two bytes to string, Big-Endian */
 void code16(unsigned char* src, int value) {
@@ -49,6 +51,7 @@ MpObj string_char_new(int c) {
     str->value[1] = '\0';
     MP_TYPE(obj) = TYPE_STR;
     GET_STR_OBJ(obj) = str;
+    string_update_hash(str);
     return gc_track(obj);
 }
 
@@ -58,7 +61,6 @@ MpObj string_char_new(int c) {
  */
 MpObj string_alloc(char *s, int size) {
     MpStr* str = mp_malloc(sizeof(MpStr));
-    MpObj v;
     if (size > 0) {
         /* copy string data to new memory */
         str->stype = 1;
@@ -83,8 +85,9 @@ MpObj string_alloc(char *s, int size) {
             str->value = s;
         }
     }
-    v.type = TYPE_STR;
-    v.value.str = str;
+
+    MpObj v = string_to_obj(str); 
+    string_update_hash(str);
     return gc_track(v);
 }
 
@@ -92,9 +95,23 @@ MpObj string_new(char* s) {
     return string_alloc(s, strlen(s));
 }
 
-MP_INLINE
-MpObj string_static(char* s) {
+MpObj string_to_obj(MpStr* str) {
+    MpObj o;
+    o.type = TYPE_STR;
+    o.value.str = str;
+    return o;
+}
+
+MP_INLINE MpObj string_static(char* s) {
     return string_alloc(s, -1);
+}
+
+MpObj string_from_cstr(char* s) {
+    return string_alloc(s, -1);
+}
+
+static void string_update_hash(MpStr* s) {
+    s->hash = mp_hash(s->value, s->len);
 }
 
 /**
@@ -202,6 +219,8 @@ MpObj string_append_char(MpObj string, char c) {
     str->value[str->len+1] = '\0';
     str->len++;
     str->stype = 1;
+    
+    string_update_hash(str);
     return string;
 }
 
@@ -222,6 +241,8 @@ MpObj string_append_cstr(MpObj string, const char* sz) {
     strcpy(str->value+str->len, sz);
     str->len += sz_len;
     str->stype = 1;
+
+    string_update_hash(str);
     return string;
 }
 
@@ -257,7 +278,30 @@ MpObj string_substring(MpStr* str, int start, int end) {
     for (i = start; i < end; i++) {
         *(s++) = str->value[i];
     }
+
+    string_update_hash(GET_STR_OBJ(new_str));
     return new_str;
+}
+
+MpObj string_add(MpStr* a, MpStr* b) {
+    char* sa = a->value;
+    char* sb = b->value;
+    int la = a->len;
+    int lb = b->len;
+    if (la == 0) {
+        return string_to_obj(b);
+    }
+    if (lb == 0) {
+        return string_to_obj(a);
+    }
+
+    int len = la + lb;
+    MpObj des = string_alloc(NULL, len);
+    char*s = GET_CSTR(des);
+    memcpy(s, sa, la);
+    memcpy(s + la, sb, lb);
+    string_update_hash(GET_STR_OBJ(des));
+    return des;
 }
 
 MpObj string_builtin_find() {
@@ -291,6 +335,7 @@ MpObj string_builtin_upper() {
     for (i = 0; i < len; i++) {
         news[i] = toupper(s[i]);
     }
+    string_update_hash(GET_STR_OBJ(nstr));
     return nstr;
 }
 
@@ -304,6 +349,7 @@ MpObj string_builtin_lower() {
     for (i = 0; i < len; i++) {
         news[i] = tolower(s[i]);
     }
+    string_update_hash(GET_STR_OBJ(nstr));
     return nstr;
 }
 

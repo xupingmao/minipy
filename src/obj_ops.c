@@ -2,7 +2,7 @@
  * opeartor implementions
  * @author xupingmao
  * @since 2016
- * @modified 2022/01/18 22:29:45
+ * @modified 2022/01/19 20:06:03
  */
 
 #include <assert.h>
@@ -241,18 +241,7 @@ MpObj obj_add(MpObj a, MpObj b) {
                 GET_NUM(a) += GET_NUM(b);
                 return a;
             case TYPE_STR: {
-                char* sa = GET_CSTR(a);
-                char* sb = GET_CSTR(b);
-                int la = GET_STR_LEN(a);
-                int lb = GET_STR_LEN(b);
-                if (la == 0) {return b;    }
-                if (lb == 0) {return a;    }
-                int len = la + lb;
-                MpObj des = string_alloc(NULL, len);
-                char*s = GET_CSTR(des);
-                memcpy(s, sa, la);
-                memcpy(s + la, sb, lb);
-                return des;
+                return string_add(GET_STR_OBJ(a), GET_STR_OBJ(b));
             }
             case TYPE_LIST: {
                 return list_add(GET_LIST(a), GET_LIST(b));

@@ -2,7 +2,7 @@
  * description here
  * @author xupingmao <578749341@qq.com>
  * @since 2016
- * @modified 2022/01/15 15:17:56
+ * @modified 2022/01/19 20:11:43
  */
 #include "include/mp.h"
 #include <ctype.h>
@@ -856,6 +856,11 @@ MpObj bf_hasattr() {
     return obj_is_in(self, key);
 }
 
+MpObj bf_hash() {
+    MpObj object = arg_take_obj("hash");
+    return number_obj(obj_hash(object));
+}
+
 void builtins_init() {
     reg_builtin_func("load", bf_load);
     reg_builtin_func("save", bf_save);
@@ -912,6 +917,7 @@ void builtins_init() {
     reg_builtin_func("next", bf_next);
     
     reg_builtin_func("getosname", bf_get_os_name);
+    reg_builtin_func("hash", bf_hash);
 }
 
 

@@ -165,7 +165,7 @@ MpObj        string_chr(int n); // get a char from char_list.
 MpObj        string_alloc(char* s, int size);
 MpObj        string_new(char*s);
 MpObj        string_static(char*s);
-#define      string_from_cstr(s) string_static(s)
+MpObj        string_from_cstr(char*);
 MpObj        string_const(char*);
 void         string_free(MpStr*);
 int          string_equals(MpStr*s0, MpStr*s1);
@@ -204,6 +204,10 @@ MpObj   list_from_array(int n, ...);
 MpObj   list_builtin_extend();
 
 // dict functions
+// 哈希函数
+int mp_hash(void* s, int len);
+int obj_hash(MpObj obj);
+
 MpObj            dict_new();
 MpObj            dict_new_obj();
 MpDict*          dict_init();

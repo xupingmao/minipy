@@ -3,7 +3,7 @@
  * too many interfaces with similar function will confuse the users.
  * @author xupingmao <578749341@qq.com>
  * @since 2016
- * @modified 2022/01/19 20:12:46
+ * @modified 2022/01/19 00:52:24
  */
 #include "include/mp.h"
 
@@ -20,6 +20,14 @@ static int js_hash(unsigned char* s, int len) {
     return abs(hash);
 }
 
+static int lua_hash(void const *v,int l) {
+    int i,step = (l>>5)+1;
+    int h = l + (l >= 4?*(int*)v:0);
+    for (i=l; i>=step; i-=step) {
+        h = h^((h<<5)+(h>>2)+((unsigned char *)v)[i-1]);
+    }
+    return h;
+}
 
 int mp_hash(void* s, int len) {
     return js_hash((unsigned char*)s, len);
@@ -29,7 +37,7 @@ int mp_hash(void* s, int len) {
  * simple hash function for dict
  * @since 2015-?
  */
-int obj_hash(MpObj key) {
+static int obj_hash(MpObj key) {
     switch(MP_TYPE(key)) {
     case TYPE_STR: {
         return GET_STR_OBJ(key)->hash;
@@ -40,23 +48,35 @@ int obj_hash(MpObj key) {
     return 0;
 }
 
-
-
 /**
  * init dictionary
  * @since 2015-?
  */
 MpDict* dict_init(){
-    int i;
     MpDict * dict = mp_malloc(sizeof(MpDict));
-    dict->cap = 3;
+    dict->cap = 4;
     dict->extend = 2;
     dict->nodes = mp_malloc(sizeof(DictNode) * (dict->cap));
-    // to mark that the node is not allocated.
-    for(i = 0; i < dict->cap; i++){
-        dict->nodes[i].used = 0;
-    }
+    dict->slots  = mp_malloc(sizeof(HashSlot) * (dict->cap));
+    dict->others = mp_malloc(sizeof(int) * (dict->cap));
+
     dict->len = 0;
+    dict->mask = dict->cap - 1;
+
+    // 初始化数据
+    // to mark that the node is not allocated.
+    for(int i = 0; i < dict->cap; i++){
+        // 重置节点
+        dict->nodes[i].used = 0;
+        dict->nodes[i].hash = 0;
+
+        // 重置索引数据
+        for (int j = 0; j < DICT_ZIP_SIZE; j++) {
+            dict->slots[i].index[j] = -1;
+        }
+        // 冲突链表
+        dict->others[i] = -1;
+    }
     return dict;
 }
 
@@ -76,34 +96,73 @@ void dict_check(MpDict* dict){
     if(dict->len < dict->cap)
         return;
 
-    int osize = dict->cap;
-    int i = 0;
-    int j = 0;
+    int old_cap = dict->cap;
     int nsize = 0;
     
-    if (osize < 10) {
-        nsize = osize + 2;
+    if (old_cap < 10) {
+        // 小字典
+        nsize = old_cap + 2;
     } else {
-        // osize >= 10
-        nsize = osize + osize / 2 + 2;
-        nsize = nsize / 2 * 2;
+        nsize = old_cap + old_cap / 2 + 1;
     }
     
     DictNode* nodes = mp_malloc(nsize * sizeof(DictNode));
-    for(i = 0; i < nsize; i++) {
+    HashSlot* slots = mp_malloc(nsize * sizeof(HashSlot));
+    int* others = mp_malloc(nsize * sizeof(int));
+    int mask = nsize - 1;
+
+    for(int i = 0; i < nsize; i++) {
         nodes[i].used = 0;
+        for (int j = 0; j < DICT_ZIP_SIZE; j++) {
+            slots[i].index[j] = -1;
+        }
+        others[i] = -1;
     }
 
-    for(i = 0; i < osize; i++) {
+    int j = 0;
+    for(int i = 0; i < old_cap; i++) {
         if (dict->nodes[i].used > 0) {
+            int idx = j; // 新的索引下标
             nodes[j] = dict->nodes[i];
             j++;
+
+            int hash = dict->nodes[i].hash;
+            int p = hash & mask;
+            HashSlot slot = slots[p];
+            int index_handled = 0;
+            for (int k = 0; k < DICT_ZIP_SIZE; k++) {
+                if (slot.index[k] < 0) {
+                    slot.index[k] = idx;
+                    index_handled = 1;
+                    break;
+                }
+            }
+
+            // 索引满了，放到冲突序列里面
+            if (index_handled == 0) {
+                for (int k = 0; k < nsize; k++) {
+                    if (others[k] < 0) {
+                        others[k] = idx;
+                        break;
+                    }
+                }
+            }
         }
     }
+
     DictNode* temp = dict->nodes;
+    HashSlot* old_slots = dict->slots;
+    int* old_others = dict->others;
+
     dict->nodes = nodes;
+    dict->slots = slots;
+    dict->others = others;
     dict->cap = nsize;
-    mp_free(temp, osize * sizeof(DictNode));
+    // 最好是 2^n - 1
+    dict->mask = mask;
+    mp_free(temp, old_cap * sizeof(DictNode));
+    mp_free(old_slots, old_cap * sizeof(HashSlot));
+    mp_free(old_others, old_cap * sizeof(int));
 }
 
 /**
@@ -113,6 +172,8 @@ void dict_check(MpDict* dict){
 void dict_free(MpDict* dict){
     PRINT_OBJ_GC_INFO_START();
     mp_free(dict->nodes, (dict->cap) * sizeof(DictNode));
+    mp_free(dict->slots, (dict->cap) * sizeof(HashSlot));
+    mp_free(dict->others, (dict->cap) * sizeof(int));
     mp_free(dict, sizeof(MpDict));
     PRINT_OBJ_GC_INFO_END("dict", dict);
 }
@@ -121,13 +182,52 @@ void dict_free(MpDict* dict){
  * find a free entry to put dict node
  * @since 2015-?
  */
-static int findfreepos(MpDict* dict) {
-    int i;
-    for(i = 0; i < dict->cap; i++) {
+static int findfreepos(MpDict* dict, MpObj key) {
+    // 先找一个空节点
+    for(int i = 0; i < dict->cap; i++) {
         if (dict->nodes[i].used <= 0) {
             return i;
         }
     }
+
+    mp_raise("findfreepos: unexpected reach");
+    return -1;
+}
+
+static int findfreepos_new(MpDict* dict, MpObj key) {
+    int hash = obj_hash(key);
+    int p = hash & dict->mask;
+
+    HashSlot slot = dict->slots[p];
+    int found = -1;
+
+    // 先找一个空节点
+    for(int i = 0; i < dict->cap; i++) {
+        if (dict->nodes[i].used == 0) {
+            found = i;
+        }
+    }
+
+    assert(found >= 0);
+
+    // 更新索引
+    for (int i = 0; i < DICT_ZIP_SIZE; i++) {
+        int idx = slot.index[i];
+        if (idx < 0) {
+            slot.index[i] = found;
+            return found;
+        }
+    }
+
+    // 没找到
+    for (int i = 0; i < dict->cap; i++) {
+        if (dict->others[i] < 0) {
+            dict->others[i] = found;
+            return found;
+        }
+    }
+
+    mp_raise("findfreepos: unexpected reach");
     return -1;
 }
 
@@ -142,12 +242,12 @@ int dict_set0(MpDict* dict, MpObj key, MpObj val){
         return (node - dict->nodes);
     }
     dict_check(dict);
-    i = findfreepos(dict);
+    i = findfreepos(dict, key);
     dict->len++;
-    dict->nodes[i].hash = obj_hash(key);
     dict->nodes[i].used = 1;
     dict->nodes[i].key = key;
     dict->nodes[i].val = val;
+    dict->nodes[i].hash = obj_hash(key);
     return i;
 }
 
@@ -199,24 +299,54 @@ int dict_get_attr(MpDict* dict, int const_id) {
 }
 
 DictNode* dict_get_node(MpDict* dict, MpObj key){
-    int i = 0;
-    int hash = obj_hash(key);
-    
     DictNode* nodes = dict->nodes;
-    for (i = 0; i < dict->cap; i++) {
-        // 为空或者被删除
-        if (nodes[i].used <= 0) {
-            continue;
-        }
+    int hash = obj_hash(key);
 
-        if (hash != nodes[i].hash) {
-            continue;
-        }
-
-        if (is_obj_equals(nodes[i].key, key)) {
+    for (int i = 0; i < dict->cap; i++) {
+        if (nodes[i].used > 0 && nodes[i].hash == hash 
+                && is_obj_equals(nodes[i].key, key)) {
             return nodes + i;
         }
     }
+
+    return NULL;
+}
+
+DictNode* dict_get_node_new(MpDict* dict, MpObj key){
+    int i = 0;
+    int hash = obj_hash(key);
+
+    // 先在索引中搜索
+    HashSlot slot = dict->slots[hash & dict->mask];
+    for (int i = 0; i < DICT_ZIP_SIZE; i++) {
+        int index = slot.index[i];
+        // 不存在
+        if (index == -1) {
+            return NULL;
+        }
+
+        // 被删除的节点索引
+        if (index == -2) {
+            continue;
+        }
+        DictNode node = dict->nodes[index];
+        if (node.used > 0 && is_obj_equals(node.key, key)) {
+            return dict->nodes + index;
+        }
+    }
+    
+    // 没找到，到冲突链表上找
+    for (int i = 0; i < dict->len; i++) {
+        int index = dict->others[i];
+        if (index < 0) {
+            continue;
+        }
+        DictNode node = dict->nodes[index];
+        if (node.used > 0 && is_obj_equals(node.key, key)) {
+            return dict->nodes + index;
+        }
+    }
+
     return NULL;
 }
 
@@ -226,12 +356,7 @@ MpObj* dict_get_by_cstr(MpDict* dict, char* key) {
     int i = 0;
     DictNode* nodes = dict->nodes;
     for (i = 0; i < dict->cap; i++) {
-        // 0:未使用 -1:被删除
-        if (nodes[i].used <= 0) {
-            continue;
-        }
-
-        if (IS_STR(nodes[i].key)
+        if (nodes[i].used > 0 && IS_STR(nodes[i].key)
                 && strcmp(GET_CSTR(nodes[i].key), key) == 0) {
             return &nodes[i].val;
         }
@@ -248,6 +373,8 @@ void dict_del(MpDict* dict, MpObj key) {
     if (node == NULL) {
         mp_raise("obj_del: key_error %o", key);
     }
+
+    // 被删除需要标记为-1
     node->used = -1;
     dict->len--;
     return;
@@ -275,7 +402,7 @@ MpObj dict_builtin_values() {
     MpObj list = list_new(dict->len);
     int i;
     for(i = 0; i < dict->cap; i++) {
-        if (dict->nodes[i].used > 0) {
+        if (dict->nodes[i].used) {
             obj_append(list, dict->nodes[i].val);
         }
     }
@@ -317,7 +444,7 @@ MpObj dict_builtin_pop() {
             return NONE_OBJECT;
         }
     } else {
-        node->used = -1;
+        node->used = 0;
         return node->val;
     }
 }
@@ -341,7 +468,16 @@ void dict_methods_init() {
  * @since 2016-?
  */
 MpObj dict_iter_new(MpObj dict) {
-    mp_assert_type(dict, TYPE_DICT, "dict_iter_new");
+    /*
+    MpObj *__iter__ = dict_get_by_str(dict, "__iter__");
+    if (__iter__ != NULL) {
+        MpObj *next = dict_get_by_str(dict, "next");
+        MpObj data = data_new(sizeof(Mp_base_iterator));
+        Mp_base_iterator* base_iterator = (Mp_base_iterator*)GET_DATA(data);
+        base_iterator->func = *next;
+        base_iterator->proto = get_base_iter_proto();
+        return data;
+    }*/
     MpObj data = data_new(1);
     MpData* iterator = GET_DATA(data);
     iterator->cur = 0;
@@ -359,7 +495,8 @@ MpObj dict_iter_new(MpObj dict) {
 MpObj* dict_next(MpData* iterator) {
     MpDict* dict = GET_DICT(iterator->data_ptr[0]);
     if (iterator->cur < dict->cap) {
-        for(int i = iterator->cur; i < dict->cap; i++) {
+        int i;
+        for(i = iterator->cur; i < dict->cap; i++) {
             if (dict->nodes[i].used > 0) {
                 iterator->cur = i + 1;
                 return &dict->nodes[i].key;
