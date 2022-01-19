@@ -164,8 +164,8 @@ MpObj        string_char_new(int c);
 MpObj        string_chr(int n); // get a char from char_list.
 MpObj        string_alloc(char* s, int size);
 MpObj        string_new(char*s);
-MpObj        string_static(char*s);
-MpObj        string_from_cstr(char*);
+MpObj        string_static(const char*s);
+MpObj        string_from_cstr(const char*);
 MpObj        string_const(char*);
 void         string_free(MpStr*);
 int          string_equals(MpStr*s0, MpStr*s1);
@@ -213,15 +213,17 @@ MpObj            dict_new_obj();
 MpDict*          dict_init();
 void             dict_free(MpDict* dict);
 int              dict_set0(MpDict* dict, MpObj key, MpObj val);
-DictNode*        dict_get_node(MpDict* dict, MpObj key);
+DictNode*        dict_get_node_new(MpDict* dict, MpObj key);
+DictNode*        dict_get_node_old(MpDict* dict, MpObj key);
 MpObj*           dict_get_by_cstr(MpDict* dict, char* key);
 void             dict_del(MpDict* dict, MpObj k);
 void             dict_methods_init();
-void             dict_set_by_cstr(MpDict* dict, char* key, MpObj val);
+void             dict_set_by_cstr(MpDict* dict, const char* key, MpObj val);
 MpObj            dict_keys(MpDict* );
 
 #define          dict_set(d, k, v)                dict_set0(GET_DICT(d), k, v)
 #define          dict_get_by_str(dict, key)       dict_get_by_cstr(GET_DICT(dict), key)
+#define          dict_get_node dict_get_node_old
 
 /** dict methods **/
 MpObj            dict_iter_new(MpObj dict);

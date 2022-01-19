@@ -3,7 +3,7 @@
  *
  *  Created on: 2014/8/25
  *  @author: xupingmao
- *  @modified 2022/01/19 00:11:50
+ *  @modified 2022/01/19 21:18:39
  */
 
 #ifndef _OBJECT_H_
@@ -31,6 +31,7 @@ typedef union MpValue {
   long   lv;
   void*              ptr;
   struct MpStr*      str;
+  struct MpConstStr* const_str;
   struct MpList*     list;
   struct MpFunction* func;
   struct MpDict*     dict;
@@ -244,11 +245,6 @@ typedef struct DictNode{
   int used; /* also used for attr index */
 } DictNode;
 
-#define DICT_ZIP_SIZE 5
-typedef struct hash_slot_t {
-  int index[DICT_ZIP_SIZE];
-} HashSlot;
-
 typedef struct MpDict {
   int marked;
   int len;
@@ -259,9 +255,7 @@ typedef struct MpDict {
   // 存放数据的节点
   DictNode* nodes;
   // 存放索引的数据
-  HashSlot* slots;
-  // 放不下的冲突节点
-  int* others;
+  int* slots;
 } MpDict;
 
 
@@ -273,6 +267,16 @@ typedef struct MpStr {
     int hash;
     char *value;
 } MpStr;
+
+typedef struct MpConstStr {
+    int marked;
+    int len;
+    int stype;
+    // 字符串的哈希值
+    int hash;
+    const char *value;
+} MpConstStr;
+
 
 
 /**

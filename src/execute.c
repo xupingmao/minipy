@@ -1,7 +1,7 @@
 /**
   * execute minipy bytecode
   * @since 2014-9-2
-  * @modified 2022/01/18 20:33:26
+  * @modified 2022/01/19 20:18:31
   *
   * 2015-6-16: interpreter for tinyvm bytecode.
  **/
@@ -334,6 +334,7 @@ tailcall:
                     // pc[0] = OP_FAST_LD_GLO;
                     // code16(pc+1, idx);
                     // OPTIMIZE END
+                    // TODO key被删除后重新设置，它的位置可能变动
                     cache->op = OP_FAST_LD_GLO;
                     cache->v.ival = idx;
 
@@ -363,12 +364,14 @@ tailcall:
         }
         case OP_FAST_LD_GLO: {
             PROFILE_START(cache);
+            // TODO 需要对比一下key是否匹配,处理命中失败的情况
             MP_PUSH(GET_DICT(globals)->nodes[cache->v.ival].val);
             PROFILE_END(cache);
             break;
         }
         case OP_FAST_ST_GLO: {
             PROFILE_START(cache);
+            // TODO 需要对比一下key是否匹配,处理命中失败的情况
             GET_DICT(globals)->nodes[cache->v.ival].val = MP_POP();
             PROFILE_END(cache);
             break;

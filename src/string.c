@@ -2,7 +2,7 @@
  * description here
  * @author xupingmao
  * @since 2018/02/19 16:49:28
- * @modified 2022/01/19 20:11:18
+ * @modified 2022/01/19 21:21:34
  */
 
 #include "include/mp.h"
@@ -102,12 +102,19 @@ MpObj string_to_obj(MpStr* str) {
     return o;
 }
 
-MP_INLINE MpObj string_static(char* s) {
-    return string_alloc(s, -1);
+MpObj string_static(const char* s) {
+    return string_from_cstr(s);
 }
 
-MpObj string_from_cstr(char* s) {
-    return string_alloc(s, -1);
+MpObj string_from_cstr(const char* s) {
+    MpConstStr* str = mp_malloc(sizeof(MpConstStr));
+    str->stype = 0;
+    str->len = strlen(s);
+    str->value = s;
+
+    MpObj v = string_to_obj((MpStr*)str);
+    string_update_hash(GET_STR_OBJ(v));
+    return gc_track(v);
 }
 
 static void string_update_hash(MpStr* s) {

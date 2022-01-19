@@ -2,7 +2,7 @@
  * description here
  * @author xupingmao <578749341@qq.com>
  * @since 2016
- * @modified 2022/01/19 20:11:43
+ * @modified 2022/01/19 21:47:07
  */
 #include "include/mp.h"
 #include <ctype.h>
@@ -207,12 +207,15 @@ MpObj mp_format_va_list_check_length(char* fmt, va_list ap, int ap_length, int a
                 int next = fmt[i+1];
                 MpObj v  = va_arg(ap, MpObj);
                 if (next == 's') {
+                    // "%os": 对象的字符串(没有引号)
                     str = string_append_obj(str, v);
                     i++;
                 } else if (next == 't') {
+                    // "%ot": 对象的类型
                     str = string_append_cstr(str, get_object_type_cstr(v));
                     i++;
                 } else {
+                    // "%o": 对象格式化
                     if (IS_STR(v)) {
                         str = string_append_char(str, '"');
                         str = string_append_obj(str, v);

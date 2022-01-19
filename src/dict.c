@@ -3,9 +3,10 @@
  * too many interfaces with similar function will confuse the users.
  * @author xupingmao <578749341@qq.com>
  * @since 2016
- * @modified 2022/01/19 20:12:46
+ * @modified 2022/01/19 22:29:50
  */
 #include "include/mp.h"
+
 
 /** 
  *   New hashdict instance, with initial allocated size set to 7.
@@ -41,22 +42,28 @@ int obj_hash(MpObj key) {
 }
 
 
+void dict_reset(MpDict* dict) {
+    // to mark that the node is not allocated.
+    for(int i = 0; i < dict->cap; i++){
+        dict->nodes[i].used = 0;
+        dict->slots[i*2] = -1;
+        dict->slots[i*2+1] = -1;
+    }
+}
 
 /**
  * init dictionary
  * @since 2015-?
  */
 MpDict* dict_init(){
-    int i;
     MpDict * dict = mp_malloc(sizeof(MpDict));
-    dict->cap = 3;
+    dict->cap = 4;
     dict->extend = 2;
     dict->nodes = mp_malloc(sizeof(DictNode) * (dict->cap));
-    // to mark that the node is not allocated.
-    for(i = 0; i < dict->cap; i++){
-        dict->nodes[i].used = 0;
-    }
+    dict->slots = mp_malloc(sizeof(int) * (dict->cap) * 2);
+    dict_reset(dict);
     dict->len = 0;
+    dict->mask = dict->cap - 1;
     return dict;
 }
 
@@ -71,15 +78,17 @@ MpObj dict_new_obj() {
     return dict_new();
 }
 
-static
-void dict_check(MpDict* dict){
-    if(dict->len < dict->cap)
+static void dict_check(MpDict* dict){
+    if(dict->len < dict->cap) {
         return;
+    }
 
     int osize = dict->cap;
     int i = 0;
     int j = 0;
     int nsize = 0;
+    DictNode* old_nodes = dict->nodes;
+    int* old_slots = dict->slots;
     
     if (osize < 10) {
         nsize = osize + 2;
@@ -90,20 +99,27 @@ void dict_check(MpDict* dict){
     }
     
     DictNode* nodes = mp_malloc(nsize * sizeof(DictNode));
-    for(i = 0; i < nsize; i++) {
-        nodes[i].used = 0;
-    }
+    int * slots = mp_malloc(nsize * sizeof(int) * 2);
 
-    for(i = 0; i < osize; i++) {
-        if (dict->nodes[i].used > 0) {
-            nodes[j] = dict->nodes[i];
-            j++;
+    dict->nodes = nodes;
+    dict->slots = slots;
+    dict->cap = nsize;
+    dict->mask = nsize - 1;
+    dict->len = 0;
+    dict_reset(dict);
+
+    for (int i = 0; i < osize; i++) {
+        DictNode node = old_nodes[i];
+        if (node.used > 0) {
+            dict_set0(dict, node.key, node.val);
+            DictNode* found = dict_get_node(dict, node.key);
+            assert(found != NULL);
+            found->used = node.used;
         }
     }
-    DictNode* temp = dict->nodes;
-    dict->nodes = nodes;
-    dict->cap = nsize;
-    mp_free(temp, osize * sizeof(DictNode));
+
+    mp_free(old_nodes, osize * sizeof(DictNode));
+    mp_free(old_slots, 2 * osize * sizeof(int));
 }
 
 /**
@@ -113,6 +129,7 @@ void dict_check(MpDict* dict){
 void dict_free(MpDict* dict){
     PRINT_OBJ_GC_INFO_START();
     mp_free(dict->nodes, (dict->cap) * sizeof(DictNode));
+    mp_free(dict->slots, (dict->cap*2) * sizeof(int));
     mp_free(dict, sizeof(MpDict));
     PRINT_OBJ_GC_INFO_END("dict", dict);
 }
@@ -122,12 +139,13 @@ void dict_free(MpDict* dict){
  * @since 2015-?
  */
 static int findfreepos(MpDict* dict) {
-    int i;
-    for(i = 0; i < dict->cap; i++) {
+    for(int i = 0; i < dict->cap; i++) {
         if (dict->nodes[i].used <= 0) {
             return i;
         }
     }
+
+    mp_raise("findfreepos: unexpected reach");
     return -1;
 }
 
@@ -135,19 +153,23 @@ static int findfreepos(MpDict* dict) {
  * @return node index
  */
 int dict_set0(MpDict* dict, MpObj key, MpObj val){
-    int i;
     DictNode* node = dict_get_node(dict, key);
     if (node != NULL) {
         node->val = val;
         return (node - dict->nodes);
     }
     dict_check(dict);
-    i = findfreepos(dict);
+
+    int i = findfreepos(dict);
     dict->len++;
-    dict->nodes[i].hash = obj_hash(key);
+
+    // 插入新数据
+    int hash = obj_hash(key);
+    dict->nodes[i].hash = hash;
     dict->nodes[i].used = 1;
     dict->nodes[i].key = key;
     dict->nodes[i].val = val;
+    dict->slots[hash & dict->mask] = i;
     return i;
 }
 
@@ -198,10 +220,9 @@ int dict_get_attr(MpDict* dict, int const_id) {
     return -1;
 }
 
-DictNode* dict_get_node(MpDict* dict, MpObj key){
+DictNode* dict_get_node_old(MpDict* dict, MpObj key){
     int i = 0;
     int hash = obj_hash(key);
-    
     DictNode* nodes = dict->nodes;
     for (i = 0; i < dict->cap; i++) {
         // 为空或者被删除
@@ -215,6 +236,45 @@ DictNode* dict_get_node(MpDict* dict, MpObj key){
 
         if (is_obj_equals(nodes[i].key, key)) {
             return nodes + i;
+        }
+    }
+    return NULL;
+}
+
+DictNode* dict_get_node_new(MpDict* dict, MpObj key){
+    int hash = obj_hash(key);
+    DictNode* nodes = dict->nodes;
+    int start = hash & dict->mask;
+
+    mp_printf("dict_get_node: start=%d, mask=%d, len=%d, cap=%d, key=%o\n", 
+        start, dict->mask, dict->len, dict->cap, key);
+
+    for (int i = start; i < dict->cap * 2; i++) {
+        int index = dict->slots[i];
+
+        if (index == -1) {
+            // 没有值，退出
+            // return NULL;
+            continue;
+        }
+
+        if (index < 0 || index >= dict->cap) {
+            mp_raise("dict_get_node: unexpected index = %d", index);
+        }
+
+        DictNode node = nodes[index];
+
+        // 为空或者被删除
+        if (node.used <= 0) {
+            continue;
+        }
+
+        if (hash != node.hash) {
+            continue;
+        }
+
+        if (is_obj_equals(node.key, key)) {
+            return nodes + index;
         }
     }
     return NULL;
@@ -239,7 +299,7 @@ MpObj* dict_get_by_cstr(MpDict* dict, char* key) {
     return NULL;
 }
 
-void dict_set_by_cstr(MpDict* dict, char* key, MpObj value) {
+void dict_set_by_cstr(MpDict* dict, const char* key, MpObj value) {
     dict_set0(dict, string_from_cstr(key), value);
 }
 
