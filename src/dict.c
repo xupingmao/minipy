@@ -59,22 +59,25 @@ void dict_reset(MpDict* dict) {
  * init dictionary
  * @since 2015
  */
-MpDict* dict_init(){
-    MpDict * dict = mp_malloc(sizeof(MpDict));
-    dict->cap = 4;
+MpDict* dict_init(MpDict* dict, int cap){
+    dict->cap = cap;
     dict->extend = 2;
     dict->nodes = mp_malloc(sizeof(DictNode) * (dict->cap));
     dict->slots = mp_malloc(sizeof(int) * (dict->cap) * 2);
     dict->len = 0;
     dict->mask = dict->cap - 1;
+    dict->free_start = 0;
     dict_reset(dict);
     return dict;
 }
 
 MpObj dict_new(){
+    MpDict* dict = mp_malloc(sizeof(MpDict));
+    dict_init(dict, 4);
+
     MpObj o;
     o.type = TYPE_DICT;
-    GET_DICT(o) = dict_init();
+    o.value.dict = dict;
     return gc_track(o);
 }
 
@@ -99,19 +102,11 @@ static void dict_check(MpDict* dict){
     } else {
         // osize >= 10
         new_cap += old_cap + old_cap / 2 + 2;
-        // 必须使用偶数
+        // 必须使用偶数，这样取址运算更有效
         new_cap = new_cap / 2 * 2;
     }
     
-    DictNode* nodes = mp_malloc(new_cap * sizeof(DictNode));
-    int * slots = mp_malloc(new_cap * sizeof(int) * 2);
-
-    dict->nodes = nodes;
-    dict->slots = slots;
-    dict->cap = new_cap;
-    dict->mask = new_cap - 1;
-    dict->len = 0;
-    dict_reset(dict);
+    dict_init(dict, new_cap);
 
     for (int i = 0; i < old_cap; i++) {
         DictNode node = old_nodes[i];
@@ -147,7 +142,7 @@ void dict_free(MpDict* dict){
  * @since 2015-?
  */
 static int findfreepos(MpDict* dict) {
-    for(int i = 0; i < dict->cap; i++) {
+    for(int i = dict->free_start; i < dict->cap; i++) {
         if (dict->nodes[i].used <= 0) {
             return i;
         }
@@ -205,6 +200,8 @@ int dict_set0(MpDict* dict, MpObj key, MpObj val){
         mp_raise("dict_set0: can not found valid slot!");
     }
 
+    // 更新空闲索引下标
+    dict->free_start = pos + 1;
     return pos;
 }
 
@@ -314,6 +311,8 @@ MpObj dict_pop(MpDict* dict, MpObj key) {
     }
     node->used = -1;
     dict->len--;
+    int node_index = node - dict->nodes;
+    dict->free_start = MIN(dict->free_start, node_index);
     return node->val;
 }
 

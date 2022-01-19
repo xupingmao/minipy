@@ -13,6 +13,7 @@
 #define strequals(a, b) (a == b || strcmp(a,b) == 0)
 #define max(a, b) (a) > (b) ? (a) : (b)
 #define MAX(a, b) (a) > (b) ? (a) : (b)
+#define MIN(a, b) (a) > (b) ? (b) : (a)
 #define string_const2 string_const_with_len
 
 #define MP_INLINE inline

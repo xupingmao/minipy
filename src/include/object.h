@@ -256,6 +256,8 @@ typedef struct MpDict {
   DictNode* nodes;
   // 存放索引的数据
   int* slots;
+  // 空闲节点的开始索引
+  int free_start;
 } MpDict;
 
 

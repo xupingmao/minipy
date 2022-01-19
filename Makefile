@@ -11,10 +11,10 @@ minipy: src/*.c src/include/*.h
 .PHONY: clean test
 
 o2:
-	$(cc) -DTM_USE_CACHE -o minipy -O2 -lm src/main.c
+	$(cc) -DTM_USE_CACHE -o minipy -O2 src/main.c -lm
 
 o3:
-	$(cc) -DTM_USE_CACHE -o minipy -O3 -lm src/main.c
+	$(cc) -DTM_USE_CACHE -o minipy -O3 src/main.c -lm
 
 debuggc:
 	$(cc) -g -DLOG_LEVEL=5 -DMP_DEBUG -o minipy src/main.c -lm
