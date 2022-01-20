@@ -16,7 +16,7 @@ o2:
 o3:
 	$(cc) -DTM_USE_CACHE -o minipy -O3 src/main.c -lm
 
-debuggc:
+debug-gc:
 	$(cc) -g -DLOG_LEVEL=5 -DMP_DEBUG -o minipy src/main.c -lm
 
 debug:
@@ -25,8 +25,12 @@ debug:
 nogc:
 	$(cc) -g -DGC_DESABLED -o minipy src/main.c -lm
 
-check_mem: 
+check-mem: 
 	$(cc) -DTM_CHECK_MEM -o minipy src/main.c -lm
+
+test-reg-vs-stack:
+	$(cc) -o reg_vs_stack test/reg_vs_stack/reg_vs_stack.c -lm
+	./reg_vs_stack
 	
 test:
 	./minipy ./test/test_main.py

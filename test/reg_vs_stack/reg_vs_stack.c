@@ -3,8 +3,7 @@
 #include <stdlib.h>
 #include <time.h>
 
-#define N 1000000
-
+// 基于寄存器的VM和基于栈的VM对比
 // calculate `a = 3 * 4` by register based vm and stack based vm
 
 enum OP {
@@ -26,37 +25,37 @@ enum OP {
     EOP, 
 };
 
-typedef struct _RegInst
-{
+typedef struct _RegInst {
     int op;
     int a;
     int b;
     int c;
 }RegInst;
 
-typedef struct _StackInst 
-{
+typedef struct _StackInst {
     int op;
     int a;
 } StackInst;
 
-int regTest ()
-{
+int regTest (int loops) {
     int i = 0, j = 0;
-    RegInst *instList = malloc(sizeof(RegInst) * 10);
-    instList[0] = (RegInst){RSET, 0, 3, 0};
-    instList[1] = (RegInst){RSET, 1, 4, 0};
-    instList[2] = (RegInst){RMUL, 0, 1, 2};
-    instList[3] = (RegInst){EOP,  0, 0, 0};
+
+    // 寄存器指令集
+    RegInst instList[] = {
+        {RSET, 0, 3, 0},  // locals[0] = 3
+        {RSET, 1, 4, 0},  // locals[1] = 4
+        {RMUL, 0, 1, 2},  // locals[0] = locals[1] * locals[2]
+        {EOP,  0, 0, 0}
+    };
 
     // instructions count
-    int count = 4;
+    int count = sizeof(instList) / sizeof(RegInst);
     // RegInst[] instList = {inst};
     int locals[] = {1,2,3,4,5,6,7,8,9};
     // define inst
     RegInst inst;
 
-    for (i = 0; i < N; i++) {
+    for (i = 0; i < loops; i++) {
         for (j = 0; j < count; j++) {
             inst = instList[j];
             switch(inst.op) {
@@ -77,31 +76,31 @@ int regTest ()
             }
         }
     }
-    free(instList);
+
     return 0;
 }
 
-int stackTest ()
+int stackTest (int loops)
 {
     int i = 0, j = 0;
     
-    StackInst *instList = malloc(sizeof(StackInst) * 10);
-    instList[0] = (StackInst){LD_NUM, 3};
-    instList[1] = (StackInst){LD_NUM, 4};
-    instList[2] = (StackInst){MUL, 0};
-    instList[3] = (StackInst){ST_LOC, 0};
-    instList[4] = (StackInst){EOP, 0};
-    StackInst inst;
+    StackInst instList[] = {
+        {LD_NUM, 3}, 
+        {LD_NUM, 4},
+        {MUL, 0},
+        {ST_LOC, 0},
+        {EOP, 0}
+    };
 
-    // RegInst[] instList = {inst};
     int locals[] = {1,2,3,4,5,6,7,8,9};
     int stack[]  = {0,0,0,0,0};
     int top = 0;
     
     // instructions count
     int count = 5;
+    StackInst inst;
 
-    for (i = 0; i < N; i++) {
+    for (i = 0; i < loops; i++) {
         top = 0;
         for (j = 0; j < count; j++) {
             inst = instList[j];
@@ -140,21 +139,28 @@ int stackTest ()
             }
         }
     }
-    free(instList);
     return 0;
 }
+
+typedef int (*TestFunc) (int);
+
+void runWithProfile(TestFunc func, int loops, const char* message) {
+    long t1 = clock();
+    func(loops);
+    long cost = clock() - t1;
+    printf("%s:%ld\n", message, cost);
+}
+
 
 int main(int argc, char const *argv[])
 {
     long t1, t2;
-    t1 = clock();
-    regTest();
-    t2 = clock();
-    printf("regTest=%ld\n", t2-t1);
+    int loops = 1000000;
 
-    t1 = clock();
-    stackTest();
-    t2 = clock();
-    printf("stackTest=%ld\n", t2-t1);
+    printf("loops: %d\n", loops);
+
+    runWithProfile(regTest, loops, "regTest.clocks");
+    runWithProfile(stackTest, loops, "stackTest.clocks");
+
     return 0;
 }
