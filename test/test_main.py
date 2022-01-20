@@ -7,7 +7,7 @@ import os
 
 import_func = mp_init._import
 
-def testfiles(filenamelist):
+def testfiles():
     suc = False
     for filename in os.listdir("test/test_case"):
         if not filename.endswith(".py"):
@@ -25,10 +25,9 @@ def testfiles(filenamelist):
 
         try:
             g = {}
-            print("")
-            print("=" * 50)
-            print("| ", modpath)
-            print("=" * 50)
+            print("\n\n")
+            print("File: %s" % fpath)
+            print("-" * 60)
             import_func(g, modpath)
         except Exception as e:
             print("test failed -- " + fpath)
@@ -41,26 +40,4 @@ def testfiles(filenamelist):
     print("all tests passed!!!")
     exit(0)
     
-testfiles(
-    [
-        # test base object
-        "test-string",
-        "test-list",
-        "test-dict",
-        "test-assignment",
-        
-        # test expression
-        "test-op",
-        "test-in",
-        "test-for",
-        "test-function",
-        "test-while",
-        "test-lex",
-        "test-parse",
-        "test-tailcall",
-        "test-try-simple",
-        "test-sys",
-        # some algorithms
-        "ackermann",
-    ]
-)
+testfiles()

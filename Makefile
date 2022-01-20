@@ -29,11 +29,14 @@ check-mem:
 	$(cc) -DTM_CHECK_MEM -o minipy src/main.c -lm
 
 test-reg-vs-stack:
-	$(cc) -o reg_vs_stack test/reg_vs_stack/reg_vs_stack.c -lm
-	./reg_vs_stack
+	$(cc) -o build/reg_vs_stack test/reg_vs_stack/reg_vs_stack.c -lm
+	./build/reg_vs_stack
 	
 test:
 	./minipy ./test/test_main.py
+
+benchmark:
+	python3 ./test/benchmark/benchmark_main.py
 
 clean : 
 	rm minipy
