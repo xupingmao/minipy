@@ -500,6 +500,10 @@ MpObj bf_bool() {
     }
 }
 
+MpObj bf_dict() {
+    return dict_new();
+}
+
 MpObj bf_len() {
     MpObj o = arg_take_obj("len");
     return number_obj(mp_len(o));
@@ -868,6 +872,7 @@ void builtins_init() {
     reg_builtin_func("float", bf_float);
     reg_builtin_func("bool", bf_bool);
     reg_builtin_func("list", bf_list);
+    reg_builtin_func("dict", bf_dict);
 
     reg_builtin_func("print", bf_print);
     reg_builtin_func("chr", bf_chr);

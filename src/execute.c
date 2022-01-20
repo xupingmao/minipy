@@ -470,14 +470,18 @@ tailcall:
             *top = number_obj(!is_true_obj(*top));
             break;
         }
-        case OP_SET:
+
+        case OP_SET:{
             PROFILE_START(cache);
-            k = MP_POP();
-            x = MP_POP();
-            v = MP_POP();
-            obj_set(x, k, v);
+            MpObj* key = top;
+            MpObj* obj = top-1;
+            MpObj* value = top-2;
+            top-=3;
+            obj_set(*obj, *key, *value);
             PROFILE_END(cache);
             break;
+        }
+        
         case OP_POP: {
             PROFILE_START(cache);
             top--;

@@ -49,48 +49,6 @@ void gc_check_native_call(int size, MpObj returnMpObj) {
     // TODO check memory
 }
 
-
-MpObj mp_call(MpObj func, int args, ...) {
-    int i = 0;
-    va_list ap;
-    va_start(ap, args);
-    arg_start();
-    for (i = 0; i < args; i++) {
-        arg_push(va_arg(ap, MpObj));
-    }
-    va_end(ap);
-    // mp_printf("at line %d, try to call %o with %d args\n", lineno, func_get_name_obj(func), args);
-    // *self* will be resolved in obj_call
-    MpObj ret;
-    if (IS_DICT(func)) {
-        ret = class_new(func);
-        MpObj *_fnc = dict_get_by_str(ret, "__init__");
-        if (_fnc != NULL) {
-            func = *_fnc;
-        } else {
-            goto mp_call_end;
-        }
-    }
-
-    if (IS_FUNC(func)) {
-        RESOLVE_METHOD_SELF(func);
-        /* call native */
-        if (GET_FUNCTION(func)->native != NULL) {
-            ret = GET_FUNCTION(func)->native();
-            goto mp_call_end;
-        } else {
-            mp_raise("can not call py function from tm2c");
-        }
-    } 
-
-    mp_raise("File %o, line=%d: obj_call:invalid object %o", GET_FUNCTION_FILE(tm->frame->fnc), 
-        tm->frame->lineno, func);
-
-    mp_call_end:
-    gc_local_add(ret);
-    return ret;
-}
-
 /**
  * call native function
  * @param fn, native function
@@ -218,15 +176,6 @@ MpObj mp_import(MpObj globals, MpObj mod_name) {
     obj_set(globals, mod_name, mod);
     return mod;
 }
-
-// void mp_import_all(MpObj globals, MpObj mod_name) {
-//     int b_has = mp_is_in(mod_name, tm->modules);
-//     if (b_has) {
-//         MpObj mod_value = obj_get(tm->modules, mod_name);
-//         // do something here.
-//         mp_call_native_2(dict_builtin_update, globals, mod_value);
-//     }
-// }
 
 /**
  * convert argv to list

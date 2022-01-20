@@ -252,8 +252,8 @@ DictNode* dict_get_node_new(MpDict* dict, MpObj key){
 
         if (index == -1) {
             // 没有值，退出
-            // return NULL;
-            continue;
+            return NULL;
+            // continue;
         }
 
         #ifdef MP_DEBUG
@@ -262,18 +262,18 @@ DictNode* dict_get_node_new(MpDict* dict, MpObj key){
             }
         #endif
 
-        DictNode node = nodes[index];
+        DictNode* node = nodes+index;
 
         // 为空或者被删除
-        if (node.used <= 0) {
+        if (node->used <= 0) {
             continue;
         }
 
-        if (hash != node.hash) {
+        if (hash != node->hash) {
             continue;
         }
 
-        if (is_obj_equals(node.key, key)) {
+        if (is_obj_equals(node->key, key)) {
             // mp_printf("dict_get_node: found node, key=%o, index=%d\n", key, index);
             return nodes + index;
         }

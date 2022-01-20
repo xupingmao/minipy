@@ -253,7 +253,10 @@ MpObj obj_add(MpObj a, MpObj b) {
 }
 
 int is_obj_equals(MpObj a, MpObj b){
-    if(MP_TYPE(a) != MP_TYPE(b)) return 0;
+    if(MP_TYPE(a) != MP_TYPE(b)) {
+        return FALSE;
+    }
+    
     switch(MP_TYPE(a)){
         case TYPE_NUM:return GET_NUM(a) == GET_NUM(b);
         case TYPE_STR: {
@@ -274,7 +277,7 @@ int is_obj_equals(MpObj a, MpObj b){
                     return 0;
                 }
             }
-            return 1;
+            return TRUE;
         }
         case TYPE_NONE:return 1;
         case TYPE_DICT:return GET_DICT(a) == GET_DICT(b);
@@ -287,7 +290,7 @@ int is_obj_equals(MpObj a, MpObj b){
                 MP_TYPE(a), ltype, MP_TYPE(b), rtype);
         } 
     }
-    return 0;
+    return FALSE;
 }
 
 MpObj obj_cmp(MpObj a, MpObj b) {

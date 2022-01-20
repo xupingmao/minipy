@@ -19,7 +19,8 @@ class CodeWriter:
         self.func_buf = []
         self.label_dict = {}
         self.is_in_func = False
-        self.writeline("MpObj %s_main() {" % self.name)
+        self.py_entry_func = "%s_main" % self.name
+        self.writeline("MpObj %s() {" % self.py_entry_func)
         self.writeline("  MpObj fname = string_new(\"%s\");" % self.name)
         self.writeline("  MpObj module_name = fname;")
         self.writeline("  module = module_new(fname, module_name, NONE_OBJECT);")
@@ -69,21 +70,33 @@ class CodeWriter:
                 result.append(value)
         return "\n".join(result)
 
-    def gen_main_code(self):
+    def gen_global_code(self):
         self.writeline("  return NONE_OBJECT;")
         self.writeline("}")
         return self.gen_code_by_buf(self.line_buf)
 
+    def gen_main_entry(self):
+        buf = []
+        buf.append("")
+        buf.append("int main(int argc, char* argv[]) {")
+        buf.append("  mp2c_run_func(argc, argv, \"%s\", %s);" % 
+            (self.name, self.py_entry_func))
+        buf.append("  return 0;")
+        buf.append("}")
+        return "\n".join(buf)
+
     def get_code(self):
-        main_code = self.gen_main_code()
+        global_code = self.gen_global_code()
         func_code = self.gen_code_by_buf(self.func_buf)
+        main_entry = self.gen_main_entry()
         buf = []
         buf.append("#include \"../src/include/mp.h\"")
         buf.append("#include \"../mp2c/mp2c.c\"")
         buf.append("static MpObj module;")
         buf.append("static MpObj globals;")
         buf.append(func_code)
-        buf.append(main_code)
+        buf.append(global_code)
+        buf.append(main_entry)
         return "\n".join(buf)
 
 def do_convert_op(writer, op, val, func_name):
@@ -230,7 +243,7 @@ def main():
     print("saved to %s" % c_file_path)
 
     print("start build...")
-    result = os.system("gcc build/mp2c_main.c -o build/mp2c")
+    result = os.system("gcc %s -o build/mp2c -lm" % c_file_path)
     if result == 0:
         print("build success!")
     else:
