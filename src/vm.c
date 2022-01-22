@@ -22,6 +22,7 @@
 #include "module/sys.c"
 #include "module/math.c"
 #include "module/os.c"
+#include "module/mp_debug.c"
 #include "module/mp_random.c"
 
 
@@ -185,7 +186,8 @@ int vm_init(int argc, char* argv[]) {
     sys_mod_init();
     math_mod_init();
     os_mod_init();
-    random_mod_init();
+    init_mod_for_random();
+    init_mod_for_debug();
     
     return 0;
 }

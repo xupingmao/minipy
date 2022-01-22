@@ -249,6 +249,7 @@ typedef struct MpDict {
   int marked;
   int len;
   int cap;
+  int slot_cap;
   int extend;
   // hash的掩码
   int mask;

@@ -120,13 +120,20 @@ MpObj bf_vmopt() {
     return NONE_OBJECT;
 }
 
+MpObj bf_print_dict_info() {
+    MpDict* dict = arg_take_dict_ptr("debug.print_debug_info");
+    dict_print_debug_info(dict);
+    return NONE_OBJECT;
+}
+
 /**
  * init debug module
  * @since 2016-11-16
  */
-void debug_mod_init() {
+void init_mod_for_debug() {
     MpObj debug = dict_new();
     
+    reg_mod("debug", debug);
     reg_mod_func(debug, "get_ex_list", bf_get_ex_list);
     reg_mod_func(debug, "set_vm_state", bf_set_vm_state);
     reg_mod_func(debug, "inspect_ptr", bf_inspect_ptr);
@@ -134,6 +141,5 @@ void debug_mod_init() {
     reg_mod_func(debug, "get_vm_info", bf_get_vm_info);
     reg_mod_func(debug, "get_mp_local_list", bf_get_mp_local_list);
     reg_mod_func(debug, "vmopt", bf_vmopt);
-
-    obj_set_by_cstr(tm->modules, "debug", debug);
+    reg_mod_func(debug, "print_dict_info", bf_print_dict_info);
 }

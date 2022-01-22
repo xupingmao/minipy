@@ -31,6 +31,9 @@ check-mem:
 test-reg-vs-stack:
 	$(cc) -o build/reg_vs_stack test/reg_vs_stack/reg_vs_stack.c -lm
 	./build/reg_vs_stack
+
+test-dict:
+	make && ./minipy ./test/test_case/030_test_debug.py
 	
 test:
 	./minipy ./test/test_main.py

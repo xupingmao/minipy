@@ -163,7 +163,7 @@ MpObj mp_format_va_list_check_length(char* fmt, va_list ap, int ap_length, int a
     int templ = 0;
     char* start = fmt;
     int istrans = 1;
-    char buf[20];
+    char buf[50];
     int args_in_fmt = 0;
 
     for (i = 0; i < len; i++) {
@@ -179,9 +179,32 @@ MpObj mp_format_va_list_check_length(char* fmt, va_list ap, int ap_length, int a
                 mp_raise("TypeError: not enough arguments for format string");
             }
 
+            char num_fmt[20];
+            int  num_len = 1;
+            // -1是为了把%加进取
+            char* fmt_store = fmt + i - 1;
+            // 重置buf
+            // memset(void *s,int ch,size_t n);
+            memset(num_fmt, 0, sizeof(num_fmt));
+
+            if (fmt[i] == '-') {
+                num_len++;
+                i++;
+            }
+
+            for (; isdigit(fmt[i]) && i < len; i++) {
+                num_len++;
+            }
+
+            if (num_len >= sizeof(num_fmt)) {
+                mp_raise("mp_format_va_list: Invalid format");
+            }
+
             switch (fmt[i]) {
             case 'd':
-                sprintf(buf, "%d", va_arg(ap, int));
+                // char *strncpy(char *dest, const char *src, size_t n) 
+                strncpy(num_fmt, fmt_store, num_len+1);
+                sprintf(buf, num_fmt, va_arg(ap, int));
                 str = string_append_cstr(str, buf);
                 break;
             case 'f':
@@ -227,7 +250,7 @@ MpObj mp_format_va_list_check_length(char* fmt, va_list ap, int ap_length, int a
                 break;
             }
             default:
-                mp_raise("format: unknown pattern %c", fmt[i]);
+                mp_raise("mp_format_va_list: unknown pattern %c", fmt[i]);
                 break;
             }
         } else {

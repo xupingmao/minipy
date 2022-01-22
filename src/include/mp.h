@@ -57,8 +57,8 @@ MpObj NONE_OBJECT;
 MpObj ARRAY_CHARS;
 
 // 函数指针
-typedef MpObj (* MpNativeFunc ) ();
-
+typedef MpObj (*MpNativeFunc)();
+typedef MpObj (*BuiltinFunc)();
 
 #include "instruction.h"
 
@@ -127,13 +127,11 @@ typedef MpObj (* MpNativeFunc ) ();
 
 #endif
 
-typedef MpObj (*BuiltinFunc)();
-
 /** code functions **/
 void code16(unsigned char*s, int value);
 void code32(unsigned char*s, int value);
-int uncode32(unsigned char**s);
-int uncode16(unsigned char**s);
+int  uncode32(unsigned char**s);
+int  uncode16(unsigned char**s);
 
 
 // gc functions
@@ -175,6 +173,7 @@ MpObj        string_substring(MpStr* str, int start, int end) ;
 void         string_methods_init();
 MpObj        string_iter_new(MpObj s);
 MpObj*       string_next(MpData* iterator);
+int          string_hash(MpStr* str);
 
 // number functions
 MpObj      number_obj(double v);
@@ -202,13 +201,14 @@ void     list_insert(MpList*list, int index, MpObj value);
 int      list_index(MpList*, MpObj val);
 void     list_append(MpList* list, MpObj v);
 void     list_shorten(MpList* list, int len); // shorten list.
-MpObj   list_from_array(int n, ...);
-MpObj   list_builtin_extend();
+MpObj    list_from_array(int n, ...);
+MpObj    list_builtin_extend();
 
 // dict functions
 // 哈希函数
 int mp_hash(void* s, int len);
 int obj_hash(MpObj obj);
+int obj_ptr_hash(MpObj* obj);
 
 MpObj            dict_new();
 MpObj            dict_new_obj();
@@ -222,6 +222,8 @@ void             dict_del(MpDict* dict, MpObj k);
 void             dict_methods_init();
 void             dict_set_by_cstr(MpDict* dict, const char* key, MpObj val);
 MpObj            dict_keys(MpDict* );
+void  dict_print_debug_info(MpDict* dict);
+MpObj dict_to_obj(MpDict* dict);
 
 #define          dict_set(d, k, v)                dict_set0(GET_DICT(d), k, v)
 #define          dict_get_by_str(dict, key)       dict_get_by_cstr(GET_DICT(dict), key)
@@ -230,8 +232,6 @@ MpObj            dict_keys(MpDict* );
 /** dict methods **/
 MpObj            dict_iter_new(MpObj dict);
 MpObj*           dict_next(MpData* iterator);
-int              dict_set_attr(MpDict* dict, int const_id, MpObj val);
-int              dict_get_attr(MpDict* dict, int const_id);
 
 
 // arg functions
@@ -249,10 +249,11 @@ MpObj   arg_take_func_obj(const char* fnc);
 int     arg_take_int(const char* fnc);
 double  arg_take_double(const char* fnc);
 MpList* arg_take_list_ptr(const char* fnc);
-MpObj  arg_take_list_obj(const char* fnc);
-MpObj  arg_take_dict_obj(const char* fnc);
-MpObj  arg_take_obj(const char* fnc);
-MpObj  arg_take_data_obj(const char* fnc);
+MpObj   arg_take_list_obj(const char* fnc);
+MpObj   arg_take_dict_obj(const char* fnc);
+MpDict* arg_take_dict_ptr(const char* fnc);
+MpObj   arg_take_obj(const char* fnc);
+MpObj   arg_take_data_obj(const char* fnc);
 int arg_count() ;
 int arg_remains();
 

@@ -20,7 +20,7 @@ static MpObj random_randint() {
 	return number_obj(start + value);
 }
 
-void random_mod_init() {
+void init_mod_for_random() {
     MpObj module = dict_new();
     reg_mod("random", module);
 

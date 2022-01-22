@@ -85,8 +85,8 @@ def repl():
     print("Try 'help' for more information, 'exit' to quit")
     
     fpyeval = pyeval.pyeval
-    global debug
-    debug = 0
+    global DEBUG
+    DEBUG = False
 
     g = {}
     g.update(globals())
@@ -101,9 +101,9 @@ def repl():
                 if x == 'help':
                     print_help()
                     continue
-                if 'debug' not in g:
-                    g['debug'] = 0
-                v = fpyeval(x, g, g['debug'])
+                if 'DEBUG' not in g:
+                    g['DEBUG'] = False
+                v = fpyeval(x, g, g['DEBUG'])
                 if v != None:
                     repl_print(v)
             except Exception as e:

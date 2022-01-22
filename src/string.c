@@ -119,6 +119,7 @@ MpObj string_from_cstr(const char* s) {
 
 static void string_update_hash(MpStr* s) {
     s->hash = mp_hash(s->value, s->len);
+    // s->hash = -1;
 }
 
 /**
@@ -172,6 +173,13 @@ int string_index(MpStr* s1, MpStr* s2, int start) {
 
 static int string_size(MpStr* s) {
     return s->len;
+}
+
+int string_hash(MpStr* s) {
+    if (s->hash < 0) {
+        s->hash = mp_hash(s->value, s->len);
+    } 
+    return s->hash;
 }
 
 static char string_char_at(MpStr* s, int index) {

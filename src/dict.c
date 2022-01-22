@@ -7,6 +7,8 @@
  */
 #include "include/mp.h"
 
+static int dict_find_start(MpDict* dict, int hash);
+static DictNode* dict_get_node_with_hash(MpDict* dict, MpObj key, int hash);
 
 /** 
  *   New hashdict instance, with initial allocated size set to 7.
@@ -26,23 +28,25 @@ int mp_hash(void* s, int len) {
     return js_hash((unsigned char*)s, len);
 }
 
+int obj_ptr_hash(MpObj* key) {
+    switch(key->type) {
+        case TYPE_STR:
+            return key->value.str->hash;
+        case TYPE_NUM:
+            return abs((int) key->value.num);
+        default: return 0;
+    }
+
+    mp_raise("obj_hash: unexpected reach");
+    return 0;
+}
+
 /**
  * simple hash function for dict
  * @since 2015-?
  */
 int obj_hash(MpObj key) {
-    switch(MP_TYPE(key)) {
-    case TYPE_STR: {
-        return GET_STR_OBJ(key)->hash;
-    }
-    case TYPE_NUM:return abs((int) GET_NUM(key));
-    case TYPE_MODULE:
-    case TYPE_FUNCTION:
-    default: return 0;
-    }
-
-    mp_raise("obj_hash: unexpected reach");
-    return 0;
+    return obj_ptr_hash(&key);
 }
 
 
@@ -50,8 +54,10 @@ void dict_reset(MpDict* dict) {
     // to mark that the node is not allocated.
     for(int i = 0; i < dict->cap; i++){
         dict->nodes[i].used = 0;
-        dict->slots[i*2] = -1;
-        dict->slots[i*2+1] = -1;
+    }
+
+    for (int i = 0; i < dict->slot_cap; i++) {
+        dict->slots[i] = -1;
     }
 }
 
@@ -61,11 +67,12 @@ void dict_reset(MpDict* dict) {
  */
 MpDict* dict_init(MpDict* dict, int cap){
     dict->cap = cap;
+    dict->slot_cap = cap * 4 / 3 + cap;
     dict->extend = 2;
     dict->nodes = mp_malloc(sizeof(DictNode) * (dict->cap));
-    dict->slots = mp_malloc(sizeof(int) * (dict->cap) * 2);
+    dict->slots = mp_malloc(sizeof(int) * (dict->slot_cap));
     dict->len = 0;
-    dict->mask = dict->cap - 1;
+    dict->mask = cap * 4 / 3;
     dict->free_start = 0;
     dict_reset(dict);
     return dict;
@@ -75,14 +82,19 @@ MpObj dict_new(){
     MpDict* dict = mp_malloc(sizeof(MpDict));
     dict_init(dict, 4);
 
-    MpObj o;
-    o.type = TYPE_DICT;
-    o.value.dict = dict;
+    MpObj o = dict_to_obj(dict);
     return gc_track(o);
 }
 
 MpObj dict_new_obj() {
     return dict_new();
+}
+
+MpObj dict_to_obj(MpDict* dict) {
+    MpObj o;
+    o.type = TYPE_DICT;
+    o.value.dict = dict;
+    return o;
 }
 
 static void dict_check(MpDict* dict){
@@ -92,6 +104,7 @@ static void dict_check(MpDict* dict){
 
     int old_cap = dict->cap;
     int old_len = dict->len;
+    int old_slot_cap = dict->slot_cap;
     DictNode* old_nodes = dict->nodes;
     int* old_slots = dict->slots;
     
@@ -122,7 +135,7 @@ static void dict_check(MpDict* dict){
     #endif
 
     mp_free(old_nodes, old_cap * sizeof(DictNode));
-    mp_free(old_slots, 2 * old_cap * sizeof(int));
+    mp_free(old_slots, old_slot_cap * sizeof(int));
 }
 
 /**
@@ -132,7 +145,7 @@ static void dict_check(MpDict* dict){
 void dict_free(MpDict* dict){
     PRINT_OBJ_GC_INFO_START();
     mp_free(dict->nodes, (dict->cap) * sizeof(DictNode));
-    mp_free(dict->slots, (dict->cap*2) * sizeof(int));
+    mp_free(dict->slots, (dict->slot_cap) * sizeof(int));
     mp_free(dict, sizeof(MpDict));
     PRINT_OBJ_GC_INFO_END("dict", dict);
 }
@@ -154,13 +167,20 @@ static int findfreepos(MpDict* dict) {
 
 
 // 调试功能
-static void print_debug_info(MpDict* dict) {
-    for (int i = 0; i < dict->cap; i++) {
-        mp_printf("nodes[%d].key=%o\n", i, dict->nodes[i].key);
-        mp_printf("nodes[%d].used=%d\n", i, dict->nodes[i].used);
-    }
-    for (int i = 0; i < dict->cap * 2; i++) {
-        mp_printf("slots[%d]=%d\n", i, dict->slots[i]);
+void dict_print_debug_info(MpDict* dict) {
+    mp_printf("dict(len=%d, cap=%d, slot_cap=%d, mask=%d)\n", 
+        dict->len, dict->cap, dict->slot_cap, dict->mask);
+
+    for (int i = 0; i < dict->slot_cap; i++) {
+        int slot = dict->slots[i];
+        if (slot < 0) {
+            mp_printf("slots[%03d]=%03d -> NULL\n", i, slot);
+        } else {
+            MpObj key = dict->nodes[slot].key;
+            int hash = dict->nodes[slot].hash;
+            int start = dict_find_start(dict, hash);
+            mp_printf("slots[%03d]=%03d -> %o (%d/%d)\n", i, slot, key, hash, start);
+        }
     }
 }
 
@@ -168,7 +188,8 @@ static void print_debug_info(MpDict* dict) {
  * @return node index
  */
 int dict_set0(MpDict* dict, MpObj key, MpObj val){
-    DictNode* node = dict_get_node(dict, key);
+    int hash = obj_ptr_hash(&key);
+    DictNode* node = dict_get_node_with_hash(dict, key, hash);
     if (node != NULL) {
         node->val = val;
         return (node - dict->nodes);
@@ -179,13 +200,12 @@ int dict_set0(MpDict* dict, MpObj key, MpObj val){
     dict->len++;
 
     // 插入新数据
-    int hash = obj_hash(key);
     dict->nodes[pos].hash = hash;
     dict->nodes[pos].used = 1;
     dict->nodes[pos].key = key;
     dict->nodes[pos].val = val;
 
-    int start = hash & dict->mask;
+    int start = dict_find_start(dict, hash);
     int is_slot_set = FALSE;
     for (int i = start; i < start + dict->cap; i++) {
         if (dict->slots[i] < 0) {
@@ -196,7 +216,7 @@ int dict_set0(MpDict* dict, MpObj key, MpObj val){
     }
 
     if (is_slot_set == FALSE) {
-        print_debug_info(dict);
+        dict_print_debug_info(dict);
         mp_raise("dict_set0: can not found valid slot!");
     }
 
@@ -238,11 +258,18 @@ DictNode* dict_get_node_old(MpDict* dict, MpObj key){
     return NULL;
 }
 
-DictNode* dict_get_node_new(MpDict* dict, MpObj key){
-    int hash = obj_hash(key);
+static int dict_find_start(MpDict* dict, int hash) {
+    return hash % dict->cap;
+}
+
+DictNode* dict_get_node_new(MpDict* dict, MpObj key) {
+    return dict_get_node_with_hash(dict, key, obj_ptr_hash(&key));
+}
+
+static DictNode* dict_get_node_with_hash(MpDict* dict, MpObj key, int hash){
     DictNode* nodes = dict->nodes;
     // 计算开始位置
-    int start = hash & dict->mask;
+    int start = dict_find_start(dict, hash);
 
     // mp_printf("dict_get_node: start=%d, mask=%d, len=%d, cap=%d, key=%o\n", 
     //     start, dict->mask, dict->len, dict->cap, key);
@@ -284,9 +311,8 @@ DictNode* dict_get_node_new(MpDict* dict, MpObj key){
 MpObj* dict_get_by_cstr(MpDict* dict, char* key) {
     //int hash = hash_cstr((unsigned char*) key, strlen(key));
     //int idx = hash % dict->cap;
-    int i = 0;
     DictNode* nodes = dict->nodes;
-    for (i = 0; i < dict->cap; i++) {
+    for (int i = 0; i < dict->cap; i++) {
         // 0:未使用 -1:被删除
         if (nodes[i].used <= 0) {
             continue;
@@ -361,13 +387,17 @@ MpObj dict_builtin_copy() {
 }
 
 MpObj dict_builtin_update() {
-    MpObj self = arg_take_dict_obj("dict.update");
-    MpObj other = arg_take_dict_obj("dict.update");
+    MpDict* self = arg_take_dict_ptr("dict.update");
+    MpDict* other = arg_take_dict_ptr("dict.update");
 
-    for (int i = 0; i < DICT_LEN(other); i++) {
-        dict_set0(GET_DICT(self), GET_DICT(other)->nodes[i].key, GET_DICT(other)->nodes[i].val);
+    for (int i = 0; i < other->cap; i++) {
+        if (other->nodes[i].used <= 0) {
+            continue;
+        }
+        dict_set0(self, other->nodes[i].key, 
+            other->nodes[i].val);
     }
-    return self;
+    return dict_to_obj(self);
 }
 
 MpObj dict_builtin_pop() {

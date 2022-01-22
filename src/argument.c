@@ -117,6 +117,11 @@ MpObj arg_take_dict_obj(const char* fnc) {
     return v;
 }
 
+MpDict* arg_take_dict_ptr(const char* fnc) {
+    MpObj v = arg_take_dict_obj(fnc);
+    return GET_DICT(v);
+}
+
 MpList* arg_take_list_ptr(const char* fnc) {
     MpObj v = arg_take_from_vm0(fnc);
     if (NOT_LIST(v)) {

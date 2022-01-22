@@ -1,7 +1,14 @@
 
 # set -x
 
+this_cwd=$(pwd)
 prog=python
+
+# 检查python命令是否存在
+type python 1>/dev/null;
+if [ $? -ne 0 ]; then
+	prog=python3
+fi
 
 case $1 in
     "mp" )
@@ -11,7 +18,7 @@ case $1 in
     ;;
 esac
 
-pushd src/python
+cd src/python
 rm ../bin.c
 
 echo "Current path: $(pwd)"
@@ -24,8 +31,15 @@ $prog mp_encode.py mp_encode.py >> bin.c
 $prog mp_encode.py mp_opcode.py >> bin.c
 $prog mp_encode.py pyeval.py >> bin.c
 $prog mp_encode.py repl.py >> bin.c
+
+if [ $? -ne 0 ]; then
+	echo "编译失败"
+fi
+
 mv bin.c ../
-popd
+
+cd $this_cwd
 
 make && make test
+
 set +x
