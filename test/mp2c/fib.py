@@ -1,4 +1,10 @@
+import time
 
+def timeit(func, *args):
+    t1 = time.time()
+    ret = func(*args)
+    cost_time = (time.time() - t1) * 1000
+    print("cost time: %sms" % cost_time)
 
 def fib(n):
     # print("n=",n)
@@ -9,4 +15,7 @@ def fib(n):
         return 1
     return fib(n-1) + fib(n-2)
 
-print("fib(30)=" + str(fib(30)))
+def main():
+	print("fib(30)=" + str(fib(30)))
+
+timeit(main)

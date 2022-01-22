@@ -5,7 +5,6 @@
  * @modified 2022/01/15 13:07:11
  */
 #include "vm.c"
-#include "bin.c"
 
 int main(int argc, char *argv[]) {
     /* start vm with bin */
@@ -17,15 +16,7 @@ int main(int argc, char *argv[]) {
     /* use first frame */
     int code = setjmp(tm->frames->buf);
     if (code == 0) {
-        /* load python modules */
-        load_boot_module("mp_init",     mp_init_bin);
-        load_boot_module("mp_opcode",   mp_opcode_bin);
-        load_boot_module("mp_tokenize", mp_tokenize_bin);
-        load_boot_module("mp_parse",    mp_parse_bin);
-        load_boot_module("mp_encode",   mp_encode_bin);
-        load_boot_module("pyeval",      pyeval_bin);
-        load_boot_module("repl",        repl_bin);
-        
+        vm_load_py_modules();
         obj_set_by_cstr(tm->builtins, "MP_USE_CACHE", number_obj(1));
         // call boot function
         vm_call_mod_func("mp_init", "boot");

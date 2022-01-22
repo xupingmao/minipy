@@ -15,14 +15,27 @@ def rand_str(length):
 		v += chr(random.randint(a, b))
 	return v
 
-def main(n):
-	print("n=%d" % n)
+def test_random_gen(n):
+	print("test_random_gen: n=%d" % n)
+	for i in range(n):
+		rand_str(5)
+
+def test_dict_set(n):
+	print("test_dict_set: n=%d" % n)
 	d = dict()
 	for i in range(n):
 		key = rand_str(5)
 		d[key] = 1
 	print("len(dict)=%d" % len(d))
 
+def test_dict_get(n):
+	print("test_dict_get: n=%d" % n)
+	d = dict()
+	for i in range(n):
+		key = rand_str(5)
+		d[key] = 1
+	print("len(dict)=%d" % len(d))
 
-timeit(main, 100000)
-
+timeit(test_random_gen, 100000)
+timeit(test_dict_set, 100000)
+timeit(test_dict_get, 100000)

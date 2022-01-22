@@ -28,6 +28,13 @@ void mp_traceback() {
     fprintf(stderr, "%s\n", GET_CSTR(tm->ex_line));
 }
 
+static int get_lineno() {
+    if (tm->mp2c_mode == TRUE) {
+        return tm->mp2c_lineno;
+    }
+    return tm->frame->lineno;
+}
+
 void mp_raise(char* fmt, ...) {
     va_list a;
     va_start(a, fmt);
@@ -36,7 +43,7 @@ void mp_raise(char* fmt, ...) {
     MpObj file = func_get_file_name_obj(tm->frame->fnc);
     MpObj fnc_name = func_get_name_obj(tm->frame->fnc);
     tm->ex_line = mp_format("File %o: in %o at line %d\n  %os", 
-        file, fnc_name, tm->frame->lineno, tm->ex);
+        file, fnc_name, get_lineno(), tm->ex);
     va_end(a);
     longjmp(tm->frame->buf, 1);
 }

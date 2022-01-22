@@ -50,8 +50,6 @@
 
 #include "object.h"
 #define OBJ_SIZE sizeof(MpObj)
-#define TRUE  1
-#define FALSE 0
 
 MpObj NONE_OBJECT;
 MpObj ARRAY_CHARS;
@@ -61,71 +59,6 @@ typedef MpObj (*MpNativeFunc)();
 typedef MpObj (*BuiltinFunc)();
 
 #include "instruction.h"
-
-#ifdef MP_CHECK_MEM
-    /* #include <execinfo.h> */
-    #include "map.h"
-
-    #define sys_malloc malloc
-    #define sys_free   free
-    
-    DEF_MAP(PtrMap, void*, int);
-
-    PtrMap* ptr_map;
-    int ptr_map_malloc_cnt = 0;
-    int ptr_map_free_cnt = 0;
-
-    void* PtrMap_malloc(int size, const char* file, int line) {
-        ptr_map_malloc_cnt++;
-        /* printf("%s:%d malloc(%d)\n", file, line, size); */
-        void* mem = sys_malloc(size);
-        PtrMap_set(ptr_map, mem, 1);
-        return mem;
-    }
-
-    void PtrMap_free_mem(void* mem, const char* file, int line) {
-        ptr_map_free_cnt++;
-        int *v = PtrMap_get(ptr_map, mem);
-        if (v == NULL) {
-            fprintf(stderr, "%s:%d (%p) invalid free!\n", file, line, mem);
-            /*
-            int j, nptrs;
-            void* buffer[100];
-            char** strings;
-            nptrs = backtrace(buffer, 100);
-            strings = backtrace_symbols(buffer, nptrs);
-            printf("backtrace() returned %d addresses\n", nptrs);
-            if (strings != NULL) {            
-                for (j = 0; j < nptrs; j++) {
-                    printf("%s\n", strings[j]);
-                }
-                free(strings);
-            }
-            */
-            exit(1);
-        } else {
-            sys_free(mem);
-            PtrMap_del(ptr_map, mem);
-        }
-    }
-
-    void* PtrMap_realloc(void* mem, int nsize, const char* file, int line) {
-        int *v = PtrMap_get(ptr_map, mem);
-        if (v == NULL) {
-            fprintf(stderr, "%s:%d (%p) invalid realloc!\n", file, line, mem);
-            exit(1);
-        }
-        PtrMap_del(ptr_map, mem);
-        void* new_mem = realloc(mem, nsize);
-        PtrMap_set(ptr_map, new_mem, 1);
-        return new_mem;
-    }
-
-    #define malloc(size)  PtrMap_malloc(size, __FILE__, __LINE__)
-    #define free(mem)     PtrMap_free_mem(mem, __FILE__, __LINE__)
-    #define realloc(mem, nsize) PtrMap_realloc(mem, nsize, __FILE__, __LINE__)
-
-#endif
 
 /** code functions **/
 void code16(unsigned char*s, int value);
@@ -166,7 +99,7 @@ MpObj        string_alloc(char* s, int size);
 MpObj        string_new(char*s);
 MpObj        string_static(const char*s);
 MpObj        string_from_cstr(const char*);
-MpObj        string_const(char*);
+MpObj        string_const(const char*);
 void         string_free(MpStr*);
 int          string_equals(MpStr*s0, MpStr*s1);
 MpObj        string_substring(MpStr* str, int start, int end) ;
@@ -241,7 +174,7 @@ void    arg_start();
 void    arg_push(MpObj obj) ;
 void    arg_set_arguments(MpObj* first, int len);
 void    resolve_self_by_func_ptr(MpFunction *fnc);
-void    print_arguments();
+void    arg_print();
 int     arg_has_next();
 MpObj   arg_take_str_obj(const char* fnc);
 char*   arg_take_cstr(const char* fnc);
@@ -261,13 +194,13 @@ int arg_remains();
 // function functions
 MpObj           func_new(MpObj mod,MpObj self,MpObj (*native_func)());
 MpObj           func_get_attr(MpFunction* fnc, MpObj key);
-void             func_free(MpFunction*);
-unsigned char*   func_get_code(MpFunction*);
+void            func_free(MpFunction*);
+unsigned char*  func_get_code(MpFunction*);
 MpObj           func_get_code_obj(MpFunction*);
-void             func_format(char* des, MpFunction* func);
-MpModule*        get_func_mod(MpFunction* func);
+void            func_format(char* des, MpFunction* func);
+MpModule*       func_get_mod(MpFunction* func);
 MpObj           func_get_globals(MpFunction*);
-unsigned char*   func_resolve(MpFunction*, unsigned char*);
+unsigned char*  func_resolve(MpFunction*, unsigned char*);
 MpObj           func_get_file_name_obj(MpObj func);
 MpObj           func_get_name_obj(MpObj func);
 
@@ -345,6 +278,8 @@ void   vm_destroy();
 #define  GET_CONST(i) GET_DICT(tm->constants)->nodes[i].key
 MpObj    call_unsafe(MpObj fnc);
 MpObj    obj_call(MpObj func);
+MpObj    obj_call_nargs(MpObj func, int n, MpObj* args);
+MpObj    obj_apply(MpObj func, MpObj args);
 MpObj    load_file_module(MpObj filename, MpObj code, MpObj name);
 MpObj    mp_eval(MpFrame*);
 MpFrame* push_frame(MpObj fnc);
@@ -359,14 +294,14 @@ void mp_traceback();
 void mp_raise(char* fmt, ...);
 
 // builtin functions
-void      mp_print(MpObj v);
-void      mp_println(MpObj v);
+void     mp_print(MpObj v);
+void     mp_println(MpObj v);
 MpObj    mp_format_va_list(char* fmt, va_list ap, int appendln);
 MpObj    mp_format_va_list_check_length(char* fmt, va_list ap, int ap_length, int appendln);
 MpObj    mp_format(char*fmt, ...);
 MpObj    mp_format_check_length(char*fmt, int ap_length, ...);
-void      mp_inspect_obj(MpObj o);
-void      mp_printf(char* fmt, ...);
+void     mp_inspect_obj(MpObj o);
+void     mp_printf(char* fmt, ...);
 
 /* avoid '\0' in char array, which will be regarded as end by c lang */
 /* Chars     MpObj_info(char*,MpObj,int); */
@@ -386,6 +321,10 @@ MpObj    vm_call_mod_func(char* modname, char* funcname);
 
 // time.c
 int64_t  time_get_milli_seconds();
+
+// import.c
+MpObj  obj_import(MpObj globals, MpObj name);
+MpObj  obj_import_attr(MpObj globals, MpObj module_name, MpObj attr);
 
 #include "mp_micro.h"
 #include "mp_log.h"

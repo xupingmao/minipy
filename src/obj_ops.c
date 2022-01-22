@@ -398,6 +398,24 @@ MpObj string_mod_list(MpObj str, MpObj list) {
 
         if (c == '%') {
             i++;
+            char num_buf[20];
+            int num_len = 0;
+            char *fmt_temp = fmt;
+            while (isdigit(fmt[i]) && num_len <= sizeof(num_buf)) {
+                i++;
+                num_len++;
+            }
+
+            if (num_len > 0) {
+                strncpy(num_buf, fmt_temp, num_len);
+            }
+
+            if (num_len >= sizeof(num_buf)) {
+                mp_raise("obj_mod(%d): format too long", __LINE__);
+            }
+
+            // TODO 处理 %03d 中间的数字部分
+
             switch(fmt[i]) {
                 case 's':
                 {
@@ -407,8 +425,8 @@ MpObj string_mod_list(MpObj str, MpObj list) {
                 }
                 case 'd': 
                 {
-                    MpObj item = list_get(plist, arg_index);                 
-                    mp_assert_type(item, TYPE_NUM, "obj_mod");  
+                    MpObj item = list_get(plist, arg_index);
+                    mp_assert_type(item, TYPE_NUM, "obj_mod");
                     string_append_obj(result, item);
                     arg_index++;
                     break;
@@ -436,7 +454,8 @@ MpObj string_mod_list(MpObj str, MpObj list) {
                     break;
                 }
                 default:
-                    mp_raise("obj_mod: unsupported format type '%c'(0x%x)", fmt[i], fmt[i]);
+                    mp_raise("obj_mod(%d): unsupported format type '%c'(0x%x)", 
+                        __LINE__, fmt[i], fmt[i]);
             }
         } else {
             string_append_char(result, c);
@@ -590,6 +609,7 @@ MpObj obj_append(MpObj a, MpObj item) {
 }
 
 MpObj mp_get_global_by_cstr(MpObj globals, char *key) {
+    mp_assert_type(globals, TYPE_DICT, "mp_get_global_by_cstr");
     MpObj okey = string_new(key);
     DictNode* node = dict_get_node(GET_DICT(globals), okey);
     if (node == NULL) {

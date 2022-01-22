@@ -34,7 +34,14 @@ def test_div(n):
 		a = rand_int() / rand_int()
 	return a
 
+def test_modulo(n):
+	print("test_modulo: n=%d" % n)
+	for i in range(n):
+		a = rand_int() % rand_int()
+	return a
+
 timeit(test_add, 100000)
 timeit(test_sub, 100000)
 timeit(test_mul, 100000)
 timeit(test_div, 100000)
+timeit(test_modulo, 100000)

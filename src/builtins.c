@@ -165,6 +165,7 @@ MpObj mp_format_va_list_check_length(char* fmt, va_list ap, int ap_length, int a
     int istrans = 1;
     char buf[50];
     int args_in_fmt = 0;
+    char* fmt0 = fmt;
 
     for (i = 0; i < len; i++) {
         if (fmt[i] == '%') {
@@ -197,7 +198,7 @@ MpObj mp_format_va_list_check_length(char* fmt, va_list ap, int ap_length, int a
             }
 
             if (num_len >= sizeof(num_fmt)) {
-                mp_raise("mp_format_va_list: Invalid format");
+                mp_raise("mp_format_va_list(%d): Invalid format", __LINE__);
             }
 
             switch (fmt[i]) {
@@ -205,6 +206,10 @@ MpObj mp_format_va_list_check_length(char* fmt, va_list ap, int ap_length, int a
                 // char *strncpy(char *dest, const char *src, size_t n) 
                 strncpy(num_fmt, fmt_store, num_len+1);
                 sprintf(buf, num_fmt, va_arg(ap, int));
+                str = string_append_cstr(str, buf);
+                break;
+            case 'x':
+                sprintf(buf, "%x", va_arg(ap, int));
                 str = string_append_cstr(str, buf);
                 break;
             case 'f':
@@ -250,7 +255,8 @@ MpObj mp_format_va_list_check_length(char* fmt, va_list ap, int ap_length, int a
                 break;
             }
             default:
-                mp_raise("mp_format_va_list: unknown pattern %c", fmt[i]);
+                mp_raise("mp_format_va_list(%d): unknown pattern '%c' at idx=%d", 
+                    __LINE__, fmt[i], i);
                 break;
             }
         } else {

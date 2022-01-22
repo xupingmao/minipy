@@ -116,4 +116,70 @@
     #define CHECK_MEM_USAGE(msg) ;
 #endif
 
+
+#ifdef MP_CHECK_MEM
+    /* #include <execinfo.h> */
+    #include "map.h"
+
+    #define sys_malloc malloc
+    #define sys_free   free
+    
+    DEF_MAP(PtrMap, void*, int);
+
+    PtrMap* ptr_map;
+    int ptr_map_malloc_cnt = 0;
+    int ptr_map_free_cnt = 0;
+
+    void* PtrMap_malloc(int size, const char* file, int line) {
+        ptr_map_malloc_cnt++;
+        /* printf("%s:%d malloc(%d)\n", file, line, size); */
+        void* mem = sys_malloc(size);
+        PtrMap_set(ptr_map, mem, 1);
+        return mem;
+    }
+
+    void PtrMap_free_mem(void* mem, const char* file, int line) {
+        ptr_map_free_cnt++;
+        int *v = PtrMap_get(ptr_map, mem);
+        if (v == NULL) {
+            fprintf(stderr, "%s:%d (%p) invalid free!\n", file, line, mem);
+            /*
+            int j, nptrs;
+            void* buffer[100];
+            char** strings;
+            nptrs = backtrace(buffer, 100);
+            strings = backtrace_symbols(buffer, nptrs);
+            printf("backtrace() returned %d addresses\n", nptrs);
+            if (strings != NULL) {            
+                for (j = 0; j < nptrs; j++) {
+                    printf("%s\n", strings[j]);
+                }
+                free(strings);
+            }
+            */
+            exit(1);
+        } else {
+            sys_free(mem);
+            PtrMap_del(ptr_map, mem);
+        }
+    }
+
+    void* PtrMap_realloc(void* mem, int nsize, const char* file, int line) {
+        int *v = PtrMap_get(ptr_map, mem);
+        if (v == NULL) {
+            fprintf(stderr, "%s:%d (%p) invalid realloc!\n", file, line, mem);
+            exit(1);
+        }
+        PtrMap_del(ptr_map, mem);
+        void* new_mem = realloc(mem, nsize);
+        PtrMap_set(ptr_map, new_mem, 1);
+        return new_mem;
+    }
+
+    #define malloc(size)  PtrMap_malloc(size, __FILE__, __LINE__)
+    #define free(mem)     PtrMap_free_mem(mem, __FILE__, __LINE__)
+    #define realloc(mem, nsize) PtrMap_realloc(mem, nsize, __FILE__, __LINE__)
+
+#endif
+
 #endif

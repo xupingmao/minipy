@@ -72,7 +72,8 @@ MpDict* dict_init(MpDict* dict, int cap){
     dict->nodes = mp_malloc(sizeof(DictNode) * (dict->cap));
     dict->slots = mp_malloc(sizeof(int) * (dict->slot_cap));
     dict->len = 0;
-    dict->mask = cap * 4 / 3;
+    // 两个的差值就是基数
+    dict->mask = (dict->slot_cap) - (dict->cap);
     dict->free_start = 0;
     dict_reset(dict);
     return dict;
@@ -114,9 +115,7 @@ static void dict_check(MpDict* dict){
         new_cap = old_cap + 2;
     } else {
         // osize >= 10
-        new_cap += old_cap + old_cap / 2 + 2;
-        // 必须使用偶数，这样取址运算更有效
-        new_cap = new_cap / 2 * 2;
+        new_cap += old_cap + old_cap / 2;
     }
     
     dict_init(dict, new_cap);
@@ -259,7 +258,9 @@ DictNode* dict_get_node_old(MpDict* dict, MpObj key){
 }
 
 static int dict_find_start(MpDict* dict, int hash) {
-    return hash % dict->cap;
+    // 取模运算只用到了hash的右侧部分的数字
+    // 使用&位运算可以充分使用全部的数字，但是要求mask=(2^n-1)
+    return hash % dict->mask;
 }
 
 DictNode* dict_get_node_new(MpDict* dict, MpObj key) {
@@ -406,6 +407,16 @@ MpObj dict_builtin_pop() {
     return dict_pop(GET_DICT(self), key);
 }
 
+MpObj dict_builtin_get() {
+    MpDict* self = arg_take_dict_ptr("dict.get");
+    MpObj key = arg_take_obj("dict.get");
+    DictNode* node = dict_get_node(self, key);
+    if (node == NULL) {
+        return NONE_OBJECT;
+    }
+    return node->val;
+}
+
 /**
  * init dict methods
  * @since 2015-?
@@ -413,6 +424,7 @@ MpObj dict_builtin_pop() {
 void dict_methods_init() {
     tm->dict_proto = dict_new();
     /* build dict class */
+    reg_mod_func(tm->dict_proto, "get",    dict_builtin_get);
     reg_mod_func(tm->dict_proto, "keys",   dict_builtin_keys);
     reg_mod_func(tm->dict_proto, "values", dict_builtin_values);
     reg_mod_func(tm->dict_proto, "copy",   dict_builtin_copy);
@@ -460,9 +472,9 @@ MpObj* dict_next(MpData* iterator) {
  * get attribute by char array
  * @since 2016-09-02
  */
-MpObj mp_getattr(MpObj obj, char* key) {
+MpObj mp_getattr(MpObj obj, const char* key) {
     // TODO optimize string find
-    MpObj obj_key = string_new(key);
+    MpObj obj_key = string_static(key);
     return obj_get(obj, obj_key);
 }
 
@@ -471,15 +483,15 @@ MpObj mp_getattr(MpObj obj, char* key) {
  * get attribute by char array
  * @since 2016-09-02
  */
-void mp_setattr(MpObj obj, char* key, MpObj value) {
-    MpObj obj_key = string_new(key);
+void mp_setattr(MpObj obj, const char* key, MpObj value) {
+    MpObj obj_key = string_static(key);
     obj_set(obj, obj_key, value);
 }
 
-int mp_hasattr(MpObj obj, char* key) {
+int mp_hasattr(MpObj obj, const char* key) {
     mp_assert_type(obj, TYPE_DICT, "mp_hasattr");
 
-    MpObj obj_key = string_const(key);
+    MpObj obj_key = string_static(key);
     DictNode* node = dict_get_node(GET_DICT(obj), obj_key);
     if (node == NULL) {
         return 0;

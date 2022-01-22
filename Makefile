@@ -43,4 +43,3 @@ benchmark:
 
 clean : 
 	rm minipy
-	

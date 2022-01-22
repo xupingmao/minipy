@@ -357,3 +357,16 @@ MpObj obj_call(MpObj func) {
         func);
     return NONE_OBJECT;
 }
+
+
+MpObj obj_apply(MpObj func, MpObj args) {
+    mp_assert_type2(func, TYPE_FUNCTION, TYPE_CLASS, "obj_apply");
+    mp_assert_type(args, TYPE_LIST, "obj_apply");
+    arg_set_arguments(LIST_NODES(args), LIST_LEN(args));
+    return obj_call(func);
+}
+
+MpObj obj_call_nargs(MpObj func, int n, MpObj* args) {
+    arg_set_arguments(args, n);
+    return obj_call(func);
+}

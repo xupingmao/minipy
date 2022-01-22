@@ -271,23 +271,16 @@ tailcall:
 
         case OP_IMPORT: {
             // _import(des_globals, fname, tar);
-            MpObj import_func = mp_get_global_by_cstr(globals, "_import");
-            arg_start();
-            arg_push(globals);
-            MpObj modname, attr;
-
             if (cache->v.ival == 1) {
                 // import name
-                modname = MP_POP();
-                arg_push(modname); // arg1
+                MpObj modname = MP_POP();
+                obj_import(globals, modname);
             } else {
                 // from name import attr
-                attr = MP_POP();
-                modname = MP_POP();
-                arg_push(modname);
-                arg_push(attr);
+                MpObj attr = MP_POP();
+                MpObj modname = MP_POP();
+                obj_import_attr(globals, modname, attr);
             }
-            obj_call(import_func);
             break;
         }
         case OP_CONSTANT: {

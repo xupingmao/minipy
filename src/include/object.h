@@ -23,6 +23,10 @@
 #define MAX_FILE_SIZE 1024 * 1024 * 5 /* max file size loaded into memery */
 #include <stdint.h>
 
+typedef char BOOL;
+#define TRUE  1
+#define FALSE 0
+
 /* handle like lua */
 typedef union MpValue {
   double dv;
@@ -137,6 +141,10 @@ typedef struct MpFrame {
 typedef struct MpVm {
   char* version;
   int   debug;
+
+  // mp2c模式
+  BOOL  mp2c_mode;
+  int   mp2c_lineno;
 
   /* program arguments */
   int    argc;

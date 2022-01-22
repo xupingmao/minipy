@@ -29,3 +29,6 @@ print("-" * 50)
 
 main(20)
 print("-" * 50)
+
+main(30)
+print("-" * 50)

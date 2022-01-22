@@ -127,8 +127,8 @@ static void string_update_hash(MpStr* s) {
  * this object will not be tracked by gc
  * @since 2016-08-22
  */
-MpObj string_const(char* s) {
-    MpObj str_obj = string_new(s);
+MpObj string_const(const char* s) {
+    MpObj str_obj = string_static(s);
     int i = dict_set(tm->constants, str_obj, NONE_OBJECT);
     return DICT_NODES(tm->constants)[i].key;
 }

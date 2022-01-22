@@ -18,12 +18,14 @@
 #include "exception.c"
 #include "argument.c"
 #include "execute.c"
+#include "import.c"
 #include "module/time.c"
 #include "module/sys.c"
 #include "module/math.c"
 #include "module/os.c"
 #include "module/mp_debug.c"
 #include "module/mp_random.c"
+#include "bin.c"
 
 
 /**
@@ -155,6 +157,7 @@ int vm_init(int argc, char* argv[]) {
     // 初始化Profile
     PROFILE_INIT();
 
+    tm->mp2c_mode = FALSE;
     tm->argc   = argc;
     tm->argv   = argv;
     tm->code   = NULL;
@@ -212,4 +215,16 @@ void vm_destroy() {
 #if MP_PROFILE
     profile_print_detail();
 #endif
+}
+
+
+void vm_load_py_modules() {
+    /* load python modules */
+    load_boot_module("mp_init",     mp_init_bin);
+    load_boot_module("mp_opcode",   mp_opcode_bin);
+    load_boot_module("mp_tokenize", mp_tokenize_bin);
+    load_boot_module("mp_parse",    mp_parse_bin);
+    load_boot_module("mp_encode",   mp_encode_bin);
+    load_boot_module("pyeval",      pyeval_bin);
+    load_boot_module("repl",        repl_bin);
 }

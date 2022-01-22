@@ -10,25 +10,29 @@ import os
 from mp_encode import *
 from mp_opcode import *
 
+OP_FUNC_MAP = {
+    OP_ADD: "obj_add",
+    OP_SUB: "obj_sub",
+    OP_MUL: "obj_mul",
+    OP_DIV: "obj_div",
+    OP_MOD: "obj_mod",
+    OP_GET: "obj_get",
+    OP_OR:  "obj_or",
+    OP_LTEQ: "obj_LTEQ",
+    OP_EQEQ: "obj_EQEQ",
+}
+
 class CodeWriter:
 
     def __init__(self, code, name):
         self.code = code
         self.name = name
+        self.const_dict = dict()
         self.line_buf = []
         self.func_buf = []
         self.label_dict = {}
         self.is_in_func = False
         self.py_entry_func = "%s_main" % self.name
-        self.writeline("MpObj %s() {" % self.py_entry_func)
-        self.writeline("  MpObj fname = string_new(\"%s\");" % self.name)
-        self.writeline("  MpObj module_name = fname;")
-        self.writeline("  module = module_new(fname, module_name, NONE_OBJECT);")
-        self.writeline("  globals = GET_MODULE(module)->globals;")
-        self.writeline("  MpObj t1, t2, t3;");
-        self.writeline("  MpObj op_stack[256];")
-        self.writeline("  MpObj *top = op_stack;")
-        self.writeline("  MpObj func = NONE_OBJECT;")
 
     def indent(self):
         pass
@@ -38,6 +42,15 @@ class CodeWriter:
             self.func_buf.append(["str", line])
         else:
             self.line_buf.append(["str", line])
+
+    def write_debug_line(self, op, val):
+        return
+        op_name = opcodes[op]
+        self.writeline("  puts(\"%s %r\");" % (op_name, val));
+
+    def write_debug_lineno(self, lineno):
+        return
+        self.writeline("  tm->mp2c_lineno = %d;" % lineno)
 
     def goto_label(self, val, indent = 2):
         self.label_dict[val] = 1
@@ -60,6 +73,18 @@ class CodeWriter:
     def end(self):
         pass
 
+    def gen_py_entry_start(self):
+        buf = []
+        buf.append("MpObj %s() {" % self.py_entry_func)
+        buf.append("  MpObj fname = string_const(\"%s\");" % self.name)
+        buf.append("  MpObj module_name = fname;")
+        buf.append("  module = module_new(fname, module_name, NONE_OBJECT);")
+        buf.append("  globals = GET_MODULE(module)->globals;")
+        buf.append("  MpObj op_stack[256];")
+        buf.append("  MpObj *top = op_stack;")
+        buf.append("  MpObj func = NONE_OBJECT;")
+        return "\n".join(buf)
+
     def gen_code_by_buf(self, buf):
         result = []
         for type, value in buf:
@@ -70,10 +95,29 @@ class CodeWriter:
                 result.append(value)
         return "\n".join(result)
 
-    def gen_global_code(self):
+    def gen_const_def_section_code(self):
+        buf = []
+        for key in self.const_dict:
+            name = self.const_dict.get(key)
+            buf.append("MpObj %s;" % name)
+        return "\n".join(buf)
+
+    def gen_const_init_code(self):
+        buf = []
+        for key in self.const_dict:
+            name = self.const_dict.get(key)
+            buf.append("  %s = string_const(\"%s\");" % (name, key))
+        return "\n".join(buf)
+
+    def gen_global_section_code(self):
         self.writeline("  return NONE_OBJECT;")
         self.writeline("}")
-        return self.gen_code_by_buf(self.line_buf)
+
+        buf = []
+        buf.append(self.gen_py_entry_start())
+        buf.append(self.gen_const_init_code())
+        buf.append(self.gen_code_by_buf(self.line_buf))
+        return "\n".join(buf)
 
     def gen_main_entry(self):
         buf = []
@@ -86,18 +130,28 @@ class CodeWriter:
         return "\n".join(buf)
 
     def get_code(self):
-        global_code = self.gen_global_code()
-        func_code = self.gen_code_by_buf(self.func_buf)
+        const_section = self.gen_const_def_section_code()
+        global_section = self.gen_global_section_code()
+        func_section = self.gen_code_by_buf(self.func_buf)
         main_entry = self.gen_main_entry()
         buf = []
         buf.append("#include \"../src/include/mp.h\"")
         buf.append("#include \"../mp2c/mp2c.c\"")
         buf.append("static MpObj module;")
         buf.append("static MpObj globals;")
-        buf.append(func_code)
-        buf.append(global_code)
+        buf.append(const_section)
+        buf.append(func_section)
+        buf.append(global_section)
         buf.append(main_entry)
         return "\n".join(buf)
+
+    def get_const_var(self, key):
+        name = self.const_dict.get(key)
+        if name is None:
+            name = "const_%s" % len(self.const_dict)
+            self.const_dict[key] = name
+        return name
+
 
 def do_convert_op(writer, op, val, func_name):
     # writer.writeline("  t2 = MP2C_POP();")
@@ -116,6 +170,7 @@ def convert(code, writer):
     for op, val in inst_list:
         op_index += 1
         writer.define_label(op_index)
+        writer.write_debug_line(op, val)
 
         # print(op, val)
         if op == OP_FILE:
@@ -136,29 +191,43 @@ def convert(code, writer):
             writer.writeline("  MpObj locals[256];")
             writer.writeline("  MpObj op_stack[256];")
             writer.writeline("  MpObj *top = op_stack;")
-            writer.writeline("  MpObj t1, t2, t3;")
         elif op == OP_LOAD_PARAMS:
             parg = int(val / 256)
             varg = val % 256
             line = "  /* OP_LOAD_PARAMS(%s) */" % parg
             writer.writeline(line)
             for i in range(parg):
-                writer.writeline("""  locals[%d] = arg_take_obj("%s");""" % (i, func_name))
+                writer.writeline("  locals[%d] = arg_take_obj(\"%s\");" % (i, func_name))
+        elif op == OP_LOAD_PARG:
+            for i in range(val):
+                writer.writeline("  locals[%d] = arg_take_obj(\"\");" % (i, func_name))
+        elif op == OP_LOAD_NARG:
+            arg_index = val
+            writer.writeline("  MpObj args = list_new(arg_remains());")
+            writer.writeline("  while(arg_remains() > 0) {")
+            writer.writeline("    obj_append(args, arg_take_obj(\"%s\"));" % (func_name))
+            writer.writeline("  }")
+            writer.writeline("  locals[%s] = args;" % arg_index)
         elif op == OP_LOAD_LOCAL:
             line = "  MP2C_PUSH(locals[{}]);".format(val)
+            writer.writeline(line)
+        elif op == OP_STORE_LOCAL:
+            line = "  locals[{}] = MP2C_POP();".format(val)
             writer.writeline(line)
         elif op == OP_NUMBER:
             line = "  MP2C_PUSH(number_obj({}));".format(val)
             writer.writeline(line)
         elif op == OP_STRING:
-            line = "  MP2C_PUSH(string_new(\"{}\"));".format(val)
+            str_var = writer.get_const_var(val)
+            line = "  MP2C_PUSH({});".format(str_var)
             writer.writeline(line)
-        elif op == OP_LOAD_GLOBAL:
-            writer.writeline("  MP2C_PUSH(mp2c_load_global(globals, \"{}\"));".format(val))
         elif op == OP_CALL:
             argc = val
             writer.writeline("  top -= %s; /* args */" % argc)
-            writer.writeline("  *top = obj_call_narg(*top, %s, top + 1);" % argc)
+            writer.writeline("  *top = obj_call_nargs(*top, %s, top + 1);" % argc)
+        elif op == OP_APPLY:
+            writer.writeline("  top--;")
+            writer.writeline("  *top = obj_apply(*top, *(top+1));")
         elif op == OP_POP:
             writer.writeline("  MP2C_POP();")
         elif op == OP_JUMP:
@@ -170,7 +239,9 @@ def convert(code, writer):
                 line = line.rstrip()
             else:
                 line = "Unknown"
-            writer.writeline("  /* (line:%s) %r */" % (val, line))
+            writer.write_debug_lineno(val)
+            writer.writeline("  /* (line:%03d) %r */" % (val, line))
+            # writer.writeline("  printf(\"%%d: %%s\n\", %d, %s);" % (val, line))
             # writer.writeline("L%s:" % val)
         elif op == OP_POP_JUMP_ON_FALSE:
             writer.writeline("  if(!is_true_obj(MP2C_POP())) {")
@@ -182,31 +253,26 @@ def convert(code, writer):
             writer.writeline("  }");
         elif op == OP_RETURN:
             writer.writeline("  return MP2C_POP();")
-        elif op == OP_OR:
-            do_convert_op(writer, op, val, "obj_or")
-        elif op == OP_SUB:
-            do_convert_op(writer, op, val, "obj_sub")
-        elif op == OP_ADD:
-            do_convert_op(writer, op, val, "obj_add")
-        elif op == OP_MOD:
-            do_convert_op(writer, op, val, "obj_mod")
-        elif op == OP_LTEQ:
-            do_convert_op(writer, op, val, "obj_LTEQ")
-        elif op == OP_EQEQ:
-            do_convert_op(writer, op, val, "obj_EQEQ")
+        elif op in OP_FUNC_MAP:
+            func_name = OP_FUNC_MAP.get(op)
+            do_convert_op(writer, op, val, func_name)
         elif op == OP_EOF:
             writer.writeline("  /* EOF: end of function */")
             writer.writeline("}")
             writer.exit_func()
         elif op == OP_STORE_GLOBAL:
-            writer.writeline("  obj_set_by_cstr(globals, \"%s\", MP2C_POP());" % val)
+            var_name = writer.get_const_var(val)
+            writer.writeline("  obj_set(globals, %s, MP2C_POP());" % var_name)
+        elif op == OP_LOAD_GLOBAL:
+            var_name = writer.get_const_var(val)
+            writer.writeline("  MP2C_PUSH(mp2c_load_global(globals, {}));".format(var_name))
         elif op == OP_EOP:
             writer.writeline("  /* EOP */")
         elif op == OP_IMPORT:
             if val == 1:
-                writer.writeline("  _import(mp_globals, MP2C_POP());")
+                writer.writeline("  obj_import(globals, MP2C_POP());")
             else:
-                writer.writeline("  _import(mp_globals, *(top-1), *top);")
+                writer.writeline("  obj_import_attr(globals, *(top-1), *top);")
                 writer.writeline("  top -= 2;")
         else:
             op_str = opcodes[op]
@@ -243,6 +309,7 @@ def main():
     print("saved to %s" % c_file_path)
 
     print("start build...")
+    os.system("rm build/mp2c")
     result = os.system("gcc %s -o build/mp2c -lm" % c_file_path)
     if result == 0:
         print("build success!")
@@ -251,6 +318,14 @@ def main():
         sys.exit(1)
 
     print("run build/mp2c ...")
+    print("")
+    print("-" * 50)
+    print(">>> Run with minipy")
+    os.system("./minipy %r" % fpath)
+    
+    print("")
+    print("-" * 50)
+    print(">>> Run with mp2c")
     os.system("./build/mp2c")
 
 

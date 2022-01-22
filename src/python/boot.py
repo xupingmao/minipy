@@ -3,8 +3,10 @@
 # @since 2016
 # @modified 2020/10/02 08:57:56
 
-"""CPython运行环境使用
-"""
+
+# CPython运行环境使用
+# minipy 不依赖这个工具
+
 import sys
 import struct
 import os
