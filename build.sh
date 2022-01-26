@@ -1,17 +1,17 @@
-
-# set -x
-
+# build script for minipy
+# 注意：如果在Mac系统上报错，需要转换成Unix的换行模式（就是把\r删掉）
 this_cwd=$(pwd)
 prog=python
 
-# 检查python命令是否存在
+# check python command
 type python 1>/dev/null;
+
 if [ $? -ne 0 ]; then
-	prog=python3
+    prog=python3
 fi
 
 case $1 in
-    "mp" )
+    "mp")
     echo "use minipy to compile compiler"
     mv minipy build/
     prog=../../build/minipy
@@ -33,7 +33,7 @@ $prog mp_encode.py pyeval.py >> bin.c
 $prog mp_encode.py repl.py >> bin.c
 
 if [ $? -ne 0 ]; then
-	echo "编译失败"
+	echo "Compile Failed"
 fi
 
 mv bin.c ../

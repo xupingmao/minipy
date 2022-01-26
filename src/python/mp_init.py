@@ -1,7 +1,7 @@
 # -*- coding:utf-8 -*-
 # @author xupingmao
 # @since 2016
-# @modified 2022/01/15 17:55:54
+# @modified 2022/01/26 15:50:47
 """Minipy初始化, 这里_import函数还没准备好，无法调用"""
 
 def add_builtin(name, func):
@@ -275,18 +275,9 @@ def execfile(fpath, chdir = True):
     code = compilefile(fpath)
     load_module(fpath, code, '__main__')
 
-def to_fixed(num, length):
-    return str(num).rjust(length).replace(' ', '0')
-
 def dis(path):
-    from mp_encode import *
-    from mp_opcode import *
-    ins_list = compile_to_list(load(path), path)
-    for index, item in enumerate(ins_list):
-        op = int(item[0])
-        line = "%04d %22d %r" % (index+1, opcodes[op], item[1])
-        # line = to_fixed(index+1, 4) + ' ' + opcodes[op].ljust(22) + str(item[1])
-        print(line)
+    import mp_encode
+    mp_encode.dis(path)
 
 def _assert(exp, err = None):
     if not exp: 

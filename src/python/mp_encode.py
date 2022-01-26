@@ -1,7 +1,7 @@
 # -*- coding:utf-8 -*-
 # @author xupingmao
 # @since 2016
-# @modified 2022/01/18 22:40:52
+# @modified 2022/01/26 15:49:15
 
 """使用说明
 dis_code: 反编译代码为字节码
@@ -924,7 +924,8 @@ def dis_code(code, return_str = False, fname = "<string>"):
     ins_list = compile_to_list(code, fname)
     for index, item in enumerate(ins_list):
         op = int(item[0])
-        line = to_fixed(index+1, 4) + ' ' + opcodes[op].ljust(22) + str(item[1])
+        line = "%s %s %r" % (to_fixed(index+1,4), opcodes[op].ljust(22), item[1])
+        # line = to_fixed(index+1, 4) + ' ' + opcodes[op].ljust(22) + str(item[1])
 
         if return_str:
             result.append(line)

@@ -29,13 +29,16 @@ make && make test
 
 位于 `/src/python`
 
-1. `mp_opcode.py` 字节码定义
-2. `mp_tokenize.py` 词法分析器
-3. `mp_parse.py` 手写递归解析器
-4. `mp_encode.py` 代码生成器，运行 `python mp_encode.py {script.py}` 可以打印出字节码(未处理过的)
+- `mp_opcode.py` 字节码定义
+- `mp_tokenize.py` 词法分析器，将代码转换成单词(`tokens`)
+    - 运行 `python mp_tokenize.py {script.py}` 可以打印出单词
+- `mp_parse.py` 语法分析器，将单词(`tokens`)转换成语法树(`Syntax Tree`)
+    - 运行 `python mp_parse.py {script.py}` 可以打印出语法树
+- `mp_encode.py` 代码生成器，将语法树(`Syntax Tree`)转换成字节码(`opcodes`)
+    - 运行 `python mp_encode.py {script.py}` 可以打印出字节码(未处理过的)
 
 ### 特性
-- [x] 基于栈的计算机模型，字节码定义在 `src/python/tmcode.py`
+- [x] 基于栈的计算机模型，字节码定义在 `src/python/mp_opcode.py`
 - [x] 支持异常处理，基于`setjmp/longjmp`实现
 - [x] 支持Native方法扩展
 - [x] 支持常用的Python类型
