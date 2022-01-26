@@ -2,7 +2,7 @@
 # 这个版本通过字节码来生成C语言的代码，相比于通过语法树解析，逻辑要简单很多
 # @author xupingmao <578749341@qq.com>
 # @since 2020/10/18 00:32:28
-# @modified 2022/01/18 22:49:03
+# @modified 2022/01/26 15:35:02
 # @version v0.2
 
 import sys
@@ -257,6 +257,7 @@ def convert(code, writer):
             func_name = OP_FUNC_MAP.get(op)
             do_convert_op(writer, op, val, func_name)
         elif op == OP_EOF:
+            writer.writeline("  return NONE_OBJECT;")
             writer.writeline("  /* EOF: end of function */")
             writer.writeline("}")
             writer.exit_func()
@@ -286,6 +287,16 @@ def file_basename(fpath):
     name = fname.split(".")[0]
     return name
 
+def do_build(c_file_path, target):
+    print("building %s ..." % c_file_path)
+    os.system("rm build/mp2c")
+    result = os.system("gcc -O2 %r -o %r -lm" % (c_file_path, target))
+    if result == 0:
+        print("build success!")
+    else:
+        print("build failed")
+        sys.exit(1)
+
 def main():
     argv = sys.argv
     # print(argv)
@@ -305,17 +316,12 @@ def main():
     # print(result_code)
 
     c_file_path = "build/%s.c" % name
+    target = "build/%s.out" % name
+
     save(c_file_path, result_code)
     print("saved to %s" % c_file_path)
 
-    print("start build...")
-    os.system("rm build/mp2c")
-    result = os.system("gcc %s -o build/mp2c -lm" % c_file_path)
-    if result == 0:
-        print("build success!")
-    else:
-        print("build failed")
-        sys.exit(1)
+    do_build(c_file_path, target)
 
     print("run build/mp2c ...")
     print("")
@@ -326,7 +332,7 @@ def main():
     print("")
     print("-" * 50)
     print(">>> Run with mp2c")
-    os.system("./build/mp2c")
+    os.system("./%s" % target)
 
 
 if __name__ == '__main__':
