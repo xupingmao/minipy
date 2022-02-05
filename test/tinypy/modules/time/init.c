@@ -1,8 +1,13 @@
+#include <ctype.h>
+#include <stdlib.h>
+
 #ifdef _WIN32
     #include <Windows.h>
 #else
     #include <sys/time.h>
 #endif
+
+typedef long long int64_t;
 
 int64_t time_get_milli_seconds() {
 #ifdef _WIN32
