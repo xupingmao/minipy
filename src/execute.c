@@ -1,7 +1,7 @@
 /**
   * execute minipy bytecode
   * @since 2014-9-2
-  * @modified 2022/01/19 20:18:31
+  * @modified 2022/02/04 22:56:31
   *
   * 2015-6-16: interpreter for tinyvm bytecode.
  **/
@@ -624,6 +624,10 @@ tailcall:
             dict_set0(GET_DICT(globals), class_name, clazz);
             break;
         }
+        // 类定义结束
+        case OP_CLASS_END: {
+            break;
+        }
 
         // 翻转堆栈
         // rotate stack
@@ -696,7 +700,7 @@ tailcall:
             continue;
 
         case OP_EOP:
-        case OP_EOF: {
+        case OP_DEF_END: {
            ret = NONE_OBJECT;
            goto end;
         }

@@ -1,7 +1,7 @@
 # -*- coding:utf-8 -*-
 # @author xupingmao
 # @since 2016
-# @modified 2022/01/26 15:49:15
+# @modified 2022/02/04 22:55:20
 
 """使用说明
 dis_code: 反编译代码为字节码
@@ -508,7 +508,7 @@ def encode_def(tk, in_class = 0):
     if narg:
         emit(OP_LOAD_NARG, narg_index)
     encode_item(tk.third)
-    emit(OP_EOF)
+    emit(OP_DEF_END)
     #regs[1] = asm_get_regs()
     #emit_tag(func_end)
     #loc_num_ins[1] = get_loc_num()
@@ -528,6 +528,7 @@ def encode_class(tk):
         emit_load(tk.first)
         load_attr(func.first)
         emit(OP_SET)
+    emit(OP_CLASS_END)
 
 def encode_return(tk):
     if tk.first:

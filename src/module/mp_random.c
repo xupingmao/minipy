@@ -25,5 +25,7 @@ void init_mod_for_random() {
     reg_mod("random", module);
 
     reg_mod_func(module, "randint",  random_randint);
+
+    reg_mod_attr(module, "RAND_MAX", number_obj(RAND_MAX));
 }
 

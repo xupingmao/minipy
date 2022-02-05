@@ -3,7 +3,7 @@
  *
  *  Created on: 2014/8/25
  *  @author: xupingmao
- *  @modified 2022/01/19 21:18:39
+ *  @modified 2022/01/26 23:43:04
  */
 
 #ifndef _OBJECT_H_
@@ -272,8 +272,8 @@ typedef struct MpDict {
 
 typedef struct MpStr {
     int marked;
-    int len;
     int stype; /* string type, 1: memory; 0: static */
+    int len;
     // 字符串的哈希值
     int hash;
     char *value;
@@ -281,8 +281,8 @@ typedef struct MpStr {
 
 typedef struct MpConstStr {
     int marked;
-    int len;
     int stype;
+    int len;
     // 字符串的哈希值
     int hash;
     const char *value;

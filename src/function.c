@@ -28,7 +28,7 @@ unsigned char* func_resolve(MpFunction* fnc, unsigned char* pc) {
             maxlocals = max(val, maxlocals);
         } else if (op == OP_SETJUMP) {
             fnc->modifier = 1;
-        } else if(op == OP_EOF){
+        } else if(op == OP_DEF_END){
             defs--;
             if (defs == 0) break;
         } else if(op == OP_EOP) {
@@ -64,7 +64,7 @@ MpCodeCache* func_resolve_cache(MpFunction* fnc, MpCodeCache* cache) {
         int val = cache->v.ival;
         if (op == OP_LOAD_LOCAL || op == OP_STORE_LOCAL) {
             maxlocals = max(cache->v.ival, maxlocals);
-        } else if (op == OP_EOF) {
+        } else if (op == OP_DEF_END) {
             defs--;
             if (defs == 0) {
                 break;
@@ -244,10 +244,10 @@ MpObj func_get_code_obj(MpFunction* func) {
     }
     unsigned char* code = func->code;
     int len = 0;
-    while (code[len] != OP_EOF) {
+    while (code[len] != OP_DEF_END) {
         len += 3;
     }
-    len += 3; /* OP_EOF */
+    len += 3; /* OP_DEF_END */
     return string_alloc((char*)code, len);
 }
 

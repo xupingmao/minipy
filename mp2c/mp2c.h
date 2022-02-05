@@ -1,7 +1,7 @@
 #include "../src/vm.c"
 
-#ifndef TM2C_C
-#define TM2C_C
+#ifndef TM2C_H
+#define TM2C_H
 
 #define LEVEL_ERROR 0
 #define LOG(level, msg, lineno, func_name, value) /* x */
@@ -36,6 +36,18 @@ MpObj obj_EQEQ(MpObj left, MpObj right) {
 
 MpObj obj_LTEQ(MpObj left, MpObj right) {
     return number_obj(mp_cmp(left, right) <= 0);
+}
+
+MpObj obj_GTEQ(MpObj left, MpObj right) {
+    return number_obj(mp_cmp(left, right) >= 0);
+}
+
+MpObj obj_not_eq(MpObj left, MpObj right) {
+    return number_obj(!is_obj_equals(left, right)); 
+}
+
+MpObj obj_and(MpObj left, MpObj right) {
+    return number_obj(is_true_obj(left) && is_true_obj(right));
 }
 
 void gc_local_add(MpObj object) {
@@ -211,7 +223,6 @@ MpObj argv_to_dict(int n, ...) {
  */
 int mp2c_run_func(int argc, char* argv[], char* mod_name, MpNativeFunc func) {
     int ret = vm_init(argc, argv);
-    int i;
     if (ret != 0) { 
         return ret;
     }
@@ -237,7 +248,7 @@ int mp2c_run_func(int argc, char* argv[], char* mod_name, MpNativeFunc func) {
     } else if (code == 1){
         mp_traceback();
     } else if (code == 2){
-        
+        mp_traceback();
     }
     vm_destroy();
     return 0;

@@ -2,7 +2,7 @@
 # stack based opcodes
 # @author xupingmao
 # @since 2016
-# @modified 2022/01/15 23:28:13
+# @modified 2022/02/04 23:00:30
 
 """使用说明
 在`minipy`的根目录执行
@@ -51,28 +51,30 @@ _opcode_names = [
     'OP_UNPACK', 'OP_ROT', 'OP_DEL', 'OP_FOR', 'OP_NEXT', 'OP_ITER', 'OP_LOAD_EX',
     'OP_SETJUMP', 
     
+    # 函数调用相关
     'OP_CALL', 
     'OP_TAILCALL',
     # apply(a, b)
     'OP_APPLY', 
     'OP_DEF', 
     'OP_RETURN',
+    # end of function
+    'OP_DEF_END',
     
     # class opcodes
     'OP_CLASS', 
     'OP_CLASS_SET',
+    'OP_CLASS_END',
 
     'OP_LOAD_PARAMS', 
     'OP_LOAD_NARG', 
     "OP_LOAD_PARG",
 
-    # end of function
-    'OP_EOF',
-
     "OP_CLR_JUMP",
 
     # end of program
     'OP_EOP',
+    
     # mulity assignment, eg. x,y = 1,2
     'OP_DEBUG',
     'OP_LINE',

@@ -1,8 +1,10 @@
 /**
- * opeartor implementions
+ * Object operator implementation
+ * 对象相关的操作实现，这些函数的入参大部分都是`MpObj`或者`MpObj*`
+ * 这个模块的作用是封装了对MpStr/MpList/MpDict等对象的调用
  * @author xupingmao
  * @since 2016
- * @modified 2022/01/19 20:06:03
+ * @modified 2022/02/04 22:32:11
  */
 
 #include <assert.h>
@@ -575,7 +577,7 @@ MpObj iter_new(MpObj collections) {
         case TYPE_CLASS: return iter_new(GET_CLASS(collections)->attr_dict);
         case TYPE_STR:  return string_iter_new(collections);
         case TYPE_DATA: return collections;
-        default: mp_raise("iter_new(): can not create a iterator of %o", collections);
+        default: mp_raise("iter_new: can not create a iterator of %o", collections);
     }
     return NONE_OBJECT;
 }
