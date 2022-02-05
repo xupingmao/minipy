@@ -23,3 +23,4 @@ id_rsa_github*
 minipy.dSYM
 /**/*.dSYM
 /test/tinypy/build/*
+/test/tinypy/tinypy/tinypy
