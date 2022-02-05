@@ -2,6 +2,7 @@
 cc = gcc
 LOG_LEVEL?=2
 MP_PROFILE?=0
+ROOT=$(shell pwd)
 
 minipy: src/*.c src/include/*.h
 	$(cc) -DTM_USE_CACHE -DLOG_LEVEL=$(LOG_LEVEL)\
@@ -38,7 +39,13 @@ test-dict:
 test:
 	./minipy ./test/test_main.py
 
+tinypy:
+	rm $(ROOT)/build/tinypy || echo "no tinypy"
+	cd test/tinypy && python2 setup.py tinypy math random time
+	mv test/tinypy/build/tinypy $(ROOT)/build/
+
 benchmark:
+	make tinypy
 	python3 ./test/benchmark/benchmark_main.py
 
 clean : 

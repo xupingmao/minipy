@@ -21,6 +21,10 @@ def main():
 		print(">>> Run with minipy")
 		os.system("./minipy %r" % fpath)
 
+		print("-" * 60)
+		print(">>> Run with tinypy")
+		os.system("./build/tinypy %r" % fpath)
+
 		print("\n\n")
 
 

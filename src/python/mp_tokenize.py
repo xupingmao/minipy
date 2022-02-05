@@ -1,7 +1,7 @@
 # -*- coding:utf-8 -*-
 # @author xupingmao
 # @since 2016
-# @modified 2021/11/03 23:47:17
+# @modified 2022/02/05 17:52:16
 
 # MP_TEST
 try:
@@ -25,9 +25,12 @@ def findpos(token):
         return [0,0]
     return token.pos
 
-# @param s, src
-# @param pos, position
+
 def find_error_line(s, pos):
+    """
+    @param {str} s: source code
+    @param {int} pos: position
+    """
     #print("****************")
     #print(pos, pos.type, pos.val, pos.pos)
     y = pos[0]

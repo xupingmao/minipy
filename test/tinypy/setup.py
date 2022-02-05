@@ -15,7 +15,7 @@ MODULES = []
 def main():
     chksize()
     if len(sys.argv) < 2:
-        print HELP
+        print(HELP)
         return
     
     global TEST,CLEAN,BOOT,DEBUG,VALGRIND,SANDBOX
@@ -52,7 +52,7 @@ def main():
         build = build_gcc
 
     if build == None:
-        print "couldn't detect OS or incorrect compiler command. defaulting to GCC."
+        print("couldn't detect OS or incorrect compiler command. defaulting to GCC.")
         build = build_gcc
     
     cmd = sys.argv[1]
@@ -68,7 +68,7 @@ def main():
     elif cmd == "install":
         install_cpython()
     else:
-        print 'invalid command'
+        print('invalid command')
 
 HELP = """
 python setup.py command [options] [modules]
@@ -146,22 +146,22 @@ def vars_windows():
         VARS['$FLAGS'] += ' -Ic:\\mingw\\include\\SDL -lSDLmain -lSDL '
 
 def do_cmd(cmd):
-    for k,v in VARS.items():
+    for k,v in list(VARS.items()):
         cmd = cmd.replace(k,v)
     if '$' in cmd:
-        print 'vars_error',cmd
+        print('vars_error',cmd)
         sys.exit(-1)
     if VALGRIND and (cmd.startswith("./") or cmd.startswith("../")):
         cmd = "valgrind " + cmd
     
-    print cmd
+    print(cmd)
     r = os.system(cmd)
     if r:
-        print 'exit_status',r
+        print('exit_status',r)
         sys.exit(r)
         
 def do_chdir(dest):
-    print 'cd',dest
+    print('cd',dest)
     os.chdir(dest)
 
 def build_bc(opt=False):
@@ -171,7 +171,7 @@ def build_bc(opt=False):
         fname = mod+".tpc"
         data = open(fname,'rb').read()
         cols = 16
-        for n in xrange(0,len(data),cols):
+        for n in range(0,len(data),cols):
             out.append(",".join([str(ord(v)) for v in data[n:n+cols]])+',')
         out.append("""};""")
     out.append("")
@@ -225,7 +225,7 @@ def build_blob():
     out.append("#endif")
     out.append('')
     dest = os.path.join(TOPDIR,'build','tinypy.h')
-    print 'writing %s'%dest
+    print('writing %s'%dest)
     f = open(dest,'w')
     f.write('\n'.join(out))
     f.close()
@@ -247,7 +247,7 @@ def build_blob():
             out.append(line)
     out.append('')
     dest = os.path.join(TOPDIR,'build','tinypy.c')
-    print 'writing %s'%dest
+    print('writing %s'%dest)
     f = open(dest,'w')
     f.write('\n'.join(out))
     f.close()
@@ -260,7 +260,7 @@ def py2bc(cmd,mod):
         cmd = cmd.replace('$DEST',dest)
         do_cmd(cmd)
     else:
-        print '#',dest,'is up to date'
+        print('#',dest,'is up to date')
 
 def build_gcc():
     mods = CORE[:]
@@ -273,12 +273,12 @@ def build_gcc():
         mods.append('disasm')
         do_cmd("gcc $WFLAGS -g vmmain.c $FLAGS -lm -o vm")
         if BOOT:
-            do_cmd('python tests.py $SYS')
+            do_cmd('python2 tests.py $SYS')
         for mod in mods:
-            py2bc('python py2bc.py $SRC $DEST',mod)
+            py2bc('python2 py2bc.py $SRC $DEST',mod)
     else:
         for mod in mods:
-            py2bc('python py2bc.py $SRC $DEST'+nopos,mod)
+            py2bc('python2 py2bc.py $SRC $DEST'+nopos,mod)
     if BOOT:
         do_cmd('$VM tests.tpc $SYS')
         for mod in mods: py2bc('$VM py2bc.tpc $SRC $DEST',mod)
@@ -386,7 +386,7 @@ def shrink(fname):
         if len(line.strip()) == 0: continue
         line = line.rstrip()
         l1,l2 = len(line),len(line.lstrip())
-        line = "\t"*((l1-l2)/4)+line.lstrip()
+        line = "\t"*((l1-l2)//4)+line.lstrip()
         
         #remove comments
         if '.c' in fname or '.h' in fname:
@@ -424,7 +424,7 @@ def chksize():
         f = open(fname,'r'); t1 += len(f.read()); f.close()
         txt = shrink(fname)
         t2 += len(txt)
-    print "#",t1,t2,t2-65536
+    print("#",t1,t2,t2-65536)
     return t2
 
 def build_64k():
@@ -439,11 +439,11 @@ def build_64k():
         f = open(dest,'w')
         f.write(txt)
         f.close()
-        print '%s saved to %s'%(src,dest)
+        print('%s saved to %s'%(src,dest))
 
 def build_cpython():
     try: from distutils.core import setup, Extension
-    except: print "cannot import distutils"
+    except: print("cannot import distutils")
 
     do_chdir(os.path.join(TOPDIR,'cpython'))
     setup(name = "tinypy",
@@ -454,7 +454,7 @@ def build_cpython():
     
 def install_cpython():
     try: from distutils.core import setup, Extension
-    except: print "cannot import distutils"
+    except: print("cannot import distutils")
 
     do_chdir(os.path.join(TOPDIR,'cpython'))
     setup(name = "tinypy",
