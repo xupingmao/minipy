@@ -1,7 +1,6 @@
 /* File: VM
  * Functionality pertaining to the virtual machine.
  */
-
 tp_vm *_tp_init(void) {
     int i;
     tp_vm *tp = (tp_vm*)calloc(sizeof(tp_vm),1);
@@ -465,6 +464,7 @@ void tp_builtins(TP) {
     {"ord",tp_ord}, {"merge",tp_merge}, {"getraw",tp_getraw},
     {"setmeta",tp_setmeta}, {"getmeta",tp_getmeta},
     {"bool", tp_builtins_bool},
+    {"dict", tp_builtins_dict},
     #ifdef TP_SANDBOX
     {"sandbox",tp_sandbox_},
     #endif
@@ -515,6 +515,13 @@ tp_obj tp_eval(TP, const char *text, tp_obj globals) {
     return tp_exec(tp,code,globals);
 }
 
+static void tp_init_argv(TP) {
+    tp_obj sys = tp_get(tp, tp->modules, tp_string("sys"));
+    tp_obj argv = tp_get(tp, tp->builtins, tp_string("ARGV"));
+    tp_set(tp, sys, tp_string("argv"), argv);
+}
+
+
 /* Function: tp_init
  * Initializes a new virtual machine.
  *
@@ -529,6 +536,7 @@ tp_vm *tp_init(int argc, char *argv[]) {
     tp_builtins(tp);
     tp_args(tp,argc,argv);
     tp_compiler(tp);
+    tp_init_argv(tp);
     return tp;
 }
 

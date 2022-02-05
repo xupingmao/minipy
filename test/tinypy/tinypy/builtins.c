@@ -320,3 +320,8 @@ tp_obj tp_builtins_bool(TP) {
     tp_obj v = TP_OBJ();
     return (tp_number(tp_bool(tp, v)));
 }
+
+
+tp_obj tp_builtins_dict(TP) {
+    return tp_dict(tp);
+}

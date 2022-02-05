@@ -7,6 +7,9 @@
  *
  * Returns a string object representating self.
  */
+
+#include "ops_mod.c"
+
 tp_obj tp_str(TP,tp_obj self) {
     int type = self.type;
     if (type == TP_STRING) { return self; }
@@ -275,6 +278,16 @@ tp_obj tp_add(TP,tp_obj a, tp_obj b) {
     tp_raise(tp_None,tp_string("(tp_add) TypeError: ?"));
 }
 
+static tp_obj tp_list_mul(TP, tp_obj list, tp_obj num) {
+    tp_obj result = tp_list(tp);
+    int i;
+    for (i = 0; i < num.number.val; i++) {
+        tp_params_v(tp, 2, result, list);
+        tp_extend(tp);
+    }
+    return result;
+}
+
 tp_obj tp_mul(TP,tp_obj a, tp_obj b) {
     if (a.type == TP_NUMBER && a.type == b.type) {
         return tp_number(a.number.val*b.number.val);
@@ -292,6 +305,12 @@ tp_obj tp_mul(TP,tp_obj a, tp_obj b) {
         char *s = r.string.info->s;
         int i; for (i=0; i<n; i++) { memcpy(s+al*i,a.string.val,al); }
         return tp_track(tp,r);
+    } else if ((a.type == TP_LIST && b.type == TP_NUMBER) ||
+               (a.type == TP_NUMBER && b.type == TP_LIST)) {
+        if (a.type == TP_NUMBER) {
+            return tp_list_mul(tp, b, a);
+        }
+        return tp_list_mul(tp, a, b);
     }
     tp_raise(tp_None,tp_string("(tp_mul) TypeError: ?"));
 }
@@ -350,10 +369,23 @@ int tp_cmp(TP,tp_obj a, tp_obj b) {
     tp_raise(tp_None,tp_string("(" #name ") TypeError: unsupported operand type(s)")); \
 }
 
+
+tp_obj tp_mod(TP, tp_obj a, tp_obj b) {
+    if (a.type == TP_NUMBER && a.type == b.type) {
+        tp_num a1 = a.number.val;
+        tp_num b1 = b.number.val;
+        return tp_number(((long)a1) % ((long)b1));
+    } else if (a.type == TP_STRING) {
+        return tp_string_mod(tp, a, b);
+    }
+
+    tp_raise(tp_None,tp_string("(tp_mod) TypeError: unsupported operand type(s)"));
+}
+
 TP_OP(tp_bitwise_and,((long)a)&((long)b));
 TP_OP(tp_bitwise_or,((long)a)|((long)b));
 TP_OP(tp_bitwise_xor,((long)a)^((long)b));
-TP_OP(tp_mod,((long)a)%((long)b));
+/* TP_OP(tp_mod,((long)a)%((long)b)); */
 TP_OP(tp_lsh,((long)a)<<((long)b));
 TP_OP(tp_rsh,((long)a)>>((long)b));
 TP_OP(tp_sub,a-b);

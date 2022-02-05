@@ -45,7 +45,6 @@ tinypy:
 	mv test/tinypy/build/tinypy $(ROOT)/build/
 
 benchmark:
-	make tinypy
 	python3 ./test/benchmark/benchmark_main.py
 
 clean : 

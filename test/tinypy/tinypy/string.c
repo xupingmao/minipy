@@ -1,5 +1,5 @@
-/* File: MpStr
- * MpStr handling functions.
+/* File: String
+ * String handling functions.
  */
  
 /*
