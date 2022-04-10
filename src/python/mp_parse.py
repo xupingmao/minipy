@@ -1,7 +1,7 @@
 # -*- coding:utf-8 -*-
 # @author xupingmao
 # @since 2016
-# @modified 2022/01/16 16:27:25
+# @modified 2022/04/10 15:12:13
 """Parse minipy code, grammar see minipy.grammar"""
 
 from mp_tokenize import *
@@ -374,7 +374,7 @@ def parse_from(p):
     node.first = p.pop()
     _path_check(p, node.first)
     if p.token.type != "*":
-        raise Exception("expect * at from statement")
+        raise Exception("only `from modname import *` is supported")
     p.token.type = 'string'
     node.second = p.token
     p.next()

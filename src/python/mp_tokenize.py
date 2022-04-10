@@ -1,13 +1,14 @@
 # -*- coding:utf-8 -*-
 # @author xupingmao
 # @since 2016
-# @modified 2022/02/05 17:52:16
+# @modified 2022/04/10 16:11:15
 
 # MP_TEST
 try:
-    _ = tm
+    _ = load
 except:
     # need some tool from python to bootstrap
+    # TODO: 支持`from boot import load`
     from boot import *
 
 class Token:
@@ -65,7 +66,7 @@ SYMBOL_CHARS = '-=[];,./!%*()+{}:<>@^'
 KEYWORDS = [
     'as','def','class', 'return','pass','and','or','not','in','import',
     'is','while','break','for','continue','if','else','elif','try',
-    'except','raise','global','del','from','None', "assert"
+    'except','raise','global','del','from','None', 'assert'
 ]
 
 SYMBOLS = [
@@ -78,7 +79,7 @@ SYMBOLS = [
 B_BEGIN = ['[','(','{']
 B_END   = [']',')','}']
 
-class TData:
+class Tokenizer:
 
     def __init__(self):
         self.y=1
@@ -112,7 +113,6 @@ def clean(s):
     return s
 
 def tokenize(s):
-    global T
     s = clean(s)
     return do_tokenize(s)
 
@@ -123,41 +123,48 @@ def is_number_begin(c):
     return c >= '0' and c <= '9'
 
 def do_tokenize(s):
-    global T
-    T = TData()
+    tokenizer = Tokenizer()
     i = 0
     l = len(s)
     while i < l:
         c = s[i]
-        T.f = [T.y,i-T.yi+1]
-        if T.nl: 
-            T.nl = False
-            i = do_indent(s,i,l)
-        elif c == '\n': i = do_nl(s,i,l)
-        elif c in SYMBOL_CHARS: i = do_symbol(s,i,l)
-        elif is_number_begin(c): i = do_number(s,i,l)
-        elif is_name_begin(c):   i = do_name(s,i,l)
-        elif c == '"' or c == "'":   i = do_string(s,i,l)
-        elif c == '#': i = do_comment(s,i,l)
+        tokenizer.f = [tokenizer.y,i-tokenizer.yi+1]
+        if tokenizer.nl: 
+            tokenizer.nl = False
+            i = do_indent(tokenizer,s,i,l)
+        elif c == '\n':
+            i = do_nl(tokenizer,s,i,l)
+        elif c in SYMBOL_CHARS: 
+            i = do_symbol(tokenizer,s,i,l)
+        elif is_number_begin(c):
+            i = do_number(tokenizer,s,i,l)
+        elif is_name_begin(c):
+            i = do_name(tokenizer,s,i,l)
+        elif c == '"' or c == "'":
+            i = do_string(tokenizer,s,i,l)
+        elif c == '#':
+            i = do_comment(tokenizer,s,i,l)
         elif c == '\\' and s[i+1] == '\n':
-            i += 2; T.y+=1; T.yi = i
-        elif is_blank(c): i += 1
-        else: compile_error('do_tokenize',s, Token('', '', T.f), "unknown token")
-    indent(0)
-    r = T.res
-    T = None
-    return r
+            i += 2; 
+            tokenizer.y+=1; 
+            tokenizer.yi = i
+        elif is_blank(c): 
+            i += 1
+        else:
+            compile_error('do_tokenize',s, Token('', '', tokenizer.f), "unknown token")
+    indent(tokenizer, 0)
+    return tokenizer.res
 
-def do_nl(s,i,l):
-    if not T.braces:
-        T.add('nl','nl')
+def do_nl(tokenizer, s,i,l):
+    if not tokenizer.braces:
+        tokenizer.add('nl','nl')
     i+=1
-    T.nl=True
-    T.y+=1
-    T.yi=i
+    tokenizer.nl=True
+    tokenizer.y+=1
+    tokenizer.yi=i
     return i
 
-def do_indent(s,i,l):
+def do_indent(tokenizer,s,i,l):
     v = 0
     while i<l:
         c = s[i]
@@ -167,26 +174,27 @@ def do_indent(s,i,l):
         v+=1
     # skip blank line or comment line.
     # i >= l means reaching EOF, which do not need to indent or dedent
-    if not T.braces and c != '\n' and c != '#' and i < l:
-        indent(v)
+    if not tokenizer.braces and c != '\n' and c != '#' and i < l:
+        indent(tokenizer, v)
     return i
 
-def indent(v):
-    if v == T.indent[-1]: pass
-    elif v > T.indent[-1]:
-        T.indent.append(v)
-        T.add('indent',v)
-    elif v < T.indent[-1]:
-        n = T.indent.index(v)
-        while len(T.indent) > n+1:
-            v = T.indent.pop()
-            T.add('dedent',v)
+def indent(tokenizer, v):
+    if v == tokenizer.indent[-1]:
+        return
+    elif v > tokenizer.indent[-1]:
+        tokenizer.indent.append(v)
+        tokenizer.add('indent',v)
+    elif v < tokenizer.indent[-1]:
+        n = tokenizer.indent.index(v)
+        while len(tokenizer.indent) > n+1:
+            v = tokenizer.indent.pop()
+            tokenizer.add('dedent',v)
 
 
 def symbol_match(s, i, v):
     return s[i:i+len(v)] == v
             
-def do_symbol(s,i,l):
+def do_symbol(tokenizer, s,i,l):
     v = None
     for sb in SYMBOLS:
         if symbol_match(s, i, sb):
@@ -195,12 +203,14 @@ def do_symbol(s,i,l):
             break
     if v == None:
         raise "invalid symbol"
-    T.add(v,v)
-    if v in B_BEGIN: T.braces += 1
-    if v in B_END: T.braces -= 1
+    tokenizer.add(v,v)
+    if v in B_BEGIN: 
+        tokenizer.braces += 1
+    if v in B_END: 
+        tokenizer.braces -= 1
     return i
 
-def do_number(s,i,l):
+def do_number(tokenizer, s,i,l):
     v=s[i];i+=1;c=None
     while i<l:
         c = s[i]
@@ -212,7 +222,7 @@ def do_number(s,i,l):
             c = s[i]
             if c < '0' or c > '9': break
             v+=c;i+=1
-    T.add('number',float(v))
+    tokenizer.add('number',float(v))
     return i
 
 def is_name_begin(c):
@@ -221,18 +231,20 @@ def is_name_begin(c):
 def is_name(c):
     return (c>='a' and c<='z') or (c>='A' and c<='Z') or (c in '_$') or (c>='0' and c<='9')
     
-def do_name(s,i,l):
+def do_name(tokenizer, s,i,l):
     v=s[i];i+=1
     while i<l:
         c = s[i]
         if not is_name(c): break
         v+=c
         i+=1
-    if v in KEYWORDS: T.add(v,v)
-    else: T.add('name',v)
+    if v in KEYWORDS: 
+        tokenizer.add(v,v)
+    else: 
+        tokenizer.add('name',v)
     return i
 
-def do_string(s,i,l):
+def do_string(tokenizer, s,i,l):
     v = ''
     q = s[i]  # quote char
     i += 1
@@ -245,11 +257,13 @@ def do_string(s,i,l):
             c = s[i]
             if c == q and s[i+1] == q and s[i+2] == q:
                 i += 3
-                T.add('string',v)
+                tokenizer.add('string',v)
                 break
             else:
                 v+=c; i+=1
-                if c == '\n': T.y += 1;T.x = i
+                if c == '\n': 
+                    tokenizer.y += 1
+                    tokenizer.x = i
     else:
         while i<l:
             c = s[i]
@@ -263,13 +277,13 @@ def do_string(s,i,l):
                 v+=c;i+=1
             elif c == q:
                 i += 1
-                T.add('string',v)
+                tokenizer.add('string',v)
                 break
             else:
                 v+=c;i+=1
     return i
 
-def do_comment(s,i,l):
+def do_comment(tokenizer, s,i,l):
     i += 1
     value = ""
     while i<l:
@@ -277,7 +291,7 @@ def do_comment(s,i,l):
         value += s[i]
         i += 1
     if value.startswith("@debugger"):
-        T.add("@", "debugger")
+        tokenizer.add("@", "debugger")
     return i
 
 # MP_TEST

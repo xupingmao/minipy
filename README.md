@@ -72,12 +72,12 @@ make && make test
 ### 类型系统
 1. `string`, 是不可变对象
 2. `number`, 全部使用double类型
-3. `list`, 列表
-4. `dict`, dict对象目前不是使用hashtable实现的，
+3. `list`, 列表（动态数组）
+4. `dict`, 哈希表
 5. `function`, 包括native的C函数和自定义的Python函数
-6. `class`, 类
+6. `class`, 自定义Python类型
 7. `None`, None类型
-8. `data`, data类型可以使用C语言自由扩展
+8. `data`, 自定义的C语言类型
 
 ### 协议
 

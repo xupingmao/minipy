@@ -39,6 +39,9 @@ test-dict:
 test:
 	./minipy ./test/test_main.py
 
+test-tokenize:
+	python3 ./test/test_tokenize.py
+
 tinypy:
 	rm $(ROOT)/build/tinypy || echo "no tinypy"
 	cd test/tinypy && python2 setup.py tinypy math random time
