@@ -1,5 +1,7 @@
 import time
 import os
+import sys
+import argparse
 
 def timeit(func, *args):
     t1 = time.time()
@@ -9,6 +11,10 @@ def timeit(func, *args):
 
 
 def main():
+	parser = argparse.ArgumentParser("Minipy基准测试")
+	parser.add_argument("--micropython", action = "store_true")
+	args = parser.parse_args()
+
 	dirname = "./test/benchmark/cases"
 	for fname in sorted(os.listdir(dirname)):
 		fpath = os.path.join(dirname, fname)
@@ -24,6 +30,11 @@ def main():
 		print("-" * 60)
 		print(">>> Run with tinypy")
 		os.system("./build/tinypy %r" % fpath)
+
+		if args.micropython:
+			print("-" * 60)
+			print(">>> Run with MicroPython")
+			os.system("./build/micropython %r" % fpath)
 
 		print("\n\n")
 

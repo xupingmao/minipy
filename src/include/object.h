@@ -3,7 +3,7 @@
  *
  *  Created on: 2014/8/25
  *  @author: xupingmao
- *  @modified 2022/01/26 23:43:04
+ *  @modified 2022/02/09 23:51:59
  */
 
 #ifndef _OBJECT_H_
@@ -138,6 +138,7 @@ typedef struct MpFrame {
 #define FRAMES_COUNT 128
 #define MAX_ARG_COUNT 10
 #define STACK_SIZE 2048
+
 typedef struct MpVm {
   char* version;
   int   debug;
@@ -175,7 +176,7 @@ typedef struct MpVm {
   /* MpObj *top; */
   MpObj *arguments;
   
-  // prototypes
+  /* prototypes */
   MpObj list_proto;
   MpObj dict_proto;
   MpObj str_proto;
@@ -201,7 +202,9 @@ typedef struct MpVm {
   /* constants */
   MpObj _TRUE;
   MpObj _FALSE;
-  
+
+  /* 一些内部信息 */
+  int vm_size;
 } MpVm;
 
 typedef struct MpData {

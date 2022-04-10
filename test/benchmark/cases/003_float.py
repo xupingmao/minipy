@@ -1,6 +1,13 @@
 import time
 import random
 
+try:
+    randint_wrap = random.randint
+except:
+    # micropython
+    def randint_wrap(a, b):
+        return a + random.getrandbits(32) % (b-a)
+
 def timeit(func, *args):
     t1 = time.time()
     ret = func(*args)
@@ -8,7 +15,7 @@ def timeit(func, *args):
     print("cost time: %sms" % cost_time)
 
 def rand_float():
-	return random.randint(1, 100) + 0.5
+	return randint_wrap(1, 100) + 0.5
 
 def test_add(n):
 	print("test_add: n=%d" % n)

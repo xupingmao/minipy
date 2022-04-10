@@ -2,7 +2,7 @@
  * description here
  * @author xupingmao
  * @since 2016
- * @modified 2022/01/17 23:52:02
+ * @modified 2022/02/09 23:56:02
  */
 
 #include "include/mp.h"
@@ -121,9 +121,9 @@ MpObj load_boot_module(char* sz_filename, char* sz_code) {
  * @param mod, module name
  * @param sz_fnc, function name
  */
-MpObj vm_call_mod_func(char* mod, char* sz_fnc) {
-    MpObj module = obj_get(tm->modules, string_new(mod));
-    MpObj fnc = obj_get(module, string_new(sz_fnc));
+MpObj vm_call_mod_func(const char* mod, const char* sz_fnc) {
+    MpObj module = obj_get(tm->modules, string_static(mod));
+    MpObj fnc = obj_get(module, string_static(sz_fnc));
     arg_start();
     return obj_call(fnc);
 }
@@ -135,18 +135,16 @@ MpObj vm_call_mod_func(char* mod, char* sz_fnc) {
  * built-in modules
  */
 int vm_init(int argc, char* argv[]) {
-    
     int i;
+
+    /* 使用静态内存，尽量避免动态内存分配 */
+    static MpVm _vm;
 
     #ifdef MP_CHECK_MEM
         ptr_map = PtrMap_new();
     #endif
 
-    tm = malloc(sizeof(MpVm));
-    if (tm == NULL) {
-        fprintf(stderr, "vm init fail");
-        return -1;
-    }
+    tm = &_vm;
 
     log_init();
     
@@ -164,6 +162,7 @@ int vm_init(int argc, char* argv[]) {
     tm->steps  = 0;
     tm->_TRUE  = number_obj(1);
     tm->_FALSE = number_obj(0);
+    tm->vm_size = sizeof(MpVm);
 
     /* set module boot */
     MpObj boot = dict_new();
@@ -204,7 +203,6 @@ void vm_destroy() {
     printf("steps = %d\n", tm->steps);
 #endif
     gc_destroy();
-    free(tm);
 
     log_destroy();
 

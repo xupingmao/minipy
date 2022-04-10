@@ -316,8 +316,8 @@ void     builtins_init();
 MpObj*   get_builtin(char* key);
 
 
-// vm.c
-MpObj    vm_call_mod_func(char* modname, char* funcname);
+/* vm.c */
+MpObj vm_call_mod_func(const char* modname, const char* funcname);
 
 // time.c
 int64_t  time_get_milli_seconds();

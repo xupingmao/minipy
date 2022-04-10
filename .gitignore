@@ -25,3 +25,4 @@ minipy.dSYM
 /test/tinypy/build/*
 /test/tinypy/tinypy/tinypy
 /test/tinypy/tinypy/vm
+/test/micropython/

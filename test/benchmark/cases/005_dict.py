@@ -1,6 +1,13 @@
 import time
 import random
 
+try:
+    randint_wrap = random.randint
+except:
+    # micropython
+    def randint_wrap(a, b):
+        return a + random.getrandbits(32) % (b-a)
+
 def timeit(func, *args):
     t1 = time.time()
     ret = func(*args)
@@ -12,7 +19,7 @@ def rand_str(length):
 	a = ord('A')
 	b = ord('Z')
 	for i in range(length):
-		v += chr(random.randint(a, b))
+		v += chr(randint_wrap(a, b))
 	return v
 
 def test_random_gen(n):

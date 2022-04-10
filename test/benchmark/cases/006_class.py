@@ -1,11 +1,19 @@
 # -*- coding:utf-8 -*-
 # @author xupingmao
 # @since 2022/02/04 22:45:35
-# @modified 2022/02/04 22:50:41
+# @modified 2022/02/13 18:11:19
 # @filename 006_class.py
 
 import time
 import random
+
+try:
+    randint_wrap = random.randint
+except:
+    # micropython
+    def randint_wrap(a, b):
+        return a + random.getrandbits(32) % (b-a)
+
 
 class TestClass:
 
@@ -27,11 +35,11 @@ def rand_str(length):
     a = ord('A')
     b = ord('Z')
     for i in range(length):
-        v += chr(random.randint(a, b))
+        v += chr(randint_wrap(a, b))
     return v
 
 def rand_int():
-    return random.randint(1, 100)
+    return randint_wrap(1, 100)
 
 def test_random_gen(n):
     print("test_random_gen: n=%d" % n)

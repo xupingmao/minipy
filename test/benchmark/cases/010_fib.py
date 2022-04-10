@@ -12,4 +12,4 @@ def fib(n):
         return 1
     return fib(n-1) + fib(n-2)
 
-timeit(fib, 35)
+timeit(fib, 30)

@@ -7,8 +7,15 @@ def timeit(func, *args):
     cost_time = (time.time() - t1) * 1000
     print("cost time: %sms" % cost_time)
 
+try:
+	randint_wrap = random.randint
+except:
+	# micropython
+	def randint_wrap(a, b):
+		return a + random.getrandbits(32) % (b-a)
+
 def rand_int():
-	return random.randint(1, 100)
+	return randint_wrap(1, 100)
 
 def test_add(n):
 	print("test_add: n=%d" % n)

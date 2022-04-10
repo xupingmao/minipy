@@ -44,6 +44,9 @@ tinypy:
 	cd test/tinypy && python2 setup.py tinypy math random time
 	mv test/tinypy/build/tinypy $(ROOT)/build/
 
+micropython:
+	python3 ./test/benchmark/build_micropython.py
+
 benchmark:
 	python3 ./test/benchmark/benchmark_main.py
 

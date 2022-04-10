@@ -1,7 +1,7 @@
 /**
   * execute minipy bytecode
   * @since 2014-9-2
-  * @modified 2022/02/04 22:56:31
+  * @modified 2022/02/06 11:27:25
   *
   * 2015-6-16: interpreter for tinyvm bytecode.
  **/
@@ -158,6 +158,7 @@ void pop_frame() {
     PROFILE_END(cache); \
     break;
     
+
 #define FRAME_CHECK_GC()  \
 f->top = top; \
 if (tm->allocated > tm->gc_threshold) {   \
@@ -396,7 +397,21 @@ tailcall:
             FRAME_CHECK_GC();
             break;
         }
-        MP_OP(OP_ADD, obj_add)
+        case OP_ADD: {
+            // TODO 可以合并为 OP_ADD_TO_LOCAL
+            PROFILE_START(cache); 
+            MpObj* second = top-1;
+            if (top->type == TYPE_NUM && second->type == TYPE_NUM) {
+                second->value.num = top->value.num + second->value.num;
+                top--;
+            } else {
+                *second = obj_add(*second, *top);
+                top--;
+            }
+            PROFILE_END(cache);
+            break;
+        }
+        // MP_OP(OP_ADD, obj_add)
         MP_OP(OP_SUB, obj_sub)
         MP_OP(OP_MUL, obj_mul)
         MP_OP(OP_DIV, obj_div)
