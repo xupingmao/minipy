@@ -14,6 +14,9 @@
 
 迷你Python解释器，Python实现的编译器+C语言实现的VM.
 
+注意：本项目主要是用于学习编译器相关原理，如果需要用于生产环境，可以参考以下项目
+- [micropython](https://github.com/micropython/micropython)
+
 ## 如何开始
 
 ```
@@ -78,6 +81,20 @@ make && make test
 6. `class`, 自定义Python类型
 7. `None`, None类型
 8. `data`, 自定义的C语言类型
+
+### 相关项目
+
+其他嵌入式Python的实现
+- [micropython](https://github.com/micropython/micropython)
+- [tinypy](https://github.com/philhassey/tinypy)
+
+其他嵌入式脚本语言实现
+- Lua
+    - [lua](https://github.com/lua/lua)
+    - [luajit](https://github.com/LuaJIT/LuaJIT)
+- JavaScript
+    - [quickjs](https://github.com/bellard/quickjs)
+    - [duktape](https://github.com/svaarala/duktape)
 
 ### 协议
 
