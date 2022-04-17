@@ -1,7 +1,7 @@
 # -*- coding:utf-8 -*-
 # @author xupingmao
 # @since 2016
-# @modified 2022/02/04 22:55:20
+# @modified 2022/04/17 21:29:29
 
 """使用说明
 dis_code: 反编译代码为字节码
@@ -57,6 +57,15 @@ _end_tag_list = [-1]
 
 _tag_cnt = 0
 _global_index = 0
+
+
+def init_pop_value_type_set():
+    result = set(["call"])
+    for item in _op_dict:
+        result.add(item)
+    return result
+
+POP_VALUE_TYPE_SET = init_pop_value_type_set()
 
 class Scope:
     def __init__(self):
@@ -796,6 +805,9 @@ def encode_item(tk):
         return r
     return 1
 
+def need_pop_value(type):
+    return type in POP_VALUE_TYPE_SET
+
 def encode_block(tk):
     assert gettype(tk) == "list"
     for i in tk:
@@ -806,7 +818,7 @@ def encode_block(tk):
         if lineno != None: 
             emit(OP_LINE, lineno)
         encode_item(i)
-        if i.type == 'call': 
+        if need_pop_value(i.type):
             emit(OP_POP)
 
 def encode(content):
@@ -891,7 +903,7 @@ def convert_to_cstring(filename, code):
     code = code.replace('"', '\\"')
     code = code.replace("\n", "\\n")
     code = code.replace("\0", "\\0")
-    cstring = "char* " + filename.split(".")[0] + "_bin" + "=";
+    cstring = "const char* " + filename.split(".")[0] + "_bin" + "=";
     cstring += '"'
     cstring += code
     cstring += '";'

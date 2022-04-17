@@ -2,7 +2,7 @@
  * description here
  * @author xupingmao
  * @since 2016
- * @modified 2022/01/18 20:03:54
+ * @modified 2022/04/12 21:09:51
  */
 #include "include/mp.h"
 
@@ -146,6 +146,12 @@ MpObj class_instance(MpObj clazz){
           obj_set(instance, k, method);
         }
     }
+    
+    MpObj *_fnc = dict_get_by_cstr(GET_DICT(instance), "__init__");
+    if (_fnc != NULL) {
+        obj_call(*_fnc);
+    }
+
     return instance;
 }
 
@@ -344,12 +350,7 @@ MpObj obj_call(MpObj func) {
             }
         }
     } else if (IS_CLASS(func)) {
-        ret = class_instance(func);
-        MpObj *_fnc = dict_get_by_str(ret, "__init__");
-        if (_fnc != NULL) {
-            obj_call(*_fnc);
-        }
-        return ret;
+        return class_instance(func);
     }
     mp_raise("File %o, line=%d: obj_call:invalid object %o", 
         GET_FUNCTION_FILE(tm->frame->fnc), 

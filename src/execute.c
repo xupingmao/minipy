@@ -1,7 +1,7 @@
 /**
   * execute minipy bytecode
   * @since 2014-9-2
-  * @modified 2022/02/06 11:27:25
+  * @modified 2022/04/17 21:31:07
   *
   * 2015-6-16: interpreter for tinyvm bytecode.
  **/
@@ -9,14 +9,14 @@
 #include "include/mp.h"
 #include "execute_profile.c"
 
-void mp_resolve_code(MpModule* m, char* code);
+void mp_resolve_code(MpModule* m, const char* code);
 
 /**
  * @since 2016-11-24
  * TODO gc problem, still save string to constants dict?
  */
-void mp_resolve_code(MpModule* m, char* code) {
-    char* s = code;
+void mp_resolve_code(MpModule* m, const char* code) {
+    const char* s = code;
     char buf[1024];
     int error = 0;
     char* error_msg = NULL;
@@ -323,21 +323,17 @@ tailcall:
                     MpObj value = GET_DICT(tm->builtins)->nodes[idx].val;
                     // OPTIMIZE
                     // set the builtin to `globals()`
-                    obj_set(globals, cache->v.obj, value);
-                    idx = dict_get0(GET_DICT(globals), cache->v.obj);
-                    // pc[0] = OP_FAST_LD_GLO;
-                    // code16(pc+1, idx);
+                    // obj_set(globals, cache->v.obj, value);
+                    // idx = dict_get0(GET_DICT(globals), cache->v.obj);
                     // OPTIMIZE END
                     // TODO key被删除后重新设置，它的位置可能变动
-                    cache->op = OP_FAST_LD_GLO;
-                    cache->v.ival = idx;
+                    // cache->op = OP_FAST_LD_GLO;
+                    // cache->v.ival = idx;
 
                     MP_PUSH(value);
                 }
             } else {
                 MP_PUSH(GET_DICT(globals)->nodes[idx].val);
-                // pc[0] = OP_FAST_LD_GLO;
-                // code16(pc+1, idx);
                 cache->op = OP_FAST_LD_GLO;
                 cache->v.ival = idx;
             }

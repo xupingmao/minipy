@@ -1,7 +1,7 @@
 # -*- coding:utf-8 -*-
 # @author xupingmao
 # @since 2016
-# @modified 2022/04/10 15:12:13
+# @modified 2022/04/12 20:54:34
 """Parse minipy code, grammar see minipy.grammar"""
 
 from mp_tokenize import *
@@ -21,15 +21,16 @@ class AstNode:
         self.second = second
     
 class ParserCtx:
-    def __init__(self, r, txt):
+    def __init__(self, tokens, txt):
         # current token
         self.token = Token("nl", 'nl', None)
         self.eof = Token("eof", 'eof', None)
-        r.append(self.token)
-        r.append(self.eof)
-        self.r = r
+        tokens.append(self.token)
+        tokens.append(self.eof)
+        self.tokens = tokens
+        self.r = tokens
         self.i = 0
-        self.l = len(r)
+        self.l = len(tokens)
         self.tree = []
         self.src = txt
         self.last_token = None
@@ -643,8 +644,8 @@ stmt_map = {
     "pass": parse_pass,
     "[":    parse_multi_assign,
     "name": parse_assign_or_exp,
-    "number": baseitem,
-    "string": baseitem,
+    "number": expr,
+    "string": expr,
     "try": parse_try,
     "global": parse_global,
     "del": parse_del,
@@ -678,6 +679,7 @@ def parse_block(p):
             
     
 def parse(content):
+    """解析额入口"""
     r = tokenize(content)
     p = ParserCtx(r, content)
     p.next()

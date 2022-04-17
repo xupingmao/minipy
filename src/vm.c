@@ -2,7 +2,7 @@
  * description here
  * @author xupingmao
  * @since 2016
- * @modified 2022/02/09 23:56:02
+ * @modified 2022/04/17 21:29:55
  */
 
 #include "include/mp.h"
@@ -99,7 +99,7 @@ MpObj load_file_module(MpObj file, MpObj code, MpObj name) {
 /**
  * @since 2016-11-27
  */
-MpObj load_boot_module(char* sz_filename, char* sz_code) {
+MpObj load_boot_module(char* sz_filename, const char* sz_code) {
     MpObj name = string_new(sz_filename);
     MpObj file = name;
     MpObj code = string_new("");

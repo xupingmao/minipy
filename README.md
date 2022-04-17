@@ -84,17 +84,23 @@ make && make test
 
 ### 相关项目
 
-其他嵌入式Python的实现
-- [micropython](https://github.com/micropython/micropython)
-- [tinypy](https://github.com/philhassey/tinypy)
+其他Python的实现
+- [CPython](https://github.com/python/cpython) Python的官方实现版本
+- [micropython](https://github.com/micropython/micropython) 嵌入式版本
+- [tinypy](https://github.com/philhassey/tinypy) 64K的迷你版本，支持Python的部分子集
+- [cython](https://github.com/cython/cython) Python的超集，可以把Python转换成C语言编译以提升运行速度，同时也可以简化Python的C语言扩展的开发
 
 其他嵌入式脚本语言实现
 - Lua
-    - [lua](https://github.com/lua/lua)
-    - [luajit](https://github.com/LuaJIT/LuaJIT)
+    - [lua](https://github.com/lua/lua) 非常流行的嵌入式脚本引擎
+    - [luajit](https://github.com/LuaJIT/LuaJIT) lua的JIT性能优化版本
 - JavaScript
     - [quickjs](https://github.com/bellard/quickjs)
     - [duktape](https://github.com/svaarala/duktape)
+
+更多有意思的编译器项目
+- [ShivyC](https://github.com/ShivamSarodia/ShivyC) 一个Python编写的C语言编译器
+- [NASM](https://github.com/netwide-assembler/nasm) 跨平台的x86汇编和反汇编器
 
 ### 协议
 
