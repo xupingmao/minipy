@@ -17,6 +17,13 @@ o2:
 o3:
 	$(cc) -DTM_USE_CACHE -O3 -o minipy src/main.c -lm
 
+minipyc_bin:
+	python3 src/python/mp_encode.py -const_name minipyc_bin -c_code mp2c/minipyc.py > mp2c/gen/minipyc_bin.h
+	python3 src/python/mp_encode.py -const_name mp2c_bin -c_code mp2c/mp2c.py > mp2c/gen/mp2c_bin.h
+
+minipyc: minipyc_bin
+	$(cc) -DTM_USE_CACHE -O2 -o minipyc mp2c/minipyc.c -lm
+
 debug-gc:
 	$(cc) -g -DLOG_LEVEL=5 -DMP_DEBUG -o minipy src/main.c -lm
 

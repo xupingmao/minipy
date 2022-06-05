@@ -10,6 +10,7 @@ tm.exe
 tm0.exe
 tinypy.exe
 minipy
+minipyc
 src/minipy
 test/minipy
 __pycache__

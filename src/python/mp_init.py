@@ -1,7 +1,7 @@
 # -*- coding:utf-8 -*-
 # @author xupingmao
 # @since 2016
-# @modified 2022/01/26 15:50:47
+# @modified 2022/06/05 16:46:54
 """Minipy初始化, 这里_import函数还没准备好，无法调用"""
 
 def add_builtin(name, func):
@@ -369,5 +369,5 @@ def boot(loadlibs=True):
         elif argv[0] == "-h" or argv[0] == "--help":
             print_init_help()
         else:
-            print("file not exists, exit")
+            print("file(%s) not exists, exit" % argv[0])
             

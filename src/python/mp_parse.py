@@ -1,7 +1,7 @@
 # -*- coding:utf-8 -*-
 # @author xupingmao
 # @since 2016
-# @modified 2022/04/12 20:54:34
+# @modified 2022/06/05 16:58:47
 """Parse minipy code, grammar see minipy.grammar"""
 
 from mp_tokenize import *
@@ -786,6 +786,23 @@ def tk_list_len(tk):
     if tk == None: return 0
     if tk.type == ',':return tk_list_len(tk.first) + tk_list_len(tk.second)
     return 1
+
+
+
+class ArgReader:
+
+    def __init__(self, args):
+        self.args = args
+        self.index = -1
+        self.max_index = len(args) - 1
+
+    def has_next(self):
+        return self.index < self.max_index
+
+    def next(self):
+        self.index += 1
+        return self.args[self.index]
+
 
 if __name__ == "__main__":
     import sys

@@ -1,7 +1,7 @@
 # -*- coding:utf-8 -*-
 # @author xupingmao
 # @since 2016
-# @modified 2022/04/17 21:29:29
+# @modified 2022/06/05 16:58:37
 
 """使用说明
 dis_code: 反编译代码为字节码
@@ -898,12 +898,16 @@ def compile(src, filename, des = None):
             dest += str(item[0]) + '#' + escape_for_compile(item[1])+'\n'
     return dest;
   
-def convert_to_cstring(filename, code):
+def convert_to_cstring(filename, code, const_name=None):
     code = code.replace("\\", "\\\\")
     code = code.replace('"', '\\"')
     code = code.replace("\n", "\\n")
     code = code.replace("\0", "\\0")
-    cstring = "const char* " + filename.split(".")[0] + "_bin" + "=";
+
+    if const_name == None:
+        const_name = filename.split(".")[0] + "_bin"
+
+    cstring = "const char* " + const_name + "=";
     cstring += '"'
     cstring += code
     cstring += '";'
@@ -956,6 +960,7 @@ def dis(path, return_str = False):
 def main():
     import sys
     ARGV = sys.argv
+
     if len(ARGV) < 2:
         print("usage: %s filename    : compile python to c code" % ARGV[0])
         print("       %s -p filename : print code" % ARGV[0])
@@ -967,15 +972,43 @@ def main():
         code = compilefile(ARGV[1])
         code = convert_to_cstring(ARGV[1], code)
         print(code)
-    elif len(ARGV) == 3:
-        op = ARGV[1];
-        if op == "-p":
-            code = compilefile(ARGV[2])
-            print(code)
-        elif op == "-dis":
-            dis(ARGV[2])
-        else:
-            compile(ARGV[1], "#test", ARGV[2])
+    elif len(ARGV) >= 3:
+        args = dict()
+        parser = ArgReader(ARGV[1:])
+        while parser.has_next():
+            item = parser.next()
+            if item == "-p":
+                assert parser.has_next(), "expect filename"
+                filename = parser.next()
+                code = compilefile(filename)
+                print(code)
+                return
+
+            if item == "-dis":
+                assert parser.has_next(), "expect filename"
+                filename = parser.next()
+                dis(filename)
+                return
+
+            if item == "-const_name":
+                assert parser.has_next()
+                args["const_name"] = parser.next()
+                continue
+
+            if item == "-c_code":
+                args["c_code"] = True
+                continue
+
+            if "c_code" in args:
+                filename = item
+                const_name_default = filename.split(".")[0] + "_bin"
+                const_name = args.get("const_name", const_name_default)
+
+                code = compilefile(filename)
+                code = convert_to_cstring(filename, code, const_name)
+                print(code)
+            else:
+                compile(item, "#test")
 
 if __name__ == "__main__":
     main()

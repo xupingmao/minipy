@@ -2,7 +2,7 @@
 # 这个版本通过字节码来生成C语言的代码，相比于通过语法树解析，逻辑要简单很多
 # @author xupingmao <578749341@qq.com>
 # @since 2020/10/18 00:32:28
-# @modified 2022/02/05 17:36:22
+# @modified 2022/06/05 17:04:51
 # @version v0.2
 
 import sys
@@ -517,23 +517,6 @@ def convert(code, writer):
 
     writer.end()
 
-def file_basename(fpath):
-    fname = fpath.split("/")[-1]
-    name = fname.split(".")[0]
-    return name
-
-def do_build(c_file_path, target):
-    print("building %s ..." % c_file_path)
-    # os.system("rm build/mp2c")
-    build_cmd = "gcc -O2 %r -o %r -lm -Isrc -Imp2c" % (c_file_path, target)
-    print("build command:", build_cmd)
-    result = os.system(build_cmd)
-    if result == 0:
-        print("build success!")
-    else:
-        print("build failed")
-        sys.exit(1)
-
 def do_benchmark(fpath, target):
     print("")
     print("Test File: %s" % fpath)
@@ -551,6 +534,56 @@ def do_benchmark(fpath, target):
     print(">>> Run with python3")
     os.system("python3 %r" % fpath)
 
+
+class AotCompiler:
+
+    def __init__(self, debug = False):
+        self._debug = debug
+
+    def do_build(self, c_file_path, target):
+        print("building %s ..." % c_file_path)
+        print("target: %s" % target)
+        
+        build_cmd = "gcc -O2 %r -o %r -lm -Isrc -Imp2c" % (c_file_path, target)
+        print("build command:", build_cmd)
+        result = os.system(build_cmd)
+        if result == 0:
+            print("build success!")
+        else:
+            print("build failed")
+            sys.exit(1)
+
+
+    def get_base_name(self, fpath):
+        fname = fpath.split("/")[-1]
+        name = fname.split(".")[0]
+        return name
+
+    def get_default_target(self, fpath):
+        name = self.get_base_name(fpath)
+        return "build/%s.out" % name
+
+    def compile(self, fpath, target = None):
+        code = load(fpath)    
+        name = self.get_base_name(fpath)
+        writer = CodeWriter(code, name)
+        convert(code, writer)
+        result_code = writer.get_code()
+        # print(result_code)
+
+        if target == None:
+            target = self.get_default_target(fpath)
+
+        c_file_path = "build/%s.c" % name
+
+        save(c_file_path, result_code)
+
+        if self._debug:
+            print("saved to %s" % c_file_path)
+
+        self.do_build(c_file_path, target)
+
+
 def main():
     argv = sys.argv
     # print(argv)
@@ -562,20 +595,8 @@ def main():
     else:
         raise Exception("参数异常")
 
-    code = load(fpath)    
-    name = file_basename(fpath)
-    writer = CodeWriter(code, name)
-    convert(code, writer)
-    result_code = writer.get_code()
-    # print(result_code)
-
-    c_file_path = "build/%s.c" % name
-    target = "build/%s.out" % name
-
-    save(c_file_path, result_code)
-    print("saved to %s" % c_file_path)
-
-    do_build(c_file_path, target)
+    compiler = AotCompiler(True)
+    compiler.compile(fpath)
 
     do_benchmark(fpath, target)
 
