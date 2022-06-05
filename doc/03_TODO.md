@@ -1,5 +1,8 @@
 # 基础功能
 
+- [] Unicode支持
+- [] 关键字参数
+
 ## Unicode支持
 
 由于`UTF-8`是兼容ASCII码的变长编码，所以目前minipy的字符串可以存储`UTF-8`编码的字符串，但是`len(str)`,`str[index]`这类操作的结果是不正确的
