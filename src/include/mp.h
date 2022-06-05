@@ -326,7 +326,7 @@ int64_t  time_get_milli_seconds();
 MpObj  obj_import(MpObj globals, MpObj name);
 MpObj  obj_import_attr(MpObj globals, MpObj module_name, MpObj attr);
 
-#include "mp_micro.h"
+#include "mp_macro.h"
 #include "mp_log.h"
 
 #endif

@@ -3,11 +3,11 @@
  *
  *  Created on: 2020/09/21
  *  @author: xupingmao
- *  @modified 2022/01/15 15:07:04
+ *  @modified 2022/06/05 17:52:28
  */
 
-#ifndef MP_MICRO_H_
-#define MP_MICRO_H_
+#ifndef MP_MACRO_H_
+#define MP_MACRO_H_
 
 /* c micros */
 #define strequals(a, b) (a == b || strcmp(a,b) == 0)
