@@ -1,1 +1,17 @@
-const char* minipyc_bin="67#mp2c/minipyc\n63#5\n2#sys\n1#1\n63#6\n2#mp_encode\n1#1\n63#7\n2#mp2c\n1#1\n63#9\n51#boot\n63#9\n57\n63#10\n28#mp_encode\n2#ArgReader\n22\n28#sys\n2#argv\n22\n48#1\n25\n63#11\n28#dict\n48\n25#1\n63#13\n27\n2#has_next\n22\n48\n37#53\n63#14\n27\n2#next\n22\n48\n25#2\n63#15\n27#2\n2#-o\n15\n37#20\n63#16\n28#assert\n27\n2#has_next\n22\n48\n48#1\n30\n63#17\n27\n2#next\n22\n48\n27#1\n2#target\n21\n63#18\n36#33\n35#1\n63#20\n27#1\n2#get\n22\n2#target\n48#1\n25#3\n63#21\n28#mp2c\n2#AotCompiler\n22\n48\n25#4\n63#22\n27#4\n2#compile\n22\n27#2\n27#3\n48#2\n30\n36#56\n53\n26#boot\n61\n";
+const char* minipyc_bin="67#mp2c/minipyc\n"
+"63#5\n2#sys\n1#1\n"
+"63#6\n2#mp_encode\n1#1\n"
+"63#7\n2#mp2c\n1#1\n"
+"63#9\n51#boot\n"
+"63#9\n57\n"
+"63#10\n28#mp_encode\n2#ArgReader\n22\n28#sys\n2#argv\n22\n48#1\n25\n"
+"63#11\n28#dict\n48\n25#1\n"
+"63#13\n27\n2#has_next\n22\n48\n37#53\n"
+"63#14\n27\n2#next\n22\n48\n25#2\n"
+"63#15\n27#2\n2#-o\n15\n37#20\n"
+"63#16\n28#assert\n27\n2#has_next\n22\n48\n48#1\n30\n"
+"63#17\n27\n2#next\n22\n48\n27#1\n2#target\n21\n"
+"63#18\n36#33\n35#1\n"
+"63#20\n27#1\n2#get\n22\n2#target\n48#1\n25#3\n"
+"63#21\n28#mp2c\n2#AotCompiler\n22\n48\n25#4\n"
+"63#22\n27#4\n2#compile\n22\n27#2\n27#3\n48#2\n30\n36#56\n53\n26#boot\n61\n";

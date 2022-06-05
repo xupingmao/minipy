@@ -1,7 +1,7 @@
 # -*- coding:utf-8 -*-
 # @author xupingmao
 # @since 2016
-# @modified 2022/06/05 16:58:37
+# @modified 2022/06/05 17:47:17
 
 """使用说明
 dis_code: 反编译代码为字节码
@@ -880,45 +880,16 @@ def compile_to_list(src, filename):
     return code
 
 def compile(src, filename, des = None):
-    global _ctx
-    # lock here
-    asm_init()
-    _ctx = EncodeCtx(src)
-    name = filename.split(".")[0]
-    emit(OP_FILE, name)
-    encode(src)
-    _ctx = None
-    code = gen_code()
-    dest = ''
-    for item in code:
-        # there is no # in CJK charsets, so it is better to split the sequence
-        if item[1] == 0:
-            dest += str(item[0]) + '\n'
-        else:
-            dest += str(item[0]) + '#' + escape_for_compile(item[1])+'\n'
-    return dest;
-  
-def convert_to_cstring(filename, code, const_name=None):
-    code = code.replace("\\", "\\\\")
-    code = code.replace('"', '\\"')
-    code = code.replace("\n", "\\n")
-    code = code.replace("\0", "\\0")
+    c = Compiler()
+    return c.compile(src, filename, des)
 
-    if const_name == None:
-        const_name = filename.split(".")[0] + "_bin"
-
-    cstring = "const char* " + const_name + "=";
-    cstring += '"'
-    cstring += code
-    cstring += '";'
-    return cstring
-    
     
 def _compilefile(filename, des = None):
     return _compile(load(filename), filename, des)
     
 def compilefile(filename, des = None):
-    return compile(load(filename), filename, des)
+    c = Compiler()
+    return c.compilefile(filename, des)
 
 def split_instr(instr):
     size = len(instr)
@@ -956,6 +927,97 @@ def dis(path, return_str = False):
     code = load(path)
     return dis_code(code, return_str, path)
 
+
+class Compiler:
+
+    def __init__(self):
+        self.code_style = "line"
+
+    def set_code_style(self, code_style):
+        self.code_style = code_style
+
+    def _escape(self, s):
+        s = str(s)
+        s = s.replace("\\", "\\\\")
+        s = s.replace('"', '\\"')
+        s = s.replace("\r", "\\r")
+        s = s.replace("\n", "\\n")
+        s = s.replace("\0", "\\0")
+        return s
+    
+    def gen_code(self, src, filename):
+        global _ctx
+        # lock here
+        asm_init()
+        _ctx = EncodeCtx(src)
+        name = filename.split(".")[0]
+        emit(OP_FILE, name)
+        encode(src)
+        _ctx = None
+        return gen_code()
+
+    def compile(self, src, filename, des = None):
+        code = self.gen_code(src, filename)
+        dest = ''
+        for item in code:
+            # there is no # in CJK charsets, so it is better to split the sequence
+            if item[1] == 0:
+                dest += str(item[0]) + '\n'
+            else:
+                dest += str(item[0]) + '#' + escape_for_compile(item[1])+'\n'
+        return dest
+
+    def compilefile(self, filename, des = None):
+        return self.compile(load(filename), filename, des)
+
+    def to_c_code(self, filename, code, const_name=None):
+        code = self._escape(code)
+
+        if const_name == None:
+            const_name = filename.split(".")[0] + "_bin"
+
+        cstring = "const char* " + const_name + "=";
+        cstring += '"'
+        cstring += code
+        cstring += '";'
+        return cstring
+
+    def compile_to_c_code(self, filename, const_name = None):
+        src = load(filename)
+        code = self.gen_code(src, filename)
+        result = []
+        temp = []
+
+        for item in code:
+            if item[0] == OP_LINE:
+                code_line = "".join(temp)
+                code_line = "\"%s\"" % self._escape(code_line)
+                result.append(code_line)
+                temp = []
+
+            # there is no # in CJK charsets, so it is better to split the sequence
+            if item[1] == 0:
+                code_item = str(item[0]) + "\n"
+            else:
+                code_item = str(item[0]) + '#' + escape_for_compile(item[1])+'\n'
+
+            temp.append(code_item)
+
+
+        if len(temp) > 0:
+            code_line = "".join(temp)
+            code_line = "\"%s\"" % self._escape(code_line)
+            result.append(code_line)
+        
+        code = "\n".join(result)
+
+        if const_name == None:
+            const_name = filename.split(".")[0] + "_bin"
+
+        cstring = "const char* " + const_name + "=";
+        cstring += code + ";"
+        return cstring
+
 # MP_TEST
 def main():
     import sys
@@ -969,8 +1031,10 @@ def main():
         import repl
         import mp_opcode
         opcodes = mp_opcode.opcodes
-        code = compilefile(ARGV[1])
-        code = convert_to_cstring(ARGV[1], code)
+        filename = ARGV[1]
+
+        compiler = Compiler()
+        code = compiler.compile_to_c_code(filename)
         print(code)
     elif len(ARGV) >= 3:
         args = dict()
@@ -1004,8 +1068,8 @@ def main():
                 const_name_default = filename.split(".")[0] + "_bin"
                 const_name = args.get("const_name", const_name_default)
 
-                code = compilefile(filename)
-                code = convert_to_cstring(filename, code, const_name)
+                c = Compiler()
+                code = c.compile_to_c_code(filename, const_name)
                 print(code)
             else:
                 compile(item, "#test")
