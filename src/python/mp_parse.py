@@ -1,7 +1,7 @@
 # -*- coding:utf-8 -*-
 # @author xupingmao
 # @since 2016
-# @modified 2022/06/05 16:58:47
+# @modified 2022/06/05 19:31:40
 """Parse minipy code, grammar see minipy.grammar"""
 
 from mp_tokenize import *
@@ -790,6 +790,7 @@ def tk_list_len(tk):
 
 
 class ArgReader:
+    """参数阅读器,使用了迭代器模式"""
 
     def __init__(self, args):
         self.args = args

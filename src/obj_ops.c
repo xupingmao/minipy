@@ -4,7 +4,7 @@
  * 这个模块的作用是封装了对MpStr/MpList/MpDict等对象的调用
  * @author xupingmao
  * @since 2016
- * @modified 2022/04/12 21:09:27
+ * @modified 2022/06/05 19:40:49
  */
 
 #include <assert.h>
@@ -157,7 +157,7 @@ MpObj obj_get(MpObj self, MpObj k) {
             return obj_get(pclass->attr_dict, k);
         }
     }
-    mp_raise("keyError %o", k);
+    mp_raise("keyError: %o", k);
     return NONE_OBJECT;
 }
 

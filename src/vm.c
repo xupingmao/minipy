@@ -2,7 +2,7 @@
  * description here
  * @author xupingmao
  * @since 2016
- * @modified 2022/04/17 21:29:55
+ * @modified 2022/06/05 19:30:13
  */
 
 #include "include/mp.h"
@@ -25,7 +25,13 @@
 #include "module/os.c"
 #include "module/mp_debug.c"
 #include "module/mp_random.c"
-#include "bin.c"
+#include "gen/mp_init.gen.c"
+#include "gen/mp_tokenize.gen.c"
+#include "gen/mp_parse.gen.c"
+#include "gen/mp_encode.gen.c"
+#include "gen/mp_opcode.gen.c"
+#include "gen/pyeval.gen.c"
+#include "gen/repl.gen.c"
 
 
 /**

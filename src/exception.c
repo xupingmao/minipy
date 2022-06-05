@@ -2,7 +2,7 @@
  * description here
  * @author xupingmao
  * @since 2016
- * @modified 2020/10/11 18:25:35
+ * @modified 2022/06/05 19:43:28
  */
 
 #include "include/mp.h"
@@ -24,7 +24,6 @@ void mp_traceback() {
     for (i = LIST_LEN(exlist) - 1; i >= cur; i--) {
         mp_println(LIST_NODES(exlist)[i]);
     }
-    fprintf(stderr, "Exception:\n  ");
     fprintf(stderr, "%s\n", GET_CSTR(tm->ex_line));
 }
 
@@ -42,7 +41,7 @@ void mp_raise(char* fmt, ...) {
     tm->ex = mp_format_va_list(fmt, a, 0);
     MpObj file = func_get_file_name_obj(tm->frame->fnc);
     MpObj fnc_name = func_get_name_obj(tm->frame->fnc);
-    tm->ex_line = mp_format("File %o: in %o at line %d\n  %os", 
+    tm->ex_line = mp_format("  File %o: in %o at line %d\n%os", 
         file, fnc_name, get_lineno(), tm->ex);
     va_end(a);
     longjmp(tm->frame->buf, 1);
