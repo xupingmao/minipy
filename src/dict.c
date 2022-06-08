@@ -3,7 +3,7 @@
  * too many interfaces with similar function will confuse the users.
  * @author xupingmao <578749341@qq.com>
  * @since 2016
- * @modified 2022/01/19 22:29:50
+ * @modified 2022/06/06 23:19:03
  */
 #include "include/mp.h"
 
@@ -267,6 +267,19 @@ DictNode* dict_get_node_new(MpDict* dict, MpObj key) {
     return dict_get_node_with_hash(dict, key, obj_ptr_hash(&key));
 }
 
+DictNode* dict_get_node_by_index(MpDict* dict, int index) {
+    if (index < dict->len) {
+        DictNode* node = dict->nodes + index;
+        if (node->used > 0) {
+            return node;
+        } else {
+            return NULL;
+        }
+    } else {
+        return NULL;
+    }
+}
+
 static DictNode* dict_get_node_with_hash(MpDict* dict, MpObj key, int hash){
     DictNode* nodes = dict->nodes;
     // 计算开始位置
@@ -381,7 +394,9 @@ MpObj dict_builtin_copy() {
 
     for(int i = 0; i < GET_DICT(dict)->cap; i++) {
         if (GET_DICT(dict)->nodes[i].used > 0) {
-            dict_set0(GET_DICT(new_dict), GET_DICT(dict)->nodes[i].key, GET_DICT(dict)->nodes[i].val);
+            dict_set0(GET_DICT(new_dict), 
+                GET_DICT(dict)->nodes[i].key, 
+                GET_DICT(dict)->nodes[i].val);
         }
     }
     return new_dict;

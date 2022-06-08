@@ -2,7 +2,7 @@
  * description here
  * @author xupingmao
  * @since 2016
- * @modified 2022/06/05 19:43:28
+ * @modified 2022/06/06 23:01:21
  */
 
 #include "include/mp.h"
@@ -11,7 +11,7 @@
 void mp_push_exception(MpFrame* f){
     MpObj file = func_get_file_name_obj(f->fnc);
     MpObj fnc_name = func_get_name_obj(f->fnc);
-    MpObj ex = mp_format("  File %o: in %o , at line %d", file, fnc_name,
+    MpObj ex = mp_format("  File %o: in %o at line %d", file, fnc_name,
             f->lineno);
     list_append(GET_LIST(tm->ex_list), ex);
 }
@@ -44,5 +44,11 @@ void mp_raise(char* fmt, ...) {
     tm->ex_line = mp_format("  File %o: in %o at line %d\n%os", 
         file, fnc_name, get_lineno(), tm->ex);
     va_end(a);
+
+    #ifdef RECORD_LAST_OP
+        MpObj last_op_queue = CodeQueue_ToString(&tm->last_op_queue);
+        tm->ex_line = mp_format("%os\n\n%os", tm->ex_line, last_op_queue);
+    #endif
+
     longjmp(tm->frame->buf, 1);
 }

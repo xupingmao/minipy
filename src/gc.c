@@ -6,7 +6,7 @@
  * 5. release objects which are marked unused (0).
  * 
  * @since 2015
- * @modified 2022/01/15 17:48:48
+ * @modified 2022/06/06 23:10:56
  */
 
 #include "include/mp.h"
@@ -14,6 +14,7 @@
 
 void gc_init_chars();
 void gc_init_frames();
+static void gc_mark_ex(MpObj, const char*);
 
 #define GC_CONSTANS_LEN 10
 #define GC_REACHED_SIGN 1
@@ -56,6 +57,10 @@ void gc_init() {
     obj_append(tm->root, tm->ex_list);
     tm->ex = NONE_OBJECT;
     tm->ex_line = NONE_OBJECT;
+
+    #ifdef RECORD_LAST_OP
+        CodeQueue_Init(&tm->last_op_queue);
+    #endif
     
     /* initialize chars */
     gc_init_chars();
@@ -191,7 +196,7 @@ void gc_mark_list(MpList* list) {
     list->marked = GC_REACHED_SIGN;
     int i;
     for (i = 0; i < list->len; i++) {
-        gc_mark(list->nodes[i]);
+        gc_mark_ex(list->nodes[i], "list");
     }
 }
  
@@ -201,9 +206,9 @@ void gc_mark_dict(MpDict* dict) {
     dict->marked = GC_REACHED_SIGN;
     int i;
     for(i = 0; i < dict->cap; i++) {
-        if (dict->nodes[i].used) {
-            gc_mark(dict->nodes[i].key);
-            gc_mark(dict->nodes[i].val);
+        if (dict->nodes[i].used > 0) {
+            gc_mark_ex(dict->nodes[i].key, "dict.key");
+            gc_mark_ex(dict->nodes[i].val, "dict.val");
         }
     }
 }
@@ -212,9 +217,9 @@ void gc_mark_func(MpFunction* func) {
     if (func->marked)
         return;
     func->marked = GC_REACHED_SIGN;
-    gc_mark(func->mod);
-    gc_mark(func->self);
-    gc_mark(func->name);
+    gc_mark_ex(func->mod, "func.mod");
+    gc_mark_ex(func->self, "func.self");
+    gc_mark_ex(func->name, "func.name");
 }
 
 void gc_mark_class(MpClass* pclass) {
@@ -223,8 +228,8 @@ void gc_mark_class(MpClass* pclass) {
     }
 
     pclass->marked = GC_REACHED_SIGN;
-    gc_mark(pclass->name);
-    gc_mark(pclass->attr_dict);
+    gc_mark_ex(pclass->name, "class.name");
+    gc_mark_ex(pclass->attr_dict, "class.attr_dict");
 }
 
 /**
@@ -244,16 +249,20 @@ void gc_mark_module(MpModule* pmodule) {
     }
 
     pmodule->marked = GC_REACHED_SIGN;
-    gc_mark(pmodule->code);
-    gc_mark(pmodule->file);
-    gc_mark(pmodule->globals);
+    gc_mark_ex(pmodule->code, "module.code");
+    gc_mark_ex(pmodule->file, "module.file");
+    gc_mark_ex(pmodule->globals, "module.globals");
+}
+
+void gc_mark(MpObj o) {
+    gc_mark_ex(o, "default");
 }
 
 /**
  * mark object as used
  * @since 2014-??
  */
-void gc_mark(MpObj o) {
+static void gc_mark_ex(MpObj o, const char* source) {
     if (o.type == TYPE_NUM || o.type == TYPE_NONE)
         return;
     switch (o.type) {
@@ -286,7 +295,7 @@ void gc_mark(MpObj o) {
         // GET_DATA(o)->proto->mark(GET_DATA(o));
         break;
     default:
-        mp_raise("gc_mark: unknown object type %d", o.type);
+        mp_raise("gc_mark: unknown object type %d, source:%s", o.type, source);
     }
 }
 
@@ -306,15 +315,15 @@ void gc_mark_frames() {
 
     // why frames + 1 ?
     for(f = tm->frames + 1; f <= tm->frame; f++) {
-        gc_mark(f->fnc);
+        gc_mark_ex(f->fnc, "frame.func");
         /* mark locals */
         for(j = 0; j < f->maxlocals; j++) {
-            gc_mark(f->locals[j]);
+            gc_mark_ex(f->locals[j], "frame.local");
         }
         /* mark operand stack */
         MpObj* temp;
         for(temp = f->stack; temp <= f->top; temp++) {
-            gc_mark(*temp);
+            gc_mark_ex(*temp, "frame.stack");
         }
     }
 }
@@ -367,17 +376,17 @@ void gc_mark_all() {
     int64_t start_time = time_get_milli_seconds();
 
     /* mark protoes */
-    gc_mark(tm->list_proto);
-    gc_mark(tm->dict_proto);
-    gc_mark(tm->str_proto);
-    gc_mark(tm->builtins);
-    gc_mark(tm->modules);
-    gc_mark(tm->constants);
+    gc_mark_ex(tm->list_proto, "list_proto");
+    gc_mark_ex(tm->dict_proto, "dict_proto");
+    gc_mark_ex(tm->str_proto, "str_proto");
+    gc_mark_ex(tm->builtins, "builtins");
+    gc_mark_ex(tm->modules, "modules");
+    gc_mark_ex(tm->constants, "constants");
     
     gc_mark(tm->root);
     gc_mark_frames();
-    gc_mark(tm->ex);
-    gc_mark(tm->ex_line);
+    gc_mark_ex(tm->ex, "ex");
+    gc_mark_ex(tm->ex_line, "ex_line");
 
     int64_t cost_time = time_get_milli_seconds() - start_time;
     log_info("gc_mark_all: cost:%lldms", cost_time);
@@ -532,7 +541,7 @@ MpObj* data_next(MpData* data) {
 void data_mark(MpData* data) {
     int i;
     for (i = 0; i < data->data_size; i++) {
-        gc_mark(data->data_ptr[i]);
+        gc_mark_ex(data->data_ptr[i], "data");
     }
 }
 

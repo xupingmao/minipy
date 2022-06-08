@@ -1,134 +1,13 @@
 /**
   * execute minipy bytecode
   * @since 2014-9-2
-  * @modified 2022/04/17 21:31:07
+  * @modified 2022/06/08 22:44:47
   *
   * 2015-6-16: interpreter for tinyvm bytecode.
  **/
 
 #include "include/mp.h"
 #include "execute_profile.c"
-
-void mp_resolve_code(MpModule* m, const char* code);
-
-/**
- * @since 2016-11-24
- * TODO gc problem, still save string to constants dict?
- */
-void mp_resolve_code(MpModule* m, const char* code) {
-    const char* s = code;
-    char buf[1024];
-    int error = 0;
-    char* error_msg = NULL;
-
-    memset(buf, 0, sizeof(buf));
-    mp_init_cache(m);
-    
-    MpCodeCache cache;
-    cache.op = 0;
-    cache.v.ival = 0;
-    cache.sval = NULL;
-
-    while (*s != 0) {
-        /* must begin with opcode */
-        if (!isdigit(*s)) {
-            mp_raise("loadcode: not digit opcode, char=%c, fname=%o, code=%o", *s, m->file, m->code);
-            break;
-        }
-        // read opcode
-        int op = 0, i = 0, len = 0;
-        /* isdigit -- ctype.h */
-        while (isdigit(*s)) {
-            op = op * 10 + (*s-'0');
-            s++;
-        }
-        if (*s=='#') {
-            s++;
-            // load string
-            for (i = 0;*s != 0 && *s != '\n' && *s != '\r' && i < sizeof(buf); s++, i++) {
-                if (*s=='\\') {
-                    s++;
-                    switch(*s) {
-                        case '\\': buf[i] = '\\'; break;
-                        case 'n' : buf[i] = '\n'; break;
-                        case 'r' : buf[i] = '\r'; break;
-                        case 't' : buf[i] = '\t'; break;
-                        case '0' : buf[i] = '\0'; break;
-                        default:
-                            buf[i] = *(s-1);
-                            buf[i+1] = *s;
-                            i++;
-                    }
-                } else {
-                    buf[i] = *s;
-                }
-            }
-            buf[i] = '\0';
-            len = i;
-        } else if (*s == '\n') {
-            s++;
-            strcpy(buf, "0");
-        } else {
-            // opcode ended or error
-            mp_raise("loadcode: invalid code %d, %c", op, *s);
-            break;
-            error = 1;
-        }
-        
-        // skip \r\n
-        while (*s=='\r' || *s=='\n' || *s == ' ' || *s=='\t') {
-            s++;
-        }
-            
-        cache.op = op;
-        cache.v.ival = 0;
-        cache.sval = buf; // temp value, just for print
-        switch(op) {
-            case OP_NUMBER:
-                cache.v.obj = number_obj(atof(buf)); 
-                break;
-            
-            /* string value */
-            case OP_STRING: 
-            case OP_LOAD_GLOBAL:
-            case OP_STORE_GLOBAL:
-            case OP_FILE: 
-            case OP_DEF:
-            case OP_CLASS:
-                cache.v.obj = string_const2(buf, len); 
-                break;
-            
-            /* int value */
-            case OP_LOAD_LOCAL:
-            case OP_STORE_LOCAL:
-            case OP_CALL: 
-            case OP_TAILCALL:
-            case OP_ROT:
-            case OP_JUMP:
-            case OP_UP_JUMP:     
-            case OP_JUMP_ON_FALSE:
-            case OP_JUMP_ON_TRUE: 
-            case OP_POP_JUMP_ON_FALSE:
-            case OP_LOAD_PARG: 
-            case OP_LOAD_NARG:
-            case OP_LOAD_PARAMS:
-            case OP_LINE:
-            case OP_IMPORT:
-            case OP_NEXT:
-            case OP_SETJUMP:
-                cache.v.ival = atoi(buf); 
-                break;
-            default:
-                cache.v.ival = 0; 
-                break;
-        }
-        mp_push_cache(m, cache);
-    }
-    
-    if (error) {
-        mp_raise("invalid code");
-    }
-}
 
 void pop_frame() {
     if (tm->frame < tm->frames) {
@@ -186,6 +65,8 @@ MpFrame* push_frame(MpObj fnc) {
     f->pc    = GET_FUNCTION(fnc)->code;
     f->cache = GET_FUNCTION(fnc)->cache;
 
+    assert(GET_FUNCTION(fnc)->resolved == 1);
+
     f->maxlocals = func_get_max_locals(GET_FUNCTION(fnc));
 
     f->locals = top;
@@ -238,6 +119,7 @@ tailcall:
     top     = f->stack;
     cur_fnc = f->fnc;
     globals = obj_get_globals(cur_fnc);
+    MpDict *globals_dict = GET_DICT(globals);
     cache   = f->cache;
 
     const char* func_name_cstr = func_get_name_cstr(cur_fnc);
@@ -254,6 +136,11 @@ tailcall:
             tm->steps++;
         #endif
 
+        #ifdef RECORD_LAST_OP
+            CodeQueue_Append(&tm->last_op_queue, *cache);
+        #endif
+
+retry_op:
         switch (cache->op) {
 
         case OP_NUMBER: {
@@ -314,28 +201,28 @@ tailcall:
         case OP_LOAD_GLOBAL: {
             PROFILE_START(cache);
             /* mp_printf("load global %o\n", GET_CONST(i)); */
-            int idx = dict_get0(GET_DICT(globals), cache->v.obj);
+            int idx = dict_get0(globals_dict, cache->v.obj);
             if (idx == -1) {
-                idx = dict_get0(GET_DICT(tm->builtins), cache->v.obj);
+                MpDict *builtins_dict = GET_DICT(tm->builtins);
+                idx = dict_get0(builtins_dict, cache->v.obj);
                 if (idx == -1) {
                     mp_raise("NameError: name %o is not defined", cache->v.obj);
                 } else {
-                    MpObj value = GET_DICT(tm->builtins)->nodes[idx].val;
+                    MpObj value = builtins_dict->nodes[idx].val;
                     // OPTIMIZE
                     // set the builtin to `globals()`
                     // obj_set(globals, cache->v.obj, value);
                     // idx = dict_get0(GET_DICT(globals), cache->v.obj);
                     // OPTIMIZE END
-                    // TODO key被删除后重新设置，它的位置可能变动
+                    // key被删除后重新设置，它的位置可能变动
                     // cache->op = OP_FAST_LD_GLO;
-                    // cache->v.ival = idx;
-
+                    // cache->index = idx;
                     MP_PUSH(value);
                 }
             } else {
-                MP_PUSH(GET_DICT(globals)->nodes[idx].val);
-                cache->op = OP_FAST_LD_GLO;
-                cache->v.ival = idx;
+                MP_PUSH(globals_dict->nodes[idx].val);
+                // cache->op = OP_FAST_LD_GLO;
+                // cache->index = idx;
             }
 
             PROFILE_END(cache);
@@ -343,28 +230,58 @@ tailcall:
         }
         case OP_STORE_GLOBAL: {
             PROFILE_START(cache);
-            x = MP_POP();
-            int idx = dict_set0(GET_DICT(globals), cache->v.obj, x);
-            // pc[0] = OP_FAST_ST_GLO;
-            // code16(pc+1, idx);
-            cache->op = OP_FAST_ST_GLO;
-            cache->v.ival = idx;
+            MpObj value = MP_POP();
+            int idx = dict_set0(globals_dict, cache->v.obj, value);
+            // cache->op = OP_FAST_ST_GLO;
+            // cache->index = idx;
             PROFILE_END(cache);
             break;
         }
         case OP_FAST_LD_GLO: {
             PROFILE_START(cache);
             // TODO 需要对比一下key是否匹配,处理命中失败的情况
-            MP_PUSH(GET_DICT(globals)->nodes[cache->v.ival].val);
+            MP_PUSH(GET_DICT(globals)->nodes[cache->index].val);
             PROFILE_END(cache);
             break;
+
+            /*
+            PROFILE_START(cache);
+            // 需要对比一下key是否匹配,处理命中失败的情况
+            DictNode *node = dict_get_node_by_index(GET_DICT(globals), cache->index);
+            if (node != NULL && is_obj_equals(node->key, cache->v.obj)) {
+                MP_PUSH(node->val);
+                PROFILE_END(cache);
+            } else {
+                cache->index = -1;
+                cache->op = OP_LOAD_GLOBAL;
+                PROFILE_END(cache);
+                goto retry_op;
+            }
+            break;
+            */
         }
         case OP_FAST_ST_GLO: {
             PROFILE_START(cache);
             // TODO 需要对比一下key是否匹配,处理命中失败的情况
-            GET_DICT(globals)->nodes[cache->v.ival].val = MP_POP();
+            GET_DICT(globals)->nodes[cache->index].val = MP_POP();
             PROFILE_END(cache);
             break;
+
+            /*
+            PROFILE_START(cache);
+            // 需要对比一下key是否匹配,处理命中失败的情况
+            DictNode *node = dict_get_node_by_index(GET_DICT(globals), cache->index);
+            if (node != NULL && is_obj_equals(node->key, cache->v.obj)) {
+                node->val = MP_POP();
+                PROFILE_END(cache);
+            } else {
+                cache->index = -1;
+                cache->op = OP_STORE_GLOBAL;
+                PROFILE_END(cache);
+                goto retry_op;
+            }
+            break;
+            */
         }
         case OP_LIST: {
             MP_PUSH(list_new(2));
@@ -543,6 +460,9 @@ tailcall:
                 for (i = 0; i < n; i++) {
                     arg_push(first_arg[i]);
                 }
+
+                assert(GET_FUNCTION(func)->resolved == 1);
+
                 RESOLVE_METHOD_SELF(func);
                 f->fnc = func;
                 f->pc = GET_FUNCTION(func)->code;

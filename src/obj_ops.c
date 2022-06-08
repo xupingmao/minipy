@@ -4,7 +4,7 @@
  * 这个模块的作用是封装了对MpStr/MpList/MpDict等对象的调用
  * @author xupingmao
  * @since 2016
- * @modified 2022/06/05 19:40:49
+ * @modified 2022/06/08 23:18:59
  */
 
 #include <assert.h>
@@ -640,6 +640,11 @@ int mp_len(MpObj o) {
         mp_raise("mp_len: %o has no attribute len", o);
     }
     return len;
+}
+
+const char* obj_to_cstr(MpObj a) {
+    MpObj b = obj_str(a);
+    return GET_CSTR(b);
 }
 
 // func MpObj obj_str(MpObj a)

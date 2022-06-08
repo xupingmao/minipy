@@ -2,7 +2,7 @@
  * description here
  * @author xupingmao
  * @since 2016
- * @modified 2022/01/14 00:22:02
+ * @modified 2022/06/07 22:58:05
  */
 #include "include/mp.h"
 
@@ -52,6 +52,8 @@ void list_set(MpList* list, int n, MpObj val) {
     if (n >= list->len || n < 0) {
         mp_raise("list out of range");
     }
+
+    ASSERT_VALID_OBJ(val);
     list->nodes[n] = val;
 }
 
@@ -82,6 +84,9 @@ static void _list_check_cap(MpList* list) {
 
 void list_append(MpList* list, MpObj obj) {
     _list_check_cap(list);
+
+    ASSERT_VALID_OBJ(obj);
+
     list->nodes[list->len] = obj;
     list->len++;
 }
@@ -106,6 +111,9 @@ MpObj list_from_array(int n, ...) {
  */
 void list_insert(MpList* list, int n, MpObj obj) {
     _list_check_cap(list);
+
+    ASSERT_VALID_OBJ(obj);
+
     if (n < 0)
         n += list->len;
     if (n < list->len || n < 0) {

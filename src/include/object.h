@@ -3,7 +3,7 @@
  *
  *  Created on: 2014/8/25
  *  @author: xupingmao
- *  @modified 2022/02/09 23:51:59
+ *  @modified 2022/06/08 23:13:36
  */
 
 #ifndef _OBJECT_H_
@@ -57,13 +57,22 @@ struct MpRecycle {
   /* data */
 };
 
+
+#define CACHE_VTYPE_STR 1
+#define CACHE_VTYPE_INT 2
+#define CACHE_VTYPE_OBJ 3
+
+
 typedef struct _mp_code_cache {
-    int op;
+    char op;
+    char vtype; /* value type: CACHE_VTYPE_XXX */
+    int index;  /* access index */
+    char* sval; /* string value */
+
     union {
         MpObj obj;
         int ival;
     } v;
-    char* sval;
 
     #ifdef MP_PROFILE
       // 性能分析埋点
@@ -133,6 +142,15 @@ typedef struct MpFrame {
   MpCodeCache* cache_jmp;
   
 }MpFrame;
+
+#ifdef RECORD_LAST_OP
+  #define CODE_QUEUE_CAP 5
+  typedef struct _codeQueue {
+    int size;
+    int start;
+    MpCodeCache data[CODE_QUEUE_CAP];
+  } CodeQueue;
+#endif
 
 
 #define FRAMES_COUNT 128
@@ -205,6 +223,12 @@ typedef struct MpVm {
 
   /* 一些内部信息 */
   int vm_size;
+
+  #ifdef RECORD_LAST_OP
+    /* 最后的指令队列 */
+    CodeQueue last_op_queue;
+  #endif
+
 } MpVm;
 
 typedef struct MpData {

@@ -2,7 +2,7 @@
  * description here
  * @author xupingmao
  * @since 2016
- * @modified 2022/06/05 19:30:13
+ * @modified 2022/06/08 23:56:56
  */
 
 #include "include/mp.h"
@@ -19,6 +19,7 @@
 #include "argument.c"
 #include "execute.c"
 #include "import.c"
+#include "code_object.c"
 #include "module/time.c"
 #include "module/sys.c"
 #include "module/math.c"
@@ -78,13 +79,13 @@ void reg_method_by_cstr(MpObj class_obj, char* name, MpObj (*native)()) {
 /**
  * load module
  */
-void load_module(MpObj name, MpObj code) {
-    MpObj mod = module_new(name, name, code);
-    MpObj fnc = func_new(mod, NONE_OBJECT, NULL);
-    GET_FUNCTION(fnc)->code = (unsigned char*) GET_CSTR(code);
-    GET_FUNCTION(fnc)->name = string_from_cstr("#main");
-    obj_call(fnc);
-}
+// void load_module(MpObj name, MpObj code) {
+//     MpObj mod = module_new(name, name, code);
+//     MpObj fnc = func_new(mod, NONE_OBJECT, NULL);
+//     GET_FUNCTION(fnc)->code = (unsigned char*) GET_CSTR(code);
+//     GET_FUNCTION(fnc)->name = string_from_cstr("#main");
+//     obj_call(fnc);
+// }
 
 /**
  * @since 2016-11-20
@@ -98,6 +99,7 @@ MpObj load_file_module(MpObj file, MpObj code, MpObj name) {
     GET_FUNCTION(fnc)->code = (unsigned char*) GET_CSTR(code);
     GET_FUNCTION(fnc)->name = string_new("#main");
     GET_FUNCTION(fnc)->cache = GET_MODULE(mod)->cache;
+    GET_FUNCTION(fnc)->resolved = 1;
     obj_call(fnc);
     return GET_MODULE(mod)->globals;
 }
@@ -116,6 +118,7 @@ MpObj load_boot_module(char* sz_filename, const char* sz_code) {
     GET_FUNCTION(fnc)->code = (unsigned char*) GET_CSTR(code);
     GET_FUNCTION(fnc)->name = string_new("#main");
     GET_FUNCTION(fnc)->cache = GET_MODULE(mod)->cache;
+    GET_FUNCTION(fnc)->resolved = 1;
     
     obj_call(fnc);
     
@@ -130,6 +133,10 @@ MpObj load_boot_module(char* sz_filename, const char* sz_code) {
 MpObj vm_call_mod_func(const char* mod, const char* sz_fnc) {
     MpObj module = obj_get(tm->modules, string_static(mod));
     MpObj fnc = obj_get(module, string_static(sz_fnc));
+    #ifdef MP_DEBUG
+        mp_printf("fnc=%o\n", fnc);
+        mp_printf("module=%o\n", func_get_mod_obj(GET_FUNCTION(fnc)));
+    #endif
     arg_start();
     return obj_call(fnc);
 }
@@ -231,4 +238,8 @@ void vm_load_py_modules() {
     load_boot_module("mp_encode",   mp_encode_bin);
     load_boot_module("pyeval",      pyeval_bin);
     load_boot_module("repl",        repl_bin);
+
+    #ifdef MP_DEBUG
+        printf("vm_load_py_modules done!\n");
+    #endif
 }

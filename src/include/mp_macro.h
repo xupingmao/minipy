@@ -3,11 +3,13 @@
  *
  *  Created on: 2020/09/21
  *  @author: xupingmao
- *  @modified 2022/06/05 17:52:28
+ *  @modified 2022/06/09 00:00:05
  */
 
 #ifndef MP_MACRO_H_
 #define MP_MACRO_H_
+
+#include <assert.h>
 
 /* c micros */
 #define strequals(a, b) (a == b || strcmp(a,b) == 0)
@@ -61,6 +63,7 @@
 #define DICT_NODES(obj) GET_DICT(obj)->nodes
 #define ptr_addr(ptr) (long) (ptr) / sizeof(char*)
 #define GET_NUM(obj) (obj).value.dv
+#define IS_DICT_NODE_USED(node) ((node).used == 1)
 
 /* Check object type micros */
 #define IS_NONE(obj)   (MP_TYPE(obj) == TYPE_NONE)
@@ -72,6 +75,7 @@
 #define IS_NUM(obj)    (MP_TYPE(obj) == TYPE_NUM)
 #define IS_DATA(obj)   (MP_TYPE(obj) == TYPE_DATA)
 #define IS_NATIVE(obj) (GET_FUNCTION(obj)->native != NULL)
+#define IS_MODULE(obj) (MP_TYPE(obj) == TYPE_MODULE)
 
 #define NOT_NONE(obj) (MP_TYPE(obj) != TYPE_NONE)
 #define NOT_LIST(obj) (MP_TYPE(obj) != TYPE_LIST)
@@ -81,7 +85,7 @@
 #define NOT_NATIVE(obj) (GET_FUNCTION(obj)->native == NULL)
 #define NOT_CLASS(obj) (MP_TYPE(obj) != TYPE_CLASS)
 
-
+#define ASSERT_VALID_OBJ(obj) assert((obj).type >= TYPE_STR && (obj).type <= TYPE_CLASS)
 
 #define ASSERT_TYPE_WITH_INFO(obj, type, info) \
     if(MP_TYPE(obj)!=type){                    \

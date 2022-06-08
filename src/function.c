@@ -2,7 +2,7 @@
  * description here
  * @author xupingmao
  * @since 2016
- * @modified 2022/04/12 21:09:51
+ * @modified 2022/06/09 00:03:43
  */
 #include "include/mp.h"
 
@@ -56,9 +56,12 @@ MpCodeCache* func_resolve_cache(MpFunction* fnc, MpCodeCache* cache) {
     int defs = 0;
     MpCodeCache* cache_head = cache;
     
-    if (fnc->resolved) {
+    if (fnc->resolved == 1) {
         return fnc->cache_end;
     }
+
+    assert(cache->op == OP_DEF);
+
     while (1) {
         int op = cache->op;
         int val = cache->v.ival;
@@ -79,6 +82,8 @@ MpCodeCache* func_resolve_cache(MpFunction* fnc, MpCodeCache* cache) {
         cache++;
     }
 
+    assert(cache->op == OP_DEF_END);
+
     fnc->resolved = 1;
     fnc->maxlocals = maxlocals + 1;
     fnc->cache = cache_head + 1;
@@ -90,6 +95,9 @@ MpObj func_new(MpObj mod,
                MpObj self,
                MpNativeFunc native_func){
     // module可以为空或者Module类型
+    // if (!IS_MODULE(mod)) {
+    //     mp_raise("func_new: expect <module> but got %o", mod);
+    // }
     mp_assert_type2(mod, TYPE_MODULE, TYPE_NONE, "func_new");
 
     MpFunction* f= mp_malloc(sizeof(MpFunction));
@@ -141,7 +149,7 @@ MpObj class_instance(MpObj clazz){
     for(i = 0; i < cl->cap; i++) {
         k = nodes[i].key;
         v = nodes[i].val;
-        if(nodes[i].used && IS_FUNC(v)){
+        if(IS_DICT_NODE_USED(nodes[i]) && IS_FUNC(v)){
           MpObj method = method_new(v, instance);
           obj_set(instance, k, method);
         }
@@ -269,7 +277,13 @@ MpObj func_get_attr(MpFunction* fnc, MpObj key) {
     return NONE_OBJECT;
 }
 
+
+MpObj func_get_mod_obj(MpFunction* fnc) {
+    return fnc->mod;
+}
+
 unsigned char* func_get_code(MpFunction *fnc){
+    assert(fnc->resolved == 1);
     //resolve_module(GET_MODULE(fnc->mod), fnc);
     return fnc->code;
 }
@@ -286,6 +300,7 @@ MpObj func_get_globals(MpFunction* fnc) {
 }
 
 int func_get_max_locals(MpFunction* fnc){
+    assert(fnc->resolved == 1);
     //resolve_module(GET_MODULE(fnc->mod), fnc);
     return fnc->maxlocals;
 }
@@ -329,6 +344,11 @@ MpObj obj_call(MpObj func) {
         if (GET_FUNCTION(func)->native != NULL) {
             return GET_FUNCTION(func)->native();
         } else {
+            if (GET_FUNCTION(func)->resolved==0) {
+                mp_printf("func: %o\n", func);
+            }
+
+            assert (GET_FUNCTION(func)->resolved == 1);
             MpFrame* f = push_frame(func);
 
             L_recall:

@@ -45,6 +45,7 @@
 /* #include <sys/stat.h> */
 #include <math.h>
 #include <ctype.h>
+#include <assert.h>
 
 #define MP_INLINE inline
 
@@ -151,6 +152,7 @@ int              dict_set0(MpDict* dict, MpObj key, MpObj val);
 DictNode*        dict_get_node_new(MpDict* dict, MpObj key);
 DictNode*        dict_get_node_old(MpDict* dict, MpObj key);
 MpObj*           dict_get_by_cstr(MpDict* dict, char* key);
+DictNode*        dict_get_node_by_index(MpDict* dict, int index);
 void             dict_del(MpDict* dict, MpObj k);
 void             dict_methods_init();
 void             dict_set_by_cstr(MpDict* dict, const char* key, MpObj val);
@@ -198,7 +200,7 @@ void            func_free(MpFunction*);
 unsigned char*  func_get_code(MpFunction*);
 MpObj           func_get_code_obj(MpFunction*);
 void            func_format(char* des, MpFunction* func);
-MpModule*       func_get_mod(MpFunction* func);
+MpObj           func_get_mod_obj(MpFunction* func);
 MpObj           func_get_globals(MpFunction*);
 unsigned char*  func_resolve(MpFunction*, unsigned char*);
 MpObj           func_get_file_name_obj(MpObj func);
@@ -213,7 +215,7 @@ MpObj           class_new_by_cstr(char* name);
 MpObj           class_instance(MpObj dict);
 void            class_format(char* dest, MpObj clazz);
 void            class_free(MpClass* pclass);
-
+void mp_resolve_code(MpModule* m, const char* code);
 
 MpObj      data_new(size_t size);
 void       data_mark();
@@ -248,11 +250,11 @@ MpObj      obj_is_in(MpObj left, MpObj right);
 MpObj      obj_slice(MpObj self, MpObj first, MpObj second);
 MpObj      iter_new(MpObj collections);
 MpObj      obj_str(MpObj obj);
+const char* obj_to_cstr(MpObj a);
 MpObj      obj_append(MpObj a, MpObj item);
 MpObj      obj_get_globals(MpObj obj);
 
 MpObj*      obj_next(MpObj iterator);
-char*       obj_to_cstr(MpObj obj);
 int         mp_cmp(MpObj a, MpObj b);
 int         mp_is_in(MpObj key, MpObj collection);
 int         is_obj_equals(MpObj a, MpObj b);
@@ -326,7 +328,10 @@ int64_t  time_get_milli_seconds();
 MpObj  obj_import(MpObj globals, MpObj name);
 MpObj  obj_import_attr(MpObj globals, MpObj module_name, MpObj attr);
 
+const char* CodeCache_ToString(MpCodeCache* cache);
+
 #include "mp_macro.h"
 #include "mp_log.h"
+#include "mp_debug.h"
 
 #endif

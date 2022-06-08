@@ -2,14 +2,16 @@
 cc = gcc
 LOG_LEVEL?=2
 MP_PROFILE?=0
+RECORD_LAST_OP?=1
 ROOT=$(shell pwd)
 
 minipy: src/*.c src/include/*.h
 	$(cc) -DTM_USE_CACHE -DLOG_LEVEL=$(LOG_LEVEL)\
 		-DMP_PROFILE=$(MP_PROFILE)\
+		-DRECORD_LAST_OP=$(RECORD_LAST_OP)\
 		-o minipy src/main.c -lm
 
-.PHONY: clean test
+.PHONY: clean test ctest
 
 o2:
 	$(cc) -DTM_USE_CACHE -O2 -o minipy src/main.c -lm
@@ -48,6 +50,13 @@ test:
 
 test-tokenize:
 	python3 ./test/test_tokenize.py
+
+ctest:
+	$(cc) -DTM_USE_CACHE -DLOG_LEVEL=$(LOG_LEVEL)\
+		-DMP_PROFILE=$(MP_PROFILE)\
+		-DRECORD_LAST_OP=$(RECORD_LAST_OP)\
+		-o ctest test/ctest/ctest_main.c -lm -I src
+	./ctest
 
 tinypy:
 	rm $(ROOT)/build/tinypy || echo "no tinypy"

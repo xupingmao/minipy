@@ -115,3 +115,44 @@ void profile_print_detail() {
 }
 
 #endif
+
+
+#ifdef RECORD_LAST_OP
+
+CodeQueue* CodeQueue_Init(CodeQueue* queue) {
+    queue->size = 0;
+    queue->start = 0;
+    return queue;
+}
+
+void CodeQueue_Append(CodeQueue* queue, MpCodeCache cache) {
+    if (queue->size < CODE_QUEUE_CAP) {
+        queue->size++;
+    } else {
+        assert(queue->size >= CODE_QUEUE_CAP);
+        queue->start = (++queue->start) % CODE_QUEUE_CAP;
+    }
+    int index = queue->start + queue->size - 1;
+    int next = index % CODE_QUEUE_CAP;
+    queue->data[next] = cache;
+}
+
+MpObj CodeQueue_ToString(CodeQueue* queue) {
+    int start = queue->start;
+    int count = 0;
+    MpObj result = string_new("");
+    while (count < queue->size) {
+        MpCodeCache cache = queue->data[start];
+
+        const char* line = CodeCache_ToString(&cache);
+        MpObj temp = string_const(line);
+        result = obj_add(result, temp);
+
+        start = (++start) % CODE_QUEUE_CAP;
+        count++;
+    }
+
+    return result;
+}
+
+#endif
