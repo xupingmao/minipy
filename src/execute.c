@@ -1,7 +1,7 @@
 /**
   * execute minipy bytecode
   * @since 2014-9-2
-  * @modified 2022/06/09 23:16:02
+  * @modified 2022/06/10 23:11:44
   *
   * 2015-6-16: interpreter for tinyvm bytecode.
  **/
@@ -215,14 +215,14 @@ retry_op:
                     // idx = dict_get0(GET_DICT(globals), cache->v.obj);
                     // OPTIMIZE END
                     // key被删除后重新设置，它的位置可能变动
-                    // cache->op = OP_FAST_LD_GLO;
+                    // cache->op = OP_LOAD_GLOBAL_FAST;
                     // cache->index = idx;
                     MP_PUSH(value);
                 }
             } else {
                 MP_PUSH(globals_dict->nodes[idx].val);
-                // cache->op = OP_FAST_LD_GLO;
-                // cache->index = idx;
+                cache->op = OP_LOAD_GLOBAL_FAST;
+                cache->index = idx;
             }
 
             PROFILE_END(cache);
@@ -232,19 +232,12 @@ retry_op:
             PROFILE_START(cache);
             MpObj value = MP_POP();
             int idx = dict_set0(globals_dict, cache->v.obj, value);
-            // cache->op = OP_FAST_ST_GLO;
+            // cache->op = OP_STORE_GLOBAL_FAST;
             // cache->index = idx;
             PROFILE_END(cache);
             break;
         }
-        case OP_FAST_LD_GLO: {
-            PROFILE_START(cache);
-            // TODO 需要对比一下key是否匹配,处理命中失败的情况
-            MP_PUSH(GET_DICT(globals)->nodes[cache->index].val);
-            PROFILE_END(cache);
-            break;
-
-            /*
+        case OP_LOAD_GLOBAL_FAST: {
             PROFILE_START(cache);
             // 需要对比一下key是否匹配,处理命中失败的情况
             DictNode *node = dict_get_node_by_index(GET_DICT(globals), cache->index);
@@ -258,9 +251,8 @@ retry_op:
                 goto retry_op;
             }
             break;
-            */
         }
-        case OP_FAST_ST_GLO: {
+        case OP_STORE_GLOBAL_FAST: {
             PROFILE_START(cache);
             // TODO 需要对比一下key是否匹配,处理命中失败的情况
             GET_DICT(globals)->nodes[cache->index].val = MP_POP();

@@ -92,7 +92,8 @@ void profile_compute_real_time() {
 }
 
 void profile_print_detail() {
-    printf("\n\n>>>> Minipy Profile Stat\n");
+    printf("\n\n== Minipy Profile Stat\n");
+    print_line(60);
     printf("%-20s %10s %10s %s %s\n", "op_name", 
         "total_time", "times", "avg_time", "real_avg");
     print_line(60);

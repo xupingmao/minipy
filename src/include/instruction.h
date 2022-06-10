@@ -69,8 +69,8 @@
 #define OP_DEBUG 62
 #define OP_LINE 63
 #define OP_TAG 64
-#define OP_FAST_ST_GLO 65
-#define OP_FAST_LD_GLO 66
+#define OP_STORE_GLOBAL_FAST 65
+#define OP_LOAD_GLOBAL_FAST 66
 #define OP_FILE 67
 #define OP_PROFILE 68
 #endif
@@ -141,8 +141,8 @@ const char* inst_get_name_by_code(int code) {
     case 62:return "OP_DEBUG";
     case 63:return "OP_LINE";
     case 64:return "OP_TAG";
-    case 65:return "OP_FAST_ST_GLO";
-    case 66:return "OP_FAST_LD_GLO";
+    case 65:return "OP_STORE_GLOBAL_FAST";
+    case 66:return "OP_LOAD_GLOBAL_FAST";
     case 67:return "OP_FILE";
     case 68:return "OP_PROFILE";
   }

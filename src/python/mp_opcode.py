@@ -82,8 +82,8 @@ _opcode_names = [
 
     'OP_TAG', 
     # instructions for vm to optimize.
-    'OP_FAST_ST_GLO',
-    'OP_FAST_LD_GLO',
+    'OP_STORE_GLOBAL_FAST',
+    'OP_LOAD_GLOBAL_FAST',
 
     'OP_FILE',
 
