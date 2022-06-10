@@ -1,7 +1,7 @@
 /**
   * execute minipy bytecode
   * @since 2014-9-2
-  * @modified 2022/06/08 22:44:47
+  * @modified 2022/06/09 23:16:02
   *
   * 2015-6-16: interpreter for tinyvm bytecode.
  **/
@@ -430,7 +430,7 @@ retry_op:
             PROFILE_END(cache);
 
             // 调用函数的时间不算到 OP_CALL的执行时间内
-            MP_PUSH(obj_call(func));
+            MP_PUSH(OBJ_CALL_EX(func));
 
             PROFILE_START(cache);
             tm->frame = f;
@@ -476,7 +476,7 @@ retry_op:
                 }
                 goto tailcall;
             } else {
-                return obj_call(func);
+                return OBJ_CALL_EX(func);
             }
             break;
         }
@@ -486,7 +486,7 @@ retry_op:
             mp_assert_type(args, TYPE_LIST, "mp_eval: OP_APPLY");
             arg_set_arguments(LIST_NODES(args), LIST_LEN(args));
             MpObj func = MP_POP();
-            x = obj_call(func);
+            x = OBJ_CALL_EX(func);
             MP_PUSH(x);
             tm->frame = f;
             FRAME_CHECK_GC();

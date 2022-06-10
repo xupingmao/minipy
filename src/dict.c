@@ -3,7 +3,7 @@
  * too many interfaces with similar function will confuse the users.
  * @author xupingmao <578749341@qq.com>
  * @since 2016
- * @modified 2022/06/06 23:19:03
+ * @modified 2022/06/10 23:00:22
  */
 #include "include/mp.h"
 
@@ -80,15 +80,19 @@ MpDict* dict_init(MpDict* dict, int cap){
 }
 
 MpObj dict_new(){
-    MpDict* dict = mp_malloc(sizeof(MpDict));
-    dict_init(dict, 4);
-
+    MpDict* dict = dict_new_ptr();
     MpObj o = dict_to_obj(dict);
     return gc_track(o);
 }
 
 MpObj dict_new_obj() {
     return dict_new();
+}
+
+MpDict* dict_new_ptr() {
+    MpDict* dict = mp_malloc(sizeof(MpDict));
+    dict_init(dict, 4);
+    return dict;
 }
 
 MpObj dict_to_obj(MpDict* dict) {

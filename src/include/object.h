@@ -3,7 +3,7 @@
  *
  *  Created on: 2014/8/25
  *  @author: xupingmao
- *  @modified 2022/06/08 23:13:36
+ *  @modified 2022/06/10 22:55:29
  */
 
 #ifndef _OBJECT_H_
@@ -66,13 +66,14 @@ struct MpRecycle {
 typedef struct _mp_code_cache {
     char op;
     char vtype; /* value type: CACHE_VTYPE_XXX */
-    int index;  /* access index */
-    char* sval; /* string value */
 
     union {
         MpObj obj;
         int ival;
     } v;
+
+    int index;
+    char* sval; /* string value */
 
     #ifdef MP_PROFILE
       // 性能分析埋点
@@ -152,6 +153,41 @@ typedef struct MpFrame {
   } CodeQueue;
 #endif
 
+typedef struct _debug_info_t {
+    const char * source;
+} DebugInfo;
+
+
+
+/** 
+ * definition for dictionary.
+ */
+
+typedef struct DictNode{
+  MpObj key;
+  MpObj val;
+  int hash;
+  // used值说明
+  // 0: 未使用 >0:正常使用 -1:被删除
+  int used; /* also used for attr index */
+} DictNode;
+
+typedef struct MpDict {
+  int marked;
+  int len;
+  int cap;
+  int slot_cap;
+  int extend;
+  // hash的掩码
+  int mask;
+  // 存放数据的节点
+  DictNode* nodes;
+  // 存放索引的数据
+  int* slots;
+  // 空闲节点的开始索引
+  int free_start;
+} MpDict;
+
 
 #define FRAMES_COUNT 128
 #define MAX_ARG_COUNT 10
@@ -202,10 +238,11 @@ typedef struct MpVm {
   int arg_cnt;
   int arg_loaded;
 
-  MpObj constants;  /* type: dict */
-  MpObj modules;    /* type: dict */
-  MpObj builtins;   /* type: dict */
-  MpObj root;       /* type: list */
+  MpDict* constants;  /* type: dict */
+  MpObj modules;      /* type: dict */
+  MpObj builtins;     /* type: dict */
+  MpObj root;         /* type: list */
+  MpObj builtins_mod; /* 内置模块 */
 
   int steps;   /* record opcode steps executed */
   int init;    /* modules and builtins init */
@@ -267,36 +304,6 @@ typedef struct MpList {
 }MpList;
 
 
-/** 
- * definition for dictionary.
- */
-
-typedef struct DictNode{
-  MpObj key;
-  MpObj val;
-  int hash;
-  // used值说明
-  // 0: 未使用 >0:正常使用 -1:被删除
-  int used; /* also used for attr index */
-} DictNode;
-
-typedef struct MpDict {
-  int marked;
-  int len;
-  int cap;
-  int slot_cap;
-  int extend;
-  // hash的掩码
-  int mask;
-  // 存放数据的节点
-  DictNode* nodes;
-  // 存放索引的数据
-  int* slots;
-  // 空闲节点的开始索引
-  int free_start;
-} MpDict;
-
-
 typedef struct MpStr {
     int marked;
     int stype; /* string type, 1: memory; 0: static */
@@ -314,7 +321,6 @@ typedef struct MpConstStr {
     int hash;
     const char *value;
 } MpConstStr;
-
 
 
 /**

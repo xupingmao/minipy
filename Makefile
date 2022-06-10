@@ -9,6 +9,7 @@ minipy: src/*.c src/include/*.h
 	$(cc) -DTM_USE_CACHE -DLOG_LEVEL=$(LOG_LEVEL)\
 		-DMP_PROFILE=$(MP_PROFILE)\
 		-DRECORD_LAST_OP=$(RECORD_LAST_OP)\
+		-DNDEBUG\
 		-o minipy src/main.c -lm
 
 .PHONY: clean test ctest

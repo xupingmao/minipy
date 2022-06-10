@@ -20,9 +20,7 @@ int main(int argc, char *argv[]) {
         vm_load_py_modules();
         obj_set_by_cstr(tm->builtins, "MP_USE_CACHE", number_obj(1));
 
-        #ifdef MP_DEBUG
-            printf("before vm_call_mod_func!\n");
-        #endif
+        log_debug("before vm_call_mod_func!\n");
 
         // call boot function
         vm_call_mod_func("mp_init", "boot");

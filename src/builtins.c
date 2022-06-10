@@ -2,7 +2,7 @@
  * description here
  * @author xupingmao <578749341@qq.com>
  * @since 2016
- * @modified 2022/01/19 21:47:07
+ * @modified 2022/06/09 23:12:02
  */
 #include "include/mp.h"
 #include <ctype.h>
@@ -603,7 +603,7 @@ MpObj bf_apply() {
         mp_raise("apply: expect list arguments or None, but see %o", args);
         return NONE_OBJECT;
     }
-    return obj_call(func);
+    return OBJ_CALL_EX(func);
 }
 
 MpObj bf_write() {
@@ -778,7 +778,7 @@ MpObj bf_read_file() {
             }
         }
         arg_push(string_alloc(buf, i));
-        obj_call(func);
+        OBJ_CALL_EX(func);
         if (end) {
             break;
         }

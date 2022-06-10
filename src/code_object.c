@@ -3,7 +3,7 @@
  *
  *  Created on: 2022/06/05 23:55:55
  *  @author: xupingmao
- *  @modified 2022/06/08 23:18:43
+ *  @modified 2022/06/10 22:33:58
  */
 
 #include "include/mp.h"
@@ -74,12 +74,16 @@ void mp_resolve_code(MpModule* m, const char* code) {
         while (*s=='\r' || *s=='\n' || *s == ' ' || *s=='\t') {
             s++;
         }
+
+        assert(op >= 0);
+        assert(op <= 128);
             
         cache.op = op;
         cache.vtype = 0;
         cache.v.ival = 0;
         cache.index = -1;
         cache.sval = buf; // temp value, just for print
+
         switch(op) {
             case OP_NUMBER:
                 cache.v.obj = number_obj(atof(buf)); 

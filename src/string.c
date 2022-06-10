@@ -2,7 +2,7 @@
  * description here
  * @author xupingmao
  * @since 2018/02/19 16:49:28
- * @modified 2022/01/19 21:21:34
+ * @modified 2022/06/10 22:59:13
  */
 
 #include "include/mp.h"
@@ -129,8 +129,8 @@ static void string_update_hash(MpStr* s) {
  */
 MpObj string_const(const char* s) {
     MpObj str_obj = string_static(s);
-    int i = dict_set(tm->constants, str_obj, NONE_OBJECT);
-    return DICT_NODES(tm->constants)[i].key;
+    int i = dict_set0(tm->constants, str_obj, NONE_OBJECT);
+    return tm->constants->nodes[i].key;
 }
 
 
@@ -139,8 +139,8 @@ MpObj string_const(const char* s) {
  */
 MpObj string_const_with_len(char* s, int len) {
     MpObj str_obj = string_alloc(s, len);
-    int i = dict_set(tm->constants, str_obj, NONE_OBJECT);
-    return DICT_NODES(tm->constants)[i].key;
+    int i = dict_set0(tm->constants, str_obj, NONE_OBJECT);
+    return tm->constants->nodes[i].key;
 }
 
 MpObj string_chr(int n) {

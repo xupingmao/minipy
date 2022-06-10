@@ -28,6 +28,7 @@
  */
 
 /* #pragma pack(4) */
+
 #define DEBUG_GC 0
 #define PRINT_INS 0
 #define PRINT_INS_CONST 0
@@ -146,6 +147,7 @@ int obj_ptr_hash(MpObj* obj);
 
 MpObj            dict_new();
 MpObj            dict_new_obj();
+MpDict*          dict_new_ptr();
 MpDict*          dict_init();
 void             dict_free(MpDict* dict);
 int              dict_set0(MpDict* dict, MpObj key, MpObj val);
@@ -277,9 +279,15 @@ void   mp_raise(char*fmt , ...);
 void   vm_destroy();
 
 
-#define  GET_CONST(i) GET_DICT(tm->constants)->nodes[i].key
+#define  GET_CONST(i) tm->constants->nodes[i].key
 MpObj    call_unsafe(MpObj fnc);
-MpObj    obj_call(MpObj func);
+
+#ifdef MP_DEBUG
+MpObj    obj_call(MpObj, const char*, int);
+#else
+MpObj    obj_call(MpObj);
+#endif
+
 MpObj    obj_call_nargs(MpObj func, int n, MpObj* args);
 MpObj    obj_apply(MpObj func, MpObj args);
 MpObj    load_file_module(MpObj filename, MpObj code, MpObj name);

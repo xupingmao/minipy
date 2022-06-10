@@ -4,7 +4,7 @@
  * 这个模块的作用是封装了对MpStr/MpList/MpDict等对象的调用
  * @author xupingmao
  * @since 2016
- * @modified 2022/06/08 23:18:59
+ * @modified 2022/06/10 23:04:13
  */
 
 #include <assert.h>
@@ -492,7 +492,7 @@ MpObj obj_mod(MpObj a, MpObj b) {
             arg_start();
             arg_push(a);
             arg_push(b);
-            return obj_call(*__mod__);
+            return OBJ_CALL_EX(*__mod__);
         }        
     }
     mp_raise("obj_mod: can not module %o and %o", a, b);
@@ -697,6 +697,9 @@ MpObj obj_str(MpObj a) {
         return string_new(buf);
     case TYPE_NONE:
         return string_static("None");
+    case TYPE_MODULE:
+        sprintf(buf, "<module %s>", obj_to_cstr(GET_MODULE(a)->file));
+        return string_new(buf);
     case TYPE_DATA:
         return GET_DATA(a)->str(GET_DATA(a));
     default:
@@ -709,7 +712,7 @@ MpObj obj_str(MpObj a) {
 
 /** get const id, this will be used to search the const value */
 int get_const_id(MpObj const_value) {
-    int i = dict_set(tm->constants, const_value, NONE_OBJECT);
+    int i = dict_set0(tm->constants, const_value, NONE_OBJECT);
     return i;
 }
 

@@ -2,7 +2,7 @@
  * description here
  * @author xupingmao
  * @since 2016
- * @modified 2022/06/09 00:03:43
+ * @modified 2022/06/10 20:31:12
  */
 #include "include/mp.h"
 
@@ -94,10 +94,14 @@ MpCodeCache* func_resolve_cache(MpFunction* fnc, MpCodeCache* cache) {
 MpObj func_new(MpObj mod,
                MpObj self,
                MpNativeFunc native_func){
-    // module可以为空或者Module类型
-    // if (!IS_MODULE(mod)) {
-    //     mp_raise("func_new: expect <module> but got %o", mod);
-    // }
+    /* module可以为空或者Module类型 */
+    if (MP_TYPE(mod) != TYPE_MODULE) {
+        printf("func_new: expect <module> but got %d\n", MP_TYPE(mod));
+        mp_raise("func_new: expect <module>");
+    }
+
+    assert (MP_TYPE(mod) == TYPE_MODULE);
+
     mp_assert_type2(mod, TYPE_MODULE, TYPE_NONE, "func_new");
 
     MpFunction* f= mp_malloc(sizeof(MpFunction));
@@ -122,6 +126,7 @@ MpObj method_new(MpObj _fnc, MpObj self){
     GET_FUNCTION(nfnc)->maxlocals = GET_FUNCTION(_fnc)->maxlocals;
     GET_FUNCTION(nfnc)->code = GET_FUNCTION(_fnc)->code;
     GET_FUNCTION(nfnc)->cache = GET_FUNCTION(_fnc)->cache;
+    GET_FUNCTION(nfnc)->resolved = 1;
     return nfnc;
 }
 
@@ -157,7 +162,7 @@ MpObj class_instance(MpObj clazz){
     
     MpObj *_fnc = dict_get_by_cstr(GET_DICT(instance), "__init__");
     if (_fnc != NULL) {
-        obj_call(*_fnc);
+        OBJ_CALL_EX(*_fnc);
     }
 
     return instance;
@@ -334,7 +339,13 @@ MpObj func_get_name_obj(MpObj func) {
 }
 
 
-MpObj obj_call(MpObj func) {
+
+#ifdef MP_DEBUG
+MpObj obj_call(MpObj func, const char* source, int lineno)
+#else
+MpObj obj_call(MpObj func)
+#endif
+{
     MpObj ret = NONE_OBJECT;
     if (IS_FUNC(func)) {
         RESOLVE_METHOD_SELF(func);
@@ -344,9 +355,13 @@ MpObj obj_call(MpObj func) {
         if (GET_FUNCTION(func)->native != NULL) {
             return GET_FUNCTION(func)->native();
         } else {
+            #ifdef MP_DEBUG
             if (GET_FUNCTION(func)->resolved==0) {
-                mp_printf("func: %o\n", func);
+                mp_printf("\nERROR: function not resolved\n");
+                mp_printf("module: %o\n", GET_FUNCTION(func)->mod);
+                mp_printf("func: %o\nsource: %s:%d\n", func, source, lineno);
             }
+            #endif
 
             assert (GET_FUNCTION(func)->resolved == 1);
             MpFrame* f = push_frame(func);
@@ -384,10 +399,10 @@ MpObj obj_apply(MpObj func, MpObj args) {
     mp_assert_type2(func, TYPE_FUNCTION, TYPE_CLASS, "obj_apply");
     mp_assert_type(args, TYPE_LIST, "obj_apply");
     arg_set_arguments(LIST_NODES(args), LIST_LEN(args));
-    return obj_call(func);
+    return OBJ_CALL_EX(func);
 }
 
 MpObj obj_call_nargs(MpObj func, int n, MpObj* args) {
     arg_set_arguments(args, n);
-    return obj_call(func);
+    return OBJ_CALL_EX(func);
 }

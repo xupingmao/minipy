@@ -3,7 +3,7 @@
  *
  *  Created on: 2020/09/21
  *  @author: xupingmao
- *  @modified 2022/06/09 00:00:05
+ *  @modified 2022/06/09 23:33:14
  */
 
 #ifndef MP_MACRO_H_
@@ -121,6 +121,13 @@
 #endif
 
 
+#ifdef MP_DEBUG
+    #define OBJ_CALL_EX(a) obj_call((a), __FILE__, __LINE__)
+#else
+    #define OBJ_CALL_EX(a) obj_call((a))
+#endif
+
+
 #ifdef MP_CHECK_MEM
     /* #include <execinfo.h> */
     #include "map.h"
@@ -187,3 +194,4 @@
 #endif
 
 #endif
+

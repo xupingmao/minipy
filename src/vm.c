@@ -2,7 +2,7 @@
  * description here
  * @author xupingmao
  * @since 2016
- * @modified 2022/06/08 23:56:56
+ * @modified 2022/06/10 22:54:27
  */
 
 #include "include/mp.h"
@@ -20,12 +20,16 @@
 #include "execute.c"
 #include "import.c"
 #include "code_object.c"
+#include "constant_pool.c"
+
 #include "module/time.c"
 #include "module/sys.c"
 #include "module/math.c"
 #include "module/os.c"
 #include "module/mp_debug.c"
 #include "module/mp_random.c"
+
+
 #include "gen/mp_init.gen.c"
 #include "gen/mp_tokenize.gen.c"
 #include "gen/mp_parse.gen.c"
@@ -48,13 +52,15 @@ void reg_mod(char* name, MpObj mod) {
  * @param mod, module object, dict
  */
 void reg_mod_func(MpObj mod, char* name, MpObj (*native)()) {
-    MpObj func = func_new(NONE_OBJECT, NONE_OBJECT, native);
+    assert(MP_TYPE(mod) == TYPE_DICT);
+    MpObj func = func_new(tm->builtins_mod, NONE_OBJECT, native);
     GET_FUNCTION(func)->name = string_from_cstr(name);
     obj_set(mod,GET_FUNCTION(func)->name, func);
 }
 
 // 注册模块的变量
 void reg_mod_attr(MpObj module, char* name, MpObj value) {
+    // assert(MP_TYPE(module) == TYPE_MODULE);
     obj_set(module, string_from_cstr(name), value);
 }
 
@@ -69,23 +75,11 @@ void reg_method_by_cstr(MpObj class_obj, char* name, MpObj (*native)()) {
     mp_assert_type(class_obj, TYPE_CLASS, "reg_method_by_cstr");
     MpClass* clazz = GET_CLASS(class_obj);
     MpObj attr_dict = clazz->attr_dict;
-
-    MpObj func = func_new(NONE_OBJECT, NONE_OBJECT, native);
+    MpObj func = func_new(tm->builtins_mod, NONE_OBJECT, native);
     GET_FUNCTION(func)->name = string_new(name);
     
     obj_set_by_cstr(attr_dict, name, func);
 }
-
-/**
- * load module
- */
-// void load_module(MpObj name, MpObj code) {
-//     MpObj mod = module_new(name, name, code);
-//     MpObj fnc = func_new(mod, NONE_OBJECT, NULL);
-//     GET_FUNCTION(fnc)->code = (unsigned char*) GET_CSTR(code);
-//     GET_FUNCTION(fnc)->name = string_from_cstr("#main");
-//     obj_call(fnc);
-// }
 
 /**
  * @since 2016-11-20
@@ -100,7 +94,7 @@ MpObj load_file_module(MpObj file, MpObj code, MpObj name) {
     GET_FUNCTION(fnc)->name = string_new("#main");
     GET_FUNCTION(fnc)->cache = GET_MODULE(mod)->cache;
     GET_FUNCTION(fnc)->resolved = 1;
-    obj_call(fnc);
+    OBJ_CALL_EX(fnc);
     return GET_MODULE(mod)->globals;
 }
 
@@ -120,7 +114,7 @@ MpObj load_boot_module(char* sz_filename, const char* sz_code) {
     GET_FUNCTION(fnc)->cache = GET_MODULE(mod)->cache;
     GET_FUNCTION(fnc)->resolved = 1;
     
-    obj_call(fnc);
+    OBJ_CALL_EX(fnc);
     
     return GET_MODULE(mod)->globals;
 }
@@ -134,11 +128,11 @@ MpObj vm_call_mod_func(const char* mod, const char* sz_fnc) {
     MpObj module = obj_get(tm->modules, string_static(mod));
     MpObj fnc = obj_get(module, string_static(sz_fnc));
     #ifdef MP_DEBUG
-        mp_printf("fnc=%o\n", fnc);
-        mp_printf("module=%o\n", func_get_mod_obj(GET_FUNCTION(fnc)));
+        mp_printf("vm_call_mod_func.function: %o\n", fnc);
+        mp_printf("vm_call_mod_func.module: %o\n", func_get_mod_obj(GET_FUNCTION(fnc)));
     #endif
     arg_start();
-    return obj_call(fnc);
+    return OBJ_CALL_EX(fnc);
 }
 
 /**
@@ -238,8 +232,6 @@ void vm_load_py_modules() {
     load_boot_module("mp_encode",   mp_encode_bin);
     load_boot_module("pyeval",      pyeval_bin);
     load_boot_module("repl",        repl_bin);
-
-    #ifdef MP_DEBUG
-        printf("vm_load_py_modules done!\n");
-    #endif
+    
+    log_debug("vm_load_py_modules done!\n");
 }

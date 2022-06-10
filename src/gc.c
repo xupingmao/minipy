@@ -6,7 +6,7 @@
  * 5. release objects which are marked unused (0).
  * 
  * @since 2015
- * @modified 2022/06/06 23:10:56
+ * @modified 2022/06/10 23:07:21
  */
 
 #include "include/mp.h"
@@ -50,7 +50,10 @@ void gc_init() {
     tm->root = list_new(100);
     tm->builtins = dict_new();
     tm->modules = dict_new();
-    tm->constants = dict_new();
+    tm->constants = dict_new_ptr();
+    tm->builtins_mod = module_new(string_static("_builtins.py"), 
+        string_static("_builtins"), 
+        string_static(""));
 
     /* initialize exception */
     tm->ex_list = list_new(10);
@@ -368,6 +371,9 @@ void gc_reset_all() {
     for (int i = 0; i < tm->all->len; i++) {
         GC_MARKED(tm->all->nodes[i]) = 0;
     }
+
+    tm->constants->marked = 0;
+
     int64_t cost_time = time_get_milli_seconds() - t1;
     log_info("gc_reset_all: cost %lldms", cost_time);
 }
@@ -381,7 +387,8 @@ void gc_mark_all() {
     gc_mark_ex(tm->str_proto, "str_proto");
     gc_mark_ex(tm->builtins, "builtins");
     gc_mark_ex(tm->modules, "modules");
-    gc_mark_ex(tm->constants, "constants");
+    gc_mark_dict(tm->constants);
+    gc_mark_ex(tm->builtins_mod, "builtins_mod");
     
     gc_mark(tm->root);
     gc_mark_frames();

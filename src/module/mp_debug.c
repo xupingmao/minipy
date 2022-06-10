@@ -31,11 +31,12 @@ MpObj bf_get_vm_info() {
     obj_set_by_cstr(mp_info, "float_size", number_obj(sizeof(float)));
     obj_set_by_cstr(mp_info, "double_size", number_obj(sizeof(double)));
     obj_set_by_cstr(mp_info, "jmp_buf_size", number_obj(sizeof(jmp_buf)));
+    obj_set_by_cstr(mp_info, "code_cache_size", number_obj(sizeof(MpCodeCache)));
     obj_set_by_cstr(mp_info, "total_obj_len", number_obj(tm->all->len));
     obj_set_by_cstr(mp_info, "alloc_mem", number_obj(tm->allocated));
     obj_set_by_cstr(mp_info, "gc_threshold", number_obj(tm->gc_threshold));
     obj_set_by_cstr(mp_info, "frame_index", number_obj(tm->frame - tm->frames));
-    obj_set_by_cstr(mp_info, "consts_len", number_obj(DICT_LEN(tm->constants)));
+    obj_set_by_cstr(mp_info, "consts_len", number_obj(tm->constants->len));
     return mp_info;
 }
 
@@ -126,6 +127,7 @@ MpObj bf_print_dict_info() {
     return NONE_OBJECT;
 }
 
+
 /**
  * init debug module
  * @since 2016-11-16
@@ -143,3 +145,4 @@ void init_mod_for_debug() {
     reg_mod_func(debug, "vmopt", bf_vmopt);
     reg_mod_func(debug, "print_dict_info", bf_print_dict_info);
 }
+
