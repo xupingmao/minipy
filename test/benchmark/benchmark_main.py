@@ -27,9 +27,9 @@ def main():
 		print(">>> Run with minipy")
 		os.system("./minipy %r" % fpath)
 
-		print("-" * 60)
-		print(">>> Run with minipy-mp2c")
-		os.system("./minipyc %r -o %r.out && ./%r.out" % fpath)
+		# print("-" * 60)
+		# print(">>> Run with minipy-mp2c")
+		# os.system("./minipyc %r -o %r.out && ./%r.out" % fpath)
 
 		print("-" * 60)
 		print(">>> Run with tinypy")

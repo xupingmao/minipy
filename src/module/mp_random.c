@@ -11,16 +11,17 @@ static MpObj random_randint() {
 
 	int gap = stop - start + 1;
 	
-	int t = time(NULL) + clock();
-	// 初始化随机种子
-	srand((unsigned int)t);
-	
 	// rand() 生成 [0, RAND_MAX] 范围内的随机数
 	int value = rand() % gap;
 	return number_obj(start + value);
 }
 
 void init_mod_for_random() {
+	int t = time(NULL) + clock();
+	// 初始化随机种子
+	srand((unsigned int)t);
+	
+
     MpObj module = dict_new();
     reg_mod("random", module);
 
