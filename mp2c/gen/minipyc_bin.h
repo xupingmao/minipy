@@ -1,4 +1,4 @@
-const char* minipyc_bin="67#mp2c/minipyc\n"
+const char* minipyc_bin="69#mp2c/minipyc\n"
 "63#5\n2#sys\n1#1\n"
 "63#6\n2#mp_encode\n1#1\n"
 "63#7\n2#mp2c\n1#1\n"

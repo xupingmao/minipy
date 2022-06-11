@@ -1,7 +1,7 @@
 /**
   * execute minipy bytecode
   * @since 2014-9-2
-  * @modified 2022/06/11 21:19:23
+  * @modified 2022/06/11 21:44:05
   *
   * 2015-6-16: interpreter for tinyvm bytecode.
  **/
@@ -218,8 +218,11 @@ retry_op:
                 }
             } else {
                 MP_PUSH(globals_dict->nodes[idx].val);
-                cache->op = OP_LOAD_GLOBAL_FAST;
-                cache->index = idx;
+
+                #ifdef FAST_LOAD_GLOBAL
+                    cache->op = OP_LOAD_GLOBAL_FAST;
+                    cache->index = idx;
+                #endif
             }
 
             PROFILE_END(cache);
@@ -255,22 +258,6 @@ retry_op:
             GET_DICT(globals)->nodes[cache->index].val = MP_POP();
             PROFILE_END(cache);
             break;
-
-            /*
-            PROFILE_START(cache);
-            // 需要对比一下key是否匹配,处理命中失败的情况
-            DictNode *node = dict_get_node_by_index(GET_DICT(globals), cache->index);
-            if (node != NULL && is_obj_equals(node->key, cache->v.obj)) {
-                node->val = MP_POP();
-                PROFILE_END(cache);
-            } else {
-                cache->index = -1;
-                cache->op = OP_STORE_GLOBAL;
-                PROFILE_END(cache);
-                goto retry_op;
-            }
-            break;
-            */
         }
         case OP_LIST: {
             MP_PUSH(list_new(2));
@@ -318,12 +305,59 @@ retry_op:
         MP_OP(OP_MUL, obj_mul)
         MP_OP(OP_DIV, obj_div)
         MP_OP(OP_MOD, obj_mod)
-        MP_OP(OP_GET, obj_get)
+        
+        case OP_GET: {
+            PROFILE_START(cache);
+            MpObj *key = top;
+            MpObj *obj = top-1;
+            top--;
 
-        // case OP_GET_FAST: {
-        //     assert(0);
-        //     break;
-        // }
+            #ifdef FAST_GET
+
+            if (IS_DICT(*obj)) {
+                int idx = dict_get0(GET_DICT(*obj), *key);
+                if (idx != -1) {
+                    // 命中
+                    *top = GET_DICT(*obj)->nodes[idx].val;
+                    PROFILE_END(cache);
+
+                    cache->op = OP_GET_FAST;
+                    cache->index = idx;
+
+                    break;
+                }
+            } 
+
+            #endif
+            
+            *top = obj_get(*obj, *key);
+            PROFILE_END(cache);
+            break;
+        }
+
+        case OP_GET_FAST: {
+            PROFILE_START(cache);
+            MpObj *key = top;
+            MpObj *obj = top-1;
+            top--;
+
+            if (IS_DICT(*obj)) {
+                DictNode* node = dict_get_node_by_index(GET_DICT(*obj), cache->index);
+                if (node != NULL && is_obj_equals(node->key, *key)) {
+                    *top = node->val;
+                    PROFILE_END(cache);
+                    break;
+                }
+            }
+
+            *top = obj_get(*obj, *key);
+
+            cache->op = OP_GET;
+            cache->index = -1;
+
+            PROFILE_END(cache);
+            break;
+        }
         
         case OP_SLICE: {
             MpObj second = MP_POP();
@@ -393,44 +427,43 @@ retry_op:
             MpObj* value = top-2;
             top-=3;
 
-            // if (obj->type == TYPE_DICT) {
-            //     /* 没有命中缓存 */
-            //     dict_set0(obj->value.dict, *key, *value);
-            //     // cache->op = OP_SET_FAST;
-            // } else {
-            //    obj_set(*obj, *key, *value);
-            // }
+            if (obj->type == TYPE_DICT) {
+                /* 没有命中缓存 */
+                cache->index = dict_set0(obj->value.dict, *key, *value);
+                cache->op = OP_SET_FAST;
+            } else {
+               obj_set(*obj, *key, *value);
+            }
 
-            obj_set(*obj, *key, *value);
             PROFILE_END(cache);
             break;
         }
 
-        // case OP_SET_FAST: {
-        //     PROFILE_START(cache);
+        case OP_SET_FAST: {
+            PROFILE_START(cache);
 
-        //     MpObj* key = top;
-        //     MpObj* obj = top-1;
-        //     MpObj* value = top-2;
+            MpObj* key = top;
+            MpObj* obj = top-1;
+            MpObj* value = top-2;
+            top-=3;
 
-        //     if (IS_DICT(*obj)) {
-        //         DictNode* node = dict_get_node_by_index(GET_DICT(*obj), cache->index);
-        //         if (node != NULL && is_obj_equals(node->key, *key)) {
-        //             // printf("OP_SET_FAST: cache hit, index(%d)\n", cache->index);
-        //             node->val = *value;
-        //             top-=3;
-        //             PROFILE_END(cache);
-        //             break;
-        //         } 
-        //     }
+            if (IS_DICT(*obj)) {
+                DictNode* node = dict_get_node_by_index(GET_DICT(*obj), cache->index);
+                if (node != NULL && is_obj_equals(node->key, *key)) {
+                    // printf("OP_SET_FAST: cache hit, index(%d)\n", cache->index);
+                    node->val = *value; 
+                    PROFILE_END(cache);
+                    break;
+                } 
+            }
 
-        //     // printf("OP_SET_FAST: cache miss, index(%d)\n", cache->index);
-        //     // 缓存失效了，重新按照 OP_SET 执行
-        //     cache->index = -1;
-        //     cache->op = OP_SET;
-        //     goto retry_op;
-        //     break;
-        // }
+            // printf("OP_SET_FAST: cache miss, index(%d)\n", cache->index);
+            // 缓存失效了，重新按照 OP_SET 执行
+            cache->index = -1;
+            cache->op = OP_SET;
+            obj_set(*obj, *key, *value);
+            break;
+        }
         
         case OP_POP: {
             PROFILE_START(cache);

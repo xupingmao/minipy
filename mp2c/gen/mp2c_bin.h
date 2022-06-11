@@ -1,4 +1,4 @@
-const char* mp2c_bin="67#mp2c/mp2c\n"
+const char* mp2c_bin="69#mp2c/mp2c\n"
 "63#8\n2#sys\n1#1\n"
 "63#9\n2#os\n1#1\n"
 "63#10\n2#mp_encode\n2#*\n1#2\n"

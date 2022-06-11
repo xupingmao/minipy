@@ -2,7 +2,7 @@
  * minipy编译器
  * @author xupingmao
  * @since 2022/06/05 16:01:07
- * @modified 2022/06/05 17:02:26
+ * @modified 2022/06/11 21:58:48
  */
 #include "../src/vm.c"
 #include "./gen/minipyc_bin.h"
@@ -10,7 +10,7 @@
 
 static void load_minipyc() {
     load_boot_module("mp2c", mp2c_bin);
-    load_boot_module("minipyc",    minipyc_bin);
+    load_boot_module("minipyc", minipyc_bin);
 }
 
 int main(int argc, char *argv[]) {
