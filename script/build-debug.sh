@@ -1,0 +1,2 @@
+make clean
+make MP_PROFILE=1 RECORD_LAST_OP=1
