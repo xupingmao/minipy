@@ -1,4 +1,4 @@
-const char* mp_parse_bin="31\n2#number\n32\n2#string\n32\n2#name\n32\n2#None\n32\n26##0\n31\n2#=\n32\n2#+=\n32\n2#-=\n32\n2#*=\n32\n2#/=\n32\n2#%=\n32\n26##1\n31\n2#>\n32\n2#<\n32\n2#==\n32\n2#is\n32\n2#!=\n32\n2#>=\n32\n2#<=\n32\n2#in\n32\n2#notin\n32\n2#isnot\n32\n26##2\n31\n2#+\n32\n2#-\n32\n26##3\n31\n2#*\n32\n2#/\n32\n2#%\n32\n26##4\n31\n2#.\n32\n2#(\n32\n2#[\n32\n26##5\n31\n2#nl\n32\n2#eof\n32\n26##6\n31\n2#number\n32\n2#string\n32\n2#None\n32\n2#name\n32\n26##7\n67#mp_parse\n"
+const char* mp_parse_bin="31\n2#number\n32\n2#string\n32\n2#name\n32\n2#None\n32\n26##0\n31\n2#=\n32\n2#+=\n32\n2#-=\n32\n2#*=\n32\n2#/=\n32\n2#%=\n32\n26##1\n31\n2#>\n32\n2#<\n32\n2#==\n32\n2#is\n32\n2#!=\n32\n2#>=\n32\n2#<=\n32\n2#in\n32\n2#notin\n32\n2#isnot\n32\n26##2\n31\n2#+\n32\n2#-\n32\n26##3\n31\n2#*\n32\n2#/\n32\n2#%\n32\n26##4\n31\n2#.\n32\n2#(\n32\n2#[\n32\n26##5\n31\n2#nl\n32\n2#eof\n32\n26##6\n31\n2#number\n32\n2#string\n32\n2#None\n32\n2#name\n32\n26##7\n69#mp_parse\n"
 "63#7\n2#mp_tokenize\n2#*\n1#2\n"
 "63#9\n2#tm\n28#globals\n48\n17\n10\n37#6\n"
 "63#10\n2#boot\n2#*\n1#2\n35#1\n"

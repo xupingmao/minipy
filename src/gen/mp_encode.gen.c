@@ -1,4 +1,4 @@
-const char* mp_encode_bin="31\n2#string\n32\n2#number\n32\n2#None\n32\n26##0\n67#mp_encode\n"
+const char* mp_encode_bin="31\n2#string\n32\n2#number\n32\n2#None\n32\n26##0\n69#mp_encode\n"
 "63#11\n2#tm\n28#globals\n48\n17\n10\n37#6\n"
 "63#12\n2#boot\n2#*\n1#2\n35#1\n"
 "63#14\n2#mp_parse\n2#*\n1#2\n"

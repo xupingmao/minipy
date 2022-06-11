@@ -2,7 +2,7 @@
  * description here
  * @author xupingmao
  * @since 2016
- * @modified 2022/06/05 23:52:01
+ * @modified 2022/06/11 19:17:18
  */
 #include "vm.c"
 
@@ -10,7 +10,7 @@ static void test_code_queue_1() {
 	CodeQueue queue;
 	MpCodeCache cache;
 
-	CodeQueue_Init(&queue);
+	CodeQueue_Init(&queue, 5);
 
 	cache.op = 1;
 	CodeQueue_Append(&queue, cache);
@@ -28,7 +28,7 @@ static void test_code_queue_2() {
 	CodeQueue queue;
 	MpCodeCache cache;
 
-	CodeQueue_Init(&queue);
+	CodeQueue_Init(&queue, 5);
 
 	cache.op = 1;
 	CodeQueue_Append(&queue, cache);

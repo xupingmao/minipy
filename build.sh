@@ -20,7 +20,7 @@ esac
 
 cd src/python
 
-echo "Current path: $(pwd)"
+echo "current path: $(pwd)"
 echo "Python interpreter: $prog"
 
 $prog mp_encode.py mp_init.py > ../gen/mp_init.gen.c

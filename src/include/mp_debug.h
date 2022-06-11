@@ -2,15 +2,15 @@
  * 调试专用
  * @author xupingmao
  * @since 2022/06/05 23:28:29
- * @modified 2022/06/10 20:30:25
+ * @modified 2022/06/11 19:17:03
  */
 
 #define MP_DEBUG_FUNC_RESOLVE 1
 
 #ifdef RECORD_LAST_OP
 
-CodeQueue* CodeQueue_Init(CodeQueue* queue);
-void CodeQueue_Append(CodeQueue* queue, MpCodeCache cache);
+CodeQueue* CodeQueue_Init(CodeQueue* queue, int cap);
+void  CodeQueue_Append(CodeQueue* queue, MpCodeCache cache);
 MpObj CodeQueue_ToString(CodeQueue* queue);
 
 #endif

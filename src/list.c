@@ -2,7 +2,7 @@
  * description here
  * @author xupingmao
  * @since 2016
- * @modified 2022/06/07 22:58:05
+ * @modified 2022/06/11 20:26:29
  */
 #include "include/mp.h"
 
@@ -26,6 +26,13 @@ MpObj list_new(int cap) {
     v.type = TYPE_LIST;
     v.value.list = list_new_untracked(cap);
     return gc_track(v);
+}
+
+MpObj list_to_obj(MpList* list) {
+    MpObj obj;
+    obj.type = TYPE_LIST;
+    obj.value.list = list;
+    return obj;
 }
 
 void list_free(MpList* list) {

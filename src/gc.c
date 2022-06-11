@@ -6,7 +6,7 @@
  * 5. release objects which are marked unused (0).
  * 
  * @since 2015
- * @modified 2022/06/10 23:07:21
+ * @modified 2022/06/11 21:11:51
  */
 
 #include "include/mp.h"
@@ -14,7 +14,7 @@
 
 void gc_init_chars();
 void gc_init_frames();
-static void gc_mark_ex(MpObj, const char*);
+static const char* gc_mark_ex(MpObj, const char*);
 
 #define GC_CONSTANS_LEN 10
 #define GC_REACHED_SIGN 1
@@ -62,7 +62,7 @@ void gc_init() {
     tm->ex_line = NONE_OBJECT;
 
     #ifdef RECORD_LAST_OP
-        CodeQueue_Init(&tm->last_op_queue);
+        CodeQueue_Init(&tm->last_op_queue, 20);
     #endif
     
     /* initialize chars */
@@ -193,14 +193,19 @@ MpObj gc_track(MpObj v) {
     return v;
 }
 
-void gc_mark_list(MpList* list) {
+const char* gc_mark_list(MpList* list) {
     if (list->marked)
-        return;
+        return NULL;
     list->marked = GC_REACHED_SIGN;
     int i;
     for (i = 0; i < list->len; i++) {
-        gc_mark_ex(list->nodes[i], "list");
+        const char* err = gc_mark_ex(list->nodes[i], "list");
+        if (err != NULL) {
+            printf("%s:%d/%s failed: length(%d)\n", __FILE__, __LINE__, __FUNCTION__, list->len);
+            return err;
+        }
     }
+    return NULL;
 }
  
 void gc_mark_dict(MpDict* dict) {
@@ -265,19 +270,19 @@ void gc_mark(MpObj o) {
  * mark object as used
  * @since 2014-??
  */
-static void gc_mark_ex(MpObj o, const char* source) {
+static const char* gc_mark_ex(MpObj o, const char* source) {
     if (o.type == TYPE_NUM || o.type == TYPE_NONE)
-        return;
+        return NULL;
     switch (o.type) {
     case TYPE_STR: {
         if (o.value.str->marked)
-            return;
+            return NULL;
         o.value.str->marked = GC_REACHED_SIGN;
         break;
     }
     case TYPE_LIST:
-        gc_mark_list(GET_LIST(o));
-        break;
+        return gc_mark_list(GET_LIST(o));
+
     case TYPE_DICT:
         gc_mark_dict(GET_DICT(o));
         break;
@@ -292,20 +297,35 @@ static void gc_mark_ex(MpObj o, const char* source) {
         break;
     case TYPE_DATA:
         if (GET_DATA(o)->marked)
-            return;
+            return NULL;
         GET_DATA(o)->marked = GC_REACHED_SIGN;
         GET_DATA(o)->mark(GET_DATA(o));
         // GET_DATA(o)->proto->mark(GET_DATA(o));
         break;
-    default:
-        mp_raise("gc_mark: unknown object type %d, source:%s", o.type, source);
+    default: {
+            printf("%s:%d/%s unknown object type(%d), source(%s)\n", __FILE__, __LINE__, __FUNCTION__, o.type, source);
+            MpObj error = mp_format("gc_mark_ex: unknown object type %d, source:%s", o.type, source);
+            return STR_TO_CSTR(error);
+        }
     }
+
+    return NULL;
 }
 
 void gc_unmark(MpObj o) {
     if (o.type == TYPE_NUM || o.type == TYPE_NONE)
         return;
     GC_MARKED(o) = 0;
+}
+
+
+static void gc_print_frame_stack_info(MpFrame* f) {
+    mp_printf("frame.func:%o\n", f->fnc);
+    int index = 0;
+    for(MpObj *temp = f->stack; temp <= f->top; temp++) {
+        mp_printf("stack[%d]=%o\n", index, *temp);
+        index++;
+    }
 }
 
 /**
@@ -318,15 +338,21 @@ void gc_mark_frames() {
 
     // why frames + 1 ?
     for(f = tm->frames + 1; f <= tm->frame; f++) {
-        gc_mark_ex(f->fnc, "frame.func");
+        gc_mark_and_check(f->fnc, "frame.func");
         /* mark locals */
         for(j = 0; j < f->maxlocals; j++) {
-            gc_mark_ex(f->locals[j], "frame.local");
+            gc_mark_and_check(f->locals[j], "frame.local");
         }
+
         /* mark operand stack */
         MpObj* temp;
         for(temp = f->stack; temp <= f->top; temp++) {
-            gc_mark_ex(*temp, "frame.stack");
+            // gc_mark_and_check(*temp, "frame.stack");
+            const char* err = gc_mark_ex(*temp, "frame.stack");
+            if (err != NULL) {
+                gc_print_frame_stack_info(f);
+                mp_raise("gc failed:%s", err);
+            }
         }
     }
 }
@@ -372,28 +398,39 @@ void gc_reset_all() {
         GC_MARKED(tm->all->nodes[i]) = 0;
     }
 
+    // 标记常量池
+    // TODO: 常量可以不进入gc流程
     tm->constants->marked = 0;
 
     int64_t cost_time = time_get_milli_seconds() - t1;
     log_info("gc_reset_all: cost %lldms", cost_time);
 }
 
+
+void gc_mark_and_check(MpObj obj, const char* source) {
+    const char* err = gc_mark_ex(obj, source);
+    if (err != NULL) {
+        mp_printf("%s:%d/%s failed, obj:%o, source:%s\n", __FILE__, __LINE__, __FUNCTION__, obj, source);
+        mp_raise("gc failed: %s", err);
+    }
+}
+
 void gc_mark_all() {
     int64_t start_time = time_get_milli_seconds();
 
     /* mark protoes */
-    gc_mark_ex(tm->list_proto, "list_proto");
-    gc_mark_ex(tm->dict_proto, "dict_proto");
-    gc_mark_ex(tm->str_proto, "str_proto");
-    gc_mark_ex(tm->builtins, "builtins");
-    gc_mark_ex(tm->modules, "modules");
+    gc_mark_and_check(tm->list_proto, "list_proto");
+    gc_mark_and_check(tm->dict_proto, "dict_proto");
+    gc_mark_and_check(tm->str_proto, "str_proto");
+    gc_mark_and_check(tm->builtins, "builtins");
+    gc_mark_and_check(tm->modules, "modules");
     gc_mark_dict(tm->constants);
-    gc_mark_ex(tm->builtins_mod, "builtins_mod");
+    gc_mark_and_check(tm->builtins_mod, "builtins_mod");
     
     gc_mark(tm->root);
     gc_mark_frames();
-    gc_mark_ex(tm->ex, "ex");
-    gc_mark_ex(tm->ex_line, "ex_line");
+    gc_mark_and_check(tm->ex, "ex");
+    gc_mark_and_check(tm->ex_line, "ex_line");
 
     int64_t cost_time = time_get_milli_seconds() - start_time;
     log_info("gc_mark_all: cost:%lldms", cost_time);
@@ -424,7 +461,7 @@ void gc_full() {
 
     gc_mark_all();
 
-    /* sweep garbage */
+    // 清理垃圾,这个操作可以增量处理
     gc_sweep();
     tm->gc_threshold = tm->allocated + tm->allocated / 2;
     
@@ -546,8 +583,8 @@ MpObj* data_next(MpData* data) {
 }
 
 void data_mark(MpData* data) {
-    int i;
-    for (i = 0; i < data->data_size; i++) {
+    // marked 字段已经在上层处理了
+    for (int i = 0; i < data->data_size; i++) {
         gc_mark_ex(data->data_ptr[i], "data");
     }
 }

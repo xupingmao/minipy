@@ -3,7 +3,7 @@
  *
  *  Created on: 2020/09/21
  *  @author: xupingmao
- *  @modified 2022/06/09 23:33:14
+ *  @modified 2022/06/11 20:25:54
  */
 
 #ifndef MP_MACRO_H_
@@ -23,6 +23,7 @@
 
 /* macros */
 #define GET_CSTR(obj)    (obj).value.str->value
+#define STR_TO_CSTR(obj) (obj).value.str->value
 #define GET_STR_OBJ(obj) (obj).value.str
 #define GET_STR_LEN(obj) (obj).value.str->len
 #define GET_STR_CHAR(obj, index) (obj).value.str->value[index]

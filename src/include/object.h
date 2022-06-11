@@ -3,7 +3,7 @@
  *
  *  Created on: 2014/8/25
  *  @author: xupingmao
- *  @modified 2022/06/10 22:55:29
+ *  @modified 2022/06/11 20:49:45
  */
 
 #ifndef _OBJECT_H_
@@ -14,10 +14,13 @@
 #define TYPE_LIST 3
 #define TYPE_DICT 4
 #define TYPE_FUNCTION 5
-#define TYPE_NONE 7
-#define TYPE_MODULE 9
-#define TYPE_DATA 10
-#define TYPE_CLASS 11
+#define TYPE_NONE 6
+#define TYPE_MODULE 7
+#define TYPE_DATA 8
+#define TYPE_CLASS 9
+
+#define TYPE_MIN 1
+#define TYPE_MAX 9
 
 #define MP_TYPE(o) (o).type
 #define MAX_FILE_SIZE 1024 * 1024 * 5 /* max file size loaded into memery */
@@ -58,6 +61,7 @@ struct MpRecycle {
 };
 
 
+#define CACHE_VTYPE_DEFAULT 0
 #define CACHE_VTYPE_STR 1
 #define CACHE_VTYPE_INT 2
 #define CACHE_VTYPE_OBJ 3
@@ -145,11 +149,11 @@ typedef struct MpFrame {
 }MpFrame;
 
 #ifdef RECORD_LAST_OP
-  #define CODE_QUEUE_CAP 5
-  typedef struct _codeQueue {
+  typedef struct _codeQueue_t {
     int size;
     int start;
-    MpCodeCache data[CODE_QUEUE_CAP];
+    int cap;
+    MpCodeCache data[20];
   } CodeQueue;
 #endif
 

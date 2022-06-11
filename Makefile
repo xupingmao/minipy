@@ -2,7 +2,8 @@
 cc = gcc
 LOG_LEVEL?=2
 MP_PROFILE?=0
-RECORD_LAST_OP?=1
+RECORD_LAST_OP?=0
+MP_LOG_CACHE?=0
 ROOT=$(shell pwd)
 
 minipy: src/*.c src/include/*.h
@@ -30,8 +31,11 @@ minipyc: minipyc_bin
 debug-gc:
 	$(cc) -g -DLOG_LEVEL=5 -DMP_DEBUG -o minipy src/main.c -lm
 
-debug:
-	$(cc) -g -DMP_DEBUG -o minipy src/main.c -lm
+debug:src/*.c src/include/*.h
+	$(cc) -g -DTM_USE_CACHE -DLOG_LEVEL=$(LOG_LEVEL)\
+		-DMP_PROFILE=$(MP_PROFILE)\
+		-DRECORD_LAST_OP=$(RECORD_LAST_OP)\
+		-o minipy src/main.c -lm
 
 nogc:
 	$(cc) -g -DGC_DESABLED -o minipy src/main.c -lm

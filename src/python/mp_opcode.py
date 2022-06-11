@@ -2,7 +2,7 @@
 # stack based opcodes
 # @author xupingmao
 # @since 2016
-# @modified 2022/02/04 23:00:30
+# @modified 2022/06/11 18:03:54
 
 """使用说明
 在`minipy`的根目录执行
@@ -84,6 +84,8 @@ _opcode_names = [
     # instructions for vm to optimize.
     'OP_STORE_GLOBAL_FAST',
     'OP_LOAD_GLOBAL_FAST',
+    'OP_SET_FAST',
+    'OP_GET_FAST',
 
     'OP_FILE',
 

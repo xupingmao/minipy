@@ -3,7 +3,7 @@
  *
  *  Created on: 2022/06/05 23:55:55
  *  @author: xupingmao
- *  @modified 2022/06/10 22:33:58
+ *  @modified 2022/06/11 19:33:24
  */
 
 #include "include/mp.h"
@@ -123,6 +123,7 @@ void mp_resolve_code(MpModule* m, const char* code) {
                 cache.vtype = CACHE_VTYPE_INT;
                 break;
             default:
+                cache.vtype = CACHE_VTYPE_DEFAULT;
                 cache.v.ival = 0; 
                 break;
         }
@@ -138,6 +139,11 @@ void mp_resolve_code(MpModule* m, const char* code) {
 const char* CodeCache_ToString(MpCodeCache* cache) {
 	static char buf[1024];
     switch (cache->vtype) {
+        case CACHE_VTYPE_DEFAULT: {
+            snprintf(buf, 1023, "%-20s\n", 
+                inst_get_name_by_code(cache->op));
+            break;
+        }
         case CACHE_VTYPE_INT: {
             snprintf(buf, 1023, "%-20s o.ival:%d\n", 
                 inst_get_name_by_code(cache->op), cache->v.ival);
@@ -160,3 +166,52 @@ const char* CodeCache_ToString(MpCodeCache* cache) {
     }
 	return buf;
 }
+
+
+
+
+
+#ifdef RECORD_LAST_OP
+
+CodeQueue* CodeQueue_Init(CodeQueue* queue, int cap) {
+    assert(cap > 0);
+    assert(cap <= 20);
+    queue->size = 0;
+    queue->start = 0;
+    queue->cap = cap;
+    return queue;
+}
+
+void CodeQueue_Append(CodeQueue* queue, MpCodeCache cache) {
+    if (queue->size < queue->cap) {
+        queue->size++;
+    } else {
+        assert(queue->size >= queue->cap);
+        queue->start = (++queue->start) % queue->cap;
+    }
+    int index = queue->start + queue->size - 1;
+    int pos = index % queue->cap;
+    queue->data[pos] = cache;
+}
+
+MpObj CodeQueue_ToString(CodeQueue* queue) {
+    int start = queue->start;
+    int count = 0;
+    MpObj result = string_new("");
+    // printf("queue->size=%d\n", queue->size);
+    
+    while (count < queue->size) {
+        MpCodeCache cache = queue->data[start];
+
+        const char* line = CodeCache_ToString(&cache);
+        MpObj line_obj = mp_format("%03d: %s", count+1, line);
+        string_append_obj(result, line_obj);
+
+        start = (++start) % queue->cap;
+        count++;
+    }
+
+    return result;
+}
+
+#endif

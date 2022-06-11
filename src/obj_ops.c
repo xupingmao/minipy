@@ -4,7 +4,7 @@
  * 这个模块的作用是封装了对MpStr/MpList/MpDict等对象的调用
  * @author xupingmao
  * @since 2016
- * @modified 2022/06/10 23:04:13
+ * @modified 2022/06/11 18:49:48
  */
 
 #include <assert.h>
@@ -260,11 +260,13 @@ int is_obj_equals(MpObj a, MpObj b){
     }
     
     switch(MP_TYPE(a)){
-        case TYPE_NUM:return GET_NUM(a) == GET_NUM(b);
+        case TYPE_NUM:{
+            return GET_NUM(a) == GET_NUM(b);
+        }
         case TYPE_STR: {
             MpStr* s1 = GET_STR_OBJ(a);
             MpStr* s2 = GET_STR_OBJ(b);
-            return s1->value == s2->value || 
+            return (s1 == s2) || (s1->value == s2->value) ||
                 (s1->len == s2->len && strncmp(s1->value, s2->value, s1->len) == 0);
         }
         case TYPE_LIST:    {

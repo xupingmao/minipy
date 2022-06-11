@@ -1,4 +1,4 @@
-const char* repl_bin="31\n2#string\n32\n2#number\n32\n26##0\n67#repl\n"
+const char* repl_bin="31\n2#string\n32\n2#number\n32\n26##0\n69#repl\n"
 "63#6\n2#mp_encode\n1#1\n"
 "63#8\n3#40.0\n26#PRINT_STR_LEN\n"
 "63#9\n28#mp_encode\n2#compilefile\n22\n26#compilefile\n"

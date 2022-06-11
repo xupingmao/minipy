@@ -1,7 +1,7 @@
 /**
   * execute minipy bytecode
   * @since 2014-9-2
-  * @modified 2022/06/10 23:11:44
+  * @modified 2022/06/11 21:19:23
   *
   * 2015-6-16: interpreter for tinyvm bytecode.
  **/
@@ -18,6 +18,7 @@ void pop_frame() {
 }
 
 #define MP_PUSH(x) *(++top) = (x); \
+    assert(top->type >= TYPE_MIN && top->type <= TYPE_MAX); \
     if(top > tm->stack_end) \
         mp_raise("mp_eval: stack overflow");
 
@@ -31,11 +32,12 @@ void pop_frame() {
 #define MP_POP() *(top--)
 #define MP_TOP() (*top)
 
-#define MP_OP(OP_CODE, OP_FUNC) case OP_CODE: \
+#define MP_OP(OP_CODE, OP_FUNC) case OP_CODE: {\
     PROFILE_START(cache); \
     *(top-1) = OP_FUNC(*(top-1), *top);--top;\
     PROFILE_END(cache); \
-    break;
+    break;\
+    }
     
 
 #define FRAME_CHECK_GC()  \
@@ -45,7 +47,9 @@ if (tm->allocated > tm->gc_threshold) {   \
 }
 
 MpFrame* push_frame(MpObj fnc) {
-    /* make extra space for self in method call */
+    // make extra space for self in method call
+    // top包含当前frame的stack-value
+    // top+1 需要为self预留空间
     MpObj *top = tm->frame->top + 2;
     tm->frame ++ ;
     MpFrame* f = tm->frame;
@@ -80,7 +84,9 @@ MpFrame* push_frame(MpObj fnc) {
     for(i = 0; i < f->maxlocals; i++) {
         f->locals[i] = NONE_OBJECT;
     }
+
     *(f->top) = NONE_OBJECT;
+
     f->jmp = NULL;
     f->cache_jmp = NULL;
     return f;
@@ -131,7 +137,6 @@ tailcall:
         PROFILE_NULL_START();
         PROFILE_NULL_END();
 
-        mp_log_cache(cache);
         #ifdef MP_PRINT_STEPS
             tm->steps++;
         #endif
@@ -209,14 +214,6 @@ retry_op:
                     mp_raise("NameError: name %o is not defined", cache->v.obj);
                 } else {
                     MpObj value = builtins_dict->nodes[idx].val;
-                    // OPTIMIZE
-                    // set the builtin to `globals()`
-                    // obj_set(globals, cache->v.obj, value);
-                    // idx = dict_get0(GET_DICT(globals), cache->v.obj);
-                    // OPTIMIZE END
-                    // key被删除后重新设置，它的位置可能变动
-                    // cache->op = OP_LOAD_GLOBAL_FAST;
-                    // cache->index = idx;
                     MP_PUSH(value);
                 }
             } else {
@@ -322,6 +319,11 @@ retry_op:
         MP_OP(OP_DIV, obj_div)
         MP_OP(OP_MOD, obj_mod)
         MP_OP(OP_GET, obj_get)
+
+        // case OP_GET_FAST: {
+        //     assert(0);
+        //     break;
+        // }
         
         case OP_SLICE: {
             MpObj second = MP_POP();
@@ -390,10 +392,45 @@ retry_op:
             MpObj* obj = top-1;
             MpObj* value = top-2;
             top-=3;
+
+            // if (obj->type == TYPE_DICT) {
+            //     /* 没有命中缓存 */
+            //     dict_set0(obj->value.dict, *key, *value);
+            //     // cache->op = OP_SET_FAST;
+            // } else {
+            //    obj_set(*obj, *key, *value);
+            // }
+
             obj_set(*obj, *key, *value);
             PROFILE_END(cache);
             break;
         }
+
+        // case OP_SET_FAST: {
+        //     PROFILE_START(cache);
+
+        //     MpObj* key = top;
+        //     MpObj* obj = top-1;
+        //     MpObj* value = top-2;
+
+        //     if (IS_DICT(*obj)) {
+        //         DictNode* node = dict_get_node_by_index(GET_DICT(*obj), cache->index);
+        //         if (node != NULL && is_obj_equals(node->key, *key)) {
+        //             // printf("OP_SET_FAST: cache hit, index(%d)\n", cache->index);
+        //             node->val = *value;
+        //             top-=3;
+        //             PROFILE_END(cache);
+        //             break;
+        //         } 
+        //     }
+
+        //     // printf("OP_SET_FAST: cache miss, index(%d)\n", cache->index);
+        //     // 缓存失效了，重新按照 OP_SET 执行
+        //     cache->index = -1;
+        //     cache->op = OP_SET;
+        //     goto retry_op;
+        //     break;
+        // }
         
         case OP_POP: {
             PROFILE_START(cache);
@@ -424,10 +461,16 @@ retry_op:
             // 调用函数的时间不算到 OP_CALL的执行时间内
             MP_PUSH(OBJ_CALL_EX(func));
 
-            PROFILE_START(cache);
+            // 恢复当前frame的值
             tm->frame = f;
-            FRAME_CHECK_GC();
-            PROFILE_END(cache);
+            f->top = top;
+
+            if (tm->allocated > tm->gc_threshold) {
+                // gc_track(func);
+                // mp_printf("gc full at %o\n", func);
+                // printf("gc full at %s\n", obj_to_cstr(func));
+                gc_full();
+            }
             break;
         }
 
@@ -462,6 +505,8 @@ retry_op:
                 f->maxlocals = func_get_max_locals(GET_FUNCTION(func));
                 f->stack = f->locals + f->maxlocals;
                 f->top = f->stack;
+                *(f->top) = NONE_OBJECT;
+
                 // clear locals
                 for (i = 0; i < f->maxlocals; i++) {
                     f->locals[i] = NONE_OBJECT;

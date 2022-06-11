@@ -1,4 +1,4 @@
-const char* pyeval_bin="67#pyeval\n"
+const char* pyeval_bin="69#pyeval\n"
 "63#6\n2#mp_encode\n1#1\n"
 "63#7\n28#mp_encode\n2#compile\n22\n26#compile\n"
 "63#8\n28#mp_encode\n2#split_instr\n22\n26#split_instr\n"

@@ -86,11 +86,12 @@ MpObj       bf_get_malloc_info();
 void        gc_mark(MpObj);
 void        gc_unmark(MpObj);
 void        gc_mark_single(MpObj);
-void        gc_mark_list(MpList*);
+const char* gc_mark_list(MpList*);
 void        gc_mark_dict(MpDict*);
 void        gc_restore_local_obj_list(int size);
 void        gc_native_call_sweep();
 void        gc_check_native_call(int size, MpObj ret);
+void gc_mark_and_check(MpObj, const char*);
 
 /**
  * string functions
@@ -151,8 +152,7 @@ MpDict*          dict_new_ptr();
 MpDict*          dict_init();
 void             dict_free(MpDict* dict);
 int              dict_set0(MpDict* dict, MpObj key, MpObj val);
-DictNode*        dict_get_node_new(MpDict* dict, MpObj key);
-DictNode*        dict_get_node_old(MpDict* dict, MpObj key);
+DictNode*        dict_get_node(MpDict* dict, MpObj key);
 MpObj*           dict_get_by_cstr(MpDict* dict, char* key);
 DictNode*        dict_get_node_by_index(MpDict* dict, int index);
 void             dict_del(MpDict* dict, MpObj k);
@@ -164,7 +164,6 @@ MpObj dict_to_obj(MpDict* dict);
 
 #define          dict_set(d, k, v)                dict_set0(GET_DICT(d), k, v)
 #define          dict_get_by_str(dict, key)       dict_get_by_cstr(GET_DICT(dict), key)
-#define          dict_get_node dict_get_node_new
 
 /** dict methods **/
 MpObj            dict_iter_new(MpObj dict);

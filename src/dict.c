@@ -3,7 +3,7 @@
  * too many interfaces with similar function will confuse the users.
  * @author xupingmao <578749341@qq.com>
  * @since 2016
- * @modified 2022/06/10 23:00:22
+ * @modified 2022/06/11 18:41:32
  */
 #include "include/mp.h"
 
@@ -239,39 +239,18 @@ int dict_get0(MpDict* dict, MpObj key) {
     return -1;
 }
 
-
-DictNode* dict_get_node_old(MpDict* dict, MpObj key){
-    int i = 0;
-    int hash = obj_hash(key);
-    DictNode* nodes = dict->nodes;
-    for (i = 0; i < dict->cap; i++) {
-        // 为空或者被删除
-        if (nodes[i].used <= 0) {
-            continue;
-        }
-
-        if (hash != nodes[i].hash) {
-            continue;
-        }
-
-        if (is_obj_equals(nodes[i].key, key)) {
-            return nodes + i;
-        }
-    }
-    return NULL;
-}
-
 static int dict_find_start(MpDict* dict, int hash) {
     // 取模运算只用到了hash的右侧部分的数字
     // 使用&位运算可以充分使用全部的数字，但是要求mask=(2^n-1)
     return hash % dict->mask;
 }
 
-DictNode* dict_get_node_new(MpDict* dict, MpObj key) {
+DictNode* dict_get_node(MpDict* dict, MpObj key) {
     return dict_get_node_with_hash(dict, key, obj_ptr_hash(&key));
 }
 
 DictNode* dict_get_node_by_index(MpDict* dict, int index) {
+    assert(index >= 0);
     if (index < dict->len) {
         DictNode* node = dict->nodes + index;
         if (node->used > 0) {
