@@ -27,3 +27,4 @@ minipy.dSYM
 /test/tinypy/tinypy/tinypy
 /test/tinypy/tinypy/vm
 /test/micropython/
+ctest
