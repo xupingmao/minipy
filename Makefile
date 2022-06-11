@@ -9,7 +9,6 @@ ROOT=$(shell pwd)
 minipy: src/*.c src/include/*.h
 	$(cc) -DTM_USE_CACHE -DLOG_LEVEL=$(LOG_LEVEL)\
 		-DMP_PROFILE=$(MP_PROFILE)\
-		-DRECORD_LAST_OP=$(RECORD_LAST_OP)\
 		-DNDEBUG\
 		-O2 -o minipy src/main.c -lm
 
@@ -32,10 +31,7 @@ debug-gc:
 	$(cc) -g -DLOG_LEVEL=5 -DMP_DEBUG -o minipy src/main.c -lm
 
 debug:src/*.c src/include/*.h
-	$(cc) -g -DTM_USE_CACHE -DLOG_LEVEL=$(LOG_LEVEL)\
-		-DMP_PROFILE=$(MP_PROFILE)\
-		-DRECORD_LAST_OP=$(RECORD_LAST_OP)\
-		-o minipy src/main.c -lm
+	bash ./script/build-debug.sh
 
 nogc:
 	$(cc) -g -DGC_DESABLED -o minipy src/main.c -lm

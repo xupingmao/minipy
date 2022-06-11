@@ -1,2 +1,3 @@
 make clean
-make debug MP_PROFILE=1 RECORD_LAST_OP=1 MP_LOG_CACHE=1
+gcc -DTM_USE_CACHE -DMP_PROFILE -DRECORD_LAST_OP\
+	-g -o minipy src/main.c -lm
