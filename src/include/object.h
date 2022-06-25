@@ -52,7 +52,7 @@ typedef union MpValue {
 typedef struct MpObj{
   char type;
   MpValue value;
-}MpObj;
+} MpObj;
 
 
 struct MpRecycle {
@@ -66,20 +66,18 @@ struct MpRecycle {
 #define CACHE_VTYPE_INT 2
 #define CACHE_VTYPE_OBJ 3
 
-
 typedef struct _mp_code_cache {
     char op;
     char vtype; /* value type: CACHE_VTYPE_XXX */
+    int index;
+    char* sval; /* string value */
 
     union {
         MpObj obj;
         int ival;
     } v;
 
-    int index;
-    char* sval; /* string value */
-
-    #ifdef MP_PROFILE
+    #if MP_PROFILE
       // 性能分析埋点
       int64_t start_time;
       int64_t total_time;

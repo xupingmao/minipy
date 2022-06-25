@@ -5,6 +5,12 @@
 * built-in functions for developers
 ***********************************/
 
+typedef struct TypeAndDouble_t {
+    char type;
+    double value;
+} TypeAndDouble;
+
+
 MpObj bf_inspect_ptr() {
     double _ptr = arg_take_double("inspect_ptr");
     int idx = arg_take_int("inspect_ptr");
@@ -25,6 +31,8 @@ MpObj bf_get_vm_info() {
     obj_set_by_cstr(mp_info, "name", string_new("tm"));
     obj_set_by_cstr(mp_info, "vm_size", number_obj(sizeof(MpVm)));
     obj_set_by_cstr(mp_info, "obj_size", number_obj(sizeof(MpObj)));
+    obj_set_by_cstr(mp_info, "obj_value_size", number_obj(sizeof(MpValue)));
+    obj_set_by_cstr(mp_info, "type_and_double_size", number_obj(sizeof(TypeAndDouble)));
     obj_set_by_cstr(mp_info, "int_size", number_obj(sizeof(int)));
     obj_set_by_cstr(mp_info, "long_size", number_obj(sizeof(long)));
     obj_set_by_cstr(mp_info, "long_long_size", number_obj(sizeof(long long)));
