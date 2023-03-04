@@ -28,3 +28,5 @@ minipy.dSYM
 /test/tinypy/tinypy/vm
 /test/micropython/
 ctest
+pack_main
+

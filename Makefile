@@ -14,6 +14,12 @@ minipy: src/*.c src/include/*.h
 
 .PHONY: clean test ctest
 
+pack: src/*.c src/include/*.h pack/*.c
+	$(cc) -DTM_USE_CACHE -DLOG_LEVEL=$(LOG_LEVEL)\
+		-DMP_PROFILE=$(MP_PROFILE)\
+		-DNDEBUG\
+		-O2 -o pack_main pack/main.c -lm
+
 o2:
 	$(cc) -DTM_USE_CACHE -O2 -o minipy src/main.c -lm
 

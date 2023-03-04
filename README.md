@@ -19,11 +19,25 @@
 
 ## 如何开始
 
+### 编译解释器
+
 ```
 cd minipy
 make && make test
 
 # and enjoy yourself ^_^
+```
+
+### 打包成可执行文件
+
+```
+# 编辑 pack/main.py
+
+# 打包
+python3 build.py pack
+
+# 执行打包后的文件
+./pack_main
 ```
 
 ## 特性
