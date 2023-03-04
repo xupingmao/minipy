@@ -219,6 +219,8 @@ void            class_free(MpClass* pclass);
 void mp_resolve_code(MpModule* m, const char* code);
 
 MpObj      data_new(size_t size);
+MpData* data_new_ptr(size_t size);
+MpObj data_ptr_to_obj(MpData* ptr);
 void       data_mark();
 void       data_free();
 void       data_set(MpObj, MpObj, MpObj);

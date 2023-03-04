@@ -292,57 +292,6 @@ void mp_printf(char* fmt, ...) {
     va_end(a);
 }
 
-/**
- * get rest file length
- * @param fp file descripter
- * @return rest file length
- */
-long get_rest_size(FILE* fp){
-    long cur, end;
-    cur = ftell(fp);
-    fseek(fp, 0, SEEK_END);
-    end = ftell(fp);
-    fseek(fp, cur, SEEK_SET);
-    return end - cur;
-}
-
-
-/**
- * load file
- * @param fpath file path
- * @return file text
- */
-MpObj mp_load(char* fpath){
-    FILE* fp = fopen(fpath, "rb");
-    if(fp == NULL){
-        mp_raise("load: can not open file \"%s\"", fpath);
-        return NONE_OBJECT;
-    }
-    long len = get_rest_size(fp);
-    if(len > MAX_FILE_SIZE){
-        mp_raise("load: file too big to load, size = %d", len);
-        return NONE_OBJECT;
-    }
-    MpObj text = string_alloc(NULL, len);
-    char* s = GET_CSTR(text);
-    fread(s, 1, len, fp);
-    fclose(fp);
-    return text;
-}
-
-MpObj mp_save(char*fname, MpObj content) {
-    FILE* fp = fopen(fname, "wb");
-    if (fp == NULL) {
-        mp_raise("mp_save: can not save to file \"%s\"", fname);
-    }
-    char* txt = GET_CSTR(content);
-    int len = GET_STR_LEN(content);
-    fwrite(txt, 1, len, fp);
-    fclose(fp);
-    return NONE_OBJECT;
-}
-
-
 MpObj bf_input() {
     int i = 0;
     if (arg_has_next()) {
@@ -548,15 +497,6 @@ MpObj bf_print() {
     }
     putchar('\n');
     return NONE_OBJECT;
-}
-
-MpObj bf_load(MpObj p){
-    MpObj fname = arg_take_str_obj("load");
-    return mp_load(GET_CSTR(fname));
-}
-MpObj bf_save(){
-    MpObj fname = arg_take_str_obj("<save name>");
-    return mp_save(GET_CSTR(fname), arg_take_str_obj("<save content>"));
 }
 
 MpObj bf_file_append() {
@@ -875,8 +815,6 @@ MpObj bf_hash() {
 }
 
 void builtins_init() {
-    reg_builtin_func("load", bf_load);
-    reg_builtin_func("save", bf_save);
     reg_builtin_func("file_append", bf_file_append);
     reg_builtin_func("remove", bf_remove);
     reg_builtin_func("write", bf_write);

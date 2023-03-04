@@ -11,14 +11,15 @@ def build_by_mp():
         sys.exit(1)
 
     print("use minipy to compile compiler")
-    os.system("minipy build.py")
+    os.system("./minipy build.py")
 
 def compile_and_save(fpath, target):
     print("compile %s to %s" % (fpath, target))
     c = mp_encode.Compiler()
     code = c.compile_to_c_code(fpath)
-    with open(target, "w+") as fp:
-        fp.write(code)
+    fp = open(target, "w+")
+    fp.write(code)
+    fp.close()
 
 def do_build():
     print("current path: %s" % os.getcwd())
@@ -31,7 +32,7 @@ def do_build():
         compile_and_save(source, target)
     
     print("compile python files done!")
-    os.system("make clean && make test")
+    os.system("make clean && make")
 
 def main():
     arg1 = ""
