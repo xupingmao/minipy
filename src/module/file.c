@@ -176,7 +176,10 @@ MpObj mp_load(char* fpath){
     }
     MpObj text = string_alloc(NULL, len);
     char* s = GET_CSTR(text);
-    fread(s, 1, len, fp);
+    int readsize = fread(s, 1, len, fp);
+    if (readsize != len) {
+        mp_raise("load: unexpected end of file");
+    }
     fclose(fp);
     return text;
 }

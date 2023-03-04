@@ -405,7 +405,7 @@ MpObj string_mod_list(MpObj str, MpObj list) {
             char num_buf[20];
             int num_len = 0;
             char *fmt_temp = fmt;
-            while (isdigit(fmt[i]) && num_len <= sizeof(num_buf)) {
+            while (isdigit(fmt[i]) && num_len < sizeof(num_buf)) {
                 i++;
                 num_len++;
             }

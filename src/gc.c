@@ -594,16 +594,16 @@ void data_free(MpData* data) {
     mp_free(data, sizeof(MpData) + (data->data_size-1) * sizeof(MpObj));
 }
 
-MpObj data_get(MpObj self, MpObj key) {
+MpObj data_get(MpData* data, MpObj key) {
     mp_raise("data.get not implemented");
     return NONE_OBJECT;
 }
 
-void data_set(MpObj self, MpObj key, MpObj value) {
+void data_set(MpData* data, MpObj key, MpObj value) {
     mp_raise("data.set not implemented");
 }
 
-MpObj data_str(MpObj self) {
+MpObj data_str(MpData* data) {
     return string_alloc("data", -1);
 }
 

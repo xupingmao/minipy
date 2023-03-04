@@ -299,7 +299,10 @@ MpObj bf_input() {
     }
     char buf[2048];
     memset(buf, '\0', sizeof(buf));
-    fgets(buf, sizeof(buf), stdin);
+    char* result = fgets(buf, sizeof(buf), stdin);
+    if (result == NULL) {
+        mp_raise("input: fgets failed");
+    }
     int len = strlen(buf);
     /* if last char is '\n', we shift it, mainly in tcc */
     if(buf[len-1]=='\n'){
