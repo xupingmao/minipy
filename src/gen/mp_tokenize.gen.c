@@ -1,4 +1,4 @@
-const char* mp_tokenize_bin="69#mp_tokenize\n"
+const char* mp_tokenize_bin="69#\n"
 "63#7\n47#6\n"
 "63#8\n28#load\n26#_\n60\n35#6\n30\n"
 "63#12\n2#boot\n2#*\n1#2\n"

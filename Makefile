@@ -47,6 +47,7 @@ test-dict:
 	make && ./minipy ./test/test_case/030_test_debug.py
 	
 test:
+	make minipy
 	./minipy ./test/test_main.py
 
 test-tokenize:
@@ -71,4 +72,4 @@ benchmark:
 	python3 ./test/benchmark/benchmark_main.py
 
 clean : 
-	rm minipy
+	rm -f minipy
