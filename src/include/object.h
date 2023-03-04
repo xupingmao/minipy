@@ -18,6 +18,7 @@
 #define TYPE_MODULE 7
 #define TYPE_DATA 8
 #define TYPE_CLASS 9
+#define TYPE_PTR 10 // 指针类型
 
 #define TYPE_MIN 1
 #define TYPE_MAX 9
@@ -286,12 +287,11 @@ typedef struct MpData {
     void   (*func_free)();
 
     /* meta functions */
-    MpObj (*str)();
-    MpObj (*get)();
-    void  (*set)();
+    MpObj (*str)(struct MpData*);
+    MpObj (*get)(struct MpData*, MpObj);
+    void  (*set)(struct MpData*, MpObj, MpObj);
 
-    void* extend_data_ptr;
-    MpObj data_ptr[1];
+    MpObj data_ptr[1]; // 这个大小是由data_new的参数决定的，使用数组是为了使内存布局更紧凑
 }MpData;
 
 /** 
@@ -330,5 +330,7 @@ typedef struct MpConstStr {
  * only one.
  */ 
 MpVm* tm;
+
+MpObj mp_ptr_obj(void*ptr);
 
 #endif /* OBJECT_H_ */

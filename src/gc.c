@@ -594,24 +594,25 @@ void data_free(MpData* data) {
     mp_free(data, sizeof(MpData) + (data->data_size-1) * sizeof(MpObj));
 }
 
-MpObj data_get(MpObj self, MpObj key) {
+MpObj data_get(MpData* data, MpObj key) {
     mp_raise("data.get not implemented");
     return NONE_OBJECT;
 }
 
-void data_set(MpObj self, MpObj key, MpObj value) {
+void data_set(MpData* data, MpObj key, MpObj value) {
     mp_raise("data.set not implemented");
 }
 
-MpObj data_str(MpObj self) {
+MpObj data_str(MpData* data) {
     return string_alloc("data", -1);
 }
 
 
 /** 
+ * data_size指的是包含的扩展对象数量(data_ptr数组)
  * data_size is the size of objects contains in the data 
  */
-MpObj data_new(size_t data_size) {
+MpData* data_new_ptr(size_t data_size) {
     MpObj data_obj;
     data_obj.type = TYPE_DATA;
     /* there is one slot for default. */
@@ -630,5 +631,18 @@ MpObj data_new(size_t data_size) {
     for (i = 0; i < data_size; i++) {
         data->data_ptr[i] = NONE_OBJECT;
     }
-    return gc_track(data_obj);
+    gc_track(data_obj);
+    return data;
+}
+
+MpObj data_ptr_to_obj(MpData* ptr) {
+    MpObj result;
+    result.type = TYPE_DATA;
+    result.value.data = ptr;
+    return result;
+}
+
+MpObj data_new(size_t data_size) {
+    MpData* ptr = data_new_ptr(data_size);
+    return data_ptr_to_obj(ptr);
 }

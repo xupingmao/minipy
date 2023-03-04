@@ -1,4 +1,4 @@
-const char* mp_init_bin="31\n2#s\n32\n2#d\n32\n2#o\n32\n26##0\n69#mp_init\n"
+const char* mp_init_bin="31\n2#s\n32\n2#d\n32\n2#o\n32\n26##0\n69#\n"
 "63#7\n51#add_builtin\n"
 "63#7\n57#512\n"
 "63#8\n27#1\n28#__builtins__\n27\n21\n53\n26#add_builtin\n"

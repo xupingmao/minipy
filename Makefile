@@ -14,6 +14,12 @@ minipy: src/*.c src/include/*.h
 
 .PHONY: clean test ctest
 
+pack: src/*.c src/include/*.h pack/*.c
+	$(cc) -DTM_USE_CACHE -DLOG_LEVEL=$(LOG_LEVEL)\
+		-DMP_PROFILE=$(MP_PROFILE)\
+		-DNDEBUG\
+		-O2 -o pack_main pack/main.c -lm
+
 o2:
 	$(cc) -DTM_USE_CACHE -O2 -o minipy src/main.c -lm
 
@@ -47,6 +53,7 @@ test-dict:
 	make && ./minipy ./test/test_case/030_test_debug.py
 	
 test:
+	make minipy
 	./minipy ./test/test_main.py
 
 test-tokenize:
@@ -71,4 +78,4 @@ benchmark:
 	python3 ./test/benchmark/benchmark_main.py
 
 clean : 
-	rm minipy
+	rm -f minipy

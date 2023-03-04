@@ -21,6 +21,7 @@
 #include "import.c"
 #include "code_object.c"
 #include "constant_pool.c"
+#include "object.c"
 
 #include "module/time.c"
 #include "module/sys.c"
@@ -28,6 +29,7 @@
 #include "module/os.c"
 #include "module/mp_debug.c"
 #include "module/mp_random.c"
+#include "module/file.c"
 
 
 #include "gen/mp_init.gen.c"
@@ -195,6 +197,8 @@ int vm_init(int argc, char* argv[]) {
     sys_mod_init();
     math_mod_init();
     os_mod_init();
+    file_mod_init();
+    
     init_mod_for_random();
     init_mod_for_debug();
     

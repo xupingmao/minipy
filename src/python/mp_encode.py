@@ -1012,7 +1012,8 @@ class Compiler:
         code = "\n".join(result)
 
         if const_name == None:
-            const_name = filename.split(".")[0] + "_bin"
+            basename = filename.split("/")[-1]
+            const_name = basename.split(".")[0] + "_bin"
 
         cstring = "const char* " + const_name + "=";
         cstring += code + ";"

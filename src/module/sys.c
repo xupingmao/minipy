@@ -28,6 +28,7 @@ void sys_mod_init() {
     sys_mod_argv_init(sys_mod);
     sys_mod_modules_init(sys_mod);
     obj_set_by_cstr(sys_mod, "path", sys_path);
+    obj_set_by_cstr(sys_mod, "executable", string_new(tm->argv[0]));
     reg_mod_func(sys_mod, "exit", sys_exit);
 
     // register to modules
