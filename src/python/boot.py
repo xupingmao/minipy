@@ -147,7 +147,7 @@ def exists(fname):
     return os.path.exists(fname)
 
 def load(name):
-    fp = open(name, "r")
+    fp = open(name, "r", encoding="utf-8")
     t = fp.read()
     fp.close()
     return t
