@@ -27,7 +27,10 @@
 #define MAX_FILE_SIZE 1024 * 1024 * 5 /* max file size loaded into memery */
 #include <stdint.h>
 
-typedef char BOOL;
+#ifndef _WIN32
+  typedef char BOOL;
+#endif
+
 #define TRUE  1
 #define FALSE 0
 
@@ -201,7 +204,7 @@ typedef struct MpVm {
   int   debug;
 
   // mp2c模式
-  BOOL  mp2c_mode;
+  char  mp2c_mode;
   int   mp2c_lineno;
 
   /* program arguments */
