@@ -27,7 +27,10 @@
 #define MAX_FILE_SIZE 1024 * 1024 * 5 /* max file size loaded into memery */
 #include <stdint.h>
 
-typedef char BOOL;
+#ifndef BOOL
+  #define BOOL char
+#endif
+
 #define TRUE  1
 #define FALSE 0
 

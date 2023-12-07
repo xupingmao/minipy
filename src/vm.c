@@ -11,7 +11,7 @@
 #include "number.c"
 #include "gc.c"
 #include "builtins.c"
-#include "obj_ops.c"
+#include "object_ops.c"
 #include "dict.c"
 #include "dict_set.c"
 #include "function.c"

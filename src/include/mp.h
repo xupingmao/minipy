@@ -1,5 +1,3 @@
-
-
 #ifndef _MP_H
 #define _MP_H
 /** 
@@ -51,6 +49,7 @@
 #define MP_INLINE inline
 
 #include "object.h"
+
 #define OBJ_SIZE sizeof(MpObj)
 
 MpObj NONE_OBJECT;
@@ -68,48 +67,8 @@ void code32(unsigned char*s, int value);
 int  uncode32(unsigned char**s);
 int  uncode16(unsigned char**s);
 
-
-// gc functions
-#define GC_DEBUG_LIST 0
-void*       mp_malloc(size_t size);
-void*       mp_realloc(void* o, size_t osize, size_t nsize);
-void        mp_free(void* o, size_t size);
-void        init_memory();
-void        free_memory();
-
-void        gc_init();
-MpObj       gc_track(MpObj obj);
-void        gc_destroy();
-void        gc_full();
-void        gc_sweep_local(int start);
-MpObj       bf_get_malloc_info();
-void        gc_mark(MpObj);
-void        gc_unmark(MpObj);
-void        gc_mark_single(MpObj);
-const char* gc_mark_list(MpList*);
-void        gc_mark_dict(MpDict*);
-void        gc_restore_local_obj_list(int size);
-void        gc_native_call_sweep();
-void        gc_check_native_call(int size, MpObj ret);
-void gc_mark_and_check(MpObj, const char*);
-
-/**
- * string functions
- */
-MpObj        string_char_new(int c);
-MpObj        string_chr(int n); // get a char from char_list.
-MpObj        string_alloc(char* s, int size);
-MpObj        string_new(char*s);
-MpObj        string_static(const char*s);
-MpObj        string_from_cstr(const char*);
-MpObj        string_const(const char*);
-void         string_free(MpStr*);
-int          string_equals(MpStr*s0, MpStr*s1);
-MpObj        string_substring(MpStr* str, int start, int end) ;
-void         string_methods_init();
-MpObj        string_iter_new(MpObj s);
-MpObj*       string_next(MpData* iterator);
-int          string_hash(MpStr* str);
+#include "gc.h"
+#include "string.h"
 
 // number functions
 MpObj      number_obj(double v);
@@ -140,35 +99,7 @@ void     list_shorten(MpList* list, int len); // shorten list.
 MpObj    list_from_array(int n, ...);
 MpObj    list_builtin_extend();
 
-// dict functions
-// 哈希函数
-int mp_hash(void* s, int len);
-int obj_hash(MpObj obj);
-int obj_ptr_hash(MpObj* obj);
-
-MpObj            dict_new();
-MpObj            dict_new_obj();
-MpDict*          dict_new_ptr();
-MpDict*          dict_init();
-void             dict_free(MpDict* dict);
-int              dict_set0(MpDict* dict, MpObj key, MpObj val);
-DictNode*        dict_get_node(MpDict* dict, MpObj key);
-MpObj*           dict_get_by_cstr(MpDict* dict, char* key);
-DictNode*        dict_get_node_by_index(MpDict* dict, int index);
-void             dict_del(MpDict* dict, MpObj k);
-void             dict_methods_init();
-void             dict_set_by_cstr(MpDict* dict, const char* key, MpObj val);
-MpObj            dict_keys(MpDict* );
-void  dict_print_debug_info(MpDict* dict);
-MpObj dict_to_obj(MpDict* dict);
-
-#define          dict_set(d, k, v)                dict_set0(GET_DICT(d), k, v)
-#define          dict_get_by_str(dict, key)       dict_get_by_cstr(GET_DICT(dict), key)
-
-/** dict methods **/
-MpObj            dict_iter_new(MpObj dict);
-MpObj*           dict_next(MpData* iterator);
-
+#include "dict.h"
 
 // arg functions
 void    arg_insert(MpObj arg);
@@ -193,30 +124,7 @@ MpObj   arg_take_data_obj(const char* fnc);
 int arg_count() ;
 int arg_remains();
 
-
-// function functions
-MpObj           func_new(MpObj mod,MpObj self,MpObj (*native_func)());
-MpObj           func_get_attr(MpFunction* fnc, MpObj key);
-void            func_free(MpFunction*);
-unsigned char*  func_get_code(MpFunction*);
-MpObj           func_get_code_obj(MpFunction*);
-void            func_format(char* des, MpFunction* func);
-MpObj           func_get_mod_obj(MpFunction* func);
-MpObj           func_get_globals(MpFunction*);
-unsigned char*  func_resolve(MpFunction*, unsigned char*);
-MpObj           func_get_file_name_obj(MpObj func);
-MpObj           func_get_name_obj(MpObj func);
-
-MpObj           method_new(MpObj _fnc, MpObj self);
-MpObj           module_new(MpObj file, MpObj name, MpObj code);
-void            module_free(MpModule*);
-
-MpObj           class_new(MpObj name);
-MpObj           class_new_by_cstr(char* name);
-MpObj           class_instance(MpObj dict);
-void            class_format(char* dest, MpObj clazz);
-void            class_free(MpClass* pclass);
-void mp_resolve_code(MpModule* m, const char* code);
+#include "function.h"
 
 MpObj      data_new(size_t size);
 MpData* data_new_ptr(size_t size);
@@ -317,7 +225,6 @@ void     mp_printf(char* fmt, ...);
 /* avoid '\0' in char array, which will be regarded as end by c lang */
 /* Chars     MpObj_info(char*,MpObj,int); */
 MpObj    mp_load(char* fname); // load the content of a file.
-MpObj    bf_load();
 MpObj    bf_save(); // save(fname, content);
 MpObj    bf_int();
 MpObj    bf_float();

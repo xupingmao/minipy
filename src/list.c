@@ -192,8 +192,7 @@ MpObj list_add(MpList* list1, MpList*list2) {
 }
 
 // belows are builtin methods
-
-MpObj list_builtin_append() {
+static MpObj list_builtin_append() {
     const char* sz_func = "list.append";
     MpObj self = arg_take_list_obj(sz_func);
     MpObj v = arg_take_obj(sz_func);
@@ -201,11 +200,12 @@ MpObj list_builtin_append() {
     return NONE_OBJECT;
 }
 
-MpObj list_builtin_pop() {
+static MpObj list_builtin_pop() {
     MpObj self = arg_take_list_obj("list.pop");
     return list_pop(GET_LIST(self));
 }
-MpObj list_builtin_insert() {
+
+static MpObj list_builtin_insert() {
     const char* sz_func = "list.insert";
     MpObj self = arg_take_list_obj(sz_func);
     int n = arg_take_int(sz_func);
@@ -214,13 +214,13 @@ MpObj list_builtin_insert() {
     return self;
 }
 
-MpObj list_builtin_index() {
+static MpObj list_builtin_index() {
     MpList* self = arg_take_list_ptr("list.index");
     MpObj v = arg_take_obj("list.index");
     return number_obj(list_index(self, v));
 }
 
-MpObj list_builtin_reverse() {
+static MpObj list_builtin_reverse() {
     MpList* self = arg_take_list_ptr("list.reverse");
     int start = 0, end = self->len - 1;
     while (end > start) {
@@ -233,7 +233,7 @@ MpObj list_builtin_reverse() {
     return NONE_OBJECT;
 }
 
-MpObj list_builtin_remove() {
+static MpObj list_builtin_remove() {
     MpList* list = arg_take_list_ptr("list.remove");
     MpObj obj = arg_take_obj("list.remove");
     int i = 0;
@@ -247,7 +247,7 @@ MpObj list_builtin_remove() {
     return NONE_OBJECT;
 }
 
-MpObj list_builtin_copy() {
+static MpObj list_builtin_copy() {
     MpObj self = arg_take_obj("list.copy");
     MpList* list = GET_LIST(self);
     MpObj _newlist = list_new(list->cap);

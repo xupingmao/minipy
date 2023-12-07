@@ -354,6 +354,22 @@ MpObj dict_keys(MpDict* dict){
     return list;
 }
 
+static MpDict* must_get_dict(MpObj obj) {
+    if (MP_TYPE(obj) != TYPE_DICT) {
+        mp_raise("expect dict but see %ot", obj);
+    }
+    return obj.value.dict;
+}
+
+
+void dict_set(MpObj obj, MpObj key, MpObj val) {
+    dict_set0(must_get_dict(obj), key, val);
+}
+
+MpObj* dict_get_by_str(MpObj obj, char* key) {
+    return dict_get_by_cstr(must_get_dict(obj), key);
+}
+
 MpObj dict_builtin_keys(){
     MpObj dict = arg_take_dict_obj("dict.keys");
     return dict_keys(GET_DICT(dict));
