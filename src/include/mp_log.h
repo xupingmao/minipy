@@ -1,5 +1,5 @@
 #ifndef _MP_LOG_H
-
+#define _MP_LOG_H
 
 #if 0
     #define PRINT_OBJ_GC_INFO_START() int _gc_old = tm->allocated;

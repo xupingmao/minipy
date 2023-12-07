@@ -3,7 +3,7 @@
  * @email: 578749341@qq.com
  * @Date: 2022-02-12 11:48:21
  * @LastEditors: xupingmao
- * @LastEditTime: 2023-12-07 23:00:46
+ * @LastEditTime: 2023-12-07 23:38:45
  * @FilePath: /minipy/src/module/time.c
  * @Description: 描述
  */
@@ -26,7 +26,7 @@ static int64_t win32_get_nano_seconds() {
     /* 11,644,473,600,000,000,000: number of nanoseconds between
        the 1st january 1601 and the 1st january 1970 (369 years + 89 leap
        days). */
-    return large.QuadPart * 100 - 11644473600000000000;
+    return large.QuadPart * 100 - 11644473600000000000U;
 }
 
 int64_t time_get_milli_seconds() {

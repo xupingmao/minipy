@@ -13,7 +13,7 @@
 #include "object.h"
 
 // function functions
-MpObj           func_new(MpObj mod,MpObj self,MpObj (*native_func)());
+MpObj           func_new(MpObj mod,MpObj self, MpNativeFunc);
 MpObj           func_get_attr(MpFunction* fnc, MpObj key);
 void            func_free(MpFunction*);
 unsigned char*  func_get_code(MpFunction*);

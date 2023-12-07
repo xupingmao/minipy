@@ -5,6 +5,9 @@
  * @modified 2022/06/11 19:17:03
  */
 
+#ifndef MP_DEBUG_H
+#define MP_DEBUG_H
+
 #define MP_DEBUG_FUNC_RESOLVE 1
 
 #ifdef RECORD_LAST_OP
@@ -28,4 +31,4 @@ void StackTrace_Init(StackTrace *st);
 void StackTrace_Append(StackTrace *st, const char* msg);
 void StackTrace_Print(StackTrace *st);
 
-
+#endif

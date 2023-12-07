@@ -1,3 +1,12 @@
+/*
+ * @Author: xupingmao
+ * @email: 578749341@qq.com
+ * @Date: 2023-12-07 22:03:29
+ * @LastEditors: xupingmao
+ * @LastEditTime: 2023-12-07 23:30:03
+ * @FilePath: /minipy/src/include/mp.h
+ * @Description: 描述
+ */
 #ifndef _MP_H
 #define _MP_H
 /** 
@@ -74,7 +83,6 @@ int  uncode16(unsigned char**s);
 MpObj      number_obj(double v);
 void       number_format(char* des, MpObj num);
 double     number_get_double(MpObj num);
-long long  long_value(MpObj num);
 
 /**
  * list functions
@@ -225,11 +233,6 @@ void     mp_printf(char* fmt, ...);
 /* avoid '\0' in char array, which will be regarded as end by c lang */
 /* Chars     MpObj_info(char*,MpObj,int); */
 MpObj    mp_load(char* fname); // load the content of a file.
-MpObj    bf_save(); // save(fname, content);
-MpObj    bf_int();
-MpObj    bf_float();
-MpObj    bf_system();
-MpObj    bf_print();
 void     builtins_init();
 MpObj*   get_builtin(char* key);
 
