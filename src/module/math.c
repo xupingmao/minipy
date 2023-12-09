@@ -71,6 +71,12 @@ MpObj math_tan() {
     return number_obj(tan(angle));
 }
 
+static MpObj math_pow() {
+    double base = arg_take_double("math.pow");
+    double y = arg_take_double("math.pow");
+    return number_obj(pow(base, y));
+}
+
 /**
  * init math module
  * @since 2016-08-27
@@ -91,6 +97,7 @@ void mp_math_init() {
     
     reg_mod_func(math, "sin", math_sin);
     reg_mod_func(math, "tan", math_tan);
+    reg_mod_func(math, "pow", math_pow);
 
     obj_set_by_cstr(tm->modules, "math", math);
 }
