@@ -3,7 +3,7 @@
  * @email: 578749341@qq.com
  * @Date: 2023-12-07 23:04:49
  * @LastEditors: xupingmao
- * @LastEditTime: 2023-12-07 23:19:55
+ * @LastEditTime: 2023-12-09 11:19:34
  * @FilePath: /minipy/src/include/dict.h
  * @Description: 描述
  */
@@ -31,7 +31,6 @@ DictNode*        dict_get_node_by_index(MpDict* dict, int index);
 MpObj* dict_get_by_str(MpObj obj, char* key);
 
 /* dict_set* functions */
-void dict_set(MpObj obj, MpObj key, MpObj val);
 int dict_set0(MpDict* dict, MpObj key, MpObj val);
 void dict_set_by_cstr(MpDict* dict, const char* key, MpObj val);
 

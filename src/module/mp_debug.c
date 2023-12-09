@@ -140,7 +140,7 @@ MpObj bf_print_dict_info() {
  * init debug module
  * @since 2016-11-16
  */
-void init_mod_for_debug() {
+void mp_debug_init() {
     MpObj debug = dict_new();
     
     reg_mod("debug", debug);

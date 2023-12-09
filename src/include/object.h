@@ -283,11 +283,11 @@ typedef struct MpData {
     long inc;
     long end;
     MpObj cur_obj;
-    MpObj* (*next)();
+    MpObj* (*next)(struct MpData*);
 
     /* for gc */
-    void   (*mark)();
-    void   (*func_free)();
+    void   (*mark)(struct MpData*);
+    void   (*func_free)(struct MpData*);
 
     /* meta functions */
     MpObj (*str)(struct MpData*);

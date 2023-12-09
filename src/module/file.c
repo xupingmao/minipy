@@ -85,6 +85,7 @@ MpObj bf_file_get(MpData* data, MpObj attr) {
         return func_new(tm->builtins_mod, self, bf_file_write);
     }
     mp_raise("AttributeError: 'fileobject' object has no attribute %o", attr);
+    return NONE_OBJECT;
 }
 
 static
@@ -208,7 +209,7 @@ MpObj bf_save(){
 }
 
 
-void file_mod_init() {
+void mp_file_init() {
     reg_builtin_func("save", bf_save);
     reg_builtin_func("load", bf_load);
     reg_builtin_func("open", bf_open);

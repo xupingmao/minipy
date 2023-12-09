@@ -3,7 +3,7 @@
  * @email: 578749341@qq.com
  * @Date: 2022-02-12 11:48:21
  * @LastEditors: xupingmao
- * @LastEditTime: 2023-12-07 23:38:45
+ * @LastEditTime: 2023-12-09 11:12:15
  * @FilePath: /minipy/src/module/time.c
  * @Description: 描述
  */
@@ -41,24 +41,24 @@ int64_t time_get_milli_seconds() {
 #endif
 }
 
-MpObj bf_time_time() {
+static MpObj bf_time_time() {
     double ms = (double) time_get_milli_seconds();
     return number_obj(ms / 1000.f);
 }
 
-MpObj bf_time_clock() {
+static MpObj bf_time_clock() {
     return number_obj((double)clock()/CLOCKS_PER_SEC);
 }
 
 
-MpObj bf_time_ctime() {
+static MpObj bf_time_ctime() {
     time_t rawtime;
     time(&rawtime);
     char* ct = ctime(&rawtime); // ct ends with \n
     return string_alloc(ct, strlen(ct)-1);
 }
 
-MpObj bf_time_sleep() {
+static MpObj bf_time_sleep() {
     int i = 0;
     int t = arg_take_int("sleep");
 #ifdef _WIN32
@@ -69,7 +69,7 @@ MpObj bf_time_sleep() {
     return NONE_OBJECT;
 }
 
-MpObj bf_time_asctime() {
+static MpObj bf_time_asctime() {
     time_t rawtime;
     struct tm* timeinfo;
     
@@ -79,7 +79,7 @@ MpObj bf_time_asctime() {
     return string_alloc(ct, strlen(ct)-1);
 }
 
-void time_mod_init() {
+void mp_time_init() {
     MpObj time_mod = dict_new();
     reg_mod_func(time_mod, "time",  bf_time_time);
     reg_mod_func(time_mod, "clock", bf_time_clock);

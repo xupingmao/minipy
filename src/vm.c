@@ -1,3 +1,12 @@
+/*
+ * @Author: xupingmao
+ * @email: 578749341@qq.com
+ * @Date: 2023-12-07 22:03:29
+ * @LastEditors: xupingmao
+ * @LastEditTime: 2023-12-09 11:15:11
+ * @FilePath: /minipy/src/vm.c
+ * @Description: 描述
+ */
 /**
  * description here
  * @author xupingmao
@@ -193,15 +202,13 @@ int vm_init(int argc, char* argv[]) {
     builtins_init();
 
     /* init c modules */
-    time_mod_init();
-    sys_mod_init();
-    math_mod_init();
-    os_mod_init();
-    file_mod_init();
-    
-    init_mod_for_random();
-    init_mod_for_debug();
-    
+    mp_time_init();
+    mp_sys_init();
+    mp_math_init();
+    mp_os_init();
+    mp_file_init();
+    mp_random_init();
+    mp_debug_init();
     return 0;
 }
 

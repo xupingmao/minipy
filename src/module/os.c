@@ -160,7 +160,10 @@ static MpObj os_system() {
     return number_obj(ret_code);
 }
 
-void os_mod_init() {
+/**
+ * @brief OS模块
+ */
+void mp_os_init() {
     MpObj os_mod = dict_new();
     reg_mod("os", os_mod);
 

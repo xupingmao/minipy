@@ -3,7 +3,7 @@
  * @email: 578749341@qq.com
  * @Date: 2023-12-07 22:03:29
  * @LastEditors: xupingmao
- * @LastEditTime: 2023-12-07 23:30:03
+ * @LastEditTime: 2023-12-09 11:24:47
  * @FilePath: /minipy/src/include/mp.h
  * @Description: 描述
  */
@@ -137,8 +137,8 @@ int arg_remains();
 MpObj      data_new(size_t size);
 MpData* data_new_ptr(size_t size);
 MpObj data_ptr_to_obj(MpData* ptr);
-void       data_mark();
-void       data_free();
+void       data_mark(MpData* ptr);
+void       data_free(MpData* ptr);
 void       data_set(MpData*, MpObj, MpObj);
 MpObj      data_get(MpData*, MpObj);
 MpObj      data_str(MpData* self);

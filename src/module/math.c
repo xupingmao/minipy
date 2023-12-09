@@ -75,7 +75,7 @@ MpObj math_tan() {
  * init math module
  * @since 2016-08-27
  */
-void math_mod_init() {
+void mp_math_init() {
     MpObj math = dict_new();
 
     obj_set_by_cstr(math, "PI", number_obj(3.141592653589793));

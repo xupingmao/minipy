@@ -16,7 +16,7 @@ static MpObj random_randint() {
 	return number_obj(start + value);
 }
 
-void init_mod_for_random() {
+void mp_random_init() {
 	int t = time(NULL) + clock();
 	// 初始化随机种子
 	srand((unsigned int)t);
