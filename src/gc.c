@@ -590,13 +590,13 @@ void obj_free(MpObj o) {
         // GET_DATA_PROTO(o)->free(GET_DATA(o));
         break;
     default:
-        mp_raise("gc: Unknown type: %d", MP_TYPE(o));
+        mp_raise("gc_free: Unknown type: %d", MP_TYPE(o));
     }
 }
 
 
 MpObj* data_next(MpData* data) {
-    mp_raise("next is not defined!");
+    mp_raise("data.next not implemented!");
     return NULL;
 }
 
