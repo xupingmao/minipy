@@ -37,6 +37,15 @@ typedef struct _StackInst {
     int a;
 } StackInst;
 
+
+void print_locals(int* locals, int count) {
+    int i = 0;
+    for (i = 0; i < count; i++) {
+        printf("%d,", locals[i]);
+    }
+    printf("\n");
+}
+
 int regTest (int loops) {
     int i = 0, j = 0;
 
@@ -76,6 +85,8 @@ int regTest (int loops) {
             }
         }
     }
+
+    print_locals(locals, 9);
 
     return 0;
 }
@@ -139,6 +150,8 @@ int stackTest (int loops)
             }
         }
     }
+
+    print_locals(locals, 9);
     return 0;
 }
 
@@ -161,6 +174,24 @@ int main(int argc, char const *argv[])
 
     runWithProfile(regTest, loops, "regTest.clocks");
     runWithProfile(stackTest, loops, "stackTest.clocks");
+
+    /*
+    测试结果:(O2优化)
+    loops: 1000000
+    regTest.clocks:0
+    stackTest.clocks:11
+
+    测试结果:(无优化)
+    loops: 1000000
+    12,4,3,4,5,6,7,8,9,
+    regTest.clocks:14
+    12,2,3,4,5,6,7,8,9,
+    stackTest.clocks:22
+
+    15,28
+    14,23
+    13,23
+    */
 
     return 0;
 }

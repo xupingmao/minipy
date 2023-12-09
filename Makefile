@@ -45,8 +45,8 @@ nogc:
 check-mem: 
 	$(cc) -DTM_CHECK_MEM -o minipy src/main.c -lm
 
-test-reg-vs-stack:
-	$(cc) -o build/reg_vs_stack test/reg_vs_stack/reg_vs_stack.c -lm
+test-reg-vs-stack: test/benchmark/reg_vs_stack/reg_vs_stack.c
+	$(cc) -o build/reg_vs_stack test/benchmark/reg_vs_stack/reg_vs_stack.c -lm
 	./build/reg_vs_stack
 
 test-dict:
