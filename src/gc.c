@@ -98,6 +98,9 @@ void gc_init_frames() {
     }
     tm->frames_init_done = 1;
     tm->frame = tm->frames;
+    
+    // reset stack values
+    memset(tm->stack, 0, sizeof(tm->stack));
 
     // set global mp_stack_end
     tm->stack_end = tm->stack + STACK_SIZE;
@@ -114,6 +117,7 @@ void* mp_malloc(size_t size) {
         return NULL;
     }
     block = malloc(size);
+    memset(block, 0, size);
     
     log_debug("mp_malloc: %p %d->%d +%d", 
         block, tm->allocated, tm->allocated + size, size);
@@ -328,11 +332,23 @@ static void gc_print_frame_stack_info(MpFrame* f) {
     }
 }
 
+void gc_mark_frames() {
+    int i = 0;
+    for(i = 0; i < STACK_SIZE; i++) {
+        /* 局部变量和操作栈都在stack里面 */
+        gc_mark_and_check(tm->stack[i], "vm.stack");
+    }
+
+    for (i = 0; i < FRAMES_COUNT; i++) {
+        gc_mark_and_check(tm->frames[i].fnc, "frame.func");
+    }
+}
+
 /**
  * mark objects in frame-local and frame-stack
  * @since 2015
  */
-void gc_mark_frames() {
+void gc_mark_frames_old() {
     MpFrame* f = NULL;
     int j = 0;
 
@@ -573,6 +589,8 @@ void obj_free(MpObj o) {
         GET_DATA(o)->func_free(GET_DATA(o));
         // GET_DATA_PROTO(o)->free(GET_DATA(o));
         break;
+    default:
+        mp_raise("gc: Unknown type: %d", MP_TYPE(o));
     }
 }
 

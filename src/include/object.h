@@ -9,12 +9,12 @@
 #ifndef _OBJECT_H_
 #define _OBJECT_H_
 
+#define TYPE_NONE 0
 #define TYPE_STR 1
 #define TYPE_NUM 2
 #define TYPE_LIST 3
 #define TYPE_DICT 4
 #define TYPE_FUNCTION 5
-#define TYPE_NONE 6
 #define TYPE_MODULE 7
 #define TYPE_DATA 8
 #define TYPE_CLASS 9

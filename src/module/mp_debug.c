@@ -11,14 +11,14 @@ typedef struct TypeAndDouble_t {
 } TypeAndDouble;
 
 
-MpObj bf_inspect_ptr() {
+static MpObj bf_inspect_ptr() {
     double _ptr = arg_take_double("inspect_ptr");
     int idx = arg_take_int("inspect_ptr");
     char* ptr = (char*)(long long)_ptr;
     return string_chr(ptr[idx]);
 }
 
-MpObj bf_get_current_frame() {
+static MpObj bf_get_current_frame() {
     MpObj frame_info = dict_new();
     obj_set_by_cstr(frame_info, "function", tm->frame->fnc);
     // obj_set_by_cstr(frame_info, "pc", number_obj((long long)tm->frame->pc));
@@ -26,7 +26,7 @@ MpObj bf_get_current_frame() {
     return frame_info;
 }
 
-MpObj bf_get_vm_info() {
+static MpObj bf_get_vm_info() {
     MpObj mp_info = dict_new();
     obj_set_by_cstr(mp_info, "name", string_new("tm"));
     obj_set_by_cstr(mp_info, "vm_size", number_obj(sizeof(MpVm)));
@@ -40,6 +40,8 @@ MpObj bf_get_vm_info() {
     obj_set_by_cstr(mp_info, "double_size", number_obj(sizeof(double)));
     obj_set_by_cstr(mp_info, "jmp_buf_size", number_obj(sizeof(jmp_buf)));
     obj_set_by_cstr(mp_info, "code_cache_size", number_obj(sizeof(MpCodeCache)));
+    obj_set_by_cstr(mp_info, "mp_str_size", number_obj(sizeof(MpStr)));
+    obj_set_by_cstr(mp_info, "mp_func_size", number_obj(sizeof(MpFunction)));
     obj_set_by_cstr(mp_info, "total_obj_len", number_obj(tm->all->len));
     obj_set_by_cstr(mp_info, "alloc_mem", number_obj(tm->allocated));
     obj_set_by_cstr(mp_info, "gc_threshold", number_obj(tm->gc_threshold));
@@ -49,14 +51,14 @@ MpObj bf_get_vm_info() {
 }
 
 
-MpFrame* obj_getframe(int fidx) {
+static MpFrame* obj_getframe(int fidx) {
     if (fidx < 1 || fidx > FRAMES_COUNT) {
         mp_raise("obj_getframe:invalid fidx %d", fidx);
     }
     return tm->frames + fidx;
 }
 
-MpObj obj_getlocal(int fidx, int lidx) {
+static MpObj obj_getlocal(int fidx, int lidx) {
     MpFrame* f = obj_getframe(fidx);
     if (lidx < 0 || lidx >= f->maxlocals) {
         mp_raise("obj_getlocal:invalid lidx %d, maxlocals=%d", lidx, f->maxlocals);
@@ -64,7 +66,7 @@ MpObj obj_getlocal(int fidx, int lidx) {
     return f->locals[lidx];
 }
 
-MpObj obj_getstack(int fidx, int sidx) {
+static MpObj obj_getstack(int fidx, int sidx) {
     MpFrame* f = obj_getframe(fidx);
     int stacksize = f->top - f->stack;
     if (sidx < 0 || sidx >= stacksize) {
@@ -73,22 +75,27 @@ MpObj obj_getstack(int fidx, int sidx) {
     return f->stack[sidx];
 }
 
-MpObj mp_getfname(MpObj fnc) {
+static MpObj mp_getfname(MpObj fnc) {
     if (NOT_FUNC(fnc)) {
         mp_raise("mp_getfname expect function");
     }
     return GET_MODULE(GET_FUNCTION(fnc)->mod)->file;
 }
 
-MpObj bf_get_mp_local_list() {
+static MpObj bf_get_mp_local_list() {
     MpObj obj;
+
+    if (tm->local_obj_list == NULL) {
+        return list_new(0);
+    }
+
     MP_TYPE(obj) = TYPE_LIST;
     GET_LIST(obj) = tm->local_obj_list;
     return obj;
 }
 
 
-MpObj bf_set_vm_state() {
+static MpObj bf_set_vm_state() {
     int state = arg_take_int("set_vm_state");
     switch(state) {
         case 0:tm->debug = 0;break;
@@ -97,7 +104,7 @@ MpObj bf_set_vm_state() {
     return NONE_OBJECT;
 }
 
-MpObj bf_vmopt() {
+static MpObj bf_vmopt() {
     char* opt = arg_take_cstr("vminfo");
     if (strcmp(opt, "gc") == 0) {
         gc_full();
@@ -129,7 +136,7 @@ MpObj bf_vmopt() {
     return NONE_OBJECT;
 }
 
-MpObj bf_print_dict_info() {
+static MpObj bf_print_dict_info() {
     MpDict* dict = arg_take_dict_ptr("debug.print_debug_info");
     dict_print_debug_info(dict);
     return NONE_OBJECT;

@@ -9,11 +9,16 @@
 #include "include/mp.h"
 #include "execute_profile.c"
 
+void frame_reset_memory(MpFrame*);
+
 void pop_frame() {
     if (tm->frame < tm->frames) {
         printf("pop_frame: invalid call\n");
         exit(1);
     }
+    /* reset locals and stack */
+    frame_reset_memory(tm->frame);
+
     tm->frame --;
 }
 
@@ -46,6 +51,20 @@ if (tm->allocated > tm->gc_threshold) {   \
     gc_full();                            \
 }
 
+
+void frame_reset_memory(MpFrame* f) {
+    // clear local variables
+    int i = 0;
+    for(i = 0; i < f->maxlocals; i++) {
+        f->locals[i] = NONE_OBJECT;
+    }
+
+    *(f->top) = NONE_OBJECT;
+
+    f->jmp = NULL;
+    f->cache_jmp = NULL;
+}
+
 MpFrame* push_frame(MpObj fnc) {
     // make extra space for self in method call
     // top包含当前frame的stack-value
@@ -72,23 +91,13 @@ MpFrame* push_frame(MpObj fnc) {
     assert(GET_FUNCTION(fnc)->resolved == 1);
 
     f->maxlocals = func_get_max_locals(GET_FUNCTION(fnc));
-
     f->locals = top;
     /* stack starts after locals */
     f->stack  = f->locals + f->maxlocals;
     f->top    = f->stack;
     f->fnc    = fnc;
- 
-    // clear local variables
-    int i = 0;
-    for(i = 0; i < f->maxlocals; i++) {
-        f->locals[i] = NONE_OBJECT;
-    }
-
-    *(f->top) = NONE_OBJECT;
-
-    f->jmp = NULL;
-    f->cache_jmp = NULL;
+    
+    frame_reset_memory(f);
     return f;
 }
 

@@ -654,8 +654,6 @@ MpObj obj_str(MpObj a) {
     char buf[100];
     memset(buf, 0, sizeof(buf));
     switch (MP_TYPE(a)) {
-    case 0:
-        return string_from_cstr("type(0)");
     case TYPE_STR:
         return a;
     case TYPE_NUM: {
