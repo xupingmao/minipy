@@ -23,7 +23,7 @@ void pop_frame() {
 }
 
 #define MP_PUSH(x) *(++top) = (x); \
-    assert(top->type >= TYPE_MIN && top->type <= TYPE_MAX); \
+    assert(top->type >= TYPE_MIN && top->type <= TYPE_MAX);  \
     if(top > tm->stack_end) \
         mp_raise("mp_eval: stack overflow");
 

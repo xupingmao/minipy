@@ -3,8 +3,8 @@
 Author: xupingmao
 email: 578749341@qq.com
 Date: 2023-12-07 22:03:29
-LastEditors: xupingmao
-LastEditTime: 2023-12-07 22:44:47
+LastEditors: xupingmao 578749341@qq.com
+LastEditTime: 2024-04-14 14:02:30
 FilePath: /minipy/test/benchmark/benchmark_main.py
 Description: 描述
 '''
@@ -46,7 +46,7 @@ def main():
 
 		print("-" * 60)
 		print(">>> Run with minipy")
-		exec_bench("minipy", fpath)
+		exec_bench("./minipy", fpath)
 
 		# print("-" * 60)
 		# print(">>> Run with minipy-mp2c")

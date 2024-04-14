@@ -2,8 +2,8 @@
  * @Author: xupingmao
  * @email: 578749341@qq.com
  * @Date: 2023-12-07 22:03:29
- * @LastEditors: xupingmao
- * @LastEditTime: 2023-12-09 11:15:11
+ * @LastEditors: xupingmao 578749341@qq.com
+ * @LastEditTime: 2024-04-14 14:37:10
  * @FilePath: /minipy/src/vm.c
  * @Description: 描述
  */
@@ -157,6 +157,7 @@ int vm_init(int argc, char* argv[]) {
 
     /* 使用静态内存，尽量避免动态内存分配 */
     static MpVm _vm;
+    _vm.gc_debug_dict = NULL;
 
     #ifdef MP_CHECK_MEM
         ptr_map = PtrMap_new();

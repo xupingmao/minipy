@@ -69,9 +69,10 @@ static FILE* log_get_fp() {
 /**
  * log time
  */
-static void _log_time(char* level) {
+static void _log_time(FILE* fp, char* level) {
+    assert(fp != NULL);
+
     time_t cur_time;
-    FILE *fp = log_get_fp();
 
     time(&cur_time);
     char* t_str = ctime(&cur_time);
@@ -79,12 +80,14 @@ static void _log_time(char* level) {
     fprintf(fp, "%s|%s|", t_str, level);
 }
 
-static void _log_write(char* fmt, va_list ap) {
-    vfprintf(log_get_fp(), fmt, ap);
+static void _log_write(FILE* fp, char* fmt, va_list ap) {
+    assert(fp != NULL);
+    vfprintf(fp, fmt, ap);
 }
 
-static void _log_newline() {
-    fprintf(log_get_fp(), "\n");
+static void _log_newline(FILE* fp) {
+    assert(fp != NULL);
+    fprintf(fp, "\n");
 }
 
 /**
@@ -92,27 +95,29 @@ static void _log_newline() {
  */
 void log_info(char* fmt, ...) {
 #if LOG_LEVEL >= kLogInfo
-    _log_time("INFO");
+    FILE* fp = log_get_fp();
+    _log_time(fp, "INFO");
     
     va_list ap;
     va_start(ap, fmt);
-    _log_write(fmt, ap);
+    _log_write(fp, fmt, ap);
     va_end(ap);
     
-    _log_newline();
+    _log_newline(fp);
 #endif
 }
 
 void log_debug(char* fmt, ...) {
 #if LOG_LEVEL >= kLogDebug
-    _log_time("DEBUG");
+    FILE* fp = log_get_fp();
+    _log_time(fp, "DEBUG");
 
     va_list ap;
     va_start(ap, fmt);
-    _log_write(fmt, ap);
+    _log_write(fp, fmt, ap);
     va_end(ap);
     
-    _log_newline();
+    _log_newline(fp);
 #endif
 }
 
@@ -121,14 +126,15 @@ void log_debug(char* fmt, ...) {
  */
 void log_warn(char* fmt, ...) {
 #if LOG_LEVEL >= kLogWarn
-    _log_time("WARN");
+    FILE* fp = log_get_fp();
+    _log_time(fp, "WARN");
 
     va_list ap;
     va_start(ap, fmt);
-    _log_write(fmt, ap);
+    _log_write(fp, fmt, ap);
     va_end(ap);
     
-    _log_newline();
+    _log_newline(fp);
 #endif
 }
 
@@ -136,14 +142,28 @@ void log_warn(char* fmt, ...) {
  * @since 2016-11-13
  */
 void log_error(char* fmt, ...) {
-    _log_time("ERROR");
+    FILE* fp = log_get_fp();
+    _log_time(fp, "ERROR");
     
     va_list ap;
     va_start(ap, fmt);
-    _log_write(fmt, ap);
+    _log_write(fp, fmt, ap);
     va_end(ap);
     
-    _log_newline();
+    _log_newline(fp);
+}
+
+
+void log_stderr(char* fmt, ...) {
+    FILE* fp = stderr;
+    _log_time(fp, "ERROR");
+    
+    va_list ap;
+    va_start(ap, fmt);
+    _log_write(fp, fmt, ap);
+    va_end(ap);
+    
+    _log_newline(fp);
 }
 
 #if MP_LOG_CALL == 1

@@ -11,13 +11,13 @@
  * create a list which will not be tracked by garbage collector
  */
 MpList* list_new_untracked(int cap) {
-    MpList* list = mp_malloc(sizeof(MpList));
+    MpList* list = mp_malloc(sizeof(MpList), "list.new.1");
     list->len = 0;
     if (cap <= 0) {
         cap = 2;
     }
     list->cap = cap;
-    list->nodes = mp_malloc(OBJ_SIZE * list->cap);
+    list->nodes = mp_malloc(OBJ_SIZE * list->cap, "list.new.2");
     return list;
 }
 
@@ -70,6 +70,8 @@ void list_clear(MpList* list) {
 
 
 static void _list_check_cap(MpList* list) {
+    assert(list != NULL);
+    
     if (list->len >= list->cap) {
         int ocap = list->cap;
         int newsize;
@@ -81,7 +83,7 @@ static void _list_check_cap(MpList* list) {
         }
         /*int newsize = list->cap * 3 / 2 + 1;*/
         list->nodes = mp_realloc(list->nodes, OBJ_SIZE * ocap,
-                OBJ_SIZE * newsize);
+                OBJ_SIZE * newsize, "list.check_cap");
         list->cap = newsize;
 #if GC_DEBUG_LIST
         printf("resize list: from %d to %d\n", OBJ_SIZE * ocap, OBJ_SIZE * list->cap);
@@ -90,6 +92,8 @@ static void _list_check_cap(MpList* list) {
 }
 
 void list_append(MpList* list, MpObj obj) {
+    assert(list != NULL);
+
     _list_check_cap(list);
 
     ASSERT_VALID_OBJ(obj);
@@ -117,6 +121,8 @@ MpObj list_from_array(int n, ...) {
  after node at index of *n*
  */
 void list_insert(MpList* list, int n, MpObj obj) {
+    assert(list != NULL);
+
     _list_check_cap(list);
 
     ASSERT_VALID_OBJ(obj);

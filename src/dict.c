@@ -9,6 +9,10 @@
 
 static int dict_find_start(MpDict* dict, int hash);
 static DictNode* dict_get_node_with_hash(MpDict* dict, MpObj key, int hash);
+static void* dict_malloc(MpDict* dict, size_t size, const char* scene);
+static void dict_free_block(MpDict* dict, void* block, size_t size);
+void dict_free_internal(MpDict* dict);
+
 
 /** 
  *   New hashdict instance, with initial allocated size set to 7.
@@ -61,16 +65,38 @@ void dict_reset(MpDict* dict) {
     }
 }
 
+static void* dict_malloc(MpDict* dict, size_t size, const char* scene) {
+    if (dict->features & DICT_FEATURE_NO_GC) {
+        return malloc(size);
+    } else {
+        return mp_malloc(size, scene);
+    }
+}
+
+static void dict_free_block(MpDict* dict, void* block, size_t size) {
+    if (dict->features & DICT_FEATURE_NO_GC) {
+        assert(block != NULL);
+        free(block);
+    } else {
+        mp_free(block, size);
+    }
+}
+
 /**
  * init dictionary
  * @since 2015
  */
-MpDict* dict_init(MpDict* dict, int cap){
+MpDict* dict_init(MpDict*dict, int cap) {
+    int old_cap = dict->cap;
+    int old_slot_cap = dict->slot_cap;
+
     dict->cap = cap;
     dict->slot_cap = cap * 4 / 3 + cap;
     dict->extend = 2;
-    dict->nodes = mp_malloc(sizeof(DictNode) * (dict->cap));
-    dict->slots = mp_malloc(sizeof(int) * (dict->slot_cap));
+
+    dict->nodes = dict_malloc(dict, sizeof(DictNode) * (dict->cap), "dict.init");
+    dict->slots = dict_malloc(dict, sizeof(int) * (dict->slot_cap), "dict.init");
+
     dict->len = 0;
     // 两个的差值就是基数
     dict->mask = (dict->slot_cap) - (dict->cap);
@@ -78,6 +104,8 @@ MpDict* dict_init(MpDict* dict, int cap){
     dict_reset(dict);
     return dict;
 }
+
+
 
 MpObj dict_new(){
     MpDict* dict = dict_new_ptr();
@@ -90,7 +118,16 @@ MpObj dict_new_obj() {
 }
 
 MpDict* dict_new_ptr() {
-    MpDict* dict = mp_malloc(sizeof(MpDict));
+    MpDict* dict = mp_malloc(sizeof(MpDict), "dict.new");
+    dict->features = 0;
+    dict_init(dict, 4);
+    return dict;
+}
+
+MpDict* dict_new_no_gc() {
+    MpDict* dict = malloc(sizeof(MpDict));
+    dict->features = 0;
+    dict->features = dict->features | DICT_FEATURE_NO_GC;
     dict_init(dict, 4);
     return dict;
 }
@@ -106,6 +143,8 @@ static void dict_check(MpDict* dict){
     if(dict->len < dict->cap) {
         return;
     }
+
+    // printf("dict_check\n");
 
     int old_cap = dict->cap;
     int old_len = dict->len;
@@ -137,8 +176,8 @@ static void dict_check(MpDict* dict){
         }
     #endif
 
-    mp_free(old_nodes, old_cap * sizeof(DictNode));
-    mp_free(old_slots, old_slot_cap * sizeof(int));
+    dict_free_block(dict, old_nodes, old_cap * sizeof(DictNode));
+    dict_free_block(dict, old_slots, old_slot_cap * sizeof(int));
 }
 
 /**
@@ -146,10 +185,18 @@ static void dict_check(MpDict* dict){
  * @since 2015-?
  */
 void dict_free(MpDict* dict){
+    if (dict->features & DICT_FEATURE_NO_GC) {
+        return;
+    }
+    dict_free_internal(dict);
+}
+
+
+void dict_free_internal(MpDict* dict){
     PRINT_OBJ_GC_INFO_START();
-    mp_free(dict->nodes, (dict->cap) * sizeof(DictNode));
-    mp_free(dict->slots, (dict->slot_cap) * sizeof(int));
-    mp_free(dict, sizeof(MpDict));
+    dict_free_block(dict, dict->nodes, (dict->cap) * sizeof(DictNode));
+    dict_free_block(dict, dict->slots, (dict->slot_cap) * sizeof(int));
+    dict_free_block(dict, dict, sizeof(MpDict));
     PRINT_OBJ_GC_INFO_END("dict", dict);
 }
 

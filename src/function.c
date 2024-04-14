@@ -104,7 +104,7 @@ MpObj func_new(MpObj mod,
 
     mp_assert_type2(mod, TYPE_MODULE, TYPE_NONE, "func_new");
 
-    MpFunction* f= mp_malloc(sizeof(MpFunction));
+    MpFunction* f= mp_malloc(sizeof(MpFunction), "func.new");
     f->resolved = 0;
     f->mod = mod;
     f->code = NULL;
@@ -132,7 +132,7 @@ MpObj method_new(MpObj _fnc, MpObj self){
 
 MpObj class_new(MpObj name) {
     // TODO add class type
-    MpClass* clazz = mp_malloc(sizeof(MpClass));
+    MpClass* clazz = mp_malloc(sizeof(MpClass), "class.new");
     clazz->name = name;
     clazz->attr_dict = dict_new();
     return gc_track(obj_new(TYPE_CLASS, clazz));
@@ -189,7 +189,7 @@ void func_free(MpFunction* func){
  * @name  __name__
  */
 MpObj module_new(MpObj fname, MpObj name, MpObj code){
-  MpModule *mod = mp_malloc(sizeof(MpModule));
+  MpModule *mod = mp_malloc(sizeof(MpModule), "module.new");
   mod->file = fname;
   mod->code = code;
   mod->resolved = 0;
@@ -211,7 +211,7 @@ void mp_init_cache(MpModule* m) {
     if (m->cache != NULL) return;
     m->cache_cap = 100;
     m->cache_len = 0;
-    m->cache = mp_malloc(sizeof(MpCodeCache) * m->cache_cap);
+    m->cache = mp_malloc(sizeof(MpCodeCache) * m->cache_cap, "cache.init");
 }
 
 /**
@@ -222,7 +222,7 @@ void mp_push_cache(MpModule* m, MpCodeCache cache) {
         int oldsize = m->cache_cap * sizeof(MpCodeCache);
         m->cache_cap = m->cache_cap + m->cache_cap / 2 + 1;
         int newsize = m->cache_cap * sizeof(MpCodeCache);
-        m->cache = mp_realloc(m->cache, oldsize, newsize);
+        m->cache = mp_realloc(m->cache, oldsize, newsize, "cache.push");
     }
     // printf("cache: %3d - %s\n", cache.op, cache.sval);
     m->cache[m->cache_len] = cache;

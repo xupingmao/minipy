@@ -97,7 +97,7 @@ void mp_resolve_code(MpModule* m, const char* code) {
             case OP_FILE: 
             case OP_DEF:
             case OP_CLASS:
-                cache.v.obj = string_const2(buf, len); 
+                cache.v.obj = string_const_with_len(buf, len); 
                 cache.vtype = CACHE_VTYPE_OBJ;
                 break;
             

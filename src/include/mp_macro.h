@@ -86,7 +86,7 @@
 #define NOT_NATIVE(obj) (GET_FUNCTION(obj)->native == NULL)
 #define NOT_CLASS(obj) (MP_TYPE(obj) != TYPE_CLASS)
 
-#define ASSERT_VALID_OBJ(obj) assert((obj).type >= TYPE_STR && (obj).type <= TYPE_CLASS)
+#define ASSERT_VALID_OBJ(obj) assert((obj).type >= TYPE_MIN && (obj).type <= TYPE_MAX)
 
 #define ASSERT_TYPE_WITH_INFO(obj, type, info) \
     if(MP_TYPE(obj)!=type){                    \

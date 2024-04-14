@@ -2,8 +2,8 @@
  * @Author: xupingmao
  * @email: 578749341@qq.com
  * @Date: 2023-12-07 22:03:29
- * @LastEditors: xupingmao
- * @LastEditTime: 2024-04-14 11:48:02
+ * @LastEditors: xupingmao 578749341@qq.com
+ * @LastEditTime: 2024-04-14 19:07:12
  * @FilePath: /minipy/src/gc.c
  * @Description: 描述
  */
@@ -27,14 +27,18 @@
     #include "gc_simple.c"
 #endif
 
+#include "gc_debug.c"
+
 void gc_init_chars();
 void gc_init_frames();
+
 static const char* gc_mark_ex(MpObj, const char*);
 
 #define GC_CONSTANS_LEN 10
 #define GC_REACHED_SIGN 1
 #define GC_MARKED(o)    (o).value.gc->marked
 #define GET_CHAR(n)     ARRAY_CHARS[n]
+#define MP_RESET_AFTER_FREE 1
 
 
 /**
@@ -53,19 +57,22 @@ void gc_init() {
     tm->max_allocated = 0;
     tm->gc_threshold  = 1024 * 8; // set 8k to see gc process
     tm->gc_state = 1; // enable gc.
-
-    tm->all = list_new_untracked(100);
+    tm->gc_debug_dict = NULL;
     // object allocated in local scope. which can be sweeped simply.
     tm->local_obj_list = NULL;
     // tm->gc_deleted = NULL;
     tm->list_proto = NONE_OBJECT;
     tm->dict_proto = NONE_OBJECT;
     tm->str_proto  = NONE_OBJECT;
-    
+    tm->ex = NONE_OBJECT;
+    tm->ex_line = NONE_OBJECT;
+
+    tm->all = list_new_untracked(100);
     tm->root = list_new(100);
     tm->builtins = dict_new();
     tm->modules = dict_new();
     tm->constants = dict_new_ptr();
+
     tm->builtins_mod = module_new(string_static("_builtins.py"), 
         string_static("_builtins"), 
         string_static(""));
@@ -73,8 +80,6 @@ void gc_init() {
     /* initialize exception */
     tm->ex_list = list_new(10);
     obj_append(tm->root, tm->ex_list);
-    tm->ex = NONE_OBJECT;
-    tm->ex_line = NONE_OBJECT;
 
     #ifdef RECORD_LAST_OP
         CodeQueue_Init(&tm->last_op_queue, 20);
@@ -85,6 +90,10 @@ void gc_init() {
     
     /* initialize frames */
     gc_init_frames();
+
+    #ifdef MP_DEBUG
+        gc_debug_init();
+    #endif
 }
 
 void gc_init_chars() {
@@ -122,7 +131,7 @@ void gc_init_frames() {
 }
 
 
-void* mp_malloc(size_t size) {
+void* mp_malloc(size_t size, const char* scene) {
     void* block = NULL;
     MpObj* func = NULL;
 
@@ -132,30 +141,35 @@ void* mp_malloc(size_t size) {
         return NULL;
     }
     block = malloc(size);
-    memset(block, 0, size);
-    
-    log_debug("mp_malloc: %p %d->%d +%d", 
-        block, tm->allocated, tm->allocated + size, size);
-
     if (block == NULL) {
         mp_raise("mp_malloc: fail to malloc memory block of size %d", size);
     }
+
+    memset(block, 0, size);    
+    log_debug("mp_malloc: %p %d->%d +%d", 
+        block, tm->allocated, tm->allocated + size, size);
+
     tm->allocated += size;
     tm->max_allocated = max(tm->max_allocated, tm->allocated);
+
+    #ifdef MP_DEBUG
+        gc_debug_add_pointer(block, scene);
+    #endif
 
     return block;
 }
 
-void* mp_realloc(void* o, size_t osize, size_t nsize) {
-    void* block = mp_malloc(nsize);
+void* mp_realloc(void* o, size_t osize, size_t nsize, const char* scene) {
+    void* block = mp_malloc(nsize, scene);
     memcpy(block, o, osize);
     mp_free(o, osize);
     return block;
 }
 
 void mp_free(void* ptr, size_t size) {
-    if (ptr == NULL)
+    if (ptr == NULL) {
         return;
+    }
 
     log_debug("mp_free: %p %d->%d -%d", ptr, 
         tm->allocated, tm->allocated - size, size);
@@ -164,6 +178,10 @@ void mp_free(void* ptr, size_t size) {
 
     free(ptr);
     tm->allocated -= size;
+
+    #ifdef MP_DEBUG
+        gc_debug_remove_pointer(ptr);
+    #endif
 }
 
 /**
@@ -408,6 +426,11 @@ void gc_sweep() {
             list_append(temp, all->nodes[i]);
         } else {
             obj_free(all->nodes[i]);
+            
+            #if MP_RESET_AFTER_FREE
+                all->nodes[i] = NONE_OBJECT;
+            #endif
+            
             deleted_cnt+=1;
             // list_append(temp, all->nodes[i]);
         }
@@ -462,6 +485,10 @@ void gc_mark_all() {
     gc_mark_frames();
     gc_mark_and_check(tm->ex, "ex");
     gc_mark_and_check(tm->ex_line, "ex_line");
+
+    #ifdef MP_DEBUG
+        gc_debug_mark();
+    #endif
 
     int64_t cost_time = time_get_milli_seconds() - start_time;
     log_info("gc_mark_all: cost:%lldms", cost_time);
@@ -532,9 +559,14 @@ void gc_destroy() {
     list_free(tm->all);
 
     if (tm->allocated != 0) {
-        log_error("***memory leak happens***", tm->allocated);
-        log_error("tm->allocated=%d", tm->allocated);
+        log_stderr("***memory leak happens***", tm->allocated);
+        log_stderr("tm->allocated=%d", tm->allocated);
+        gc_debug_print();
     }
+
+    #ifdef MP_DEBUG
+        gc_debug_free();
+    #endif
 }
 
 
@@ -649,7 +681,7 @@ MpData* data_new_ptr(size_t data_size) {
     MpObj data_obj;
     data_obj.type = TYPE_DATA;
     /* there is one slot for default. */
-    GET_DATA(data_obj) = mp_malloc(sizeof(MpData) + (data_size-1) * sizeof(MpObj));
+    GET_DATA(data_obj) = mp_malloc(sizeof(MpData) + (data_size-1) * sizeof(MpObj), "data.new");
     MpData* data = GET_DATA(data_obj);
 
     data->mark = data_mark;

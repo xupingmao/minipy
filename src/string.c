@@ -11,6 +11,10 @@ static MpObj string_rstrip_chars(MpStr* self, char* chars, int chars_len);
 static void string_update_hash(MpStr* str);
 MpObj string_to_obj(MpStr* str);
 
+/* 字符串常量池 */
+#define STR_CONST_POOL_SIZE 256
+static MpConstStr mp_str_const_pool[STR_CONST_POOL_SIZE];
+
 /* code two bytes to string, Big-Endian */
 void code16(unsigned char* src, int value) {
     src[0] = (value >> 8) & 0xff;
@@ -42,10 +46,10 @@ int uncode32(unsigned char** src) {
  * @since 2015
  */
 MpObj string_char_new(int c) {
-    MpStr* str = mp_malloc(sizeof(MpStr));
+    MpStr* str = mp_malloc(sizeof(MpStr), "str.char_new");
     struct MpObj obj;
     str->stype = 2; // marked as char type;
-    str->value = mp_malloc(2);
+    str->value = mp_malloc(2, "str.char_new");
     str->len = 1;
     str->value[0] = c;
     str->value[1] = '\0';
@@ -60,11 +64,11 @@ MpObj string_char_new(int c) {
  * use constant char if size <= 0
  */
 MpObj string_alloc(char *s, int size) {
-    MpStr* str = mp_malloc(sizeof(MpStr));
+    MpStr* str = mp_malloc(sizeof(MpStr), "str.alloc.1");
     if (size > 0) {
         /* copy string data to new memory */
         str->stype = 1;
-        str->value = mp_malloc(size + 1);
+        str->value = mp_malloc(size + 1, "str.alloc.2");
         str->len = size;
         if (s != NULL) {
             memcpy(str->value, s, size);
@@ -106,15 +110,50 @@ MpObj string_static(const char* s) {
     return string_from_cstr(s);
 }
 
+MpConstStr* string_const_find(const char* s) {
+    int i = 0;
+    for (i = 0; i < STR_CONST_POOL_SIZE; i++) {
+        if (mp_str_const_pool[i].value == s) {
+            /* 找到已有的 */
+            return mp_str_const_pool + i;
+        }
+    }
+    /* 没找到 */
+    for (i = 0; i < STR_CONST_POOL_SIZE; i++) {
+        if (mp_str_const_pool[i].marked == 0) {
+            mp_str_const_pool[i].marked = 1;
+            mp_str_const_pool[i].stype = STR_TYPE_STATIC;
+            mp_str_const_pool[i].value = s;
+            mp_str_const_pool[i].len = strlen(s);
+            return mp_str_const_pool+i;
+        }
+    }
+
+    mp_raise("str_const_pool is full");
+    return NULL;
+}
+
+int string_const_count() {
+    int i = 0; 
+    int count = 0;
+    for (i = 0; i < STR_CONST_POOL_SIZE; i++) {
+        if (mp_str_const_pool[i].marked) {
+            count+=1;
+        }
+    }
+    return count;
+}
+
 MpObj string_from_cstr(const char* s) {
-    MpConstStr* str = mp_malloc(sizeof(MpConstStr));
-    str->stype = 0;
+    MpConstStr* str = string_const_find(s);
+    str->stype = STR_TYPE_STATIC;
     str->len = strlen(s);
     str->value = s;
+    str->marked = 1;
 
     MpObj v = string_to_obj((MpStr*)str);
     string_update_hash(GET_STR_OBJ(v));
-    return gc_track(v);
+    return v;
 }
 
 static void string_update_hash(MpStr* s) {
@@ -128,9 +167,7 @@ static void string_update_hash(MpStr* s) {
  * @since 2016-08-22
  */
 MpObj string_const(const char* s) {
-    MpObj str_obj = string_static(s);
-    int i = dict_set0(tm->constants, str_obj, NONE_OBJECT);
-    return tm->constants->nodes[i].key;
+    return string_static(s);
 }
 
 
@@ -150,10 +187,10 @@ MpObj string_chr(int n) {
 }
 
 void string_free(MpStr *str) {
-    if (str->stype) {
+    if (str->stype == STR_TYPE_DYNAMIC) {
         mp_free(str->value, str->len + 1);
+        mp_free(str, sizeof(MpStr));
     }
-    mp_free(str, sizeof(MpStr));
 }
 
 int string_index(MpStr* s1, MpStr* s2, int start) {
@@ -225,10 +262,10 @@ MpObj string_append_char(MpObj string, char c) {
     // return obj_add(string, string_chr(c));
     MpStr* str = GET_STR_OBJ(string);
     if (str->stype) {
-        str->value = mp_realloc(str->value, str->len+1, str->len+2);
+        str->value = mp_realloc(str->value, str->len+1, str->len+2, "str.append_char");
     } else {
         // static string, must malloc a new memory
-        str->value = mp_malloc(str->len+2);
+        str->value = mp_malloc(str->len+2, "str.append_char");
     }
     str->value[str->len] = c;
     str->value[str->len+1] = '\0';
@@ -247,10 +284,10 @@ MpObj string_append_cstr(MpObj string, const char* sz) {
     MpStr* str = GET_STR_OBJ(string);
     int sz_len = strlen(sz);
     if (str->stype) {
-        str->value = mp_realloc(str->value, str->len+1, str->len+1+sz_len);
+        str->value = mp_realloc(str->value, str->len+1, str->len+1+sz_len, "str.append_cstr");
     } else {
         char* old_value = str->value;
-        str->value = mp_malloc(str->len + sz_len+1);
+        str->value = mp_malloc(str->len + sz_len+1, "str.append_cstr");
         strcpy(str->value, old_value);
     }
     strcpy(str->value+str->len, sz);

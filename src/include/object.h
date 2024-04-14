@@ -20,8 +20,8 @@
 #define TYPE_CLASS 9
 #define TYPE_PTR 10 // 指针类型
 
-#define TYPE_MIN 1
-#define TYPE_MAX 9
+#define TYPE_MIN 0
+#define TYPE_MAX 10
 
 #define MP_TYPE(o) (o).type
 #define MAX_FILE_SIZE 1024 * 1024 * 5 /* max file size loaded into memery */
@@ -178,10 +178,14 @@ typedef struct DictNode{
   int used; /* also used for attr index */
 } DictNode;
 
+#define DICT_FEATURE_NO_GC 1
+
 typedef struct MpDict {
   int marked;
   int len;
+  /* dict的容量 */
   int cap;
+  /* slot索引的容量 */
   int slot_cap;
   int extend;
   // hash的掩码
@@ -192,6 +196,8 @@ typedef struct MpDict {
   int* slots;
   // 空闲节点的开始索引
   int free_start;
+  /* dict的特性 */
+  int features;
 } MpDict;
 
 
@@ -259,6 +265,7 @@ typedef struct MpVm {
   int max_allocated;
   int gc_threshold;
   int gc_state;
+  struct MpDict* gc_debug_dict;
   
   /* constants */
   MpObj _TRUE;
@@ -308,6 +315,9 @@ typedef struct MpList {
   struct MpObj* nodes;
 }MpList;
 
+
+#define STR_TYPE_STATIC 0   /* 静态字符串(C语言内部,不需要开辟内存) */
+#define STR_TYPE_DYNAMIC 1  /* 动态字符串 */
 
 typedef struct MpStr {
     int marked;

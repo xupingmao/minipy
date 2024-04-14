@@ -42,11 +42,13 @@ static MpObj bf_get_vm_info() {
     obj_set_by_cstr(mp_info, "code_cache_size", number_obj(sizeof(MpCodeCache)));
     obj_set_by_cstr(mp_info, "mp_str_size", number_obj(sizeof(MpStr)));
     obj_set_by_cstr(mp_info, "mp_func_size", number_obj(sizeof(MpFunction)));
+    obj_set_by_cstr(mp_info, "mp_dict_size", number_obj(sizeof(MpDict)));
     obj_set_by_cstr(mp_info, "total_obj_len", number_obj(tm->all->len));
     obj_set_by_cstr(mp_info, "alloc_mem", number_obj(tm->allocated));
     obj_set_by_cstr(mp_info, "gc_threshold", number_obj(tm->gc_threshold));
     obj_set_by_cstr(mp_info, "frame_index", number_obj(tm->frame - tm->frames));
     obj_set_by_cstr(mp_info, "consts_len", number_obj(tm->constants->len));
+    obj_set_by_cstr(mp_info, "string_const_count", number_obj(string_const_count()));
     return mp_info;
 }
 

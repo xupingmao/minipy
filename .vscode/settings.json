@@ -6,6 +6,9 @@
         "gc.h": "c",
         "gc_inline.h": "c",
         "gc_priv.h": "c",
-        "stdlib.h": "c"
+        "stdlib.h": "c",
+        "algorithm": "c",
+        "*.inc": "c",
+        "__config": "c"
     }
 }

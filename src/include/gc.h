@@ -1,3 +1,11 @@
+/*
+ * @Author: xupingmao 578749341@qq.com
+ * @Date: 2024-04-14 12:29:46
+ * @LastEditors: xupingmao 578749341@qq.com
+ * @LastEditTime: 2024-04-14 14:24:46
+ * @FilePath: /minipy/src/include/gc.h
+ * @Description: 这是默认设置,请设置`customMade`, 打开koroFileHeader查看配置 进行设置: https://github.com/OBKoro1/koro1FileHeader/wiki/%E9%85%8D%E7%BD%AE
+ */
 #ifndef _MP_GC_H_
 #define _MP_GC_H_
 
@@ -5,8 +13,8 @@
 
 // gc functions
 #define GC_DEBUG_LIST 0
-void*       mp_malloc(size_t size);
-void*       mp_realloc(void* o, size_t osize, size_t nsize);
+void*       mp_malloc(size_t size, const char* scene);
+void*       mp_realloc(void* o, size_t osize, size_t nsize, const char* scene);
 void        mp_free(void* o, size_t size);
 void        init_memory();
 void        free_memory();
