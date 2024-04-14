@@ -9,6 +9,7 @@
         "stdlib.h": "c",
         "algorithm": "c",
         "*.inc": "c",
-        "__config": "c"
+        "__config": "c",
+        "mp_log.h": "c"
     }
 }

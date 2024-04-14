@@ -111,6 +111,7 @@ MpObj string_static(const char* s) {
 }
 
 MpConstStr* string_const_find(const char* s) {
+    /* TODO 优化成按hash值查找方法 */
     int i = 0;
     for (i = 0; i < STR_CONST_POOL_SIZE; i++) {
         if (mp_str_const_pool[i].value == s) {
@@ -129,7 +130,7 @@ MpConstStr* string_const_find(const char* s) {
         }
     }
 
-    mp_raise("str_const_pool is full");
+    mp_panic("str_const_pool is full");
     return NULL;
 }
 
@@ -171,6 +172,15 @@ MpObj string_const(const char* s) {
 }
 
 
+MpObj string_intern(const char* s) {
+    // TODO 优化成从栈上分配内存
+    MpObj str_obj = string_alloc(s, strlen(s));
+    int i = dict_set0(tm->constants, str_obj, NONE_OBJECT);
+    return tm->constants->nodes[i].key;
+}
+
+
+
 /**
  * @since 2016-11-27
  */
@@ -194,6 +204,9 @@ void string_free(MpStr *str) {
 }
 
 int string_index(MpStr* s1, MpStr* s2, int start) {
+    assert(s1 != NULL);
+    assert(s2 != NULL);
+
     char* ss1 = s1->value;
     char* ss2 = s2->value;
     // char* p = strstr(ss1 + start, ss2);
@@ -323,8 +336,10 @@ MpObj string_substring(MpStr* str, int start, int end) {
     max_end = str->len;
     end = max_end < end ? max_end : end;
     len = end - start;
-    if (len <= 0)
+    if (len <= 0) {
         return string_from_cstr("");
+    }
+
     new_str = string_alloc(NULL, len);
     s = GET_CSTR(new_str);
     for (i = start; i < end; i++) {
@@ -575,6 +590,8 @@ void string_methods_init() {
 }
 
 MpObj* string_next(MpData* iterator) {
+    assert(iterator != NULL);
+
     if (iterator->cur >= iterator->end) {
         return NULL;
     }

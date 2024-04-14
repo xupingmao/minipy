@@ -1,6 +1,8 @@
 #ifndef TM2C_C
 #define TM2C_C
 
+#include "include/mp.h"
+
 MpObj mp_call(MpObj func, int args, ...) {
     int i = 0;
     va_list ap;

@@ -3,7 +3,7 @@
  * @email: 578749341@qq.com
  * @Date: 2023-12-07 22:03:29
  * @LastEditors: xupingmao
- * @LastEditTime: 2023-12-09 11:24:47
+ * @LastEditTime: 2024-04-14 19:24:59
  * @FilePath: /minipy/src/include/mp.h
  * @Description: 描述
  */
@@ -219,6 +219,8 @@ void mp_assert_int(double value, char* msg) ;
 void mp_push_exception(MpFrame* f);
 void mp_traceback();
 void mp_raise(char* fmt, ...);
+/* 内部异常, 直接终止程序退出 */
+void mp_panic(char* fmt, ...);
 
 // builtin functions
 void     mp_print(MpObj v);

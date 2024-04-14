@@ -28,5 +28,6 @@ void log_debug(char* fmt, ...);
 void log_info(char* fmt, ...);
 void log_warn(char* fmt, ...);
 void log_error(char* fmt, ...);
+void log_stderr(char* fmt, ...);
 
 #endif

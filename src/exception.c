@@ -34,6 +34,14 @@ static int get_lineno() {
     return tm->frame->lineno;
 }
 
+void mp_panic(char* fmt, ...) {
+    va_list ap;
+    va_start(ap, fmt);
+    vfprintf(stderr, fmt, ap);
+    va_end(ap);
+    exit(1);
+}
+
 void mp_raise(char* fmt, ...) {
     va_list a;
     va_start(a, fmt);
