@@ -1,45 +1,28 @@
 /*
+ * @Author: xupingmao 578749341@qq.com
+ * @Date: 2024-04-14 12:29:46
+ * @LastEditors: xupingmao 578749341@qq.com
+ * @LastEditTime: 2024-04-14 12:38:12
+ * @FilePath: /minipy/src/module/time.c
+ * @Description: 这是默认设置,请设置`customMade`, 打开koroFileHeader查看配置 进行设置: https://github.com/OBKoro1/koro1FileHeader/wiki/%E9%85%8D%E7%BD%AE
+ */
+/*
  * @Author: xupingmao
  * @email: 578749341@qq.com
  * @Date: 2022-02-12 11:48:21
- * @LastEditors: xupingmao
- * @LastEditTime: 2023-12-09 11:12:15
+ * @LastEditors: xupingmao 578749341@qq.com
+ * @LastEditTime: 2024-04-14 12:35:45
  * @FilePath: /minipy/src/module/time.c
  * @Description: 描述
  */
 #include "../include/mp.h"
 
 #ifdef _WIN32
-    #include <Windows.h>
+    #include "time_win32.c"
 #else
-    #include <sys/time.h>
+    #include "time_posix.c"
 #endif
 
-static int64_t win32_get_nano_seconds() {
-    /* FILETIME 包含一个 64 位值，表示自 1601 年 1 月 1 日 (UTC) 以来的 100 纳秒间隔数。*/
-    FILETIME system_time;
-    ULARGE_INTEGER large;
-
-    GetSystemTimeAsFileTime(&system_time);
-    large.u.LowPart = system_time.dwLowDateTime;
-    large.u.HighPart = system_time.dwHighDateTime;
-    /* 11,644,473,600,000,000,000: number of nanoseconds between
-       the 1st january 1601 and the 1st january 1970 (369 years + 89 leap
-       days). */
-    return large.QuadPart * 100 - 11644473600000000000U;
-}
-
-int64_t time_get_milli_seconds() {
-#ifdef _WIN32
-    return win32_get_nano_seconds() / 1000000;
-#else
-    struct timeval tv;
-    gettimeofday(&tv, NULL);
-    long sec = tv.tv_sec;
-    long micro_sec = tv.tv_usec;
-    return (int64_t)sec * 1000 + (int64_t)micro_sec/1000;
-#endif
-}
 
 static MpObj bf_time_time() {
     double ms = (double) time_get_milli_seconds();

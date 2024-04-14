@@ -43,7 +43,7 @@ nogc:
 	$(cc) -g -DGC_DESABLED -o minipy src/main.c -lm
 
 bdwgc:
-	$(cc) -g -DMP_USE_BDWGC -o minipy src/main.c -lm 
+	$(cc) -g -DMP_USE_BDWGC -o minipy src/main.c -lm -I src/deps/bdwgc/include
 
 check-mem: 
 	$(cc) -DTM_CHECK_MEM -o minipy src/main.c -lm
