@@ -1,3 +1,12 @@
+/*
+ * @Author: xupingmao
+ * @email: 578749341@qq.com
+ * @Date: 2023-12-07 22:03:29
+ * @LastEditors: xupingmao
+ * @LastEditTime: 2024-04-14 11:48:02
+ * @FilePath: /minipy/src/gc.c
+ * @Description: 描述
+ */
 /**
  * 1. mark all allocated object to be unused (0);
  * 2. mark objects can be reached from `root` to be used (1);
@@ -11,6 +20,12 @@
 
 #include "include/mp.h"
 #include "log.c"
+
+#ifdef MP_USE_BDWGC
+    #include "gc_bdwgc.c"
+#else
+    #include "gc_simple.c"
+#endif
 
 void gc_init_chars();
 void gc_init_frames();

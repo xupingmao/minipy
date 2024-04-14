@@ -2,6 +2,9 @@
     "makefile.extensionOutputFolder": "./.vscode",
     "files.associations": {
         "mp.h": "c",
-        "object.h": "c"
+        "object.h": "c",
+        "gc.h": "c",
+        "gc_inline.h": "c",
+        "gc_priv.h": "c"
     }
 }
