@@ -40,7 +40,6 @@ void dict_set_by_cstr(MpDict* dict, const char* key, MpObj val);
 
 
 MpObj dict_keys(MpDict* );
-MpObj dict_to_obj(MpDict* dict);
 
 void             dict_del(MpDict* dict, MpObj k);
 void             dict_methods_init();

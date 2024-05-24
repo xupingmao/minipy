@@ -2,8 +2,8 @@
  * @Author: xupingmao
  * @email: 578749341@qq.com
  * @Date: 2023-12-07 22:03:29
- * @LastEditors: xupingmao 578749341@qq.com
- * @LastEditTime: 2024-04-14 19:07:12
+ * @LastEditors: xupingmao
+ * @LastEditTime: 2024-05-25 00:53:40
  * @FilePath: /minipy/src/gc.c
  * @Description: 描述
  */
@@ -57,7 +57,6 @@ void gc_init() {
     tm->max_allocated = 0;
     tm->gc_threshold  = 1024 * 8; // set 8k to see gc process
     tm->gc_state = 1; // enable gc.
-    tm->gc_debug_dict = NULL;
     // object allocated in local scope. which can be sweeped simply.
     tm->local_obj_list = NULL;
     // tm->gc_deleted = NULL;
@@ -145,15 +144,13 @@ void* mp_malloc(size_t size, const char* scene) {
         mp_raise("mp_malloc: fail to malloc memory block of size %d", size);
     }
 
-    memset(block, 0, size);    
-    log_debug("mp_malloc: %p %d->%d +%d", 
-        block, tm->allocated, tm->allocated + size, size);
+    memset(block, 0, size);
 
     tm->allocated += size;
     tm->max_allocated = max(tm->max_allocated, tm->allocated);
 
     #ifdef MP_DEBUG
-        gc_debug_add_pointer(block, scene);
+        gc_debug_malloc(block, scene, size);
     #endif
 
     return block;
@@ -170,18 +167,15 @@ void mp_free(void* ptr, size_t size) {
     if (ptr == NULL) {
         return;
     }
-
-    log_debug("mp_free: %p %d->%d -%d", ptr, 
-        tm->allocated, tm->allocated - size, size);
+    
+    #ifdef MP_DEBUG
+        gc_debug_free(ptr, size);
+    #endif
     
     memset(ptr, 0, size);
 
     free(ptr);
     tm->allocated -= size;
-
-    #ifdef MP_DEBUG
-        gc_debug_remove_pointer(ptr);
-    #endif
 }
 
 /**
@@ -378,35 +372,6 @@ void gc_mark_frames() {
 }
 
 /**
- * mark objects in frame-local and frame-stack
- * @since 2015
- */
-void gc_mark_frames_old() {
-    MpFrame* f = NULL;
-    int j = 0;
-
-    // why frames + 1 ?
-    for(f = tm->frames + 1; f <= tm->frame; f++) {
-        gc_mark_and_check(f->fnc, "frame.func");
-        /* mark locals */
-        for(j = 0; j < f->maxlocals; j++) {
-            gc_mark_and_check(f->locals[j], "frame.local");
-        }
-
-        /* mark operand stack */
-        MpObj* temp;
-        for(temp = f->stack; temp <= f->top; temp++) {
-            // gc_mark_and_check(*temp, "frame.stack");
-            const char* err = gc_mark_ex(*temp, "frame.stack");
-            if (err != NULL) {
-                gc_print_frame_stack_info(f);
-                mp_raise("gc failed:%s", err);
-            }
-        }
-    }
-}
-
-/**
  * sweep unmarked objects in tm->all
  * @since ? before 2016
  * @modified 2016-08-20
@@ -517,6 +482,7 @@ void gc_full() {
 
     gc_reset_all();
 
+    // 标记全部可达对象
     gc_mark_all();
 
     // 清理垃圾,这个操作可以增量处理
@@ -563,10 +529,6 @@ void gc_destroy() {
         log_stderr("tm->allocated=%d", tm->allocated);
         gc_debug_print();
     }
-
-    #ifdef MP_DEBUG
-        gc_debug_free();
-    #endif
 }
 
 

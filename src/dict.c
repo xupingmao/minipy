@@ -11,7 +11,9 @@ static int dict_find_start(MpDict* dict, int hash);
 static DictNode* dict_get_node_with_hash(MpDict* dict, MpObj key, int hash);
 static void* dict_malloc(MpDict* dict, size_t size, const char* scene);
 static void dict_free_block(MpDict* dict, void* block, size_t size);
+static MpObj dict_to_obj(MpDict* dict);
 void dict_free_internal(MpDict* dict);
+
 
 
 /** 
@@ -132,7 +134,7 @@ MpDict* dict_new_no_gc() {
     return dict;
 }
 
-MpObj dict_to_obj(MpDict* dict) {
+static MpObj dict_to_obj(MpDict* dict) {
     MpObj o;
     o.type = TYPE_DICT;
     o.value.dict = dict;

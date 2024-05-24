@@ -265,8 +265,7 @@ typedef struct MpVm {
   int max_allocated;
   int gc_threshold;
   int gc_state;
-  struct MpDict* gc_debug_dict;
-  
+    
   /* constants */
   MpObj _TRUE;
   MpObj _FALSE;
@@ -327,16 +326,6 @@ typedef struct MpStr {
     int hash;
     char *value;
 } MpStr;
-
-typedef struct MpConstStr {
-    int marked;
-    int stype;
-    int len;
-    // 字符串的哈希值
-    int hash;
-    const char *value;
-} MpConstStr;
-
 
 /**
  * global variables

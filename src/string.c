@@ -11,10 +11,6 @@ static MpObj string_rstrip_chars(MpStr* self, char* chars, int chars_len);
 static void string_update_hash(MpStr* str);
 MpObj string_to_obj(MpStr* str);
 
-/* 字符串常量池 */
-#define STR_CONST_POOL_SIZE 256
-static MpConstStr mp_str_const_pool[STR_CONST_POOL_SIZE];
-
 /* code two bytes to string, Big-Endian */
 void code16(unsigned char* src, int value) {
     src[0] = (value >> 8) & 0xff;
@@ -67,7 +63,7 @@ MpObj string_alloc(char *s, int size) {
     MpStr* str = mp_malloc(sizeof(MpStr), "str.alloc.1");
     if (size > 0) {
         /* copy string data to new memory */
-        str->stype = 1;
+        str->stype = STR_TYPE_DYNAMIC;
         str->value = mp_malloc(size + 1, "str.alloc.2");
         str->len = size;
         if (s != NULL) {
@@ -80,7 +76,7 @@ MpObj string_alloc(char *s, int size) {
         return string_chr(s[0]);
     } else {
         /* use string ptr in C data section */
-        str->stype = 0;
+        str->stype = STR_TYPE_STATIC;
         if (size == 0) {
             str->value = "";
             str->len = 0;
@@ -110,56 +106,12 @@ MpObj string_static(const char* s) {
     return string_from_cstr(s);
 }
 
-MpConstStr* string_const_find(const char* s) {
-    /* TODO 优化成按hash值查找方法 */
-    int i = 0;
-    for (i = 0; i < STR_CONST_POOL_SIZE; i++) {
-        if (mp_str_const_pool[i].value == s) {
-            /* 找到已有的 */
-            return mp_str_const_pool + i;
-        }
-    }
-    /* 没找到 */
-    for (i = 0; i < STR_CONST_POOL_SIZE; i++) {
-        if (mp_str_const_pool[i].marked == 0) {
-            mp_str_const_pool[i].marked = 1;
-            mp_str_const_pool[i].stype = STR_TYPE_STATIC;
-            mp_str_const_pool[i].value = s;
-            mp_str_const_pool[i].len = strlen(s);
-            return mp_str_const_pool+i;
-        }
-    }
-
-    mp_panic("str_const_pool is full");
-    return NULL;
-}
-
-int string_const_count() {
-    int i = 0; 
-    int count = 0;
-    for (i = 0; i < STR_CONST_POOL_SIZE; i++) {
-        if (mp_str_const_pool[i].marked) {
-            count+=1;
-        }
-    }
-    return count;
-}
-
 MpObj string_from_cstr(const char* s) {
-    MpConstStr* str = string_const_find(s);
-    str->stype = STR_TYPE_STATIC;
-    str->len = strlen(s);
-    str->value = s;
-    str->marked = 1;
-
-    MpObj v = string_to_obj((MpStr*)str);
-    string_update_hash(GET_STR_OBJ(v));
-    return v;
+    return string_alloc(s, -1);
 }
 
 static void string_update_hash(MpStr* s) {
     s->hash = mp_hash(s->value, s->len);
-    // s->hash = -1;
 }
 
 /**
@@ -168,17 +120,13 @@ static void string_update_hash(MpStr* s) {
  * @since 2016-08-22
  */
 MpObj string_const(const char* s) {
-    return string_static(s);
+    return string_from_cstr(s);
 }
 
 
 MpObj string_intern(const char* s) {
-    // TODO 优化成从栈上分配内存
-    MpObj str_obj = string_alloc(s, strlen(s));
-    int i = dict_set0(tm->constants, str_obj, NONE_OBJECT);
-    return tm->constants->nodes[i].key;
+    return string_from_cstr(s);
 }
-
 
 
 /**
@@ -199,6 +147,8 @@ MpObj string_chr(int n) {
 void string_free(MpStr *str) {
     if (str->stype == STR_TYPE_DYNAMIC) {
         mp_free(str->value, str->len + 1);
+        mp_free(str, sizeof(MpStr));
+    } else if (str->stype == STR_TYPE_STATIC) {
         mp_free(str, sizeof(MpStr));
     }
 }
