@@ -665,25 +665,25 @@ MpObj obj_str(MpObj a) {
     case TYPE_LIST: {
         MpObj str = string_new("");
 
-        str = string_append_char(str, '[');
+        string_append_char(str, '[');
         int i, l = LIST_LEN(a);
         for (i = 0; i < l; i++) {
             MpObj obj = GET_LIST(a)->nodes[i];
             /* reference to self in list */
             if (is_obj_equals(a, obj)) {
-                str = string_append_cstr(str, "[...]");
+                string_append_cstr(str, "[...]");
             } else if (obj.type == TYPE_STR) {
-                str = string_append_char(str, '"');
-                str = string_append_obj(str, obj);
-                str = string_append_char(str, '"');
+                string_append_char(str, '"');
+                string_append_obj(str, obj);
+                string_append_char(str, '"');
             } else {
-                str = string_append_obj(str, obj);
+                string_append_obj(str, obj);
             }
             if (i != l - 1) {
-                str = string_append_char(str, ',');
+                string_append_char(str, ',');
             }
         }
-        str = string_append_char(str, ']');
+        string_append_char(str, ']');
         return str;
     }
     case TYPE_DICT:

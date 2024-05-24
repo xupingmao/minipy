@@ -6,6 +6,7 @@
  */
 
 #include "include/mp.h"
+#include "include/gc_debug.h"
 
 static MpObj string_rstrip_chars(MpStr* self, char* chars, int chars_len);
 static void string_update_hash(MpStr* str);
@@ -42,17 +43,12 @@ int uncode32(unsigned char** src) {
  * @since 2015
  */
 MpObj string_char_new(int c) {
-    MpStr* str = mp_malloc(sizeof(MpStr), "str.char_new");
-    struct MpObj obj;
-    str->stype = 2; // marked as char type;
-    str->value = mp_malloc(2, "str.char_new");
-    str->len = 1;
-    str->value[0] = c;
-    str->value[1] = '\0';
-    MP_TYPE(obj) = TYPE_STR;
-    GET_STR_OBJ(obj) = str;
-    string_update_hash(str);
-    return gc_track(obj);
+    assert (c>=0);
+    assert (c<=255);
+    char value[2];
+    value[0] = c;
+    value[1] = 0;
+    return string_alloc(value, 1);
 }
 
 /**
@@ -60,18 +56,19 @@ MpObj string_char_new(int c) {
  * use constant char if size <= 0
  */
 MpObj string_alloc(char *s, int size) {
-    MpStr* str = mp_malloc(sizeof(MpStr), "str.alloc.1");
+    MpStr* str = mp_malloc(sizeof(MpStr), "str.alloc_obj");
     if (size > 0) {
         /* copy string data to new memory */
         str->stype = STR_TYPE_DYNAMIC;
-        str->value = mp_malloc(size + 1, "str.alloc.2");
+        str->value = mp_malloc(size + 1, "str.alloc_value");
         str->len = size;
         if (s != NULL) {
             memcpy(str->value, s, size);
         } else {
-            str->stype = 1;
+            /* if `s` is NULL, just allocate memory */
         }
         str->value[size] = '\0';
+        gc_debug_str_value(str->value);
     } else if(size == 1){
         return string_chr(s[0]);
     } else {
@@ -107,7 +104,7 @@ MpObj string_static(const char* s) {
 }
 
 MpObj string_from_cstr(const char* s) {
-    return string_alloc(s, -1);
+    return string_alloc((char*)s, -1);
 }
 
 static void string_update_hash(MpStr* s) {
@@ -150,6 +147,8 @@ void string_free(MpStr *str) {
         mp_free(str, sizeof(MpStr));
     } else if (str->stype == STR_TYPE_STATIC) {
         mp_free(str, sizeof(MpStr));
+    } else {
+        mp_raise("string_free: unknown stype: %d", str->stype);
     }
 }
 

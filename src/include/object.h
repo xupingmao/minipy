@@ -178,7 +178,7 @@ typedef struct DictNode{
   int used; /* also used for attr index */
 } DictNode;
 
-#define DICT_FEATURE_NO_GC 1
+#define DICT_FEATURE_NO_GC 0
 
 typedef struct MpDict {
   int marked;

@@ -28,5 +28,6 @@ void         string_methods_init();
 MpObj        string_iter_new(MpObj s);
 MpObj*       string_next(MpData* iterator);
 int          string_hash(MpStr* str);
+MpObj string_add(MpStr* a, MpStr* b);
 
 #endif

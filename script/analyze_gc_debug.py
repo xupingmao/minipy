@@ -7,20 +7,25 @@ class GcDebugLogAnalyzer:
 
     def handle(self, log_file="minipy.log"):
         malloc_dict = {}
+        track_set = set()
+        str_dict = {}
 
         malloc_pattern = re.compile(r"malloc:([0-9a-z]+),scene:([^,]+),size:([0-9]+)")
         free_pattern = re.compile(r"free:([0-9a-z]+),size:([0-9]+)")
+        track_pattern = re.compile(r"track:([0-9a-z]+)")
+        str_pattern = re.compile(r"str_ptr:([0-9a-z]+),str_value:([^\n+])")
 
         malloc_count = 0
         free_count = 0
 
-        with open(log_file, "r+") as fp:
+        with open(log_file, "rb+") as fp:
             while True:
                 line = fp.readline()
-                line = line.strip()
-                if line == "":
+                if len(line) == 0:
                     break
 
+                line = line.decode("utf-8", errors="ignore")
+                line = line.strip()
                 result = malloc_pattern.search(line)
                 if result:
                     pointer = result.group(1)
@@ -33,12 +38,32 @@ class GcDebugLogAnalyzer:
                     pointer = result.group(1)
                     malloc_dict.pop(pointer, None)
                     free_count+=1
+
+                result = track_pattern.search(line)
+                if result:
+                    pointer = result.group(1)
+                    track_set.add(pointer)
+
+                result = str_pattern.search(line)
+                if result:
+                    pointer = result.group(1)
+                    value = result.group(2)
+                    str_dict[pointer] = value
             
         for pointer in malloc_dict:
             scene = malloc_dict[pointer]
-            print(f"free leaks {pointer} scene:{scene}")
+            print(f"miss free {pointer} scene:{scene}")
+            if pointer not in str_dict:
+                value = str_dict.get(pointer)
+                if value:
+                    print(f"miss free str {value}")
 
-        print(f"malloc_count={malloc_count}, free_count={free_count}")
+        for pointer in malloc_dict:
+            scene = malloc_dict[pointer]
+            if pointer not in track_set:
+                print(f"miss track {pointer} scene:{scene}")
+
+        print(f"malloc_count={malloc_count}, free_count={free_count}, len(str_dict)={len(str_dict)}")
 
 
 if __name__ == "__main__":

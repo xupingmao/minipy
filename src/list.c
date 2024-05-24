@@ -11,13 +11,13 @@
  * create a list which will not be tracked by garbage collector
  */
 MpList* list_new_untracked(int cap) {
-    MpList* list = mp_malloc(sizeof(MpList), "list.new.1");
+    MpList* list = mp_malloc(sizeof(MpList), "list.new_obj");
     list->len = 0;
     if (cap <= 0) {
         cap = 2;
     }
     list->cap = cap;
-    list->nodes = mp_malloc(OBJ_SIZE * list->cap, "list.new.2");
+    list->nodes = mp_malloc(OBJ_SIZE * list->cap, "list.new_nodes");
     return list;
 }
 

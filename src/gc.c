@@ -3,7 +3,7 @@
  * @email: 578749341@qq.com
  * @Date: 2023-12-07 22:03:29
  * @LastEditors: xupingmao
- * @LastEditTime: 2024-05-25 00:53:40
+ * @LastEditTime: 2024-05-25 07:19:29
  * @FilePath: /minipy/src/gc.c
  * @Description: 描述
  */
@@ -221,6 +221,11 @@ MpObj gc_track(MpObj v) {
     }
     
     list_append(tm->all, v);
+
+    #ifdef MP_DEBUG
+        gc_debug_obj_track(v);
+    #endif
+    
     return v;
 }
 
@@ -383,12 +388,12 @@ void gc_sweep() {
     int64_t start_time  = time_get_milli_seconds();
 
     log_info("gc_sweep: %d start", tm->all->len);
-    MpList* temp = list_new_untracked(200);
+    MpList* reachable_list = list_new_untracked(200);
     MpList* all = tm->all;
 
     for (i = 0; i < all->len; i++) {
         if (GC_MARKED(tm->all->nodes[i])) {
-            list_append(temp, all->nodes[i]);
+            list_append(reachable_list, all->nodes[i]);
         } else {
             obj_free(all->nodes[i]);
             
@@ -397,11 +402,10 @@ void gc_sweep() {
             #endif
             
             deleted_cnt+=1;
-            // list_append(temp, all->nodes[i]);
         }
     }
     list_free(tm->all);
-    tm->all = temp;
+    tm->all = reachable_list;
 
     int64_t cost_time = time_get_milli_seconds() - start_time;
     
@@ -529,6 +533,8 @@ void gc_destroy() {
         log_stderr("tm->allocated=%d", tm->allocated);
         gc_debug_print();
     }
+
+    log_info("gc_destroy: done");
 }
 
 

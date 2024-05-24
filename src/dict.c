@@ -11,8 +11,9 @@ static int dict_find_start(MpDict* dict, int hash);
 static DictNode* dict_get_node_with_hash(MpDict* dict, MpObj key, int hash);
 static void* dict_malloc(MpDict* dict, size_t size, const char* scene);
 static void dict_free_block(MpDict* dict, void* block, size_t size);
-static MpObj dict_to_obj(MpDict* dict);
 void dict_free_internal(MpDict* dict);
+static MpObj dict_to_obj(MpDict* dict);
+static MpDict* dict_new_no_track();
 
 
 
@@ -110,7 +111,7 @@ MpDict* dict_init(MpDict*dict, int cap) {
 
 
 MpObj dict_new(){
-    MpDict* dict = dict_new_ptr();
+    MpDict* dict = dict_new_no_track();
     MpObj o = dict_to_obj(dict);
     return gc_track(o);
 }
@@ -120,6 +121,11 @@ MpObj dict_new_obj() {
 }
 
 MpDict* dict_new_ptr() {
+    MpObj obj = dict_new_obj();
+    return obj.value.dict;
+}
+
+static MpDict* dict_new_no_track() {
     MpDict* dict = mp_malloc(sizeof(MpDict), "dict.new");
     dict->features = 0;
     dict_init(dict, 4);
