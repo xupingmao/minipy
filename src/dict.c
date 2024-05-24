@@ -488,12 +488,12 @@ MpObj dict_builtin_get() {
 void dict_methods_init() {
     tm->dict_proto = dict_new();
     /* build dict class */
-    reg_mod_func(tm->dict_proto, "get",    dict_builtin_get);
-    reg_mod_func(tm->dict_proto, "keys",   dict_builtin_keys);
-    reg_mod_func(tm->dict_proto, "values", dict_builtin_values);
-    reg_mod_func(tm->dict_proto, "copy",   dict_builtin_copy);
-    reg_mod_func(tm->dict_proto, "update", dict_builtin_update);
-    reg_mod_func(tm->dict_proto, "pop",    dict_builtin_pop);
+    mod_reg_func(tm->dict_proto, "get",    dict_builtin_get);
+    mod_reg_func(tm->dict_proto, "keys",   dict_builtin_keys);
+    mod_reg_func(tm->dict_proto, "values", dict_builtin_values);
+    mod_reg_func(tm->dict_proto, "copy",   dict_builtin_copy);
+    mod_reg_func(tm->dict_proto, "update", dict_builtin_update);
+    mod_reg_func(tm->dict_proto, "pop",    dict_builtin_pop);
 }
 
 /**

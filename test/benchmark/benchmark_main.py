@@ -3,8 +3,8 @@
 Author: xupingmao
 email: 578749341@qq.com
 Date: 2023-12-07 22:03:29
-LastEditors: xupingmao 578749341@qq.com
-LastEditTime: 2024-04-14 14:02:30
+LastEditors: xupingmao
+LastEditTime: 2024-05-25 07:27:33
 FilePath: /minipy/test/benchmark/benchmark_main.py
 Description: 描述
 '''
@@ -32,6 +32,10 @@ def main():
 
 	dirname = "./test/benchmark/cases"
 	dirname = os.path.abspath(dirname)
+
+	minipy_executable = "./minipy"
+	if os.name == "nt":
+		minipy_executable = "minipy.exe"
 	
 	for fname in sorted(os.listdir(dirname)):
 		if args.target != "" and fname != args.target:
@@ -46,7 +50,7 @@ def main():
 
 		print("-" * 60)
 		print(">>> Run with minipy")
-		exec_bench("./minipy", fpath)
+		exec_bench(minipy_executable, fpath)
 
 		# print("-" * 60)
 		# print(">>> Run with minipy-mp2c")

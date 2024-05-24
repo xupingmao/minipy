@@ -23,16 +23,13 @@ static void init_version(MpObj sys_mod) {
 }
 
 void mp_sys_init() {
-    MpObj sys_mod  = dict_new();
+    MpObj sys_mod  = mp_new_native_module("sys");
     MpObj sys_path = list_new(2);
     init_argv(sys_mod);
     init_version(sys_mod);
     
     obj_set_by_cstr(sys_mod, "path", sys_path);
     obj_set_by_cstr(sys_mod, "executable", string_new(tm->argv[0]));
-    reg_mod_func(sys_mod, "exit", sys_exit);
-
-    // register to modules
-    reg_mod("sys", sys_mod);
+    mod_reg_func(sys_mod, "exit", sys_exit);
 }
 

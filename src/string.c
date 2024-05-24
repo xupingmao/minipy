@@ -525,17 +525,17 @@ MpObj string_builtin_rstrip() {
 
 void string_methods_init() {
     tm->str_proto = dict_new();
-    reg_mod_func(tm->str_proto, "replace",    string_builtin_replace);
-    reg_mod_func(tm->str_proto, "find",       string_builtin_find);
-    reg_mod_func(tm->str_proto, "rfind",      string_builtin_rfind);
-    reg_mod_func(tm->str_proto, "substring",  string_builtin_substring);
-    reg_mod_func(tm->str_proto, "upper",      string_builtin_upper);
-    reg_mod_func(tm->str_proto, "lower",      string_builtin_lower);
-    reg_mod_func(tm->str_proto, "split",      string_builtin_split);
-    reg_mod_func(tm->str_proto, "startswith", string_builtin_startswith);
-    reg_mod_func(tm->str_proto, "endswith",   string_builtin_endswith);
-    reg_mod_func(tm->str_proto, "format",     string_builtin_format);
-    reg_mod_func(tm->str_proto, "rstrip",     string_builtin_rstrip);
+    mod_reg_func(tm->str_proto, "replace",    string_builtin_replace);
+    mod_reg_func(tm->str_proto, "find",       string_builtin_find);
+    mod_reg_func(tm->str_proto, "rfind",      string_builtin_rfind);
+    mod_reg_func(tm->str_proto, "substring",  string_builtin_substring);
+    mod_reg_func(tm->str_proto, "upper",      string_builtin_upper);
+    mod_reg_func(tm->str_proto, "lower",      string_builtin_lower);
+    mod_reg_func(tm->str_proto, "split",      string_builtin_split);
+    mod_reg_func(tm->str_proto, "startswith", string_builtin_startswith);
+    mod_reg_func(tm->str_proto, "endswith",   string_builtin_endswith);
+    mod_reg_func(tm->str_proto, "format",     string_builtin_format);
+    mod_reg_func(tm->str_proto, "rstrip",     string_builtin_rstrip);
 }
 
 MpObj* string_next(MpData* iterator) {

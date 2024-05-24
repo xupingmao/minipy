@@ -82,22 +82,20 @@ static MpObj math_pow() {
  * @since 2016-08-27
  */
 void mp_math_init() {
-    MpObj math = dict_new();
+    MpObj math = mp_new_native_module("math");
 
     obj_set_by_cstr(math, "PI", number_obj(3.141592653589793));
-    reg_mod_func(math, "abs", math_abs);
-    reg_mod_func(math, "acos", math_acos);
-    reg_mod_func(math, "asin", math_asin);
-    reg_mod_func(math, "atan", math_atan);
-    reg_mod_func(math, "atan2", math_atan2);
+    mod_reg_func(math, "abs", math_abs);
+    mod_reg_func(math, "acos", math_acos);
+    mod_reg_func(math, "asin", math_asin);
+    mod_reg_func(math, "atan", math_atan);
+    mod_reg_func(math, "atan2", math_atan2);
     
-    reg_mod_func(math, "ceil", math_ceil);
-    reg_mod_func(math, "cos", math_cos);
-    reg_mod_func(math, "cosh", math_cosh);
+    mod_reg_func(math, "ceil", math_ceil);
+    mod_reg_func(math, "cos", math_cos);
+    mod_reg_func(math, "cosh", math_cosh);
     
-    reg_mod_func(math, "sin", math_sin);
-    reg_mod_func(math, "tan", math_tan);
-    reg_mod_func(math, "pow", math_pow);
-
-    obj_set_by_cstr(tm->modules, "math", math);
+    mod_reg_func(math, "sin", math_sin);
+    mod_reg_func(math, "tan", math_tan);
+    mod_reg_func(math, "pow", math_pow);
 }

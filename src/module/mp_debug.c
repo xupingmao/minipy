@@ -143,22 +143,24 @@ static MpObj bf_print_dict_info() {
     return NONE_OBJECT;
 }
 
+static MpObj bf_get_ex_list() {
+    return tm->ex_list;
+}
+
 
 /**
  * init debug module
  * @since 2016-11-16
  */
-void mp_debug_init() {
-    MpObj debug = dict_new();
-    
-    reg_mod("debug", debug);
-    reg_mod_func(debug, "get_ex_list", bf_get_ex_list);
-    reg_mod_func(debug, "set_vm_state", bf_set_vm_state);
-    reg_mod_func(debug, "inspect_ptr", bf_inspect_ptr);
-    reg_mod_func(debug, "get_current_frame", bf_get_current_frame);
-    reg_mod_func(debug, "get_vm_info", bf_get_vm_info);
-    reg_mod_func(debug, "get_mp_local_list", bf_get_mp_local_list);
-    reg_mod_func(debug, "vmopt", bf_vmopt);
-    reg_mod_func(debug, "print_dict_info", bf_print_dict_info);
+void mp_debug_init() {    
+    MpObj debug = mp_new_native_module("debug");
+    mod_reg_func(debug, "get_ex_list", bf_get_ex_list);
+    mod_reg_func(debug, "set_vm_state", bf_set_vm_state);
+    mod_reg_func(debug, "inspect_ptr", bf_inspect_ptr);
+    mod_reg_func(debug, "get_current_frame", bf_get_current_frame);
+    mod_reg_func(debug, "get_vm_info", bf_get_vm_info);
+    mod_reg_func(debug, "get_mp_local_list", bf_get_mp_local_list);
+    mod_reg_func(debug, "vmopt", bf_vmopt);
+    mod_reg_func(debug, "print_dict_info", bf_print_dict_info);
 }
 

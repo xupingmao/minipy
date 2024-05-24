@@ -1,8 +1,8 @@
 /*
  * @Author: xupingmao 578749341@qq.com
  * @Date: 2024-04-14 12:29:46
- * @LastEditors: xupingmao 578749341@qq.com
- * @LastEditTime: 2024-04-14 12:38:12
+ * @LastEditors: xupingmao
+ * @LastEditTime: 2024-05-25 07:44:03
  * @FilePath: /minipy/src/module/time.c
  * @Description: 这是默认设置,请设置`customMade`, 打开koroFileHeader查看配置 进行设置: https://github.com/OBKoro1/koro1FileHeader/wiki/%E9%85%8D%E7%BD%AE
  */
@@ -63,12 +63,10 @@ static MpObj bf_time_asctime() {
 }
 
 void mp_time_init() {
-    MpObj time_mod = dict_new();
-    reg_mod_func(time_mod, "time",  bf_time_time);
-    reg_mod_func(time_mod, "clock", bf_time_clock);
-    reg_mod_func(time_mod, "ctime", bf_time_ctime);
-    reg_mod_func(time_mod, "sleep", bf_time_sleep);
-    reg_mod_func(time_mod, "asctime", bf_time_asctime);
-    
-    reg_mod("time", time_mod);
+    MpObj time_mod = mp_new_native_module("time");
+    mod_reg_func(time_mod, "time",  bf_time_time);
+    mod_reg_func(time_mod, "clock", bf_time_clock);
+    mod_reg_func(time_mod, "ctime", bf_time_ctime);
+    mod_reg_func(time_mod, "sleep", bf_time_sleep);
+    mod_reg_func(time_mod, "asctime", bf_time_asctime);
 }

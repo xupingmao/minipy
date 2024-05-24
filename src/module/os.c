@@ -164,18 +164,17 @@ static MpObj os_system() {
  * @brief OS模块
  */
 void mp_os_init() {
-    MpObj os_mod = dict_new();
-    reg_mod("os", os_mod);
+    MpObj os_mod = mp_new_native_module("os");
 
-    reg_mod_func(os_mod, "getcwd",  os_getcwd);
-    reg_mod_func(os_mod, "listdir", os_listdir);
-    reg_mod_func(os_mod, "chdir",   os_chdir);
-    reg_mod_func(os_mod, "stat",    os_stat);
-    reg_mod_func(os_mod, "exists",  os_exists);
-    reg_mod_func(os_mod, "system",  os_system);
+    mod_reg_func(os_mod, "getcwd",  os_getcwd);
+    mod_reg_func(os_mod, "listdir", os_listdir);
+    mod_reg_func(os_mod, "chdir",   os_chdir);
+    mod_reg_func(os_mod, "stat",    os_stat);
+    mod_reg_func(os_mod, "exists",  os_exists);
+    mod_reg_func(os_mod, "system",  os_system);
 
     // 注册os模块的属性
-    reg_mod_attr(os_mod, "name", os_get_name());
+    mod_reg_attr(os_mod, "name", os_get_name());
     
     reg_builtin_func("exists", os_exists);
 }

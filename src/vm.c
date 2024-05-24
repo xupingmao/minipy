@@ -3,7 +3,7 @@
  * @email: 578749341@qq.com
  * @Date: 2023-12-07 22:03:29
  * @LastEditors: xupingmao
- * @LastEditTime: 2024-05-25 01:40:30
+ * @LastEditTime: 2024-05-25 07:45:31
  * @FilePath: /minipy/src/vm.c
  * @Description: 描述
  */
@@ -53,16 +53,20 @@
 /**
  * register module
  */
-void reg_mod(char* name, MpObj mod) {
-    mp_assert_type(mod, TYPE_DICT, "reg_module");
-    obj_set(tm->modules, string_new(name), mod);
+MpObj mp_new_native_module(char* name) {
+    MpObj module = dict_new();
+    MpObj module_name = string_new(name);
+
+    obj_set(module, string_from_cstr("__name__"), module_name);
+    obj_set(tm->modules, module_name, module);
+    return module;
 }
 
 /**
  * register module function
  * @param mod, module object, dict
  */
-void reg_mod_func(MpObj mod, char* name, MpObj (*native)()) {
+void mod_reg_func(MpObj mod, char* name, MpObj (*native)()) {
     assert(MP_TYPE(mod) == TYPE_DICT);
     MpObj func = func_new(tm->builtins_mod, NONE_OBJECT, native);
     GET_FUNCTION(func)->name = string_from_cstr(name);
@@ -70,7 +74,7 @@ void reg_mod_func(MpObj mod, char* name, MpObj (*native)()) {
 }
 
 // 注册模块的变量
-void reg_mod_attr(MpObj module, char* name, MpObj value) {
+void mod_reg_attr(MpObj module, char* name, MpObj value) {
     // assert(MP_TYPE(module) == TYPE_MODULE);
     obj_set(module, string_from_cstr(name), value);
 }
@@ -79,7 +83,7 @@ void reg_mod_attr(MpObj module, char* name, MpObj value) {
  * register built-in function
  */
 void reg_builtin_func(char* name, MpObj (*native)()) {
-    reg_mod_func(tm->builtins, name, native);
+    mod_reg_func(tm->builtins, name, native);
 }
 
 void reg_method_by_cstr(MpObj class_obj, char* name, MpObj (*native)()) {
@@ -183,10 +187,7 @@ int vm_init(int argc, char* argv[]) {
     tm->vm_size = sizeof(MpVm);
 
     /* set module boot */
-    MpObj boot = dict_new();
-    obj_set(boot, string_from_cstr("__name__"), string_from_cstr("boot"));
-
-    reg_mod("boot", boot);
+    MpObj boot = mp_new_native_module("boot");
 
     /* builtins constants */
     obj_set_by_cstr(tm->builtins, "tm",    number_obj(1));

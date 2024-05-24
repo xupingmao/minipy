@@ -283,15 +283,15 @@ MpObj list_builtin_extend() {
 
 void list_methods_init() {
     tm->list_proto = dict_new();
-    reg_mod_func(tm->list_proto, "append", list_builtin_append);
-    reg_mod_func(tm->list_proto, "pop", list_builtin_pop);
-    reg_mod_func(tm->list_proto, "insert", list_builtin_insert);
-    reg_mod_func(tm->list_proto, "index", list_builtin_index);
-    reg_mod_func(tm->list_proto, "reverse", list_builtin_reverse);
-    reg_mod_func(tm->list_proto, "remove", list_builtin_remove);
-    reg_mod_func(tm->list_proto, "copy", list_builtin_copy);
-    reg_mod_func(tm->list_proto, "clear", list_builtin_clear);
-    reg_mod_func(tm->list_proto, "extend", list_builtin_extend);
+    mod_reg_func(tm->list_proto, "append", list_builtin_append);
+    mod_reg_func(tm->list_proto, "pop", list_builtin_pop);
+    mod_reg_func(tm->list_proto, "insert", list_builtin_insert);
+    mod_reg_func(tm->list_proto, "index", list_builtin_index);
+    mod_reg_func(tm->list_proto, "reverse", list_builtin_reverse);
+    mod_reg_func(tm->list_proto, "remove", list_builtin_remove);
+    mod_reg_func(tm->list_proto, "copy", list_builtin_copy);
+    mod_reg_func(tm->list_proto, "clear", list_builtin_clear);
+    mod_reg_func(tm->list_proto, "extend", list_builtin_extend);
 }
 
 MpObj list_iter_new(MpObj list) {

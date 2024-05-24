@@ -746,11 +746,6 @@ MpObj bf_next() {
     }
 }
 
-MpObj bf_get_ex_list() {
-    return tm->ex_list;
-}
-
-
 MpObj bf_get_os_name() {
     const char* sz_func = "getosname";
 #ifdef _WINDOWS_H

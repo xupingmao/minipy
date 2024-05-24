@@ -21,12 +21,11 @@ void mp_random_init() {
 	// 初始化随机种子
 	srand((unsigned int)t);
 	
+    MpObj module = mp_new_native_module("random");
 
-    MpObj module = dict_new();
-    reg_mod("random", module);
-
-    reg_mod_func(module, "randint",  random_randint);
-
-    reg_mod_attr(module, "RAND_MAX", number_obj(RAND_MAX));
+	// functions
+    mod_reg_func(module, "randint",  random_randint);
+	// attributes
+    mod_reg_attr(module, "RAND_MAX", number_obj(RAND_MAX));
 }
 
