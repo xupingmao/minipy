@@ -57,8 +57,8 @@ void reg_builtin_func(char* name, MpObj (*native)()) {
     MpModule_RegFunc(tm->builtins, name, native);
 }
 
-void reg_method_by_cstr(MpObj class_obj, char* name, MpObj (*native)()) {
-    mp_assert_type(class_obj, TYPE_CLASS, "reg_method_by_cstr");
+void mp_reg_method(MpObj class_obj, char* name, MpObj (*native)()) {
+    mp_assert_type(class_obj, TYPE_CLASS, "mp_reg_method");
     MpClass* clazz = GET_CLASS(class_obj);
     MpObj attr_dict = clazz->attr_dict;
     MpObj func = func_new(tm->builtins_mod, NONE_OBJECT, native);

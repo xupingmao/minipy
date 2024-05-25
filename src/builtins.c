@@ -474,7 +474,7 @@ MpObj bf_list() {
 
 MpObj bf_bool() {
     MpObj a = mp_take_obj_arg("bool");
-    if (is_true_obj(a)) {
+    if (mp_is_true(a)) {
         return tm->_TRUE;
     } else {
         return tm->_FALSE;

@@ -31,7 +31,7 @@ MpObj obj_GE(MpObj left, MpObj right) {
 }
 
 MpObj obj_EQEQ(MpObj left, MpObj right) {
-    return number_obj(is_obj_equals(left, right));
+    return number_obj(mp_is_equals(left, right));
 }
 
 MpObj obj_LTEQ(MpObj left, MpObj right) {
@@ -43,11 +43,11 @@ MpObj obj_GTEQ(MpObj left, MpObj right) {
 }
 
 MpObj obj_not_eq(MpObj left, MpObj right) {
-    return number_obj(!is_obj_equals(left, right)); 
+    return number_obj(!mp_is_equals(left, right)); 
 }
 
 MpObj obj_and(MpObj left, MpObj right) {
-    return number_obj(is_true_obj(left) && is_true_obj(right));
+    return number_obj(mp_is_true(left) && mp_is_true(right));
 }
 
 void gc_local_add(MpObj object) {

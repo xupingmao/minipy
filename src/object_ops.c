@@ -254,7 +254,7 @@ MpObj obj_add(MpObj a, MpObj b) {
     return NONE_OBJECT;
 }
 
-int is_obj_equals(MpObj a, MpObj b){
+int mp_is_equals(MpObj a, MpObj b){
     if(MP_TYPE(a) != MP_TYPE(b)) {
         return FALSE;
     }
@@ -277,7 +277,7 @@ int is_obj_equals(MpObj a, MpObj b){
             MpObj* nodes1 = GET_LIST(a)->nodes;
             MpObj* nodes2 = GET_LIST(b)->nodes;
             for(i = 0; i < len; i++){
-                if(!is_obj_equals(nodes1[i], nodes2[i]) ){
+                if(!mp_is_equals(nodes1[i], nodes2[i]) ){
                     return 0;
                 }
             }
@@ -290,7 +290,7 @@ int is_obj_equals(MpObj a, MpObj b){
         default: {
             const char* ltype = get_type_cstr(a.type);
             const char* rtype = get_type_cstr(b.type);
-            mp_raise("is_obj_equals: not supported type %d:%s and %d:%s", 
+            mp_raise("mp_is_equals: not supported type %d:%s and %d:%s", 
                 MP_TYPE(a), ltype, MP_TYPE(b), rtype);
         } 
     }
@@ -539,7 +539,7 @@ MpObj obj_is_in(MpObj left, MpObj right) {
     return number_obj(mp_is_in(left, right));
 }
 
-int is_true_obj(MpObj v) {
+int mp_is_true(MpObj v) {
     switch (MP_TYPE(v)) {
         case TYPE_NUM:
             return GET_NUM(v) != 0;
@@ -569,7 +569,7 @@ MpObj obj_neg(MpObj o) {
 }
 
 MpObj obj_or(MpObj a, MpObj b) {
-    return number_obj(is_true_obj(a) || is_true_obj(b));
+    return number_obj(mp_is_true(a) || mp_is_true(b));
 }
 
 MpObj iter_new(MpObj collections) {
@@ -670,7 +670,7 @@ MpObj obj_str(MpObj a) {
         for (i = 0; i < l; i++) {
             MpObj obj = GET_LIST(a)->nodes[i];
             /* reference to self in list */
-            if (is_obj_equals(a, obj)) {
+            if (mp_is_equals(a, obj)) {
                 string_append_cstr(str, "[...]");
             } else if (obj.type == TYPE_STR) {
                 string_append_char(str, '"');

@@ -352,7 +352,7 @@ static DictNode* dict_get_node_with_hash(MpDict* dict, MpObj key, int hash){
             continue;
         }
 
-        if (is_obj_equals(node->key, key)) {
+        if (mp_is_equals(node->key, key)) {
             // mp_printf("dict_get_node: found node, key=%o, index=%d\n", key, index);
             return nodes + index;
         }

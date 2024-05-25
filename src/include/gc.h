@@ -26,8 +26,6 @@ void        gc_unmark(MpObj);
 void        gc_mark_single(MpObj);
 const char* gc_mark_list(MpList*);
 void        gc_mark_dict(MpDict*);
-void        gc_restore_local_obj_list(int size);
-void        gc_native_call_sweep();
 void        gc_check_native_call(int size, MpObj ret);
 void gc_mark_and_check(MpObj, const char*);
 size_t mp_sizeof(MpObj);

@@ -335,7 +335,7 @@ retry_op:
             if (IS_DICT(*obj)) {
                 int index = get_cache_int(cache);
                 DictNode* node = dict_get_node_by_index(GET_DICT(*obj), index);
-                if (node != NULL && is_obj_equals(node->key, *key)) {
+                if (node != NULL && mp_is_equals(node->key, *key)) {
                     *top = node->val;
                     PROFILE_END(cache);
                     break;
@@ -360,14 +360,14 @@ retry_op:
         
         case OP_EQEQ: {
             PROFILE_START(cache);
-            *(top-1) = number_obj(is_obj_equals(*(top-1), *top)); 
+            *(top-1) = number_obj(mp_is_equals(*(top-1), *top)); 
             top--; 
             PROFILE_END(cache);
             break; 
         }
         
         case OP_NOTEQ: { 
-            *(top-1) = number_obj(!is_obj_equals(*(top-1), *top)); 
+            *(top-1) = number_obj(!mp_is_equals(*(top-1), *top)); 
             top--; 
             break; 
         }
@@ -398,17 +398,17 @@ retry_op:
             break;
         }
         case OP_AND: {
-            *(top-1) = number_obj(is_true_obj(*(top-1)) && is_true_obj(*top));
+            *(top-1) = number_obj(mp_is_true(*(top-1)) && mp_is_true(*top));
             top--;
             break;
         }
         case OP_OR: {
-            *(top-1) = number_obj(is_true_obj(*(top-1)) || is_true_obj(*top));
+            *(top-1) = number_obj(mp_is_true(*(top-1)) || mp_is_true(*top));
             top--;
             break;
         }
         case OP_NOT:{
-            *top = number_obj(!is_true_obj(*top));
+            *top = number_obj(!mp_is_true(*top));
             break;
         }
 
@@ -443,7 +443,7 @@ retry_op:
             if (IS_DICT(*obj)) {
                 int index = get_cache_int(cache);
                 DictNode* node = dict_get_node_by_index(GET_DICT(*obj), index);
-                if (node != NULL && is_obj_equals(node->key, *key)) {
+                if (node != NULL && mp_is_equals(node->key, *key)) {
                     // printf("OP_SET_FAST: cache hit, index(%d)\n", cache->index);
                     node->val = *value; 
                     PROFILE_END(cache);
@@ -654,7 +654,7 @@ retry_op:
         }
 
         case OP_POP_JUMP_ON_FALSE: {
-            if (!is_true_obj(MP_POP())) {
+            if (!mp_is_true(MP_POP())) {
                 // pc += i * 3;
                 cache += get_cache_int(cache);
                 continue;
@@ -664,7 +664,7 @@ retry_op:
 
         case OP_JUMP_ON_TRUE: {
             PROFILE_START(cache);
-            if (is_true_obj(MP_TOP())) {
+            if (mp_is_true(MP_TOP())) {
                 PROFILE_END(cache);
                 cache += get_cache_int(cache);
                 continue;
@@ -676,7 +676,7 @@ retry_op:
 
         case OP_JUMP_ON_FALSE: {
             PROFILE_START(cache);
-            if (!is_true_obj(MP_TOP())) {
+            if (!mp_is_true(MP_TOP())) {
                 PROFILE_END(cache);
                 cache += get_cache_int(cache);
                 continue;

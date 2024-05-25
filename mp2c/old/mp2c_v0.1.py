@@ -19,7 +19,7 @@ mp_call_native_0     = "mp_call_native_0"
 mp_call_native_1     = "mp_call_native_1"
 mp_call_native_2     = "mp_call_native_2"
 mp_insert_arg           = "mp_insert_arg"
-func_bool            = "is_true_obj"
+func_bool            = "mp_is_true"
 func_add             = "obj_add"
 func_sub             = "obj_sub"
 func_mul             = "obj_mul"
@@ -763,17 +763,17 @@ def do_ge(item, env):
     return do_op(item, env, func_GE)
 
 def do_ne(item, env):
-    return "(" + do_op(item, env, "!is_obj_equals", "!=") + ")"
+    return "(" + do_op(item, env, "!mp_is_equals", "!=") + ")"
     
 def do_eq(item, env):
-    return do_op(item, env, "is_obj_equals", "==")
+    return do_op(item, env, "mp_is_equals", "==")
     
 def do_not(item, env):
     value = do_item(item.first, env)
     if value is None:
         raise Exception("do_not: value is None")
-    if not value.startswith("is_true_obj"):
-        return "!is_true_obj(" + value + ")"
+    if not value.startswith("mp_is_true"):
+        return "!mp_is_true(" + value + ")"
     return sformat("!(%s)", value)
 
 def do_notin(item, env):

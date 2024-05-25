@@ -147,7 +147,7 @@ int list_index(MpList* list, MpObj v) {
     int len = list->len;
     MpObj* nodes = list->nodes;
     for (i = 0; i < len; i++) {
-        if (is_obj_equals(nodes[i], v)) {
+        if (mp_is_equals(nodes[i], v)) {
             return i;
         }
     }
@@ -245,7 +245,7 @@ static MpObj list_builtin_remove() {
     int i = 0;
     for (i = 0; i < list->len; i++) {
         MpObj item = list->nodes[i];
-        if (is_obj_equals(item, obj)) {
+        if (mp_is_equals(item, obj)) {
             _list_del(list, i);
             return item;
         }

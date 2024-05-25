@@ -180,28 +180,24 @@ MpObj obj_get_globals(MpObj obj);
 MpObj* obj_next(MpObj iterator);
 int mp_cmp(MpObj a, MpObj b);
 int mp_is_in(MpObj key, MpObj collection);
-int is_obj_equals(MpObj a, MpObj b);
+int mp_is_equals(MpObj a, MpObj b);
 int mp_len(MpObj obj);
-int is_true_obj(MpObj v);
-int mp_iter(MpObj self, MpObj* k);
+int mp_is_true(MpObj v);
 MpObj mp_get_global_by_cstr(MpObj globals, char* key);
 MpObj mp_call_builtin(BuiltinFunc func, int n, ...);
 MpObj mp_get_constant(int index);  // 读取常量
 
 // vm functions
-MpObj call_module_function(char* mod, char* fnc);
-void reg_builtin(char* name, MpObj value);
 void reg_builtin_func(char* name, MpObj (*native_func)());
 MpObj mp_new_native_module(char* name);
 void MpModule_RegFunc(MpObj mod, char* name, MpObj (*native_func)());
 void MpModule_RegAttr(MpObj mod, char* attr, MpObj value);
-void reg_method_by_cstr(MpObj clazz, char* name, MpObj (*native_func)());
+void mp_reg_method(MpObj clazz, char* name, MpObj (*native_func)());
 int obj_eq_cstr(MpObj str, const char* value);
 void mp_raise(char* fmt, ...);
 void vm_destroy();
 
 #define GET_CONST(i) tm->constants->nodes[i].key
-MpObj call_unsafe(MpObj fnc);
 
 #ifdef MP_DEBUG
 MpObj mp_call_func(MpObj, const char*, int);

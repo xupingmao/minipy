@@ -58,7 +58,7 @@ MpObj bf_open() {
 }
 
 static int is_file_open(MpData* data) {
-    return is_true_obj(data->data_ptr[2]);
+    return mp_is_true(data->data_ptr[2]);
 }
 
 static void set_file_open(MpData* data, MpObj flag) {

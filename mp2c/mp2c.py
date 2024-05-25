@@ -459,15 +459,15 @@ def convert(code, writer):
             # writer.writeline("  printf(\"%%d: %%s\n\", %d, %s);" % (val, line))
             # writer.writeline("L%s:" % val)
         elif op == OP_POP_JUMP_ON_FALSE:
-            writer.writeline("  if(!is_true_obj(MP2C_POP())) {")
+            writer.writeline("  if(!mp_is_true(MP2C_POP())) {")
             writer.goto_label(op_index + val, 4)
             writer.writeline("  }")
         elif op == OP_JUMP_ON_TRUE:
-            writer.writeline("  if (is_true_obj(MP2C_TOP())) {");
+            writer.writeline("  if (mp_is_true(MP2C_TOP())) {");
             writer.goto_label(op_index + val, 4)
             writer.writeline("  }");
         elif op == OP_JUMP_ON_FALSE:
-            writer.writeline("  if (!is_true_obj(MP2C_TOP())) {");
+            writer.writeline("  if (!mp_is_true(MP2C_TOP())) {");
             writer.goto_label(op_index + val, 4)
             writer.writeline("  }");
         elif op == OP_RETURN:
@@ -478,7 +478,7 @@ def convert(code, writer):
         elif op == OP_SET:
             writer.emit_op_set()
         elif op == OP_NOT:
-            writer.writeline("*top = number_obj(!is_true_obj(*top));")
+            writer.writeline("*top = number_obj(!mp_is_true(*top));")
         elif op == OP_DEF_END:
             writer.emit_op_func_end()
         elif op == OP_STORE_GLOBAL:
