@@ -265,7 +265,7 @@ int dict_set0(MpDict* dict, MpObj key, MpObj val){
 
     int start = dict_find_start(dict, hash);
     int is_slot_set = FALSE;
-    for (int i = start; i < start + dict->cap; i++) {
+    for (int i = start; i < dict->slot_cap; i++) {
         if (dict->slots[i] < 0) {
             dict->slots[i] = pos;
             is_slot_set = TRUE;
@@ -275,7 +275,7 @@ int dict_set0(MpDict* dict, MpObj key, MpObj val){
 
     if (is_slot_set == FALSE) {
         dict_print_debug_info(dict);
-        mp_raise("dict_set0: can not found valid slot!");
+        mp_raise("dict_set0: can not found valid slot! start:%d, cap:%d", start, dict->cap);
     }
 
     // 更新空闲索引下标
@@ -561,4 +561,12 @@ int mp_hasattr(MpObj obj, const char* key) {
         return 0;
     }
     return 1;
+}
+
+size_t dict_sizeof(MpDict* dict) {
+    size_t result = 0;
+    result += sizeof(MpDict);
+    result += sizeof(int) * dict->slot_cap;
+    result += sizeof(DictNode) * dict->cap;
+    return result;
 }

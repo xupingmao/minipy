@@ -68,6 +68,7 @@ static MpObj bf_get_memory_info() {
 
     obj_set_by_cstr(mp_info, "cache_size", number_obj(cache_size));
     obj_set_by_cstr(mp_info, "gc_all_size", number_obj(list_sizeof(tm->all)));
+    obj_set_by_cstr(mp_info, "constants_size", number_obj(dict_sizeof(tm->constants)));
     return mp_info;
 }
 

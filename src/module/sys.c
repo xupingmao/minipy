@@ -22,6 +22,11 @@ static void init_version(MpObj sys_mod) {
     obj_set_by_cstr(sys_mod, "version", string_new("minipy"));
 }
 
+static MpObj sys_getsizeof() {
+    MpObj obj = arg_take_obj("sys.getsizeof");
+    return number_obj(obj_sizeof(obj));
+}
+
 void mp_sys_init() {
     MpObj sys_mod  = mp_new_native_module("sys");
     MpObj sys_path = list_new(2);
@@ -31,5 +36,6 @@ void mp_sys_init() {
     obj_set_by_cstr(sys_mod, "path", sys_path);
     obj_set_by_cstr(sys_mod, "executable", string_new(tm->argv[0]));
     mod_reg_func(sys_mod, "exit", sys_exit);
+    mod_reg_func(sys_mod, "getsizeof", sys_getsizeof);
 }
 

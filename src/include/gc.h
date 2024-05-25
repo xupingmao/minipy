@@ -1,8 +1,8 @@
 /*
  * @Author: xupingmao 578749341@qq.com
  * @Date: 2024-04-14 12:29:46
- * @LastEditors: xupingmao 578749341@qq.com
- * @LastEditTime: 2024-04-14 14:24:46
+ * @LastEditors: xupingmao
+ * @LastEditTime: 2024-05-25 09:51:47
  * @FilePath: /minipy/src/include/gc.h
  * @Description: 这是默认设置,请设置`customMade`, 打开koroFileHeader查看配置 进行设置: https://github.com/OBKoro1/koro1FileHeader/wiki/%E9%85%8D%E7%BD%AE
  */
@@ -33,5 +33,6 @@ void        gc_restore_local_obj_list(int size);
 void        gc_native_call_sweep();
 void        gc_check_native_call(int size, MpObj ret);
 void gc_mark_and_check(MpObj, const char*);
+size_t obj_sizeof(MpObj);
 
 #endif

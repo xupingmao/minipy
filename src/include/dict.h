@@ -46,5 +46,6 @@ void             dict_methods_init();
 /** dict methods **/
 MpObj            dict_iter_new(MpObj dict);
 MpObj*           dict_next(MpData* iterator);
+size_t dict_sizeof(MpDict* dict);
 
 #endif
