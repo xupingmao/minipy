@@ -201,11 +201,11 @@ void dict_free(MpDict* dict){
 
 
 void dict_free_internal(MpDict* dict){
-    PRINT_OBJ_GC_INFO_START();
+    PRINT_MP_GC_INFO_START();
     dict_free_block(dict, dict->nodes, (dict->cap) * sizeof(DictNode));
     dict_free_block(dict, dict->slots, (dict->slot_cap) * sizeof(int));
     dict_free_block(dict, dict, sizeof(MpDict));
-    PRINT_OBJ_GC_INFO_END("dict", dict);
+    PRINT_MP_GC_INFO_END("dict", dict);
 }
 
 /**

@@ -3,7 +3,7 @@
  * @email: 578749341@qq.com
  * @Date: 2023-12-07 22:03:29
  * @LastEditors: xupingmao
- * @LastEditTime: 2024-05-25 08:56:03
+ * @LastEditTime: 2024-05-25 15:15:36
  * @FilePath: /minipy/src/include/mp.h
  * @Description: 描述
  */
@@ -73,7 +73,7 @@
 
 #include "object.h"
 
-#define OBJ_SIZE sizeof(MpObj)
+#define MP_OBJ_SIZE sizeof(MpObj)
 
 MpObj NONE_OBJECT;
 MpObj ARRAY_CHARS;
@@ -216,9 +216,9 @@ void   vm_destroy();
 MpObj    call_unsafe(MpObj fnc);
 
 #ifdef MP_DEBUG
-MpObj    obj_call(MpObj, const char*, int);
+MpObj    mp_call_func(MpObj, const char*, int);
 #else
-MpObj    obj_call(MpObj);
+MpObj    mp_call_func(MpObj);
 #endif
 
 MpObj    obj_call_nargs(MpObj func, int n, MpObj* args);

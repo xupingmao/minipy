@@ -1,8 +1,11 @@
-/**
- * description here
- * @author xupingmao
- * @since 2016
- * @modified 2022/06/10 20:31:12
+/*
+ * @Author: xupingmao
+ * @email: 578749341@qq.com
+ * @Date: 2016
+ * @LastEditors: xupingmao
+ * @LastEditTime: 2024-05-25 16:43:53
+ * @FilePath: /minipy/src/function.c
+ * @Description: minipy函数
  */
 #include "include/mp.h"
 #include "include/code_cache.h"
@@ -163,7 +166,7 @@ MpObj class_instance(MpObj clazz){
     
     MpObj *_fnc = dict_get_by_cstr(GET_DICT(instance), "__init__");
     if (_fnc != NULL) {
-        OBJ_CALL_EX(*_fnc);
+        MP_CALL_EX(*_fnc);
     }
 
     return instance;
@@ -183,26 +186,6 @@ void class_format(char* dest, MpObj class_obj) {
 void func_free(MpFunction* func){
     // the references will be tracked by gc collecter
     mp_free(func, sizeof(MpFunction));
-}
-
-/**
- * @param file filename
- * @name  __name__
- */
-MpObj module_new(MpObj fname, MpObj name, MpObj code){
-  MpModule *mod = mp_malloc(sizeof(MpModule), "module.new");
-  mod->file = fname;
-  mod->code = code;
-  mod->resolved = 0;
-  mod->cache = NULL;
-  /*mod->constants = list_new(20);*/
-  /*list_append(GET_LIST(mod->constants), NONE_OBJECT);*/
-  mod->globals = dict_new();
-  MpObj m = gc_track(obj_new(TYPE_MODULE, mod));
-  /* set module */
-  obj_set(tm->modules, fname, mod->globals);
-  obj_set(mod->globals, string_static("__name__"), name);
-  return m;
 }
 
 /**
@@ -228,13 +211,6 @@ void mp_push_cache(MpModule* m, MpCodeCache cache) {
     // printf("cache: %3d - %s\n", cache.op, cache.sval);
     m->cache[m->cache_len] = cache;
     m->cache_len++;
-}
-
-void module_free(MpModule* mod){
-    if (mod->cache != NULL) {
-        mp_free(mod->cache, sizeof(MpCodeCache) * mod->cache_cap);
-    }
-    mp_free(mod, sizeof(MpModule));
 }
 
 
@@ -342,9 +318,9 @@ MpObj func_get_name_obj(MpObj func) {
 
 
 #ifdef MP_DEBUG
-MpObj obj_call(MpObj func, const char* source, int lineno)
+MpObj mp_call_func(MpObj func, const char* source, int lineno)
 #else
-MpObj obj_call(MpObj func)
+MpObj mp_call_func(MpObj func)
 #endif
 {
     MpObj ret = NONE_OBJECT;
@@ -400,10 +376,10 @@ MpObj obj_apply(MpObj func, MpObj args) {
     mp_assert_type2(func, TYPE_FUNCTION, TYPE_CLASS, "obj_apply");
     mp_assert_type(args, TYPE_LIST, "obj_apply");
     arg_set_arguments(LIST_NODES(args), LIST_LEN(args));
-    return OBJ_CALL_EX(func);
+    return MP_CALL_EX(func);
 }
 
 MpObj obj_call_nargs(MpObj func, int n, MpObj* args) {
     arg_set_arguments(args, n);
-    return OBJ_CALL_EX(func);
+    return MP_CALL_EX(func);
 }

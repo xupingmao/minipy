@@ -494,7 +494,7 @@ MpObj obj_mod(MpObj a, MpObj b) {
             arg_start();
             arg_push(a);
             arg_push(b);
-            return OBJ_CALL_EX(*__mod__);
+            return MP_CALL_EX(*__mod__);
         }        
     }
     mp_raise("obj_mod: can not module %o and %o", a, b);

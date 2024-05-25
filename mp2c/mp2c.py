@@ -46,6 +46,7 @@ class CodeWriter:
         self.py_func_name = None
         # 当前的Python类名
         self.py_class_name = None
+        self.debug = False
 
     def indent(self):
         pass
@@ -59,11 +60,11 @@ class CodeWriter:
     def write_debug_opcode(self, op, val):
         op_name = opcodes[op]
         self.writeline("  // %s %r" % (op_name, val))
-        return
-        self.writeline("  puts(\"%s %r\");" % (op_name, val));
+
 
     def write_debug_lineno(self, lineno):
-        return
+        if not self.debug:
+            return
         self.writeline("  tm->mp2c_lineno = %d;" % lineno)
 
     def goto_label(self, val, indent = 2):
@@ -568,7 +569,7 @@ class AotCompiler:
         return "build/%s.out" % name
 
     def compile(self, fpath, target = None):
-        code = load(fpath)    
+        code = load(fpath)
         name = self.get_base_name(fpath)
         writer = CodeWriter(code, name)
         convert(code, writer)

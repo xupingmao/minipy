@@ -17,7 +17,7 @@ MpList* list_new_untracked(int cap) {
         cap = 2;
     }
     list->cap = cap;
-    list->nodes = mp_malloc(OBJ_SIZE * list->cap, "list.new_nodes");
+    list->nodes = mp_malloc(MP_OBJ_SIZE * list->cap, "list.new_nodes");
     return list;
 }
 
@@ -36,10 +36,10 @@ MpObj list_to_obj(MpList* list) {
 }
 
 void list_free(MpList* list) {
-    PRINT_OBJ_GC_INFO_START();
-    mp_free(list->nodes, list->cap * OBJ_SIZE);
+    PRINT_MP_GC_INFO_START();
+    mp_free(list->nodes, list->cap * MP_OBJ_SIZE);
     mp_free(list, sizeof(MpList));
-    PRINT_OBJ_GC_INFO_END("list", list);
+    PRINT_MP_GC_INFO_END("list", list);
 }
 
 MpObj list_get(MpList* list, int n) {
@@ -82,11 +82,11 @@ static void _list_check_cap(MpList* list) {
             newsize = ocap / 2 + ocap + 1;
         }
         /*int newsize = list->cap * 3 / 2 + 1;*/
-        list->nodes = mp_realloc(list->nodes, OBJ_SIZE * ocap,
-                OBJ_SIZE * newsize, "list.check_cap");
+        list->nodes = mp_realloc(list->nodes, MP_OBJ_SIZE * ocap,
+                MP_OBJ_SIZE * newsize, "list.check_cap");
         list->cap = newsize;
 #if GC_DEBUG_LIST
-        printf("resize list: from %d to %d\n", OBJ_SIZE * ocap, OBJ_SIZE * list->cap);
+        printf("resize list: from %d to %d\n", MP_OBJ_SIZE * ocap, MP_OBJ_SIZE * list->cap);
 #endif
     }
 }
@@ -191,9 +191,9 @@ MpObj list_add(MpList* list1, MpList*list2) {
     MpObj newlist = list_new(newl);
     MpList* list = GET_LIST(newlist);
     list->len = newl;
-    int list1_nodes_size = list1->len * OBJ_SIZE;
+    int list1_nodes_size = list1->len * MP_OBJ_SIZE;
     memcpy(list->nodes, list1->nodes, list1_nodes_size);
-    memcpy(list->nodes + list1->len, list2->nodes, list2->len * OBJ_SIZE);
+    memcpy(list->nodes + list1->len, list2->nodes, list2->len * MP_OBJ_SIZE);
     return newlist;
 }
 
@@ -259,7 +259,7 @@ static MpObj list_builtin_copy() {
     MpObj _newlist = list_new(list->cap);
     MpList* newlist = GET_LIST(_newlist);
     newlist->len = list->len;
-    memcpy(newlist->nodes, list->nodes, list->len * OBJ_SIZE);
+    memcpy(newlist->nodes, list->nodes, list->len * MP_OBJ_SIZE);
     return _newlist;
 }
 

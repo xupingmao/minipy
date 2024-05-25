@@ -2,7 +2,7 @@
  * @Author: xupingmao 578749341@qq.com
  * @Date: 2024-04-14 12:29:46
  * @LastEditors: xupingmao
- * @LastEditTime: 2024-05-25 09:51:47
+ * @LastEditTime: 2024-05-25 16:50:12
  * @FilePath: /minipy/src/include/gc.h
  * @Description: 这是默认设置,请设置`customMade`, 打开koroFileHeader查看配置 进行设置: https://github.com/OBKoro1/koro1FileHeader/wiki/%E9%85%8D%E7%BD%AE
  */
@@ -23,7 +23,6 @@ void        gc_init();
 MpObj       gc_track(MpObj obj);
 void        gc_destroy();
 void        gc_full();
-void        gc_sweep_local(int start);
 void        gc_mark(MpObj);
 void        gc_unmark(MpObj);
 void        gc_mark_single(MpObj);

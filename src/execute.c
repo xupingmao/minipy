@@ -486,7 +486,7 @@ retry_op:
             PROFILE_END(cache);
 
             // 调用函数的时间不算到 OP_CALL的执行时间内
-            MP_PUSH(OBJ_CALL_EX(func));
+            MP_PUSH(MP_CALL_EX(func));
 
             // 恢复当前frame的值
             tm->frame = f;
@@ -540,7 +540,7 @@ retry_op:
                 }
                 goto tailcall;
             } else {
-                return OBJ_CALL_EX(func);
+                return MP_CALL_EX(func);
             }
             break;
         }
@@ -550,7 +550,7 @@ retry_op:
             mp_assert_type(args, TYPE_LIST, "mp_eval: OP_APPLY");
             arg_set_arguments(LIST_NODES(args), LIST_LEN(args));
             MpObj func = MP_POP();
-            x = OBJ_CALL_EX(func);
+            x = MP_CALL_EX(func);
             MP_PUSH(x);
             tm->frame = f;
             FRAME_CHECK_GC();

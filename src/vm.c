@@ -31,6 +31,7 @@
 #include "code_object.c"
 #include "constant_pool.c"
 #include "object.c"
+#include "module.c"
 
 #include "module/time.c"
 #include "module/sys.c"
@@ -109,7 +110,7 @@ MpObj load_file_module(MpObj file, MpObj code, MpObj name) {
     GET_FUNCTION(fnc)->name = string_new("#main");
     GET_FUNCTION(fnc)->cache = GET_MODULE(mod)->cache;
     GET_FUNCTION(fnc)->resolved = 1;
-    OBJ_CALL_EX(fnc);
+    MP_CALL_EX(fnc);
     return GET_MODULE(mod)->globals;
 }
 
@@ -129,7 +130,7 @@ MpObj load_boot_module(char* sz_filename, const char* sz_code) {
     GET_FUNCTION(fnc)->cache = GET_MODULE(mod)->cache;
     GET_FUNCTION(fnc)->resolved = 1;
     
-    OBJ_CALL_EX(fnc);
+    MP_CALL_EX(fnc);
     
     return GET_MODULE(mod)->globals;
 }
@@ -147,7 +148,7 @@ MpObj vm_call_mod_func(const char* mod, const char* sz_fnc) {
         mp_printf("vm_call_mod_func.module: %o\n", func_get_mod_obj(GET_FUNCTION(fnc)));
     #endif
     arg_start();
-    return OBJ_CALL_EX(fnc);
+    return MP_CALL_EX(fnc);
 }
 
 /**
