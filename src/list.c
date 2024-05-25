@@ -281,6 +281,14 @@ MpObj list_builtin_extend() {
     return self;
 }
 
+size_t list_sizeof(MpList* list) {
+    size_t size = 0;
+    size += sizeof(MpList);
+    size += sizeof(MpObj) * list->cap;
+    return size;
+}
+
+
 void list_methods_init() {
     tm->list_proto = dict_new();
     mod_reg_func(tm->list_proto, "append", list_builtin_append);

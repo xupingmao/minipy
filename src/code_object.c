@@ -7,6 +7,8 @@
  */
 
 #include "include/mp.h"
+#include "include/code_cache.h"
+#include "log.c"
 
 /**
  * @since 2016-11-24
@@ -22,8 +24,10 @@ void mp_resolve_code(MpModule* m, const char* code) {
     
     MpCodeCache cache;
     cache.op = 0;
-    cache.v.ival = 0;
-    cache.sval = NULL;
+    cache.a = 0;
+    cache.b = 0;
+
+    MpDict* const_dict = tm->constants;
 
     while (*s != 0) {
         /* must begin with opcode */
@@ -80,27 +84,37 @@ void mp_resolve_code(MpModule* m, const char* code) {
             
         cache.op = op;
         cache.vtype = 0;
-        cache.v.ival = 0;
-        cache.index = -1;
-        cache.sval = buf; // temp value, just for print
+        cache.a = 0;
+        cache.b = 0;
 
         switch(op) {
-            case OP_NUMBER:
-                cache.v.obj = number_obj(atof(buf)); 
+            case OP_NUMBER: {
+                int index = dict_set0(const_dict, number_obj(atof(buf)), tm->_TRUE);
                 cache.vtype = CACHE_VTYPE_OBJ;
+                if (index >= 0xffff) {
+                    mp_raise("mp_resolve_code: constant overflow");
+                }
+                set_cache_int(&cache, index);
+                assert (get_cache_int(&cache) == index);
                 break;
-            
+            }            
             /* string value */
             case OP_STRING: 
             case OP_LOAD_GLOBAL:
             case OP_STORE_GLOBAL:
             case OP_FILE: 
             case OP_DEF:
-            case OP_CLASS:
-                cache.v.obj = string_const_with_len(buf, len); 
+            case OP_CLASS: {
                 cache.vtype = CACHE_VTYPE_OBJ;
+                MpObj str_value = string_const_with_len(buf, len); 
+                int index = dict_set0(const_dict, str_value, NONE_OBJECT);
+                if (index >= 0xffff) {
+                    mp_raise("mp_resolve_code: constant overflow");
+                }
+                set_cache_int(&cache, index);
+                assert (get_cache_int(&cache) == index);
                 break;
-            
+            }
             /* int value */
             case OP_LOAD_LOCAL:
             case OP_STORE_LOCAL:
@@ -118,16 +132,26 @@ void mp_resolve_code(MpModule* m, const char* code) {
             case OP_LINE:
             case OP_IMPORT:
             case OP_NEXT:
-            case OP_SETJUMP:
-                cache.v.ival = atoi(buf); 
+            case OP_SETJUMP: {
                 cache.vtype = CACHE_VTYPE_INT;
+                int int_value = atoi(buf);
+                if (int_value >= 0xffff) {
+                    mp_raise("mp_resolve_code: int value overflow");
+                }
+                set_cache_int(&cache, int_value);
+                assert (get_cache_int(&cache) == int_value);
                 break;
+            }
             default:
                 cache.vtype = CACHE_VTYPE_DEFAULT;
-                cache.v.ival = 0; 
+                cache.a = 0;
+                cache.b = 0;
                 break;
         }
         mp_push_cache(m, cache);
+        #if MP_DEBUG_CACHE
+            log_debug("mp_push_cache:%s,%d", inst_get_name_by_code(cache.op), get_cache_int(&cache));
+        #endif
     }
     
     if (error) {
@@ -146,22 +170,19 @@ const char* CodeCache_ToString(MpCodeCache* cache) {
         }
         case CACHE_VTYPE_INT: {
             snprintf(buf, 1023, "%-20s o.ival:%d\n", 
-                inst_get_name_by_code(cache->op), cache->v.ival);
+                inst_get_name_by_code(cache->op), get_cache_int(cache));
             break;
         }
         case CACHE_VTYPE_OBJ: {
+            int index = get_cache_int(cache);
             snprintf(buf, 1023, "%-20s v.obj:%s\n", 
-                inst_get_name_by_code(cache->op), obj_to_cstr(cache->v.obj));
-            break;
-        }
-        case CACHE_VTYPE_STR: {
-            snprintf(buf, 1023, "%-20s v.sval:%s\n", 
-                inst_get_name_by_code(cache->op), cache->sval);
+                inst_get_name_by_code(cache->op), mp_get_constant(index));
             break;
         }
         default: {
+            int value = get_cache_int(cache);
             snprintf(buf, 1023, "%-20s v.ival:%d\n", 
-                inst_get_name_by_code(cache->op), cache->v.ival);
+                inst_get_name_by_code(cache->op), value);
         }
     }
 	return buf;

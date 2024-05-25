@@ -51,6 +51,26 @@ static MpObj bf_get_vm_info() {
     return mp_info;
 }
 
+static MpObj bf_get_memory_info() {
+    MpObj mp_info = dict_new();
+    size_t cache_size = 0;
+    MpList* all = tm->all;
+    int i = 0;
+
+    for (i = 0; i < all->len; i++) {
+        MpObj node = all->nodes[i];
+        if (node.type == TYPE_MODULE) {
+            if (GET_MODULE(node)->cache != NULL) {
+                cache_size += sizeof(MpCodeCache) * GET_MODULE(node)->cache_cap;
+            }
+        }
+    }
+
+    obj_set_by_cstr(mp_info, "cache_size", number_obj(cache_size));
+    obj_set_by_cstr(mp_info, "gc_all_size", number_obj(list_sizeof(tm->all)));
+    return mp_info;
+}
+
 
 static MpFrame* obj_getframe(int fidx) {
     if (fidx < 1 || fidx > FRAMES_COUNT) {
@@ -159,6 +179,7 @@ void mp_debug_init() {
     mod_reg_func(debug, "inspect_ptr", bf_inspect_ptr);
     mod_reg_func(debug, "get_current_frame", bf_get_current_frame);
     mod_reg_func(debug, "get_vm_info", bf_get_vm_info);
+    mod_reg_func(debug, "get_memory_info", bf_get_memory_info);
     mod_reg_func(debug, "get_mp_local_list", bf_get_mp_local_list);
     mod_reg_func(debug, "vmopt", bf_vmopt);
     mod_reg_func(debug, "print_dict_info", bf_print_dict_info);

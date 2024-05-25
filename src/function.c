@@ -5,6 +5,7 @@
  * @modified 2022/06/10 20:31:12
  */
 #include "include/mp.h"
+#include "include/code_cache.h"
 
 /**
  * check function's byte code
@@ -64,9 +65,9 @@ MpCodeCache* func_resolve_cache(MpFunction* fnc, MpCodeCache* cache) {
 
     while (1) {
         int op = cache->op;
-        int val = cache->v.ival;
+        int val = get_cache_int(cache);
         if (op == OP_LOAD_LOCAL || op == OP_STORE_LOCAL) {
-            maxlocals = max(cache->v.ival, maxlocals);
+            maxlocals = max(val, maxlocals);
         } else if (op == OP_DEF_END) {
             defs--;
             if (defs == 0) {

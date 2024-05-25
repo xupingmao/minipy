@@ -3,7 +3,7 @@
  * @email: 578749341@qq.com
  * @Date: 2023-12-07 22:03:29
  * @LastEditors: xupingmao
- * @LastEditTime: 2024-05-25 06:40:53
+ * @LastEditTime: 2024-05-25 08:56:03
  * @FilePath: /minipy/src/include/mp.h
  * @Description: 描述
  */
@@ -46,6 +46,11 @@
 /* #pragma pack(4) */
 
 #define DEBUG_GC 0
+
+#ifndef MP_DEBUG_CACHE
+    #define MP_DEBUG_CACHE 0
+#endif
+
 #define PRINT_INS 0
 #define PRINT_INS_CONST 0
 #define EVAL_DEBUG 1
@@ -115,6 +120,7 @@ void     list_append(MpList* list, MpObj v);
 void     list_shorten(MpList* list, int len); // shorten list.
 MpObj    list_from_array(int n, ...);
 MpObj    list_builtin_extend();
+size_t list_sizeof(MpList*);
 
 #include "dict.h"
 
@@ -191,6 +197,7 @@ int         is_true_obj(MpObj v);
 int         mp_iter(MpObj self, MpObj *k);
 MpObj       mp_get_global_by_cstr(MpObj globals, char* key);
 MpObj       mp_call_builtin(BuiltinFunc func, int n, ...);
+MpObj mp_get_constant(int index); // 读取常量
 
 // vm functions
 MpObj  call_module_function(char* mod, char* fnc);

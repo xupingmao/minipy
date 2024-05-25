@@ -36,6 +36,9 @@ minipyc: minipyc_bin
 debug-gc:
 	$(cc) -g -DLOG_LEVEL=5 -DMP_DEBUG -o minipy src/main.c -lm
 
+debug-cache:
+	$(cc) -g -DLOG_LEVEL=5 -DMP_DEBUG_CACHE=1 -o minipy src/main.c -lm
+
 debug:src/*.c src/include/*.h
 	bash ./script/build-debug.sh
 

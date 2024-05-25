@@ -1,4 +1,13 @@
 /*
+ * @Author: xupingmao
+ * @email: 578749341@qq.com
+ * @Date: 2024-04-14 19:14:16
+ * @LastEditors: xupingmao
+ * @LastEditTime: 2024-05-25 09:05:50
+ * @FilePath: /minipy/src/include/object.h
+ * @Description: 描述
+ */
+/*
  * object.h
  *
  *  Created on: 2014/8/25
@@ -66,20 +75,14 @@ struct MpRecycle {
 
 
 #define CACHE_VTYPE_DEFAULT 0
-#define CACHE_VTYPE_STR 1
 #define CACHE_VTYPE_INT 2
 #define CACHE_VTYPE_OBJ 3
 
 typedef struct _mp_code_cache {
-    char op;
+    unsigned char op;
     char vtype; /* value type: CACHE_VTYPE_XXX */
-    int index;
-    char* sval; /* string value */
-
-    union {
-        MpObj obj;
-        int ival;
-    } v;
+    unsigned char a;
+    unsigned char b;
 
     #if MP_PROFILE
       // 性能分析埋点

@@ -7,6 +7,7 @@
  **/
 
 #include "include/mp.h"
+#include "include/code_cache.h"
 #include "execute_profile.c"
 
 void frame_reset_memory(MpFrame*);
@@ -159,21 +160,22 @@ retry_op:
 
         case OP_NUMBER: {
             PROFILE_START(cache);
-            MP_PUSH(cache->v.obj);
+            MP_PUSH(get_cache_obj(cache));
             PROFILE_END(cache);
             break;
         }
 
         case OP_STRING: {
             PROFILE_START(cache);
-            MP_PUSH(cache->v.obj);
+            MP_PUSH(get_cache_obj(cache));
             PROFILE_END(cache);
             break;
         }
 
         case OP_IMPORT: {
             // _import(des_globals, fname, tar);
-            if (cache->v.ival == 1) {
+            int value = get_cache_int(cache);
+            if (value == 1) {
                 // import name
                 MpObj modname = MP_POP();
                 obj_import(globals, modname);
@@ -187,7 +189,7 @@ retry_op:
         }
         case OP_CONSTANT: {
             PROFILE_START(cache);
-            MP_PUSH(GET_CONST(cache->v.ival));
+            MP_PUSH(get_cache_obj(cache));
             PROFILE_END(cache);
             break;
         }
@@ -201,37 +203,36 @@ retry_op:
 
         case OP_LOAD_LOCAL: {
             PROFILE_START(cache);
-            MP_PUSH(locals[cache->v.ival]);
+            int index = get_cache_int(cache);
+            MP_PUSH(locals[index]);
             PROFILE_END(cache);
             break;
         }
 
         case OP_STORE_LOCAL:
             PROFILE_START(cache);
-            locals[cache->v.ival] = MP_POP();
+            int index = get_cache_int(cache);
+            locals[index] = MP_POP();
             PROFILE_END(cache);
             break;
 
         case OP_LOAD_GLOBAL: {
             PROFILE_START(cache);
             /* mp_printf("load global %o\n", GET_CONST(i)); */
-            int idx = dict_get0(globals_dict, cache->v.obj);
+            MpObj obj = get_cache_obj(cache);
+
+            int idx = dict_get0(globals_dict, obj);
             if (idx == -1) {
                 MpDict *builtins_dict = GET_DICT(tm->builtins);
-                idx = dict_get0(builtins_dict, cache->v.obj);
+                idx = dict_get0(builtins_dict, obj);
                 if (idx == -1) {
-                    mp_raise("NameError: name %o is not defined", cache->v.obj);
+                    mp_raise("NameError: name %o is not defined", obj);
                 } else {
                     MpObj value = builtins_dict->nodes[idx].val;
                     MP_PUSH(value);
                 }
             } else {
                 MP_PUSH(globals_dict->nodes[idx].val);
-
-                #ifdef FAST_LOAD_GLOBAL
-                    cache->op = OP_LOAD_GLOBAL_FAST;
-                    cache->index = idx;
-                #endif
             }
 
             PROFILE_END(cache);
@@ -240,31 +241,12 @@ retry_op:
         case OP_STORE_GLOBAL: {
             PROFILE_START(cache);
             MpObj value = MP_POP();
-            int idx = dict_set0(globals_dict, cache->v.obj, value);
+            
+            MpObj obj = get_cache_obj(cache);
+
+            int idx = dict_set0(globals_dict, obj, value);
             // cache->op = OP_STORE_GLOBAL_FAST;
             // cache->index = idx;
-            PROFILE_END(cache);
-            break;
-        }
-        case OP_LOAD_GLOBAL_FAST: {
-            PROFILE_START(cache);
-            // 需要对比一下key是否匹配,处理命中失败的情况
-            DictNode *node = dict_get_node_by_index(GET_DICT(globals), cache->index);
-            if (node != NULL && is_obj_equals(node->key, cache->v.obj)) {
-                MP_PUSH(node->val);
-                PROFILE_END(cache);
-            } else {
-                cache->index = -1;
-                cache->op = OP_LOAD_GLOBAL;
-                PROFILE_END(cache);
-                goto retry_op;
-            }
-            break;
-        }
-        case OP_STORE_GLOBAL_FAST: {
-            PROFILE_START(cache);
-            // TODO 需要对比一下key是否匹配,处理命中失败的情况
-            GET_DICT(globals)->nodes[cache->index].val = MP_POP();
             PROFILE_END(cache);
             break;
         }
@@ -351,7 +333,8 @@ retry_op:
             top--;
 
             if (IS_DICT(*obj)) {
-                DictNode* node = dict_get_node_by_index(GET_DICT(*obj), cache->index);
+                int index = get_cache_int(cache);
+                DictNode* node = dict_get_node_by_index(GET_DICT(*obj), index);
                 if (node != NULL && is_obj_equals(node->key, *key)) {
                     *top = node->val;
                     PROFILE_END(cache);
@@ -362,7 +345,7 @@ retry_op:
             *top = obj_get(*obj, *key);
 
             cache->op = OP_GET;
-            cache->index = -1;
+            set_cache_int(cache, 0);
 
             PROFILE_END(cache);
             break;
@@ -438,7 +421,8 @@ retry_op:
 
             if (obj->type == TYPE_DICT) {
                 /* 没有命中缓存 */
-                cache->index = dict_set0(obj->value.dict, *key, *value);
+                int index = dict_set0(obj->value.dict, *key, *value);
+                set_cache_int(cache, index);
                 cache->op = OP_SET_FAST;
             } else {
                obj_set(*obj, *key, *value);
@@ -457,7 +441,8 @@ retry_op:
             top-=3;
 
             if (IS_DICT(*obj)) {
-                DictNode* node = dict_get_node_by_index(GET_DICT(*obj), cache->index);
+                int index = get_cache_int(cache);
+                DictNode* node = dict_get_node_by_index(GET_DICT(*obj), index);
                 if (node != NULL && is_obj_equals(node->key, *key)) {
                     // printf("OP_SET_FAST: cache hit, index(%d)\n", cache->index);
                     node->val = *value; 
@@ -468,8 +453,8 @@ retry_op:
 
             // printf("OP_SET_FAST: cache miss, index(%d)\n", cache->index);
             // 缓存失效了，重新按照 OP_SET 执行
-            cache->index = -1;
             cache->op = OP_SET;
+            set_cache_int(cache, 0);
             obj_set(*obj, *key, *value);
             break;
         }
@@ -488,7 +473,7 @@ retry_op:
         case OP_CALL: {
             PROFILE_START(cache);
             // n是参数的个数
-            int n = cache->v.ival;
+            int n = get_cache_int(cache);
             
             f->top = top;
             top -= n;
@@ -518,7 +503,7 @@ retry_op:
 
         // 尾递归调用
         case OP_TAILCALL: {
-            int n = cache->v.ival;
+            int n = get_cache_int(cache);
             f->top = top;
             top -= n;
             MpObj* first_arg = top+1;
@@ -572,8 +557,8 @@ retry_op:
             break;
         }
         case OP_LOAD_PARAMS: {
-            int parg = (cache->v.ival >> 8) & 0xff;
-            int narg = cache->v.ival & 0xff;
+            int parg = cache->a;
+            int narg = cache->b;
             if (tm->arg_cnt < parg || tm->arg_cnt > parg + narg) {
                 mp_raise("ArgError: parg=%d,narg=%d,given=%d", 
                     parg, narg, tm->arg_cnt);
@@ -585,14 +570,14 @@ retry_op:
             break;
         }
         case OP_LOAD_PARG: {
-            int parg = cache->v.ival;
+            int parg = get_cache_int(cache);
             for (i = 0; i < parg; i++) {
                 locals[i] = arg_take_obj(func_name_cstr);
             }
             break;
         }
         case OP_LOAD_NARG: {
-            int arg_index = cache->v.ival;
+            int arg_index = get_cache_int(cache);
             MpObj list = list_new(tm->arg_cnt);
             while (arg_remains() > 0) {
                 obj_append(list, arg_take_obj(func_name_cstr));
@@ -611,7 +596,7 @@ retry_op:
                 break;
             } else {
                 // pc += i * 3;
-                cache += cache->v.ival;
+                cache += get_cache_int(cache);
                 continue;
             }
             break;
@@ -619,7 +604,7 @@ retry_op:
         case OP_DEF: {
             MpObj mod = GET_FUNCTION(cur_fnc)->mod;
             MpObj fnc = func_new(mod, NONE_OBJECT, NULL);
-            GET_FUNCTION_NAME(fnc) = cache->v.obj;
+            GET_FUNCTION_NAME(fnc) = get_cache_obj(cache);
             cache = func_resolve_cache(GET_FUNCTION(fnc), cache);
             MP_PUSH(fnc);
             continue;
@@ -629,7 +614,7 @@ retry_op:
             goto end;
         }
         case OP_CLASS: {
-            MpObj class_name = cache->v.obj;
+            MpObj class_name = get_cache_obj(cache);
             MpObj clazz = class_new(class_name);
             dict_set0(GET_DICT(globals), class_name, clazz);
             break;
@@ -642,7 +627,7 @@ retry_op:
         // 翻转堆栈
         // rotate stack
         case OP_ROT: {
-            MpObj* left = top - cache->v.ival + 1;
+            MpObj* left = top - get_cache_int(cache) + 1;
             MpObj* right = top;
             for (; left < right; left++, right--) {
                 MpObj temp = *left;
@@ -671,7 +656,7 @@ retry_op:
         case OP_POP_JUMP_ON_FALSE: {
             if (!is_true_obj(MP_POP())) {
                 // pc += i * 3;
-                cache += cache->v.ival;
+                cache += get_cache_int(cache);
                 continue;
             }
             break;
@@ -681,7 +666,7 @@ retry_op:
             PROFILE_START(cache);
             if (is_true_obj(MP_TOP())) {
                 PROFILE_END(cache);
-                cache += cache->v.ival;
+                cache += get_cache_int(cache);
                 continue;
             } else {
                 PROFILE_END(cache);
@@ -693,7 +678,7 @@ retry_op:
             PROFILE_START(cache);
             if (!is_true_obj(MP_TOP())) {
                 PROFILE_END(cache);
-                cache += cache->v.ival;
+                cache += get_cache_int(cache);
                 continue;
             } else {
                 PROFILE_END(cache);
@@ -702,11 +687,11 @@ retry_op:
         }
 
         case OP_UP_JUMP:
-            cache -= cache->v.ival;
+            cache -= get_cache_int(cache);
             continue;
 
         case OP_JUMP:
-            cache += cache->v.ival;
+            cache += get_cache_int(cache);
             continue;
 
         case OP_EOP:
@@ -723,7 +708,7 @@ retry_op:
 
         case OP_SETJUMP: { 
             f->last_top = top; 
-            f->cache_jmp = cache + cache->v.ival;
+            f->cache_jmp = cache + get_cache_int(cache);
             break; 
         }
 
@@ -735,7 +720,7 @@ retry_op:
 
         case OP_LINE: {
             PROFILE_START(cache);
-            f->lineno = cache->v.ival; 
+            f->lineno = get_cache_int(cache);
             PROFILE_END(cache);
             break;
         }

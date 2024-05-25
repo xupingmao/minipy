@@ -716,6 +716,12 @@ int get_const_id(MpObj const_value) {
     return i;
 }
 
+MpObj mp_get_constant(int index) {
+    assert (index >= 0);
+    assert (index < tm->constants->len);
+    return tm->constants->nodes[index].key;
+}
+
 
 MpObj mp_call_builtin(BuiltinFunc func, int n, ...) {
     int i = 0;
