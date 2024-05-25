@@ -693,6 +693,9 @@ def parse_block(p):
             parse_stm(p)
             skip_nl(p)
         p.next()
+    elif p.token.type == "eof":
+        # 空文件
+        return
     else:
         parse_stm(p)
         while p.token.type == ';':
@@ -703,8 +706,8 @@ def parse_block(p):
     
 def parse(content):
     """解析额入口"""
-    r = tokenize(content)
-    p = ParserCtx(r, content)
+    tokens = tokenize(content)
+    p = ParserCtx(tokens, content)
     p.next()
     try:
         while p.token.type != 'eof':

@@ -382,9 +382,12 @@ void dict_set_by_cstr(MpDict* dict, const char* key, MpObj value) {
     dict_set0(dict, string_from_cstr(key), value);
 }
 
-MpObj dict_pop(MpDict* dict, MpObj key) {
+MpObj dict_pop(MpDict* dict, MpObj key, MpObj* _default) {
     DictNode* node = dict_get_node(dict, key);
     if (node == NULL) {
+        if (_default != NULL) {
+            return *_default;
+        }
         mp_raise("dict_pop: key_error %o", key);
     }
     node->used = -1;
@@ -395,7 +398,7 @@ MpObj dict_pop(MpDict* dict, MpObj key) {
 }
 
 void dict_del(MpDict* dict, MpObj key) {
-    dict_pop(dict, key);
+    dict_pop(dict, key, NULL);
 }
 
 MpObj dict_keys(MpDict* dict){
@@ -468,7 +471,7 @@ MpObj dict_builtin_update() {
 MpObj dict_builtin_pop() {
     MpObj self = mp_take_dict_obj_arg("dict.pop");
     MpObj key  = mp_take_obj_arg("dict.pop");
-    return dict_pop(GET_DICT(self), key);
+    return dict_pop(GET_DICT(self), key, NULL);
 }
 
 MpObj dict_builtin_get() {

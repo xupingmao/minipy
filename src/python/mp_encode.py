@@ -59,13 +59,16 @@ _tag_cnt = 0
 _global_index = 0
 
 
-def init_pop_value_type_set():
-    result = set(["call", "get", "name"])
+def init_pop_value_type_dict():
+    keys = ["call", "name"]
+    result = {}
     for item in _op_dict:
-        result.add(item)
+        result[item] = True
+    for item in keys:
+        result[item] = True
     return result
 
-POP_VALUE_TYPE_SET = init_pop_value_type_set()
+POP_VALUE_TYPE_DICT = init_pop_value_type_dict()
 
 class Scope:
     def __init__(self):
@@ -802,7 +805,7 @@ def encode_item(tk):
     return 1
 
 def need_pop_value(type):
-    return type in POP_VALUE_TYPE_SET
+    return type in POP_VALUE_TYPE_DICT
 
 def encode_block(tk):
     assert gettype(tk) == "list"
