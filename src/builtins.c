@@ -16,7 +16,7 @@
     #include <unistd.h>
 #endif
 
-MpObj* get_builtin(char* key) {
+MpObj* mp_get_builtin(char* key) {
     if (!tm->init) {
         return NULL;
     }
@@ -294,8 +294,8 @@ void mp_printf(char* fmt, ...) {
 
 MpObj bf_input() {
     int i = 0;
-    if (arg_has_next()) {
-        mp_print(arg_take_obj("input"));
+    if (mp_has_next_arg()) {
+        mp_print(mp_take_obj_arg("input"));
     }
     char buf[2048];
     memset(buf, '\0', sizeof(buf));
@@ -312,7 +312,7 @@ MpObj bf_input() {
 }
 
 MpObj bf_int() {
-    MpObj v = arg_take_obj("int");
+    MpObj v = mp_take_obj_arg("int");
     if (v.type == TYPE_NUM) {
         return number_obj((int) GET_NUM(v));
     } else if (v.type == TYPE_STR) {
@@ -323,7 +323,7 @@ MpObj bf_int() {
 }
 
 MpObj bf_float() {
-    MpObj v = arg_take_obj("float");
+    MpObj v = mp_take_obj_arg("float");
     if (v.type == TYPE_NUM) {
         return v;
     } else if (v.type == TYPE_STR) {
@@ -338,11 +338,11 @@ MpObj bf_float() {
  */
 MpObj bf_load_module() {
     const char* sz_fnc = "load_module";
-    MpObj file = arg_take_str_obj(sz_fnc);
-    MpObj code = arg_take_str_obj(sz_fnc);
+    MpObj file = mp_take_str_obj_arg(sz_fnc);
+    MpObj code = mp_take_str_obj_arg(sz_fnc);
     MpObj name = NONE_OBJECT;
-    if (arg_count() == 3) {
-        name = arg_take_str_obj(sz_fnc);
+    if (mp_count_arg() == 3) {
+        name = mp_take_str_obj_arg(sz_fnc);
     }
     return load_file_module(file, code, name);
 }
@@ -361,7 +361,7 @@ MpObj bf_exit() {
 }
 
 MpObj bf_gettype() {
-    MpObj obj = arg_take_obj("gettype");
+    MpObj obj = mp_take_obj_arg("gettype");
     switch(MP_TYPE(obj)) {
         case TYPE_STR: return string_from_cstr("string");
         case TYPE_NUM: return string_from_cstr("number");
@@ -383,8 +383,8 @@ MpObj bf_gettype() {
  * so, a check function with less result is better.
  */
 MpObj bf_istype() {
-    MpObj obj = arg_take_obj("istype");
-    char* type = arg_take_cstr("istype");
+    MpObj obj = mp_take_obj_arg("istype");
+    char* type = mp_take_cstr_arg("istype");
     int is_type = 0;
     switch(MP_TYPE(obj)) {
         case TYPE_STR: is_type = strcmp(type, "string") == 0 ; break;
@@ -401,25 +401,25 @@ MpObj bf_istype() {
 }
 
 MpObj bf_chr() {
-    int n = arg_take_int("chr");
+    int n = mp_take_int_arg("chr");
     return string_chr(n);
 }
 
 MpObj bf_ord() {
-    MpObj c = arg_take_str_obj("ord");
+    MpObj c = mp_take_str_obj_arg("ord");
     MP_ASSERT(GET_STR_LEN(c) == 1, "ord() expected a character");
     return number_obj((unsigned char) GET_CSTR(c)[0]);
 }
 
 MpObj bf_code8() {
-    int n = arg_take_int("code8");
+    int n = mp_take_int_arg("code8");
     if (n < 0 || n > 255)
         mp_raise("code8(): expect number 0-255, but see %d", n);
     return string_chr(n);
 }
 
 MpObj bf_code16() {
-    int n = arg_take_int("code16");
+    int n = mp_take_int_arg("code16");
     if (n < 0 || n > 0xffff)
         mp_raise("code16(): expect number 0-0xffff, but see %x", n);
     MpObj nchar = string_alloc(NULL, 2);
@@ -428,39 +428,39 @@ MpObj bf_code16() {
 }
 
 MpObj bf_code32() {
-    int n = arg_take_int("code32");
+    int n = mp_take_int_arg("code32");
     MpObj c = string_alloc(NULL, 4);
     code32((unsigned char*) GET_CSTR(c), n);
     return c;
 }
 
 MpObj bf_raise() {
-    if (arg_count() == 0) {
+    if (mp_count_arg() == 0) {
         mp_raise("raise");
     } else {
-        mp_raise("%s", arg_take_cstr("raise"));
+        mp_raise("%s", mp_take_cstr_arg("raise"));
     }
     return NONE_OBJECT;
 }
 
 MpObj bf_system() {
-    MpObj m = arg_take_str_obj("system");
+    MpObj m = mp_take_str_obj_arg("system");
     int rs = system(GET_CSTR(m));
     return number_obj(rs);
 }
 
 MpObj bf_str() {
-    MpObj a = arg_take_obj("str");
+    MpObj a = mp_take_obj_arg("str");
     return obj_str(a);
 }
 
 MpObj bf_list() {
-    int args = arg_count();
+    int args = mp_count_arg();
     if (args != 1) {
         mp_raise("list expected at most 1 arguments, got %d", args);
     }
 
-    MpObj iterable = arg_take_obj("list");
+    MpObj iterable = mp_take_obj_arg("list");
     MpObj iter   = iter_new(iterable);
     MpObj result = list_new(10);
 
@@ -473,7 +473,7 @@ MpObj bf_list() {
 }
 
 MpObj bf_bool() {
-    MpObj a = arg_take_obj("bool");
+    MpObj a = mp_take_obj_arg("bool");
     if (is_true_obj(a)) {
         return tm->_TRUE;
     } else {
@@ -486,15 +486,15 @@ MpObj bf_dict() {
 }
 
 MpObj bf_len() {
-    MpObj o = arg_take_obj("len");
+    MpObj o = mp_take_obj_arg("len");
     return number_obj(mp_len(o));
 }
 
 MpObj bf_print() {
     int i = 0;
-    while (arg_has_next()) {
-        mp_print(arg_take_obj("print"));
-        if (arg_has_next()) {
+    while (mp_has_next_arg()) {
+        mp_print(mp_take_obj_arg("print"));
+        if (mp_has_next_arg()) {
             putchar(' ');
         }
     }
@@ -503,8 +503,8 @@ MpObj bf_print() {
 }
 
 MpObj bf_file_append() {
-    char* fname = arg_take_cstr("file_append");
-    MpObj content = arg_take_str_obj("file_append");
+    char* fname = mp_take_cstr_arg("file_append");
+    MpObj content = mp_take_str_obj_arg("file_append");
     FILE* fp = fopen(fname, "ab+");
     if (fp == NULL) {
         mp_raise("file_append: fail to open file %s", fname);
@@ -521,7 +521,7 @@ MpObj bf_file_append() {
 // remove file
 //============
 MpObj bf_remove(){
-    MpObj fname = arg_take_str_obj("remove");
+    MpObj fname = mp_take_str_obj_arg("remove");
     int flag = remove(GET_CSTR(fname));
     if(flag) {
         return number_obj(0);
@@ -531,16 +531,16 @@ MpObj bf_remove(){
 }
 
 MpObj bf_apply() {
-    MpObj func = arg_take_obj("apply");
+    MpObj func = mp_take_obj_arg("apply");
     if (NOT_FUNC(func) && NOT_DICT(func) && NOT_CLASS(func)) {
         mp_raise("apply: expect function or dict");
     }
-    MpObj args = arg_take_obj("apply");
-    arg_start();
+    MpObj args = mp_take_obj_arg("apply");
+    mp_reset_args();
     if (IS_NONE(args)) {
     } else if(IS_LIST(args)) {
         int i;for(i = 0; i < LIST_LEN(args); i++) {
-            arg_push(LIST_NODES(args)[i]);
+            mp_push_arg(LIST_NODES(args)[i]);
         }
     } else {
         mp_raise("apply: expect list arguments or None, but see %o", args);
@@ -550,7 +550,7 @@ MpObj bf_apply() {
 }
 
 MpObj bf_write() {
-    MpObj fmt = arg_take_obj("write");
+    MpObj fmt = mp_take_obj_arg("write");
     MpObj str = obj_str(fmt);
     char* s = GET_CSTR(str);
     int len = GET_STR_LEN(str);
@@ -569,8 +569,8 @@ MpObj bf_write() {
 }
 
 MpObj bf_pow() {
-    double base = arg_take_double("pow");
-    double y = arg_take_double("pow");
+    double base = mp_take_double_arg("pow");
+    double y = mp_take_double_arg("pow");
     return number_obj(pow(base, y));
 }
 
@@ -597,18 +597,18 @@ MpObj bf_xrange() {
     switch (tm->arg_cnt) {
     case 1:
         start = 0;
-        end = (long)arg_take_double(sz_func);
+        end = (long)mp_take_double_arg(sz_func);
         inc = 1;
         break;
     case 2:
-        start = (long)arg_take_double(sz_func);
-        end = (long)arg_take_double(sz_func);
+        start = (long)mp_take_double_arg(sz_func);
+        end = (long)mp_take_double_arg(sz_func);
         inc = 1;
         break;
     case 3:
-        start = (long)arg_take_double(sz_func);
-        end   = (long)arg_take_double(sz_func);
-        inc   = (long)arg_take_double(sz_func);
+        start = (long)mp_take_double_arg(sz_func);
+        end   = (long)mp_take_double_arg(sz_func);
+        inc   = (long)mp_take_double_arg(sz_func);
         break;
     default:
         mp_raise("range([n, [ n, [n]]]), but see %d arguments",
@@ -647,7 +647,7 @@ MpObj* enumerate_next(MpData* iterator) {
 }
 
 MpObj bf_enumerate() {
-    MpObj _it = arg_take_obj("enumerate");
+    MpObj _it = mp_take_obj_arg("enumerate");
     MpObj origin_iter = iter_new(_it);
 
     MpObj data = data_new(1);
@@ -659,9 +659,9 @@ MpObj bf_enumerate() {
 }
 
 MpObj bf_mmatch() {
-    char* str = arg_take_cstr("mmatch");
-    int start = arg_take_int("mmatch");
-    MpObj o_dst = arg_take_str_obj("mmatch");
+    char* str = mp_take_cstr_arg("mmatch");
+    int start = mp_take_int_arg("mmatch");
+    MpObj o_dst = mp_take_str_obj_arg("mmatch");
     char* dst = GET_CSTR(o_dst);
     int size = GET_STR_LEN(o_dst);
     return number_obj(strncmp(str+start, dst, size) == 0);
@@ -677,9 +677,9 @@ long mp_clock() {
 
 MpObj bf_add_obj_method() {
     static const char* sz_func = "add_obj_method";
-    MpObj type = arg_take_str_obj(sz_func);
-    MpObj fname = arg_take_str_obj(sz_func);
-    MpObj fnc = arg_take_func_obj(sz_func);
+    MpObj type = mp_take_str_obj_arg(sz_func);
+    MpObj fname = mp_take_str_obj_arg(sz_func);
+    MpObj fnc = mp_take_func_obj_arg(sz_func);
     char*s = GET_CSTR(type);
     if (strcmp(s, "str") == 0) {
         obj_set(tm->str_proto, fname, fnc);
@@ -696,8 +696,8 @@ MpObj bf_add_obj_method() {
 MpObj bf_read_file() {
     static const char* sz_func = "read_file";
     char c;
-    char* fname = arg_take_cstr(sz_func);
-    int nsize = arg_take_int(sz_func);
+    char* fname = mp_take_cstr_arg(sz_func);
+    int nsize = mp_take_int_arg(sz_func);
     char buf[1024];
     int i;
     int end = 0;
@@ -705,13 +705,13 @@ MpObj bf_read_file() {
     if (nsize < 0 || nsize > 1024) {
         mp_raise("%s: can not set bufsize beyond [1, 1024]",  sz_func);
     }
-    func = arg_take_func_obj(sz_func);
+    func = mp_take_func_obj_arg(sz_func);
     FILE* fp = fopen(fname, "rb");
     if (fp == NULL) {
         mp_raise("%s: can not open file %s", sz_func, fname);
     }
     while (1) {
-        arg_start();
+        mp_reset_args();
         for (i = 0; i < nsize; i++) {
             if ((c = fgetc(fp)) != EOF) {
                 buf[i] = c;
@@ -720,7 +720,7 @@ MpObj bf_read_file() {
                 break;
             }
         }
-        arg_push(string_alloc(buf, i));
+        mp_push_arg(string_alloc(buf, i));
         MP_CALL_EX(func);
         if (end) {
             break;
@@ -731,12 +731,12 @@ MpObj bf_read_file() {
 }
 
 MpObj bf_iter() {
-    MpObj func = arg_take_obj("iter");
+    MpObj func = mp_take_obj_arg("iter");
     return iter_new(func);
 }
 
 MpObj bf_next() {
-    MpObj iter = arg_take_data_obj("next");
+    MpObj iter = mp_take_data_obj_arg("next");
     MpObj *ret = obj_next(iter);
     if (ret == NULL) {
         mp_raise("<<next end>>");
@@ -784,37 +784,37 @@ MpObj bf_random() {
 }
 
 MpObj bf_Exception() {
-    return arg_take_obj("Exception");
+    return mp_take_obj_arg("Exception");
 }
 
 MpObj bf_getattr() {
-    MpObj self = arg_take_obj("getattr");
-    MpObj key  = arg_take_obj("getattr");
+    MpObj self = mp_take_obj_arg("getattr");
+    MpObj key  = mp_take_obj_arg("getattr");
     return obj_get(self, key);
 }
 
 MpObj bf_setattr() {
-    MpObj self = arg_take_obj("setattr");
-    MpObj key  = arg_take_obj("setattr");
-    MpObj val  = arg_take_obj("setattr");
+    MpObj self = mp_take_obj_arg("setattr");
+    MpObj key  = mp_take_obj_arg("setattr");
+    MpObj val  = mp_take_obj_arg("setattr");
     obj_set(self, key, val);
     return NONE_OBJECT;
 }
 
 MpObj bf_hasattr() {
-    MpObj self = arg_take_obj("hasattr");
-    MpObj key  = arg_take_obj("hasattr");
+    MpObj self = mp_take_obj_arg("hasattr");
+    MpObj key  = mp_take_obj_arg("hasattr");
     return obj_is_in(self, key);
 }
 
 MpObj bf_hash() {
-    MpObj object = arg_take_obj("hash");
+    MpObj object = mp_take_obj_arg("hash");
     return number_obj(obj_hash(object));
 }
 
 MpObj bf_isinstance() {
-    MpObj first = arg_take_obj("isinstance");
-    MpObj type = arg_take_obj("isinstance");
+    MpObj first = mp_take_obj_arg("isinstance");
+    MpObj type = mp_take_obj_arg("isinstance");
     if (IS_FUNC(type) && GET_FUNCTION(type)->native == bf_list && IS_LIST(first)) {
         return tm->_TRUE;
     }
@@ -822,7 +822,7 @@ MpObj bf_isinstance() {
     return tm->_FALSE;
 }
 
-void builtins_init() {
+void mp_init_builtins() {
     reg_builtin_func("file_append", bf_file_append);
     reg_builtin_func("remove", bf_remove);
     reg_builtin_func("write", bf_write);

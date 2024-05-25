@@ -12,8 +12,8 @@ typedef struct TypeAndDouble_t {
 
 
 static MpObj bf_inspect_ptr() {
-    double _ptr = arg_take_double("inspect_ptr");
-    int idx = arg_take_int("inspect_ptr");
+    double _ptr = mp_take_double_arg("inspect_ptr");
+    int idx = mp_take_int_arg("inspect_ptr");
     char* ptr = (char*)(long long)_ptr;
     return string_chr(ptr[idx]);
 }
@@ -118,7 +118,7 @@ static MpObj bf_get_mp_local_list() {
 
 
 static MpObj bf_set_vm_state() {
-    int state = arg_take_int("set_vm_state");
+    int state = mp_take_int_arg("set_vm_state");
     switch(state) {
         case 0:tm->debug = 0;break;
         case 1:tm->debug = 1;break;
@@ -127,23 +127,23 @@ static MpObj bf_set_vm_state() {
 }
 
 static MpObj bf_vmopt() {
-    char* opt = arg_take_cstr("vminfo");
+    char* opt = mp_take_cstr_arg("vminfo");
     if (strcmp(opt, "gc") == 0) {
         gc_full();
     } else if (strcmp(opt, "help") == 0) {
         return string_from_cstr("gc, help");
     } else if (strcmp(opt, "frame.local") == 0) {
-        int fidx = arg_take_int("vminfo");
-        int lidx = arg_take_int("vminfo");
+        int fidx = mp_take_int_arg("vminfo");
+        int lidx = mp_take_int_arg("vminfo");
         return obj_getlocal(fidx, lidx);
     } else if (strcmp(opt, "frame.stack") == 0) {
-        int fidx = arg_take_int("vminfo");
-        int sidx = arg_take_int("vminfo");
+        int fidx = mp_take_int_arg("vminfo");
+        int sidx = mp_take_int_arg("vminfo");
         return obj_getstack(fidx, sidx);
     } else if (strcmp(opt, "frame.index") == 0) {
         return number_obj(tm->frame-tm->frames);
     } else if (strcmp(opt, "frame.info") == 0) {
-        int fidx = arg_take_int("vminfo");
+        int fidx = mp_take_int_arg("vminfo");
         MpFrame *f = obj_getframe(fidx);
         MpObj info = dict_new();
         mp_setattr(info, "maxlocals", number_obj(f->maxlocals));
@@ -159,7 +159,7 @@ static MpObj bf_vmopt() {
 }
 
 static MpObj bf_print_dict_info() {
-    MpDict* dict = arg_take_dict_ptr("debug.print_debug_info");
+    MpDict* dict = mp_take_dict_ptr_arg("debug.print_debug_info");
     dict_print_debug_info(dict);
     return NONE_OBJECT;
 }
@@ -175,14 +175,14 @@ static MpObj bf_get_ex_list() {
  */
 void mp_debug_init() {    
     MpObj debug = mp_new_native_module("mp_debug");
-    mod_reg_func(debug, "get_ex_list", bf_get_ex_list);
-    mod_reg_func(debug, "set_vm_state", bf_set_vm_state);
-    mod_reg_func(debug, "inspect_ptr", bf_inspect_ptr);
-    mod_reg_func(debug, "get_current_frame", bf_get_current_frame);
-    mod_reg_func(debug, "get_vm_info", bf_get_vm_info);
-    mod_reg_func(debug, "get_memory_info", bf_get_memory_info);
-    mod_reg_func(debug, "get_mp_local_list", bf_get_mp_local_list);
-    mod_reg_func(debug, "vmopt", bf_vmopt);
-    mod_reg_func(debug, "print_dict_info", bf_print_dict_info);
+    MpModule_RegFunc(debug, "get_ex_list", bf_get_ex_list);
+    MpModule_RegFunc(debug, "set_vm_state", bf_set_vm_state);
+    MpModule_RegFunc(debug, "inspect_ptr", bf_inspect_ptr);
+    MpModule_RegFunc(debug, "get_current_frame", bf_get_current_frame);
+    MpModule_RegFunc(debug, "get_vm_info", bf_get_vm_info);
+    MpModule_RegFunc(debug, "get_memory_info", bf_get_memory_info);
+    MpModule_RegFunc(debug, "get_mp_local_list", bf_get_mp_local_list);
+    MpModule_RegFunc(debug, "vmopt", bf_vmopt);
+    MpModule_RegFunc(debug, "print_dict_info", bf_print_dict_info);
 }
 

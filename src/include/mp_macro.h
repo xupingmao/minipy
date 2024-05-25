@@ -102,7 +102,7 @@
 
 /* assert macro */
 #define MP_ASSERT(cond, msg) if(!(cond)) {mp_raise( msg );}
-#define RESOLVE_METHOD_SELF(fnc) resolve_self_by_func_ptr(GET_FUNCTION((fnc)))
+#define RESOLVE_METHOD_SELF(fnc) mp_resolve_self_by_func_ptr(GET_FUNCTION((fnc)))
 
 /* gcc process ++ from right to left */
 #define READ_BYTE(s) *s++

@@ -480,7 +480,7 @@ retry_op:
 
             // 当前的*top就是函数对象, top+1开始是参数
             // TODO top+1 can be optimized as locals
-            arg_set_arguments(top + 1, n);
+            mp_set_args(top + 1, n);
             MpObj func = MP_POP();
 
             PROFILE_END(cache);
@@ -507,7 +507,7 @@ retry_op:
             f->top = top;
             top -= n;
             MpObj* first_arg = top+1;
-            arg_set_arguments(top+1, n);
+            mp_set_args(top+1, n);
             MpObj func = MP_POP();
 
             if (NOT_FUNC(func) && NOT_CLASS(func)) {
@@ -517,10 +517,10 @@ retry_op:
             // class也可以直接调用
             if (IS_FUNC(func) && GET_FUNCTION(func)->native == NULL) {
                 /** tail call python function **/
-                arg_start();
+                mp_reset_args();
                 int i = 0;
                 for (i = 0; i < n; i++) {
-                    arg_push(first_arg[i]);
+                    mp_push_arg(first_arg[i]);
                 }
 
                 assert(GET_FUNCTION(func)->resolved == 1);
@@ -548,7 +548,7 @@ retry_op:
             f->top = top;
             MpObj args = MP_POP();
             mp_assert_type(args, TYPE_LIST, "mp_eval: OP_APPLY");
-            arg_set_arguments(LIST_NODES(args), LIST_LEN(args));
+            mp_set_args(LIST_NODES(args), LIST_LEN(args));
             MpObj func = MP_POP();
             x = MP_CALL_EX(func);
             MP_PUSH(x);
@@ -572,15 +572,15 @@ retry_op:
         case OP_LOAD_PARG: {
             int parg = get_cache_int(cache);
             for (i = 0; i < parg; i++) {
-                locals[i] = arg_take_obj(func_name_cstr);
+                locals[i] = mp_take_obj_arg(func_name_cstr);
             }
             break;
         }
         case OP_LOAD_NARG: {
             int arg_index = get_cache_int(cache);
             MpObj list = list_new(tm->arg_cnt);
-            while (arg_remains() > 0) {
-                obj_append(list, arg_take_obj(func_name_cstr));
+            while (mp_count_remain_args() > 0) {
+                obj_append(list, mp_take_obj_arg(func_name_cstr));
             }
             locals[arg_index] = list;
             break;

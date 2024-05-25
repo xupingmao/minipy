@@ -200,34 +200,34 @@ MpObj list_add(MpList* list1, MpList*list2) {
 // belows are builtin methods
 static MpObj list_builtin_append() {
     const char* sz_func = "list.append";
-    MpObj self = arg_take_list_obj(sz_func);
-    MpObj v = arg_take_obj(sz_func);
+    MpObj self = mp_take_list_obj_arg(sz_func);
+    MpObj v = mp_take_obj_arg(sz_func);
     obj_append(self, v);
     return NONE_OBJECT;
 }
 
 static MpObj list_builtin_pop() {
-    MpObj self = arg_take_list_obj("list.pop");
+    MpObj self = mp_take_list_obj_arg("list.pop");
     return list_pop(GET_LIST(self));
 }
 
 static MpObj list_builtin_insert() {
     const char* sz_func = "list.insert";
-    MpObj self = arg_take_list_obj(sz_func);
-    int n = arg_take_int(sz_func);
-    MpObj v = arg_take_obj(sz_func);
+    MpObj self = mp_take_list_obj_arg(sz_func);
+    int n = mp_take_int_arg(sz_func);
+    MpObj v = mp_take_obj_arg(sz_func);
     list_insert(GET_LIST(self), n, v);
     return self;
 }
 
 static MpObj list_builtin_index() {
-    MpList* self = arg_take_list_ptr("list.index");
-    MpObj v = arg_take_obj("list.index");
+    MpList* self = mp_take_list_ptr_arg("list.index");
+    MpObj v = mp_take_obj_arg("list.index");
     return number_obj(list_index(self, v));
 }
 
 static MpObj list_builtin_reverse() {
-    MpList* self = arg_take_list_ptr("list.reverse");
+    MpList* self = mp_take_list_ptr_arg("list.reverse");
     int start = 0, end = self->len - 1;
     while (end > start) {
         MpObj temp = self->nodes[start];
@@ -240,8 +240,8 @@ static MpObj list_builtin_reverse() {
 }
 
 static MpObj list_builtin_remove() {
-    MpList* list = arg_take_list_ptr("list.remove");
-    MpObj obj = arg_take_obj("list.remove");
+    MpList* list = mp_take_list_ptr_arg("list.remove");
+    MpObj obj = mp_take_obj_arg("list.remove");
     int i = 0;
     for (i = 0; i < list->len; i++) {
         MpObj item = list->nodes[i];
@@ -254,7 +254,7 @@ static MpObj list_builtin_remove() {
 }
 
 static MpObj list_builtin_copy() {
-    MpObj self = arg_take_obj("list.copy");
+    MpObj self = mp_take_obj_arg("list.copy");
     MpList* list = GET_LIST(self);
     MpObj _newlist = list_new(list->cap);
     MpList* newlist = GET_LIST(_newlist);
@@ -264,15 +264,15 @@ static MpObj list_builtin_copy() {
 }
 
 MpObj list_builtin_clear() {
-    MpObj self = arg_take_obj("list.clear");
+    MpObj self = mp_take_obj_arg("list.clear");
     MpList* list = GET_LIST(self);
     list->len = 0;
     return self;
 }
 
 MpObj list_builtin_extend() {
-    MpObj self = arg_take_list_obj("list.extend");
-    MpList* other = arg_take_list_ptr("list.extend");
+    MpObj self = mp_take_list_obj_arg("list.extend");
+    MpList* other = mp_take_list_ptr_arg("list.extend");
     MpList* selfptr = GET_LIST(self);
     int i = 0;
     for (i = 0; i < other->len; i++) {
@@ -289,17 +289,17 @@ size_t list_sizeof(MpList* list) {
 }
 
 
-void list_methods_init() {
+void MpList_InitMethods() {
     tm->list_proto = dict_new();
-    mod_reg_func(tm->list_proto, "append", list_builtin_append);
-    mod_reg_func(tm->list_proto, "pop", list_builtin_pop);
-    mod_reg_func(tm->list_proto, "insert", list_builtin_insert);
-    mod_reg_func(tm->list_proto, "index", list_builtin_index);
-    mod_reg_func(tm->list_proto, "reverse", list_builtin_reverse);
-    mod_reg_func(tm->list_proto, "remove", list_builtin_remove);
-    mod_reg_func(tm->list_proto, "copy", list_builtin_copy);
-    mod_reg_func(tm->list_proto, "clear", list_builtin_clear);
-    mod_reg_func(tm->list_proto, "extend", list_builtin_extend);
+    MpModule_RegFunc(tm->list_proto, "append", list_builtin_append);
+    MpModule_RegFunc(tm->list_proto, "pop", list_builtin_pop);
+    MpModule_RegFunc(tm->list_proto, "insert", list_builtin_insert);
+    MpModule_RegFunc(tm->list_proto, "index", list_builtin_index);
+    MpModule_RegFunc(tm->list_proto, "reverse", list_builtin_reverse);
+    MpModule_RegFunc(tm->list_proto, "remove", list_builtin_remove);
+    MpModule_RegFunc(tm->list_proto, "copy", list_builtin_copy);
+    MpModule_RegFunc(tm->list_proto, "clear", list_builtin_clear);
+    MpModule_RegFunc(tm->list_proto, "extend", list_builtin_extend);
 }
 
 MpObj list_iter_new(MpObj list) {

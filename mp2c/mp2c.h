@@ -77,10 +77,10 @@ MpObj mp_call_native(MpObj (*fn)(), int args, ...) {
     MpObj obj_arg;
 
     va_start(ap, args);
-    arg_start();
+    mp_reset_args();
     for (i = 0; i < args; i++) {
         obj_arg = va_arg(ap, MpObj);
-        arg_push(obj_arg);
+        mp_push_arg(obj_arg);
     }
     va_end(ap);
 
@@ -99,7 +99,7 @@ MpObj mp_call_native(MpObj (*fn)(), int args, ...) {
  * @since 2016-08-27
  */
 MpObj mp_call_native_0(MpObj (*fn)()) {
-    arg_start();
+    mp_reset_args();
     int size = tm->local_obj_list->len;
     MpObj ret = fn();
     gc_check_native_call(size, ret);
@@ -107,8 +107,8 @@ MpObj mp_call_native_0(MpObj (*fn)()) {
 }
 
 MpObj mp_call_native_1(MpObj (*fn)(), MpObj arg1) {
-    arg_start();
-    arg_push(arg1);
+    mp_reset_args();
+    mp_push_arg(arg1);
     int size = tm->local_obj_list->len;
     MpObj ret = fn();
     gc_check_native_call(size, ret);
@@ -116,9 +116,9 @@ MpObj mp_call_native_1(MpObj (*fn)(), MpObj arg1) {
 }
 
 MpObj mp_call_native_2(MpObj (*fn)(), MpObj arg1, MpObj arg2) {
-    arg_start();
-    arg_push(arg1);
-    arg_push(arg2);
+    mp_reset_args();
+    mp_push_arg(arg1);
+    mp_push_arg(arg2);
     int size = tm->local_obj_list->len;
     MpObj ret = fn();
     gc_check_native_call(size, ret);
@@ -138,10 +138,10 @@ MpObj mp_call_native_debug(int lineno, char* func_name, MpObj (*fn)(), int args,
     tm->frame->lineno = lineno;
     LOG(LEVEL_ERROR, "call,%d,%s,start", lineno, func_name, 0);
     va_start(ap, args);
-    arg_start();
+    mp_reset_args();
     for (i = 0; i < args; i++) {
         obj_arg = va_arg(ap, MpObj);
-        arg_push(obj_arg);
+        mp_push_arg(obj_arg);
     }
     va_end(ap);
 
@@ -173,7 +173,7 @@ void def_native_method(MpObj dict, MpObj name, MpNativeFunc native) {
 }
 
 MpObj mp_take_arg() {
-    return arg_take_obj("getarg");
+    return mp_take_obj_arg("getarg");
 }
 
 void mp_def_mod(char* fname, MpObj mod) {

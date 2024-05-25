@@ -12,7 +12,7 @@ static void init_argv(MpObj sys_mod) {
 }
 
 static MpObj sys_exit() {
-    int code = arg_take_int("sys.exit");
+    int code = mp_take_int_arg("sys.exit");
     exit(code);
     return NONE_OBJECT;
 }
@@ -23,7 +23,7 @@ static void init_version(MpObj sys_mod) {
 }
 
 static MpObj sys_getsizeof() {
-    MpObj obj = arg_take_obj("sys.getsizeof");
+    MpObj obj = mp_take_obj_arg("sys.getsizeof");
     return number_obj(obj_sizeof(obj));
 }
 
@@ -37,7 +37,7 @@ void mp_sys_init() {
     obj_set_by_cstr(sys_mod, "executable", string_new(tm->argv[0]));
     obj_set_by_cstr(sys_mod, "modules", tm->modules);
     
-    mod_reg_func(sys_mod, "exit", sys_exit);
-    mod_reg_func(sys_mod, "getsizeof", sys_getsizeof);
+    MpModule_RegFunc(sys_mod, "exit", sys_exit);
+    MpModule_RegFunc(sys_mod, "getsizeof", sys_getsizeof);
 }
 

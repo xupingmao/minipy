@@ -18,7 +18,7 @@ mp_call_native       = "mp_call_native"
 mp_call_native_0     = "mp_call_native_0"
 mp_call_native_1     = "mp_call_native_1"
 mp_call_native_2     = "mp_call_native_2"
-arg_insert           = "arg_insert"
+mp_insert_arg           = "mp_insert_arg"
 func_bool            = "is_true_obj"
 func_add             = "obj_add"
 func_sub             = "obj_sub"
@@ -686,7 +686,7 @@ def do_class(item, env):
         lines.append("{}(d, {}, {});".format(def_native_method, constname, env.get_c_func_def(method_name)))
 
     if init_func != None:
-        lines.append("{}(d);".format(arg_insert))
+        lines.append("{}(d);".format(mp_insert_arg))
         lines.append("{}();".format(init_func))
 
     lines.append("return d;");

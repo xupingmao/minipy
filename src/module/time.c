@@ -43,7 +43,7 @@ static MpObj bf_time_ctime() {
 
 static MpObj bf_time_sleep() {
     int i = 0;
-    int t = arg_take_int("sleep");
+    int t = mp_take_int_arg("sleep");
 #ifdef _WIN32
     Sleep(t);
 #else
@@ -64,9 +64,9 @@ static MpObj bf_time_asctime() {
 
 void mp_time_init() {
     MpObj time_mod = mp_new_native_module("time");
-    mod_reg_func(time_mod, "time",  bf_time_time);
-    mod_reg_func(time_mod, "clock", bf_time_clock);
-    mod_reg_func(time_mod, "ctime", bf_time_ctime);
-    mod_reg_func(time_mod, "sleep", bf_time_sleep);
-    mod_reg_func(time_mod, "asctime", bf_time_asctime);
+    MpModule_RegFunc(time_mod, "time",  bf_time_time);
+    MpModule_RegFunc(time_mod, "clock", bf_time_clock);
+    MpModule_RegFunc(time_mod, "ctime", bf_time_ctime);
+    MpModule_RegFunc(time_mod, "sleep", bf_time_sleep);
+    MpModule_RegFunc(time_mod, "asctime", bf_time_asctime);
 }

@@ -21,7 +21,7 @@ MpObj os_getcwd() {
 
 MpObj os_chdir() {
     const char* sz_func = "chdir";
-    char *path = arg_take_cstr(sz_func);
+    char *path = mp_take_cstr_arg(sz_func);
     int r = chdir(path);
     if (r != 0) {
         mp_raise("%s: -- fatal error, can not chdir(\"%s\")", sz_func, path);
@@ -60,7 +60,7 @@ static void os_listdir_unix(MpObj result, char *path) {
 
 MpObj os_listdir() {
     MpObj list = list_new(10);
-    MpObj path = arg_take_str_obj("listdir");
+    MpObj path = mp_take_str_obj_arg("listdir");
 #ifdef _WIN32
     WIN32_FIND_DATA Find_file_data;
     MpObj _path = obj_add(path, string_new("\\*.*"));
@@ -86,7 +86,7 @@ MpObj os_listdir() {
 }
 
 MpObj os_stat(){
-    const char *s = arg_take_cstr("stat");
+    const char *s = mp_take_cstr_arg("stat");
     struct stat stbuf;
     if (!stat(s,&stbuf)) { 
         MpObj st = dict_new();
@@ -107,7 +107,7 @@ MpObj os_stat(){
 }
 
 MpObj os_exists(){
-    MpObj _fname = arg_take_str_obj("exists");
+    MpObj _fname = mp_take_str_obj_arg("exists");
     char* fname = GET_CSTR(_fname);
     FILE*fp = fopen(fname, "rb");
     if(fp == NULL) {
@@ -155,7 +155,7 @@ MpObj os_get_name() {
 }
 
 static MpObj os_system() {
-    char* command = arg_take_cstr("os.system");
+    char* command = mp_take_cstr_arg("os.system");
     int ret_code = system(command);
     return number_obj(ret_code);
 }
@@ -166,15 +166,15 @@ static MpObj os_system() {
 void mp_os_init() {
     MpObj os_mod = mp_new_native_module("os");
 
-    mod_reg_func(os_mod, "getcwd",  os_getcwd);
-    mod_reg_func(os_mod, "listdir", os_listdir);
-    mod_reg_func(os_mod, "chdir",   os_chdir);
-    mod_reg_func(os_mod, "stat",    os_stat);
-    mod_reg_func(os_mod, "exists",  os_exists);
-    mod_reg_func(os_mod, "system",  os_system);
+    MpModule_RegFunc(os_mod, "getcwd",  os_getcwd);
+    MpModule_RegFunc(os_mod, "listdir", os_listdir);
+    MpModule_RegFunc(os_mod, "chdir",   os_chdir);
+    MpModule_RegFunc(os_mod, "stat",    os_stat);
+    MpModule_RegFunc(os_mod, "exists",  os_exists);
+    MpModule_RegFunc(os_mod, "system",  os_system);
 
     // 注册os模块的属性
-    mod_reg_attr(os_mod, "name", os_get_name());
+    MpModule_RegAttr(os_mod, "name", os_get_name());
     
     reg_builtin_func("exists", os_exists);
 }

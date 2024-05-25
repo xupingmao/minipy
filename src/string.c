@@ -322,27 +322,27 @@ MpObj string_add(MpStr* a, MpStr* b) {
 
 MpObj string_builtin_find() {
     static const char* sz_func = "find";
-    MpObj self = arg_take_str_obj(sz_func);
-    MpObj str = arg_take_str_obj(sz_func);
+    MpObj self = mp_take_str_obj_arg(sz_func);
+    MpObj str = mp_take_str_obj_arg(sz_func);
     return number_obj(string_index(self.value.str, str.value.str, 0));
 }
 
 MpObj string_builtin_rfind() {
-    MpObj self = arg_take_str_obj("rfind");
-    MpObj  str = arg_take_str_obj("rfind");
+    MpObj self = mp_take_str_obj_arg("rfind");
+    MpObj  str = mp_take_str_obj_arg("rfind");
     return number_obj(string_rfind(self.value.str, str.value.str));
 }
 
 MpObj string_builtin_substring() {
     static const char* sz_func = "substring";
-    MpObj self = arg_take_str_obj(sz_func);
-    int start = arg_take_int(sz_func);
-    int end = arg_take_int(sz_func);
+    MpObj self = mp_take_str_obj_arg(sz_func);
+    int start = mp_take_int_arg(sz_func);
+    int end = mp_take_int_arg(sz_func);
     return string_substring(self.value.str, start, end);
 }
 
 MpObj string_builtin_upper() {
-    MpObj self = arg_take_str_obj("upper");
+    MpObj self = mp_take_str_obj_arg("upper");
     int i;
     char*s = GET_CSTR(self);
     int len = GET_STR_LEN(self);
@@ -356,7 +356,7 @@ MpObj string_builtin_upper() {
 }
 
 MpObj string_builtin_lower() {
-    MpObj self = arg_take_str_obj("lower");
+    MpObj self = mp_take_str_obj_arg("lower");
     int i;
     char*s = GET_CSTR(self);
     int len = GET_STR_LEN(self);
@@ -372,9 +372,9 @@ MpObj string_builtin_lower() {
 
 MpObj string_builtin_replace() {
     static const char* sz_func;
-    MpObj self = arg_take_str_obj(sz_func);
-    MpObj src = arg_take_str_obj(sz_func);
-    MpObj des = arg_take_str_obj(sz_func);
+    MpObj self = mp_take_str_obj_arg(sz_func);
+    MpObj src = mp_take_str_obj_arg(sz_func);
+    MpObj des = mp_take_str_obj_arg(sz_func);
 
     MpObj nstr = string_alloc("", 0);
     int pos = string_index(self.value.str, src.value.str, 0);
@@ -395,8 +395,8 @@ MpObj string_builtin_replace() {
 
 MpObj string_builtin_split() {
     const char* sz_func = "split";
-    MpObj self    = arg_take_str_obj(sz_func);
-    MpObj pattern = arg_take_str_obj(sz_func);
+    MpObj self    = mp_take_str_obj_arg(sz_func);
+    MpObj pattern = mp_take_str_obj_arg(sz_func);
     int pos, lastpos;
     MpObj nstr, list;
     if (GET_STR_LEN(pattern) == 0) {
@@ -422,15 +422,15 @@ MpObj string_builtin_split() {
 }
 
 MpObj string_builtin_startswith() {
-    MpObj self = arg_take_str_obj("str.startswith");
-    MpObj arg0 = arg_take_str_obj("str.startswith");
+    MpObj self = mp_take_str_obj_arg("str.startswith");
+    MpObj arg0 = mp_take_str_obj_arg("str.startswith");
     return number_obj(string_index(GET_STR_OBJ(self), GET_STR_OBJ(arg0), 0) == 0);
 }
 
 MpObj string_builtin_endswith() {
     const char* func_name = "str.endswith";
-    MpObj self = arg_take_str_obj(func_name);
-    MpObj arg0 = arg_take_str_obj(func_name);
+    MpObj self = mp_take_str_obj_arg(func_name);
+    MpObj arg0 = mp_take_str_obj_arg(func_name);
     int idx = string_index(GET_STR_OBJ(self), GET_STR_OBJ(arg0), 0);
     if (idx < 0) {
         return number_obj(0);
@@ -440,7 +440,7 @@ MpObj string_builtin_endswith() {
 
 MpObj string_builtin_format() {
     const char* func_name = "str.format";
-    MpObj self = arg_take_str_obj(func_name);
+    MpObj self = mp_take_str_obj_arg(func_name);
     MpObj nstr = string_alloc("", 0);
     int i = 0;
 
@@ -450,7 +450,7 @@ MpObj string_builtin_format() {
         char c = self.value.str->value[i];
         if (c == '}') {
             if (start == 1) {
-                MpObj obj = arg_take_obj(func_name);
+                MpObj obj = mp_take_obj_arg(func_name);
                 string_append_obj(nstr, obj);
                 start = 0;
             } else {
@@ -511,31 +511,31 @@ static MpObj string_rstrip_chars(MpStr* self,
 }
 
 MpObj string_builtin_rstrip() {
-    MpObj self = arg_take_obj("str.rstrip");
-    int argc = arg_count();
+    MpObj self = mp_take_obj_arg("str.rstrip");
+    int argc = mp_count_arg();
     if (argc == 1) {
         // strip blank chars
         return string_rstrip_blank(GET_STR_OBJ(self));
     } else {
-        MpObj chars = arg_take_str_obj("str.rstrip");
+        MpObj chars = mp_take_str_obj_arg("str.rstrip");
         return string_rstrip_chars(GET_STR_OBJ(self), 
             GET_CSTR(chars), GET_STR_LEN(chars));
     }
 }
 
-void string_methods_init() {
+void MpStr_InitMethods() {
     tm->str_proto = dict_new();
-    mod_reg_func(tm->str_proto, "replace",    string_builtin_replace);
-    mod_reg_func(tm->str_proto, "find",       string_builtin_find);
-    mod_reg_func(tm->str_proto, "rfind",      string_builtin_rfind);
-    mod_reg_func(tm->str_proto, "substring",  string_builtin_substring);
-    mod_reg_func(tm->str_proto, "upper",      string_builtin_upper);
-    mod_reg_func(tm->str_proto, "lower",      string_builtin_lower);
-    mod_reg_func(tm->str_proto, "split",      string_builtin_split);
-    mod_reg_func(tm->str_proto, "startswith", string_builtin_startswith);
-    mod_reg_func(tm->str_proto, "endswith",   string_builtin_endswith);
-    mod_reg_func(tm->str_proto, "format",     string_builtin_format);
-    mod_reg_func(tm->str_proto, "rstrip",     string_builtin_rstrip);
+    MpModule_RegFunc(tm->str_proto, "replace",    string_builtin_replace);
+    MpModule_RegFunc(tm->str_proto, "find",       string_builtin_find);
+    MpModule_RegFunc(tm->str_proto, "rfind",      string_builtin_rfind);
+    MpModule_RegFunc(tm->str_proto, "substring",  string_builtin_substring);
+    MpModule_RegFunc(tm->str_proto, "upper",      string_builtin_upper);
+    MpModule_RegFunc(tm->str_proto, "lower",      string_builtin_lower);
+    MpModule_RegFunc(tm->str_proto, "split",      string_builtin_split);
+    MpModule_RegFunc(tm->str_proto, "startswith", string_builtin_startswith);
+    MpModule_RegFunc(tm->str_proto, "endswith",   string_builtin_endswith);
+    MpModule_RegFunc(tm->str_proto, "format",     string_builtin_format);
+    MpModule_RegFunc(tm->str_proto, "rstrip",     string_builtin_rstrip);
 }
 
 MpObj* string_next(MpData* iterator) {

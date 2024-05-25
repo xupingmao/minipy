@@ -35,10 +35,10 @@ static int is_file_obj(MpObj obj) {
 
 MpObj bf_open() {
     // 打开文件函数，返回文件对象
-    MpObj fpath = arg_take_str_obj("fpath");
+    MpObj fpath = mp_take_str_obj_arg("fpath");
     MpObj mode = string_static("r+");
-    if (arg_has_next()) {
-        mode = arg_take_str_obj("mode");
+    if (mp_has_next_arg()) {
+        mode = mp_take_str_obj_arg("mode");
     }
     FILE* fp = fopen(GET_CSTR(fpath), GET_CSTR(mode));
     if (fp == NULL) {
@@ -99,7 +99,7 @@ MpObj bf_file_str(MpData* data) {
 
 static 
 MpObj bf_file_close() {
-    MpObj self = arg_take_obj("file_close: self");
+    MpObj self = mp_take_obj_arg("file_close: self");
     if (!is_file_obj(self)) {
         mp_raise("expect fileobject");
     }
@@ -117,10 +117,10 @@ MpObj bf_file_close() {
 
 static
 MpObj bf_file_read() {
-    MpObj self = arg_take_obj("file_read: self");
+    MpObj self = mp_take_obj_arg("file_read: self");
     int len = -1;
-    if (arg_has_next()) {
-        len = arg_take_int("file_read: len");
+    if (mp_has_next_arg()) {
+        len = mp_take_int_arg("file_read: len");
     }
     if (!is_file_obj(self)) {
         mp_raise("expect fileobject");
@@ -142,8 +142,8 @@ MpObj bf_file_read() {
 }
 
 static MpObj bf_file_write() {
-    MpObj self = arg_take_obj("file_write: self");
-    MpStr* content = arg_take_str_ptr("file_write: content");
+    MpObj self = mp_take_obj_arg("file_write: self");
+    MpStr* content = mp_take_str_ptr_arg("file_write: content");
 
     if (!is_file_obj(self)) {
         mp_raise("expect fileobject");
@@ -199,13 +199,13 @@ MpObj mp_save(char*fname, MpObj content) {
 
 
 MpObj bf_load(MpObj p){
-    MpObj fname = arg_take_str_obj("load");
+    MpObj fname = mp_take_str_obj_arg("load");
     return mp_load(GET_CSTR(fname));
 }
 
 MpObj bf_save(){
-    MpObj fname = arg_take_str_obj("<save name>");
-    return mp_save(GET_CSTR(fname), arg_take_str_obj("<save content>"));
+    MpObj fname = mp_take_str_obj_arg("<save name>");
+    return mp_save(GET_CSTR(fname), mp_take_str_obj_arg("<save content>"));
 }
 
 

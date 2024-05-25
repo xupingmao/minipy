@@ -2,8 +2,8 @@
 #include <time.h>
 
 static MpObj random_randint() {
-	int start = arg_take_int("random.randint");
-	int stop  = arg_take_int("random.randint");
+	int start = mp_take_int_arg("random.randint");
+	int stop  = mp_take_int_arg("random.randint");
 
 	if (start > stop) {
 		mp_raise("random_randint: invalid range(%d, %d)", start, stop);
@@ -24,8 +24,8 @@ void mp_random_init() {
     MpObj module = mp_new_native_module("random");
 
 	// functions
-    mod_reg_func(module, "randint",  random_randint);
+    MpModule_RegFunc(module, "randint",  random_randint);
 	// attributes
-    mod_reg_attr(module, "RAND_MAX", number_obj(RAND_MAX));
+    MpModule_RegAttr(module, "RAND_MAX", number_obj(RAND_MAX));
 }
 

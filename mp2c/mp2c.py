@@ -402,15 +402,15 @@ def convert(code, writer):
             line = "  /* OP_LOAD_PARAMS(%s) */" % parg
             writer.writeline(line)
             for i in range(parg):
-                writer.writeline("  locals[%d] = arg_take_obj(\"%s\");" % (i, func_name))
+                writer.writeline("  locals[%d] = mp_take_obj_arg(\"%s\");" % (i, func_name))
         elif op == OP_LOAD_PARG:
             for i in range(val):
-                writer.writeline("  locals[%d] = arg_take_obj(\"\");" % (i, func_name))
+                writer.writeline("  locals[%d] = mp_take_obj_arg(\"\");" % (i, func_name))
         elif op == OP_LOAD_NARG:
             arg_index = val
-            writer.writeline("  MpObj args = list_new(arg_remains());")
-            writer.writeline("  while(arg_remains() > 0) {")
-            writer.writeline("    obj_append(args, arg_take_obj(\"%s\"));" % (func_name))
+            writer.writeline("  MpObj args = list_new(mp_count_remain_args());")
+            writer.writeline("  while(mp_count_remain_args() > 0) {")
+            writer.writeline("    obj_append(args, mp_take_obj_arg(\"%s\"));" % (func_name))
             writer.writeline("  }")
             writer.writeline("  locals[%s] = args;" % arg_index)
         elif op == OP_LOAD_LOCAL:

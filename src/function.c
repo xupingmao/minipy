@@ -375,11 +375,11 @@ MpObj mp_call_func(MpObj func)
 MpObj obj_apply(MpObj func, MpObj args) {
     mp_assert_type2(func, TYPE_FUNCTION, TYPE_CLASS, "obj_apply");
     mp_assert_type(args, TYPE_LIST, "obj_apply");
-    arg_set_arguments(LIST_NODES(args), LIST_LEN(args));
+    mp_set_args(LIST_NODES(args), LIST_LEN(args));
     return MP_CALL_EX(func);
 }
 
 MpObj obj_call_nargs(MpObj func, int n, MpObj* args) {
-    arg_set_arguments(args, n);
+    mp_set_args(args, n);
     return MP_CALL_EX(func);
 }

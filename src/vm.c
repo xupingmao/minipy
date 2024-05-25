@@ -3,7 +3,7 @@
  * @email: 578749341@qq.com
  * @Date: 2023-12-07 22:03:29
  * @LastEditors: xupingmao
- * @LastEditTime: 2024-05-25 08:44:06
+ * @LastEditTime: 2024-05-25 17:00:19
  * @FilePath: /minipy/src/vm.c
  * @Description: 描述
  */
@@ -50,41 +50,11 @@
 #include "gen/pyeval.gen.c"
 #include "gen/repl.gen.c"
 
-
-/**
- * register module
- */
-MpObj mp_new_native_module(char* name) {
-    MpObj module = dict_new();
-    MpObj module_name = string_new(name);
-
-    obj_set(module, string_from_cstr("__name__"), module_name);
-    obj_set(tm->modules, module_name, module);
-    return module;
-}
-
-/**
- * register module function
- * @param mod, module object, dict
- */
-void mod_reg_func(MpObj mod, char* name, MpObj (*native)()) {
-    assert(MP_TYPE(mod) == TYPE_DICT);
-    MpObj func = func_new(tm->builtins_mod, NONE_OBJECT, native);
-    GET_FUNCTION(func)->name = string_from_cstr(name);
-    obj_set(mod,GET_FUNCTION(func)->name, func);
-}
-
-// 注册模块的变量
-void mod_reg_attr(MpObj module, char* name, MpObj value) {
-    // assert(MP_TYPE(module) == TYPE_MODULE);
-    obj_set(module, string_from_cstr(name), value);
-}
-
 /**
  * register built-in function
  */
 void reg_builtin_func(char* name, MpObj (*native)()) {
-    mod_reg_func(tm->builtins, name, native);
+    MpModule_RegFunc(tm->builtins, name, native);
 }
 
 void reg_method_by_cstr(MpObj class_obj, char* name, MpObj (*native)()) {
@@ -147,7 +117,7 @@ MpObj vm_call_mod_func(const char* mod, const char* sz_fnc) {
         mp_printf("vm_call_mod_func.function: %o\n", fnc);
         mp_printf("vm_call_mod_func.module: %o\n", func_get_mod_obj(GET_FUNCTION(fnc)));
     #endif
-    arg_start();
+    mp_reset_args();
     return MP_CALL_EX(fnc);
 }
 
@@ -197,11 +167,11 @@ int vm_init(int argc, char* argv[]) {
     obj_set_by_cstr(tm->builtins, "__builtins__", tm->builtins);
     obj_set_by_cstr(tm->builtins, "__modules__",  tm->modules);
     
-    list_methods_init();
-    string_methods_init();
-    dict_methods_init();
-    dict_set_methods_init();
-    builtins_init();
+    MpList_InitMethods();
+    MpStr_InitMethods();
+    MpDict_InitMethods();
+    DictSet_InitMethods();
+    mp_init_builtins();
 
     /* init c modules */
     mp_time_init();

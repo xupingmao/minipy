@@ -487,13 +487,13 @@ MpObj obj_mod(MpObj a, MpObj b) {
     if (a.type == b.type && a.type == TYPE_NUM) {
         return number_obj((long) GET_NUM(a) % (long) GET_NUM(b));
     } else if (a.type == TYPE_STR) {
-        MpObj *__mod__ = get_builtin("__mod__");
+        MpObj *__mod__ = mp_get_builtin("__mod__");
         if (__mod__ == NULL) {
             return string_ops_mod(a, b);
         } else {
-            arg_start();
-            arg_push(a);
-            arg_push(b);
+            mp_reset_args();
+            mp_push_arg(a);
+            mp_push_arg(b);
             return MP_CALL_EX(*__mod__);
         }        
     }
@@ -728,9 +728,9 @@ MpObj mp_call_builtin(BuiltinFunc func, int n, ...) {
     va_list ap;
     va_start(ap, n);
 
-    arg_start();
+    mp_reset_args();
     for (i = 0; i < n; i++) {
-        arg_push(va_arg(ap, MpObj));
+        mp_push_arg(va_arg(ap, MpObj));
     }
     return func();
 }

@@ -42,7 +42,7 @@ void dict_set_by_cstr(MpDict* dict, const char* key, MpObj val);
 MpObj dict_keys(MpDict* );
 
 void             dict_del(MpDict* dict, MpObj k);
-void             dict_methods_init();
+void             MpDict_InitMethods();
 /** dict methods **/
 MpObj            dict_iter_new(MpObj dict);
 MpObj*           dict_next(MpData* iterator);

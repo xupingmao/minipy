@@ -421,12 +421,12 @@ MpObj* dict_get_by_str(MpObj obj, char* key) {
 }
 
 MpObj dict_builtin_keys(){
-    MpObj dict = arg_take_dict_obj("dict.keys");
+    MpObj dict = mp_take_dict_obj_arg("dict.keys");
     return dict_keys(GET_DICT(dict));
 }
 
 MpObj dict_builtin_values() {
-    MpObj _d = arg_take_dict_obj("dict.values");
+    MpObj _d = mp_take_dict_obj_arg("dict.values");
     MpDict* dict = GET_DICT(_d);
     MpObj list = list_new(dict->len);
     for(int i = 0; i < dict->cap; i++) {
@@ -438,7 +438,7 @@ MpObj dict_builtin_values() {
 }
 
 MpObj dict_builtin_copy() {
-    MpObj dict = arg_take_dict_obj("dict.copy");
+    MpObj dict = mp_take_dict_obj_arg("dict.copy");
     MpObj new_dict = dict_new();
 
     for(int i = 0; i < GET_DICT(dict)->cap; i++) {
@@ -452,8 +452,8 @@ MpObj dict_builtin_copy() {
 }
 
 MpObj dict_builtin_update() {
-    MpDict* self = arg_take_dict_ptr("dict.update");
-    MpDict* other = arg_take_dict_ptr("dict.update");
+    MpDict* self = mp_take_dict_ptr_arg("dict.update");
+    MpDict* other = mp_take_dict_ptr_arg("dict.update");
 
     for (int i = 0; i < other->cap; i++) {
         if (other->nodes[i].used <= 0) {
@@ -466,14 +466,14 @@ MpObj dict_builtin_update() {
 }
 
 MpObj dict_builtin_pop() {
-    MpObj self = arg_take_dict_obj("dict.pop");
-    MpObj key  = arg_take_obj("dict.pop");
+    MpObj self = mp_take_dict_obj_arg("dict.pop");
+    MpObj key  = mp_take_obj_arg("dict.pop");
     return dict_pop(GET_DICT(self), key);
 }
 
 MpObj dict_builtin_get() {
-    MpDict* self = arg_take_dict_ptr("dict.get");
-    MpObj key = arg_take_obj("dict.get");
+    MpDict* self = mp_take_dict_ptr_arg("dict.get");
+    MpObj key = mp_take_obj_arg("dict.get");
     DictNode* node = dict_get_node(self, key);
     if (node == NULL) {
         return NONE_OBJECT;
@@ -485,15 +485,15 @@ MpObj dict_builtin_get() {
  * init dict methods
  * @since 2015-?
  */
-void dict_methods_init() {
+void MpDict_InitMethods() {
     tm->dict_proto = dict_new();
     /* build dict class */
-    mod_reg_func(tm->dict_proto, "get",    dict_builtin_get);
-    mod_reg_func(tm->dict_proto, "keys",   dict_builtin_keys);
-    mod_reg_func(tm->dict_proto, "values", dict_builtin_values);
-    mod_reg_func(tm->dict_proto, "copy",   dict_builtin_copy);
-    mod_reg_func(tm->dict_proto, "update", dict_builtin_update);
-    mod_reg_func(tm->dict_proto, "pop",    dict_builtin_pop);
+    MpModule_RegFunc(tm->dict_proto, "get",    dict_builtin_get);
+    MpModule_RegFunc(tm->dict_proto, "keys",   dict_builtin_keys);
+    MpModule_RegFunc(tm->dict_proto, "values", dict_builtin_values);
+    MpModule_RegFunc(tm->dict_proto, "copy",   dict_builtin_copy);
+    MpModule_RegFunc(tm->dict_proto, "update", dict_builtin_update);
+    MpModule_RegFunc(tm->dict_proto, "pop",    dict_builtin_pop);
 }
 
 /**
