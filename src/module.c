@@ -20,7 +20,7 @@ MpObj module_new(MpObj fname, MpObj name, MpObj code){
   /*mod->constants = list_new(20);*/
   /*list_append(GET_LIST(mod->constants), NONE_OBJECT);*/
   mod->globals = dict_new();
-  MpObj m = gc_track(obj_new(TYPE_MODULE, mod));
+  MpObj m = gc_track(mp_to_obj(TYPE_MODULE, mod));
   /* set module */
   obj_set(tm->modules, fname, mod->globals);
   obj_set(mod->globals, string_static("__name__"), name);

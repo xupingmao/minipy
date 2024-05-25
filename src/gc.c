@@ -544,7 +544,7 @@ void gc_destroy() {
  * @param type object type
  * @value object pointer
  */
-MpObj obj_new(int type, void* value) {
+MpObj mp_to_obj(int type, void* value) {
     MpObj o;
     MP_TYPE(o) = type;
     switch (type) {
@@ -572,7 +572,7 @@ MpObj obj_new(int type, void* value) {
         case TYPE_NONE:
             break;
         default:
-            mp_raise("obj_new: not supported type %d", type);
+            mp_raise("mp_to_obj: not supported type %d", type);
     }
     return o;
 }

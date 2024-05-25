@@ -10,8 +10,7 @@
 #include <assert.h>
 #include "include/mp.h"
 
-inline
-void mp_assert(int value, char* msg) {
+inline void mp_assert(int value, char* msg) {
     if (!value) {
         mp_raise("assertion failed, %s", msg);
     }
@@ -44,22 +43,21 @@ const char* get_type_cstr(int type) {
     return MP_TYPE_STR;
 }
 
-inline
-const char* get_object_type_cstr(MpObj o) {
+inline const char* get_object_type_cstr(MpObj o) {
     return get_type_cstr(o.type);
 }
 
 void mp_assert_type(MpObj o, int type, char* msg) {
     if (MP_TYPE(o) != type) {
-        mp_raise("%s: expect %s but see %s", msg, 
-            get_type_cstr(type), get_type_cstr(o.type));
+        mp_raise("%s: expect %s but see %s", msg, get_type_cstr(type),
+                 get_type_cstr(o.type));
     }
 }
 
 void mp_assert_type2(MpObj o, int type1, int type2, char* msg) {
     if (MP_TYPE(o) != type1 && MP_TYPE(o) != type2) {
-        mp_raise("%s: expect %s or %s but see %s", msg, 
-            get_type_cstr(type1), get_type_cstr(type2), get_type_cstr(o.type));
+        mp_raise("%s: expect %s or %s but see %s", msg, get_type_cstr(type1),
+                 get_type_cstr(type2), get_type_cstr(o.type));
     }
 }
 
@@ -71,8 +69,8 @@ void mp_assert_int(double value, char* msg) {
 }
 
 int obj_eq_cstr(MpObj obj, const char* value) {
-    return MP_TYPE(obj) == TYPE_STR
-            && (GET_CSTR(obj) == value || strcmp(GET_CSTR(obj), value) == 0);
+    return MP_TYPE(obj) == TYPE_STR &&
+           (GET_CSTR(obj) == value || strcmp(GET_CSTR(obj), value) == 0);
 }
 
 void obj_set(MpObj self, MpObj k, MpObj v) {
@@ -98,8 +96,7 @@ void obj_set(MpObj self, MpObj k, MpObj v) {
     mp_raise("obj_set: Self %o, Key %o, Val %o", self, k, v);
 }
 
-inline
-void obj_set_by_cstr(MpObj self, char* key, MpObj value) {
+inline void obj_set_by_cstr(MpObj self, char* key, MpObj value) {
     obj_set(self, string_new(key), value);
 }
 
@@ -115,8 +112,9 @@ MpObj obj_get(MpObj self, MpObj k) {
                     n += GET_STR_LEN(self);
                 }
                 if (n >= GET_STR_LEN(self) || n < 0)
-                    mp_raise("MpStr_get: index overflow ,len=%d,index=%d, str=%o",
-                            GET_STR_LEN(self), n, self);
+                    mp_raise(
+                        "MpStr_get: index overflow ,len=%d,index=%d, str=%o",
+                        GET_STR_LEN(self), n, self);
                 return string_chr(0xff & GET_CSTR(self)[n]);
             }
             // string method
@@ -125,25 +123,25 @@ MpObj obj_get(MpObj self, MpObj k) {
             }
             break;
         }
-        case TYPE_LIST:{
+        case TYPE_LIST: {
             DictNode* node;
             if (MP_TYPE(k) == TYPE_NUM) {
                 return list_get(GET_LIST(self), GET_NUM(k));
             }
             // list method
-            if ((node = dict_get_node(GET_DICT(tm->list_proto), k))!=NULL) {
+            if ((node = dict_get_node(GET_DICT(tm->list_proto), k)) != NULL) {
                 return method_new(node->val, self);
             }
             break;
         }
-        case TYPE_DICT:{
+        case TYPE_DICT: {
             DictNode* node;
             node = dict_get_node(GET_DICT(self), k);
             if (node != NULL) {
                 return node->val;
-            } 
+            }
             // dict method
-            if ((node = dict_get_node(GET_DICT(tm->dict_proto), k))!=NULL) {
+            if ((node = dict_get_node(GET_DICT(tm->dict_proto), k)) != NULL) {
                 return method_new(node->val, self);
             }
             break;
@@ -185,17 +183,17 @@ MpObj obj_slice(MpObj self, MpObj first, MpObj second) {
     }
 
     MpObj ret = NONE_OBJECT;
-    
+
     if (IS_STR(self)) {
         int length = GET_STR_LEN(self);
         start = start >= 0 ? start : start + length;
-        end   = end   >= 0 ? end   : end   + length;
+        end = end >= 0 ? end : end + length;
         if (start < 0 || start > length) {
             start = 0;
-        } 
+        }
         if (end < 0 || end > length) {
-            end = length; // do not overflow;
-        } 
+            end = length;  // do not overflow;
+        }
         if (end <= start) {
             return string_alloc("", 0);
         }
@@ -210,13 +208,13 @@ MpObj obj_slice(MpObj self, MpObj first, MpObj second) {
         }
         if (start < 0 || start > length) {
             start = 0;
-        } 
+        }
         if (end < 0 || end > length) {
             end = length;
-        } 
+        }
         int i = 0;
         ret = list_new(end - start);
-        for (i = start; i < end ; i++) {
+        for (i = start; i < end; i++) {
             obj_append(ret, LIST_GET(self, i));
         }
     } else {
@@ -254,45 +252,52 @@ MpObj obj_add(MpObj a, MpObj b) {
     return NONE_OBJECT;
 }
 
-int mp_is_equals(MpObj a, MpObj b){
-    if(MP_TYPE(a) != MP_TYPE(b)) {
+int mp_is_equals(MpObj a, MpObj b) {
+    if (MP_TYPE(a) != MP_TYPE(b)) {
         return FALSE;
     }
-    
-    switch(MP_TYPE(a)){
-        case TYPE_NUM:{
+
+    switch (MP_TYPE(a)) {
+        case TYPE_NUM: {
             return GET_NUM(a) == GET_NUM(b);
         }
         case TYPE_STR: {
             MpStr* s1 = GET_STR_OBJ(a);
             MpStr* s2 = GET_STR_OBJ(b);
             return (s1 == s2) || (s1->value == s2->value) ||
-                (s1->len == s2->len && strncmp(s1->value, s2->value, s1->len) == 0);
+                   (s1->len == s2->len &&
+                    strncmp(s1->value, s2->value, s1->len) == 0);
         }
-        case TYPE_LIST:    {
-            if(GET_LIST(a) == GET_LIST(b)) return 1;
-            if(LIST_LEN(a) != LIST_LEN(b)) return 0;
+        case TYPE_LIST: {
+            if (GET_LIST(a) == GET_LIST(b))
+                return 1;
+            if (LIST_LEN(a) != LIST_LEN(b))
+                return 0;
             int i;
             int len = GET_LIST(a)->len;
             MpObj* nodes1 = GET_LIST(a)->nodes;
             MpObj* nodes2 = GET_LIST(b)->nodes;
-            for(i = 0; i < len; i++){
-                if(!mp_is_equals(nodes1[i], nodes2[i]) ){
+            for (i = 0; i < len; i++) {
+                if (!mp_is_equals(nodes1[i], nodes2[i])) {
                     return 0;
                 }
             }
             return TRUE;
         }
-        case TYPE_NONE:return 1;
-        case TYPE_DICT:return GET_DICT(a) == GET_DICT(b);
-        case TYPE_FUNCTION: return GET_FUNCTION(a) == GET_FUNCTION(b);
-        case TYPE_CLASS: return GET_CLASS(a) == GET_CLASS(b);
+        case TYPE_NONE:
+            return 1;
+        case TYPE_DICT:
+            return GET_DICT(a) == GET_DICT(b);
+        case TYPE_FUNCTION:
+            return GET_FUNCTION(a) == GET_FUNCTION(b);
+        case TYPE_CLASS:
+            return GET_CLASS(a) == GET_CLASS(b);
         default: {
             const char* ltype = get_type_cstr(a.type);
             const char* rtype = get_type_cstr(b.type);
-            mp_raise("mp_is_equals: not supported type %d:%s and %d:%s", 
-                MP_TYPE(a), ltype, MP_TYPE(b), rtype);
-        } 
+            mp_raise("mp_is_equals: not supported type %d:%s and %d:%s",
+                     MP_TYPE(a), ltype, MP_TYPE(b), rtype);
+        }
     }
     return FALSE;
 }
@@ -313,7 +318,8 @@ int mp_cmp(MpObj a, MpObj b) {
                 }
                 return 0;
             }
-            case TYPE_STR: return strcmp(GET_CSTR(a), GET_CSTR(b));
+            case TYPE_STR:
+                return strcmp(GET_CSTR(a), GET_CSTR(b));
         }
     }
     mp_raise("obj_cmp: can not compare %o and %o", a, b);
@@ -337,7 +343,7 @@ MpObj obj_mul(MpObj a, MpObj b) {
         MpObj des;
         if (len == 0)
             return a;
-        int times = (int) GET_NUM(b);
+        int times = (int)GET_NUM(b);
         if (times <= 0)
             return string_from_cstr("");
         if (times == 1)
@@ -386,7 +392,7 @@ MpObj obj_div(MpObj a, MpObj b) {
 }
 
 MpObj string_mod_list(MpObj str, MpObj list) {
-    assert(MP_TYPE(str)  == TYPE_STR);
+    assert(MP_TYPE(str) == TYPE_STR);
     assert(MP_TYPE(list) == TYPE_LIST);
 
     char* fmt = GET_CSTR(str);
@@ -404,7 +410,7 @@ MpObj string_mod_list(MpObj str, MpObj list) {
             i++;
             char num_buf[20];
             int num_len = 0;
-            char *fmt_temp = fmt;
+            char* fmt_temp = fmt;
             while (isdigit(fmt[i]) && num_len < sizeof(num_buf)) {
                 i++;
                 num_len++;
@@ -420,23 +426,20 @@ MpObj string_mod_list(MpObj str, MpObj list) {
 
             // TODO 处理 %03d 中间的数字部分
 
-            switch(fmt[i]) {
-                case 's':
-                {
+            switch (fmt[i]) {
+                case 's': {
                     string_append_obj(result, list_get(plist, arg_index));
                     arg_index++;
                     break;
                 }
-                case 'd': 
-                {
+                case 'd': {
                     MpObj item = list_get(plist, arg_index);
                     mp_assert_type(item, TYPE_NUM, "obj_mod");
                     string_append_obj(result, item);
                     arg_index++;
                     break;
                 }
-                case 'r': 
-                {
+                case 'r': {
                     MpObj item = list_get(plist, arg_index);
                     if (IS_STR(item)) {
                         string_append_char(result, '\'');
@@ -458,8 +461,8 @@ MpObj string_mod_list(MpObj str, MpObj list) {
                     break;
                 }
                 default:
-                    mp_raise("obj_mod(%d): unsupported format type '%c'(0x%x)", 
-                        __LINE__, fmt[i], fmt[i]);
+                    mp_raise("obj_mod(%d): unsupported format type '%c'(0x%x)",
+                             __LINE__, fmt[i], fmt[i]);
             }
         } else {
             string_append_char(result, c);
@@ -485,9 +488,9 @@ MpObj string_ops_mod(MpObj a, MpObj b) {
 
 MpObj obj_mod(MpObj a, MpObj b) {
     if (a.type == b.type && a.type == TYPE_NUM) {
-        return number_obj((long) GET_NUM(a) % (long) GET_NUM(b));
+        return number_obj((long)GET_NUM(a) % (long)GET_NUM(b));
     } else if (a.type == TYPE_STR) {
-        MpObj *__mod__ = mp_get_builtin("__mod__");
+        MpObj* __mod__ = mp_get_builtin("__mod__");
         if (__mod__ == NULL) {
             return string_ops_mod(a, b);
         } else {
@@ -495,12 +498,11 @@ MpObj obj_mod(MpObj a, MpObj b) {
             mp_push_arg(a);
             mp_push_arg(b);
             return MP_CALL_EX(*__mod__);
-        }        
+        }
     }
     mp_raise("obj_mod: can not module %o and %o", a, b);
     return NONE_OBJECT;
 }
-
 
 /* parent has child
  * child in parent
@@ -513,7 +515,8 @@ int mp_is_in(MpObj child, MpObj parent) {
         case TYPE_STR: {
             if (MP_TYPE(child) != TYPE_STR)
                 return 0;
-            return string_index(GET_STR_OBJ(parent), GET_STR_OBJ(child), 0) != -1;
+            return string_index(GET_STR_OBJ(parent), GET_STR_OBJ(child), 0) !=
+                   -1;
         }
         case TYPE_DICT: {
             DictNode* node = dict_get_node(GET_DICT(parent), child);
@@ -522,11 +525,16 @@ int mp_is_in(MpObj child, MpObj parent) {
             }
             return 1;
         }
-        case TYPE_NONE: return 0;
-        case TYPE_NUM:  return 0;
-        case TYPE_FUNCTION: return 0;
-        /* TODO DATA */ 
-        default: mp_raise("obj_is_in: cant handle type (%s)", get_type_cstr(MP_TYPE(parent)));
+        case TYPE_NONE:
+            return 0;
+        case TYPE_NUM:
+            return 0;
+        case TYPE_FUNCTION:
+            return 0;
+        /* TODO DATA */
+        default:
+            mp_raise("obj_is_in: cant handle type (%s)",
+                     get_type_cstr(MP_TYPE(parent)));
     }
     return 0;
 }
@@ -555,7 +563,7 @@ int mp_is_true(MpObj v) {
         case TYPE_CLASS:
         case TYPE_DATA:
             return 1;
-        }
+    }
     return 0;
 }
 
@@ -573,13 +581,19 @@ MpObj obj_or(MpObj a, MpObj b) {
 }
 
 MpObj iter_new(MpObj collections) {
-    switch(MP_TYPE(collections)) {
-        case TYPE_LIST: return list_iter_new(collections);
-        case TYPE_DICT: return dict_iter_new(collections);
-        case TYPE_CLASS: return iter_new(GET_CLASS(collections)->attr_dict);
-        case TYPE_STR:  return string_iter_new(collections);
-        case TYPE_DATA: return collections;
-        default: mp_raise("iter_new: can not create a iterator of %o", collections);
+    switch (MP_TYPE(collections)) {
+        case TYPE_LIST:
+            return list_iter_new(collections);
+        case TYPE_DICT:
+            return dict_iter_new(collections);
+        case TYPE_CLASS:
+            return iter_new(GET_CLASS(collections)->attr_dict);
+        case TYPE_STR:
+            return string_iter_new(collections);
+        case TYPE_DATA:
+            return collections;
+        default:
+            mp_raise("iter_new: can not create a iterator of %o", collections);
     }
     return NONE_OBJECT;
 }
@@ -589,17 +603,18 @@ MpObj* obj_next(MpObj iterator) {
 }
 
 void obj_del(MpObj self, MpObj k) {
-    switch(MP_TYPE(self)) {
-        case TYPE_DICT:{
+    switch (MP_TYPE(self)) {
+        case TYPE_DICT: {
             dict_del(GET_DICT(self), k);
             break;
         }
-        case TYPE_LIST:{
+        case TYPE_LIST: {
             list_del(GET_LIST(self), k);
             break;
         }
         default:
-            mp_raise("obj_del: not supported type %s", get_type_cstr(self.type));
+            mp_raise("obj_del: not supported type %s",
+                     get_type_cstr(self.type));
     }
 }
 
@@ -612,7 +627,7 @@ MpObj obj_append(MpObj a, MpObj item) {
     return a;
 }
 
-MpObj mp_get_global_by_cstr(MpObj globals, char *key) {
+MpObj mp_get_global_by_cstr(MpObj globals, char* key) {
     mp_assert_type(globals, TYPE_DICT, "mp_get_global_by_cstr");
     MpObj okey = string_new(key);
     DictNode* node = dict_get_node(GET_DICT(globals), okey);
@@ -628,15 +643,15 @@ MpObj mp_get_global_by_cstr(MpObj globals, char *key) {
 int mp_len(MpObj o) {
     int len = -1;
     switch (MP_TYPE(o)) {
-    case TYPE_STR:
-        len = GET_STR_LEN(o);
-        break;
-    case TYPE_LIST:
-        len = LIST_LEN(o);
-        break;
-    case TYPE_DICT:
-        len = DICT_LEN(o);
-        break;
+        case TYPE_STR:
+            len = GET_STR_LEN(o);
+            break;
+        case TYPE_LIST:
+            len = LIST_LEN(o);
+            break;
+        case TYPE_DICT:
+            len = DICT_LEN(o);
+            break;
     }
     if (len < 0) {
         mp_raise("mp_len: %o has no attribute len", o);
@@ -654,58 +669,58 @@ MpObj obj_str(MpObj a) {
     char buf[100];
     memset(buf, 0, sizeof(buf));
     switch (MP_TYPE(a)) {
-    case TYPE_STR:
-        return a;
-    case TYPE_NUM: {
-        char s[20];
-        double v = GET_NUM(a);
-        number_format(s, a);
-        return string_new(s);
-    }
-    case TYPE_LIST: {
-        MpObj str = string_new("");
-
-        string_append_char(str, '[');
-        int i, l = LIST_LEN(a);
-        for (i = 0; i < l; i++) {
-            MpObj obj = GET_LIST(a)->nodes[i];
-            /* reference to self in list */
-            if (mp_is_equals(a, obj)) {
-                string_append_cstr(str, "[...]");
-            } else if (obj.type == TYPE_STR) {
-                string_append_char(str, '"');
-                string_append_obj(str, obj);
-                string_append_char(str, '"');
-            } else {
-                string_append_obj(str, obj);
-            }
-            if (i != l - 1) {
-                string_append_char(str, ',');
-            }
+        case TYPE_STR:
+            return a;
+        case TYPE_NUM: {
+            char s[20];
+            double v = GET_NUM(a);
+            number_format(s, a);
+            return string_new(s);
         }
-        string_append_char(str, ']');
-        return str;
-    }
-    case TYPE_DICT:
-        sprintf(buf, "<dict at %p>", GET_DICT(a));
-        return string_new(buf);
-    case TYPE_FUNCTION:
-        FUNCTION_FORMAT(buf, a);
-        return string_new(buf);
-    case TYPE_CLASS:
-        class_format(buf, a);
-        return string_new(buf);
-    case TYPE_NONE:
-        return string_static("None");
-    case TYPE_MODULE:
-        sprintf(buf, "<module %s>", obj_to_cstr(GET_MODULE(a)->file));
-        return string_new(buf);
-    case TYPE_DATA:
-        return GET_DATA(a)->str(GET_DATA(a));
-    default:
-        sprintf(buf, "<unknown(%d)>", a.type);
-        return string_new(buf);
-        // mp_raise("str: not supported type %d", a.type);
+        case TYPE_LIST: {
+            MpObj str = string_new("");
+
+            string_append_char(str, '[');
+            int i, l = LIST_LEN(a);
+            for (i = 0; i < l; i++) {
+                MpObj obj = GET_LIST(a)->nodes[i];
+                /* reference to self in list */
+                if (mp_is_equals(a, obj)) {
+                    string_append_cstr(str, "[...]");
+                } else if (obj.type == TYPE_STR) {
+                    string_append_char(str, '"');
+                    string_append_obj(str, obj);
+                    string_append_char(str, '"');
+                } else {
+                    string_append_obj(str, obj);
+                }
+                if (i != l - 1) {
+                    string_append_char(str, ',');
+                }
+            }
+            string_append_char(str, ']');
+            return str;
+        }
+        case TYPE_DICT:
+            sprintf(buf, "<dict at %p>", GET_DICT(a));
+            return string_new(buf);
+        case TYPE_FUNCTION:
+            FUNCTION_FORMAT(buf, a);
+            return string_new(buf);
+        case TYPE_CLASS:
+            class_format(buf, a);
+            return string_new(buf);
+        case TYPE_NONE:
+            return string_static("None");
+        case TYPE_MODULE:
+            sprintf(buf, "<module %s>", obj_to_cstr(GET_MODULE(a)->file));
+            return string_new(buf);
+        case TYPE_DATA:
+            return GET_DATA(a)->str(GET_DATA(a));
+        default:
+            sprintf(buf, "<unknown(%d)>", a.type);
+            return string_new(buf);
+            // mp_raise("str: not supported type %d", a.type);
     }
     return string_alloc("", 0);
 }
@@ -717,11 +732,10 @@ int get_const_id(MpObj const_value) {
 }
 
 MpObj mp_get_constant(int index) {
-    assert (index >= 0);
-    assert (index < tm->constants->len);
+    assert(index >= 0);
+    assert(index < tm->constants->len);
     return tm->constants->nodes[index].key;
 }
-
 
 MpObj mp_call_builtin(BuiltinFunc func, int n, ...) {
     int i = 0;
@@ -744,4 +758,3 @@ MpObj obj_get_globals_from_module(MpObj module) {
     mp_assert_type(module, TYPE_MODULE, "obj_get_globals_from_module");
     return GET_MODULE(module)->globals;
 }
-

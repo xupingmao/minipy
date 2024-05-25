@@ -148,7 +148,7 @@ void data_set(MpData*, MpObj, MpObj);
 MpObj data_get(MpData*, MpObj);
 MpObj data_str(MpData* self);
 void obj_free(MpObj o);
-MpObj obj_new(int type, void* value);
+MpObj mp_to_obj(int type, void* value);
 
 /**
  * ops functions

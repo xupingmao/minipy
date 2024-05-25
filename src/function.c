@@ -115,7 +115,7 @@ MpObj func_new(MpObj mod, MpObj self, MpNativeFunc native_func) {
     f->maxlocals = 0;
     f->self = self;
     f->name = NONE_OBJECT;
-    return gc_track(obj_new(TYPE_FUNCTION, f));
+    return gc_track(mp_to_obj(TYPE_FUNCTION, f));
 }
 
 /**
@@ -138,7 +138,7 @@ MpObj class_new(MpObj name) {
     MpClass* clazz = mp_malloc(sizeof(MpClass), "class.new");
     clazz->name = name;
     clazz->attr_dict = dict_new();
-    return gc_track(obj_new(TYPE_CLASS, clazz));
+    return gc_track(mp_to_obj(TYPE_CLASS, clazz));
 }
 
 MpObj class_new_by_cstr(char* name) {
