@@ -176,6 +176,6 @@ void mp_os_init() {
     // 注册os模块的属性
     MpModule_RegAttr(os_mod, "name", os_get_name());
     
-    reg_builtin_func("exists", os_exists);
+    mp_reg_builtin_func("exists", os_exists);
 }
 

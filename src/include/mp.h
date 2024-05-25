@@ -188,7 +188,7 @@ MpObj mp_call_builtin(BuiltinFunc func, int n, ...);
 MpObj mp_get_constant(int index);  // 读取常量
 
 // vm functions
-void reg_builtin_func(char* name, MpObj (*native_func)());
+void mp_reg_builtin_func(char* name, MpObj (*native_func)());
 MpObj mp_new_native_module(char* name);
 void MpModule_RegFunc(MpObj mod, char* name, MpObj (*native_func)());
 void MpModule_RegAttr(MpObj mod, char* attr, MpObj value);
@@ -205,8 +205,8 @@ MpObj mp_call_func(MpObj, const char*, int);
 MpObj mp_call_func(MpObj);
 #endif
 
-MpObj obj_call_nargs(MpObj func, int n, MpObj* args);
-MpObj obj_apply(MpObj func, MpObj args);
+MpObj mp_call_with_nargs(MpObj func, int n, MpObj* args);
+MpObj mp_call_with_args(MpObj func, MpObj args);
 MpObj load_file_module(MpObj filename, MpObj code, MpObj name);
 MpObj mp_eval(MpFrame*);
 MpFrame* mp_push_frame(MpObj fnc);

@@ -53,7 +53,7 @@
 /**
  * register built-in function
  */
-void reg_builtin_func(char* name, MpObj (*native)()) {
+void mp_reg_builtin_func(char* name, MpObj (*native)()) {
     MpModule_RegFunc(tm->builtins, name, native);
 }
 

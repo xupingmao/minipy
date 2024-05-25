@@ -439,10 +439,10 @@ def convert(code, writer):
         elif op == OP_CALL or op == OP_TAILCALL:
             argc = val
             writer.writeline("  top -= %s; /* args */" % argc)
-            writer.writeline("  *top = obj_call_nargs(*top, %s, top + 1);" % argc)
+            writer.writeline("  *top = mp_call_with_nargs(*top, %s, top + 1);" % argc)
         elif op == OP_APPLY:
             writer.writeline("  top--;")
-            writer.writeline("  *top = obj_apply(*top, *(top+1));")
+            writer.writeline("  *top = mp_call_with_args(*top, *(top+1));")
         elif op == OP_POP:
             writer.writeline("  MP2C_POP();")
         elif op == OP_JUMP:

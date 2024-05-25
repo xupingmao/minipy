@@ -823,62 +823,62 @@ MpObj bf_isinstance() {
 }
 
 void mp_init_builtins() {
-    reg_builtin_func("file_append", bf_file_append);
-    reg_builtin_func("remove", bf_remove);
-    reg_builtin_func("write", bf_write);
-    reg_builtin_func("load_module", bf_load_module);
-    reg_builtin_func("gettype", bf_gettype);
-    reg_builtin_func("istype", bf_istype);
-    reg_builtin_func("code8", bf_code8);
-    reg_builtin_func("code16", bf_code16);
-    reg_builtin_func("code32", bf_code32);
-    reg_builtin_func("mmatch", bf_mmatch);
-    reg_builtin_func("newobj", bf_newobj);
+    mp_reg_builtin_func("file_append", bf_file_append);
+    mp_reg_builtin_func("remove", bf_remove);
+    mp_reg_builtin_func("write", bf_write);
+    mp_reg_builtin_func("load_module", bf_load_module);
+    mp_reg_builtin_func("gettype", bf_gettype);
+    mp_reg_builtin_func("istype", bf_istype);
+    mp_reg_builtin_func("code8", bf_code8);
+    mp_reg_builtin_func("code16", bf_code16);
+    mp_reg_builtin_func("code32", bf_code32);
+    mp_reg_builtin_func("mmatch", bf_mmatch);
+    mp_reg_builtin_func("newobj", bf_newobj);
 
     /* python built-in functions */
-    reg_builtin_func("globals", bf_globals);
-    reg_builtin_func("len", bf_len);
-    reg_builtin_func("exit", bf_exit);
-    reg_builtin_func("input", bf_input);
+    mp_reg_builtin_func("globals", bf_globals);
+    mp_reg_builtin_func("len", bf_len);
+    mp_reg_builtin_func("exit", bf_exit);
+    mp_reg_builtin_func("input", bf_input);
 
     /* builtin type */
-    reg_builtin_func("str", bf_str);
-    reg_builtin_func("int", bf_int);
-    reg_builtin_func("float", bf_float);
-    reg_builtin_func("bool", bf_bool);
-    reg_builtin_func("list", bf_list);
-    reg_builtin_func("dict", bf_dict);
+    mp_reg_builtin_func("str", bf_str);
+    mp_reg_builtin_func("int", bf_int);
+    mp_reg_builtin_func("float", bf_float);
+    mp_reg_builtin_func("bool", bf_bool);
+    mp_reg_builtin_func("list", bf_list);
+    mp_reg_builtin_func("dict", bf_dict);
 
-    reg_builtin_func("print", bf_print);
-    reg_builtin_func("chr", bf_chr);
-    reg_builtin_func("ord", bf_ord);
-    reg_builtin_func("raise", bf_raise);
-    reg_builtin_func("system", bf_system);
-    reg_builtin_func("apply", bf_apply);
-    reg_builtin_func("pow", bf_pow);
-    reg_builtin_func("range",  bf_range);
-    reg_builtin_func("xrange", bf_xrange);
-    reg_builtin_func("enumerate", bf_enumerate);
-    reg_builtin_func("random", bf_random);
-    reg_builtin_func("Exception", bf_Exception);
-    reg_builtin_func("getattr", bf_getattr);
-    reg_builtin_func("setattr", bf_setattr);
-    reg_builtin_func("hasattr", bf_hasattr);
+    mp_reg_builtin_func("print", bf_print);
+    mp_reg_builtin_func("chr", bf_chr);
+    mp_reg_builtin_func("ord", bf_ord);
+    mp_reg_builtin_func("raise", bf_raise);
+    mp_reg_builtin_func("system", bf_system);
+    mp_reg_builtin_func("apply", bf_apply);
+    mp_reg_builtin_func("pow", bf_pow);
+    mp_reg_builtin_func("range",  bf_range);
+    mp_reg_builtin_func("xrange", bf_xrange);
+    mp_reg_builtin_func("enumerate", bf_enumerate);
+    mp_reg_builtin_func("random", bf_random);
+    mp_reg_builtin_func("Exception", bf_Exception);
+    mp_reg_builtin_func("getattr", bf_getattr);
+    mp_reg_builtin_func("setattr", bf_setattr);
+    mp_reg_builtin_func("hasattr", bf_hasattr);
     
     /* functions which has impact on vm follow camel case */
-    // reg_builtin_func("get_const_idx", bf_get_const_idx);
-    // reg_builtin_func("get_const", bf_get_const);
-    // reg_builtin_func("get_const_len", bf_get_const_len);
-    reg_builtin_func("traceback", bf_mp_traceback);
+    // mp_reg_builtin_func("get_const_idx", bf_get_const_idx);
+    // mp_reg_builtin_func("get_const", bf_get_const);
+    // mp_reg_builtin_func("get_const_len", bf_get_const_len);
+    mp_reg_builtin_func("traceback", bf_mp_traceback);
 
-    reg_builtin_func("add_obj_method", bf_add_obj_method);
-    reg_builtin_func("read_file", bf_read_file);
-    reg_builtin_func("iter", bf_iter);
-    reg_builtin_func("next", bf_next);
+    mp_reg_builtin_func("add_obj_method", bf_add_obj_method);
+    mp_reg_builtin_func("read_file", bf_read_file);
+    mp_reg_builtin_func("iter", bf_iter);
+    mp_reg_builtin_func("next", bf_next);
     
-    reg_builtin_func("getosname", bf_get_os_name);
-    reg_builtin_func("hash", bf_hash);
-    reg_builtin_func("isinstance", bf_isinstance);
+    mp_reg_builtin_func("getosname", bf_get_os_name);
+    mp_reg_builtin_func("hash", bf_hash);
+    mp_reg_builtin_func("isinstance", bf_isinstance);
 }
 
 

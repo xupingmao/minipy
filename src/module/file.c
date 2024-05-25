@@ -210,7 +210,7 @@ MpObj bf_save(){
 
 
 void mp_file_init() {
-    reg_builtin_func("save", bf_save);
-    reg_builtin_func("load", bf_load);
-    reg_builtin_func("open", bf_open);
+    mp_reg_builtin_func("save", bf_save);
+    mp_reg_builtin_func("load", bf_load);
+    mp_reg_builtin_func("open", bf_open);
 }
