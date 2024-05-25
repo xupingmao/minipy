@@ -371,6 +371,7 @@ def do_convert_op(writer, op, val, func_name):
     writer.writeline("  *top = %s(*top, *(top+1));" % func_name)
 
 def convert(code, writer):
+    # type: (str, CodeWriter)->None
     inst_list = compile_to_list(code, "test.py")
     module_name = None
     func_name   = None
@@ -544,7 +545,7 @@ class AotCompiler:
         print("building %s ..." % c_file_path)
         print("target: %s" % target)
         
-        build_cmd = "gcc -O2 %r -o %r -lm -Isrc -Imp2c" % (c_file_path, target)
+        build_cmd = "gcc -O2 %s -o %s -lm -Isrc -Imp2c" % (c_file_path, target)
         print("build command:", build_cmd)
         result = os.system(build_cmd)
         if result == 0:
@@ -555,12 +556,15 @@ class AotCompiler:
 
 
     def get_base_name(self, fpath):
+        fpath = fpath.replace("\\", "/")
         fname = fpath.split("/")[-1]
         name = fname.split(".")[0]
         return name
 
     def get_default_target(self, fpath):
         name = self.get_base_name(fpath)
+        if os.name == "nt":
+            return "build/%s.exe" % name
         return "build/%s.out" % name
 
     def compile(self, fpath, target = None):
@@ -582,6 +586,7 @@ class AotCompiler:
             print("saved to %s" % c_file_path)
 
         self.do_build(c_file_path, target)
+        return target
 
 
 def main():
@@ -596,7 +601,7 @@ def main():
         raise Exception("参数异常")
 
     compiler = AotCompiler(True)
-    compiler.compile(fpath)
+    target = compiler.compile(fpath)
 
     do_benchmark(fpath, target)
 

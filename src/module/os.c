@@ -147,7 +147,7 @@ MpObj os_path_join0(MpObj dirname, MpObj fname) {
 }
 
 MpObj os_get_name() {
-#ifdef _WINDOWS_H
+#ifdef _WIN32
     return string_from_cstr("nt");
 #else
     return string_from_cstr("posix");
