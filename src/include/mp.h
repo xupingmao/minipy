@@ -213,8 +213,8 @@ MpObj obj_call_nargs(MpObj func, int n, MpObj* args);
 MpObj obj_apply(MpObj func, MpObj args);
 MpObj load_file_module(MpObj filename, MpObj code, MpObj name);
 MpObj mp_eval(MpFrame*);
-MpFrame* push_frame(MpObj fnc);
-void pop_frame();
+MpFrame* mp_push_frame(MpObj fnc);
+void mp_pop_frame();
 
 // exception functions
 void mp_assert(int value, char* msg);

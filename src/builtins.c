@@ -809,7 +809,7 @@ MpObj bf_hasattr() {
 
 MpObj bf_hash() {
     MpObj object = mp_take_obj_arg("hash");
-    return number_obj(obj_hash(object));
+    return number_obj(mp_get_obj_hash(object));
 }
 
 MpObj bf_isinstance() {

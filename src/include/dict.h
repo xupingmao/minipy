@@ -15,8 +15,8 @@
 // dict functions
 // 哈希函数
 int mp_hash(void* s, int len);
-int obj_hash(MpObj obj);
-int obj_ptr_hash(MpObj* obj);
+int mp_get_obj_hash(MpObj obj);
+int mp_get_ptr_hash(MpObj* obj);
 
 MpObj dict_new();
 MpObj dict_new_obj();

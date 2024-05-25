@@ -35,7 +35,7 @@ int mp_hash(void* s, int len) {
     return js_hash((unsigned char*)s, len);
 }
 
-int obj_ptr_hash(MpObj* key) {
+int mp_get_ptr_hash(MpObj* key) {
     switch(key->type) {
         case TYPE_STR:
             return key->value.str->hash;
@@ -44,7 +44,7 @@ int obj_ptr_hash(MpObj* key) {
         default: return 0;
     }
 
-    mp_raise("obj_hash: unexpected reach");
+    mp_raise("mp_get_obj_hash: unexpected reach");
     return 0;
 }
 
@@ -52,8 +52,8 @@ int obj_ptr_hash(MpObj* key) {
  * simple hash function for dict
  * @since 2015-?
  */
-int obj_hash(MpObj key) {
-    return obj_ptr_hash(&key);
+int mp_get_obj_hash(MpObj key) {
+    return mp_get_ptr_hash(&key);
 }
 
 
@@ -246,7 +246,7 @@ void dict_print_debug_info(MpDict* dict) {
  * @return node index
  */
 int dict_set0(MpDict* dict, MpObj key, MpObj val){
-    int hash = obj_ptr_hash(&key);
+    int hash = mp_get_ptr_hash(&key);
     DictNode* node = dict_get_node_with_hash(dict, key, hash);
     if (node != NULL) {
         node->val = val;
@@ -301,7 +301,7 @@ static int dict_find_start(MpDict* dict, int hash) {
 }
 
 DictNode* dict_get_node(MpDict* dict, MpObj key) {
-    return dict_get_node_with_hash(dict, key, obj_ptr_hash(&key));
+    return dict_get_node_with_hash(dict, key, mp_get_ptr_hash(&key));
 }
 
 DictNode* dict_get_node_by_index(MpDict* dict, int index) {

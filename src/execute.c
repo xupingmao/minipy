@@ -10,15 +10,15 @@
 #include "include/code_cache.h"
 #include "execute_profile.c"
 
-void frame_reset_memory(MpFrame*);
+void mp_reset_frame(MpFrame*);
 
-void pop_frame() {
+void mp_pop_frame() {
     if (tm->frame < tm->frames) {
-        printf("pop_frame: invalid call\n");
+        printf("mp_pop_frame: invalid call\n");
         exit(1);
     }
     /* reset locals and stack */
-    frame_reset_memory(tm->frame);
+    mp_reset_frame(tm->frame);
 
     tm->frame --;
 }
@@ -53,7 +53,7 @@ if (tm->allocated > tm->gc_threshold) {   \
 }
 
 
-void frame_reset_memory(MpFrame* f) {
+void mp_reset_frame(MpFrame* f) {
     // clear local variables
     int i = 0;
     for(i = 0; i < f->maxlocals; i++) {
@@ -66,7 +66,7 @@ void frame_reset_memory(MpFrame* f) {
     f->cache_jmp = NULL;
 }
 
-MpFrame* push_frame(MpObj fnc) {
+MpFrame* mp_push_frame(MpObj fnc) {
     // make extra space for self in method call
     // top包含当前frame的stack-value
     // top+1 需要为self预留空间
@@ -76,13 +76,13 @@ MpFrame* push_frame(MpObj fnc) {
 
     /* check oprand stack */
     if (top >= tm->stack + STACK_SIZE) {
-        pop_frame();
+        mp_pop_frame();
         mp_raise("mp_eval: stack overflow (%d)", STACK_SIZE);
     }
     
     /* check frame stack*/
     if (tm->frame >= tm->frames + FRAMES_COUNT-1) {
-        pop_frame();
+        mp_pop_frame();
         mp_raise("mp_eval: frame overflow (%d)", FRAMES_COUNT-1);
     }
 
@@ -98,7 +98,7 @@ MpFrame* push_frame(MpObj fnc) {
     f->top    = f->stack;
     f->fnc    = fnc;
     
-    frame_reset_memory(f);
+    mp_reset_frame(f);
     return f;
 }
 
@@ -753,6 +753,6 @@ retry_op:
     if (top != f->stack) {
         mp_raise("mp_eval: operand stack overflow");
     }*/
-    pop_frame();
+    mp_pop_frame();
     return ret;
 }

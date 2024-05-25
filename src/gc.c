@@ -680,7 +680,7 @@ MpObj data_new(size_t data_size) {
     return data_ptr_to_obj(ptr);
 }
 
-size_t obj_sizeof(MpObj obj) {
+size_t mp_sizeof(MpObj obj) {
     switch (obj.type) {
         case TYPE_LIST:
             return list_sizeof(obj.value.list);

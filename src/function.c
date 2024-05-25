@@ -341,7 +341,7 @@ MpObj mp_call_func(MpObj func)
             #endif
 
             assert (GET_FUNCTION(func)->resolved == 1);
-            MpFrame* f = push_frame(func);
+            MpFrame* f = mp_push_frame(func);
 
             L_recall:
             if (setjmp(f->buf)==0) {
@@ -356,7 +356,7 @@ MpObj mp_call_func(MpObj func)
                 } else {
                     /* there is no handler, throw to prev frame */
                     mp_push_exception(f);
-                    pop_frame();
+                    mp_pop_frame();
                     longjmp(tm->frame->buf, 1);
                 }
             }
