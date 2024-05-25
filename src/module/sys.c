@@ -35,6 +35,8 @@ void mp_sys_init() {
     
     obj_set_by_cstr(sys_mod, "path", sys_path);
     obj_set_by_cstr(sys_mod, "executable", string_new(tm->argv[0]));
+    obj_set_by_cstr(sys_mod, "modules", tm->modules);
+    
     mod_reg_func(sys_mod, "exit", sys_exit);
     mod_reg_func(sys_mod, "getsizeof", sys_getsizeof);
 }

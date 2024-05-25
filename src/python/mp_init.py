@@ -1,8 +1,23 @@
 # -*- coding:utf-8 -*-
+'''
+Author: xupingmao
+email: 578749341@qq.com
+Date: 2023-12-07 22:03:29
+LastEditors: xupingmao
+LastEditTime: 2024-05-25 11:27:31
+FilePath: /minipy/src/python/mp_init.py
+Description: 描述
+'''
+# -*- coding:utf-8 -*-
 # @author xupingmao
 # @since 2016
 # @modified 2022/06/08 23:47:53
 """Minipy初始化, 这里_import函数还没准备好，无法调用"""
+
+try:
+    __modules__ # type: dict
+except:
+    raise Exception("not minipy runtime")
 
 def add_builtin(name, func):
     __builtins__[name] = func
@@ -159,9 +174,7 @@ def _import(des_glo, fname, tar = None):
         pass
     else:
         import os
-        exists = os.exists
-        # printf("try to load module %s\n", fname)
-        from mp_encode import *
+        from mp_encode import compilefile
         # can not find file in current dir.
         fpath = find_module_path(fname)
 
@@ -175,6 +188,7 @@ def _import(des_glo, fname, tar = None):
             #del __modules__[fname]
             raise(sformat('import error: fail to compile file "%s.py":\n\t%s', fname, e))
         load_module(fname, _code)
+    
     g = __modules__[fname]
     if tar == '*':
         for k in g:

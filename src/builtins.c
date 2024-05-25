@@ -812,6 +812,16 @@ MpObj bf_hash() {
     return number_obj(obj_hash(object));
 }
 
+MpObj bf_isinstance() {
+    MpObj first = arg_take_obj("isinstance");
+    MpObj type = arg_take_obj("isinstance");
+    if (IS_FUNC(type) && GET_FUNCTION(type)->native == bf_list && IS_LIST(first)) {
+        return tm->_TRUE;
+    }
+    mp_raise("bf_isinstance: unsupported check");
+    return tm->_FALSE;
+}
+
 void builtins_init() {
     reg_builtin_func("file_append", bf_file_append);
     reg_builtin_func("remove", bf_remove);
@@ -868,6 +878,7 @@ void builtins_init() {
     
     reg_builtin_func("getosname", bf_get_os_name);
     reg_builtin_func("hash", bf_hash);
+    reg_builtin_func("isinstance", bf_isinstance);
 }
 
 

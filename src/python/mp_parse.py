@@ -68,7 +68,8 @@ class ParserCtx:
         body.reverse() # reverse the body
         return body
 
-def expect(ctx, v, msg=None):
+def expect_and_next(ctx, v, msg=None):
+    # type: (ParserCtx, any, None|str) -> None
     if ctx.token.type != v:
         error_msg = "expect %r but now is %r::%s" % (v, ctx.token.type, msg)
         compile_error("parse", ctx.src, ctx.token, error_msg)
@@ -111,13 +112,13 @@ def baseitem(p):
             node.first = None
         else:
             exp(p, ',')
-            expect(p, ']')
+            expect_and_next(p, ']')
             node.first = p.pop()
         p.add(node)
     elif t == '(':
         p.next()
         exp(p, ',')
-        expect(p, ')')
+        expect_and_next(p, ')')
         # tuple node
         last = p.last()
         if gettype(last) == "list":
@@ -130,7 +131,7 @@ def baseitem(p):
         items = []
         while p.token.type != '}':
             exp(p, 'or')
-            expect(p, ':')
+            expect_and_next(p, ':')
             exp(p, 'or')
 
             v = p.pop()
@@ -138,10 +139,10 @@ def baseitem(p):
             items.append([k,v])
             if p.token.type == '}':
                 break
-            expect(p, ',')
+            expect_and_next(p, ',')
         if p.token.type == ',':
             p.next()
-        expect(p, '}')
+        expect_and_next(p, '}')
         node.first = items
         p.add(node)
 
@@ -156,7 +157,7 @@ def parse_rvalue(p):
 
 def parse_var(p):
     token = p.token
-    expect(p, "name")
+    expect_and_next(p, "name")
     p.add(token)
 
     while True:
@@ -166,12 +167,13 @@ def parse_var(p):
         elif p.token.type == "[":
             p.next()
             parse_rvalue(p)
-            expect(p, "]")
+            expect_and_next(p, "]")
             p.add_op("get")
         else:
             return p.pop()
 
 def parse_var_list(p):
+    """eg var1, var2, var1.attr"""
     vars = [parse_var(p)]
     while p.token.type == ",":
         var = parse_var(p)
@@ -182,6 +184,20 @@ def parse_var_list(p):
     else:
         p.add(vars[0])
 
+def parse_name_list(p):
+    # type: (ParserCtx)->list
+    """eg name1, name2"""
+    name_list = [parse_name(p)]
+    while p.token.type == ",":
+        p.next()
+        token = parse_name(p)
+        name_list.append(token)
+    return name_list
+    
+def parse_name(p):
+    token = p.token
+    expect_and_next(p, "name")
+    return token
 
 #  This is not LL grammar
 #  Assignment = Lvalue '=' Rvalue
@@ -282,7 +298,7 @@ def parse_arg_list(p):
             args.append(arg)
             if p.token.type == ',':
                 p.next() # skip ,
-    expect(p, ')')
+    expect_and_next(p, ')')
     node.second = args # argument-list
     # print(args[0].pos[0])
     return node
@@ -315,7 +331,7 @@ def call_or_get_exp(p):
                     else:
                         exp(p, 'or')
                         third = p.pop()
-                expect(p, ']')
+                expect_and_next(p, ']')
                 if third == None:
                     node = AstNode("get", first, second)
                     p.add(node)
@@ -368,16 +384,23 @@ def _name_check(p, node):
         parse_error(p, node, 'import error' + node.type)
 
 def parse_from(p):
-    expect(p, "from")
+    # type: (ParserCtx) -> None
+    expect_and_next(p, "from")
     expr(p)
-    expect(p, "import")
+    expect_and_next(p, "import")
     node = AstNode("from")
     node.first = p.pop()
     _path_check(p, node.first)
-    if p.token.type != "*":
-        raise Exception("only `from modname import *` is supported")
-    p.token.type = 'string'
-    node.second = p.token
+    
+    if p.token.type == "*":
+        p.token.type = "string"
+        node.second = p.token
+    else:
+        name_list = parse_name_list(p)
+        if len(name_list) != 1:
+            raise Exception("from statement can only import one attribute")
+        node.second = name_list[0]
+        
     p.next()
     # _name_check(p, node.second)
     p.add(node)
@@ -435,34 +458,34 @@ def parse_pass(p):
 def parse_try(p):
     pos = p.token.pos # save position
     p.next()
-    expect(p, ':')
+    expect_and_next(p, ':')
     node = AstNode("try", p.visit_block())
     node.pos = pos
-    expect(p, 'except')
+    expect_and_next(p, 'except')
     if p.token.type == 'name':
         p.next()
         if p.token.type == ':':
             second = Token('name', '_')
         else:
-            expect(p, 'as')
+            expect_and_next(p, 'as')
             second = p.token
-            expect(p, 'name', 'error in try-expression')
+            expect_and_next(p, 'name', 'error in try-expression')
         node.second = second
     else:node.second = None
-    expect(p, ':')
+    expect_and_next(p, ':')
     node.third = p.visit_block()
     p.add(node)
 
 def parse_for_items(p):
     name = p.token
-    expect(p, "name")
+    expect_and_next(p, "name")
     name_list = [name]
     while p.token.type == ",":
         p.next()
         name = p.token
-        expect(p, "name")
+        expect_and_next(p, "name")
         name_list.append(name)
-    expect(p, "in")
+    expect_and_next(p, "in")
     expr(p)
     node = AstNode("in")
     node.first = name_list
@@ -476,7 +499,7 @@ def parse_for(p):
     p.next()
     node = parse_for_items(p)
     ast.first = node
-    expect(p, ':')
+    expect_and_next(p, ':')
     ast.second = p.visit_block()
     p.add(ast)
 
@@ -489,12 +512,12 @@ def parse_for_while(p, type):
     p.next()
     expr(p)
     ast.first = p.pop()
-    expect(p, ':')
+    expect_and_next(p, ':')
     ast.second = p.visit_block()
     p.add(ast)
 
 def parse_arg_def(p):
-    expect(p, '(')
+    expect_and_next(p, '(')
     if p.token.type == ')':
         p.next()
         return []
@@ -512,7 +535,7 @@ def parse_arg_def(p):
             arg.second = None
             p.next()
             if varg == 1:
-                expect(p, '=')
+                expect_and_next(p, '=')
                 baseitem(p)
                 arg.second = p.pop()
             elif p.token.type == '=':
@@ -530,7 +553,7 @@ def parse_arg_def(p):
             arg.second = None
             args.append(arg)
             p.next()
-        expect(p, ')')
+        expect_and_next(p, ')')
         return args
 
 def parse_def(p):
@@ -540,25 +563,25 @@ def parse_def(p):
     func.first = p.token
     p.next()
     func.second = parse_arg_def(p)
-    expect(p, ':')
+    expect_and_next(p, ':')
     func.third = p.visit_block()
     p.add(func)
 
 def parse_class(p):
-    expect(p, "class")
+    expect_and_next(p, "class")
     # assert_type(p, 'name','ClassException')
     clazz = AstNode()
     clazz.type = 'class'
     clazz.first = p.token
-    expect(p, "name")
+    expect_and_next(p, "name")
 
     if p.token.type == '(':
         p.next()
         assert_type(p, 'name', 'ClassException')
         p.third = p.token
         p.next()
-        expect(p, ')')
-    expect(p, ':')
+        expect_and_next(p, ')')
+    expect_and_next(p, ':')
 
     clazz.second = p.visit_block()
 
@@ -586,7 +609,7 @@ def parse_if(p):
     p.next()
     expr(p)
     ast.first = p.pop()
-    expect(p, ':')
+    expect_and_next(p, ':')
     ast.second = p.visit_block()
     ast.third = None
     cur = ast # temp
@@ -596,7 +619,7 @@ def parse_if(p):
             node = AstNode("if")
             p.next()
             expr(p)
-            expect(p, ':')
+            expect_and_next(p, ':')
             node.first = p.pop()
             node.second = p.visit_block()
             node.third = None
@@ -604,7 +627,7 @@ def parse_if(p):
             cur = node
     if p.token.type == 'else':
         p.next()
-        expect(p, ':')
+        expect_and_next(p, ':')
         cur.third = p.visit_block()
     p.add(temp)
 
@@ -622,8 +645,8 @@ def parse_skip(p):
 def parse_multi_assign(p):
     p.next()
     expr(p) # left
-    expect(p, ']')
-    expect(p, '=')
+    expect_and_next(p, ']')
+    expect_and_next(p, '=')
     expr(p) # right
     add_op(p, "=")
 

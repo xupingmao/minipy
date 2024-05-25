@@ -174,7 +174,7 @@ static MpObj bf_get_ex_list() {
  * @since 2016-11-16
  */
 void mp_debug_init() {    
-    MpObj debug = mp_new_native_module("debug");
+    MpObj debug = mp_new_native_module("mp_debug");
     mod_reg_func(debug, "get_ex_list", bf_get_ex_list);
     mod_reg_func(debug, "set_vm_state", bf_set_vm_state);
     mod_reg_func(debug, "inspect_ptr", bf_inspect_ptr);

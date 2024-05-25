@@ -60,7 +60,7 @@ _global_index = 0
 
 
 def init_pop_value_type_set():
-    result = set(["call"])
+    result = set(["call", "get", "name"])
     for item in _op_dict:
         result.add(item)
     return result
@@ -600,16 +600,12 @@ def _import_name2str(mod):
     elif mod.type == 'string':
         return mod
     
-def encode_import_multi(mod, items):
+def do_encode_from(mod, items):
     mod = _import_name2str(mod)
-    if items.type == ',':
-        encode_import_multi(mod, items.first)
-        encode_import_multi(mod, items.second)
-    else:
-        encode_import_one(mod, items)
+    encode_import_one(mod, items)
 
 def encode_from(tk):
-    encode_import_multi(tk.first, tk.second)
+    do_encode_from(tk.first, tk.second)
 
 def _encode_import(item):
     item.type = 'string'
