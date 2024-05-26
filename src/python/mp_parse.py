@@ -699,13 +699,15 @@ def parse_block(p):
     else:
         parse_stm(p)
         while p.token.type == ';':
-            if p.token.type in ('nl', 'eof'):break
-            else:parse_stm(p)
+            if p.token.type in ('nl', 'eof'):
+                break
+            else:
+                parse_stm(p)
         skip_nl(p)
             
     
 def parse(content):
-    """解析额入口"""
+    """解析入口"""
     tokens = tokenize(content)
     p = ParserCtx(tokens, content)
     p.next()

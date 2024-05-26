@@ -6,7 +6,7 @@ static void init_argv(MpObj sys_mod) {
     int i;
     for (i = 1; i < tm->argc; i++) {
         MpObj arg = string_new(tm->argv[i]);
-        obj_append(p, arg);
+        mp_append(p, arg);
     }
     obj_set_by_cstr(sys_mod, "argv", p);
 }

@@ -66,7 +66,7 @@ void mp_inspect_char(int c) {
 }
 
 void mp_print(MpObj o) {
-    MpObj str = obj_str(o);
+    MpObj str = mp_str(o);
     int i;
     for(i = 0; i < GET_STR_LEN(str); i++) {
         mp_putchar(GET_CSTR(str)[i]);
@@ -350,7 +350,7 @@ MpObj bf_load_module() {
 
 /* get globals */
 MpObj bf_globals() {
-    return obj_get_globals(tm->frame->fnc);
+    return mp_get_globals(tm->frame->fnc);
 }
 
 /* get object type */
@@ -451,7 +451,7 @@ MpObj bf_system() {
 
 MpObj bf_str() {
     MpObj a = mp_take_obj_arg("str");
-    return obj_str(a);
+    return mp_str(a);
 }
 
 MpObj bf_list() {
@@ -464,10 +464,10 @@ MpObj bf_list() {
     MpObj iter   = iter_new(iterable);
     MpObj result = list_new(10);
 
-    MpObj* next = obj_next(iter);
+    MpObj* next = mp_next(iter);
     while (next != NULL) {
-        obj_append(result, *next);
-        next = obj_next(iter);
+        mp_append(result, *next);
+        next = mp_next(iter);
     }
     return result;
 }
@@ -551,7 +551,7 @@ MpObj bf_apply() {
 
 MpObj bf_write() {
     MpObj fmt = mp_take_obj_arg("write");
-    MpObj str = obj_str(fmt);
+    MpObj str = mp_str(fmt);
     char* s = GET_CSTR(str);
     int len = GET_STR_LEN(str);
     int i;
@@ -634,7 +634,7 @@ MpObj bf_range() {
 
 MpObj* enumerate_next(MpData* iterator) {
     MpObj iter = iterator->data_ptr[0];
-    MpObj* next_value = obj_next(iter);
+    MpObj* next_value = mp_next(iter);
 
     if (next_value == NULL) {
         return NULL;
@@ -737,7 +737,7 @@ MpObj bf_iter() {
 
 MpObj bf_next() {
     MpObj iter = mp_take_data_obj_arg("next");
-    MpObj *ret = obj_next(iter);
+    MpObj *ret = mp_next(iter);
     if (ret == NULL) {
         mp_raise("<<next end>>");
         return NONE_OBJECT;

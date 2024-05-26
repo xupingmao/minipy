@@ -261,7 +261,7 @@ MpObj string_append_cstr(MpObj string, const char* sz) {
 }
 
 MpObj string_append_obj(MpObj string, MpObj obj) {
-    MpObj str = obj_str(obj);
+    MpObj str = mp_str(obj);
     char* sz = GET_CSTR(str);
     return string_append_cstr(string, sz);
 }
@@ -409,15 +409,15 @@ MpObj string_builtin_split() {
     list = list_new(10);
     while (pos != -1 && pos < GET_STR_LEN(self)) {
         if (pos == 0) {
-            obj_append(list, string_alloc("", -1));
+            mp_append(list, string_alloc("", -1));
         } else {
             MpObj str = string_substring(self.value.str, lastpos, pos);
-            obj_append(list, str);
+            mp_append(list, str);
         }
         lastpos = pos + GET_STR_LEN(pattern);
         pos = string_index(self.value.str, pattern.value.str, lastpos);
     }
-    obj_append(list, string_substring(self.value.str, lastpos, GET_STR_LEN(self)));
+    mp_append(list, string_substring(self.value.str, lastpos, GET_STR_LEN(self)));
     return list;
 }
 

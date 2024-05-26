@@ -17,6 +17,8 @@ class GcDebugLogAnalyzer:
 
         malloc_count = 0
         free_count = 0
+        free_miss_count = 0
+        track_miss_count = 0
 
         with open(log_file, "rb+") as fp:
             while True:
@@ -53,6 +55,7 @@ class GcDebugLogAnalyzer:
         for pointer in malloc_dict:
             scene = malloc_dict[pointer]
             print(f"miss free {pointer} scene:{scene}")
+            free_miss_count += 1
             if pointer not in str_dict:
                 value = str_dict.get(pointer)
                 if value:
@@ -61,7 +64,14 @@ class GcDebugLogAnalyzer:
         for pointer in malloc_dict:
             scene = malloc_dict[pointer]
             if pointer not in track_set:
+                track_miss_count+=1
                 print(f"miss track {pointer} scene:{scene}")
+        
+        if free_miss_count == 0:
+            print("no free miss")
+        
+        if track_miss_count == 0:
+            print("no track miss")
 
         print(f"malloc_count={malloc_count}, free_count={free_count}, len(str_dict)={len(str_dict)}")
 

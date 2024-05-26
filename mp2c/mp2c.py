@@ -256,7 +256,7 @@ class CodeWriter:
 
     def emit_op_next(self, op_index, val):
         self.writeline("  {")
-        self.writeline("    MpObj *next = obj_next(*top);")
+        self.writeline("    MpObj *next = mp_next(*top);")
         self.writeline("    if (next != NULL) { MP2C_PUSH(*next); }")
         self.writeline("    else {")
         self.goto_label(op_index + val, 6)
@@ -410,7 +410,7 @@ def convert(code, writer):
             arg_index = val
             writer.writeline("  MpObj args = list_new(mp_count_remain_args());")
             writer.writeline("  while(mp_count_remain_args() > 0) {")
-            writer.writeline("    obj_append(args, mp_take_obj_arg(\"%s\"));" % (func_name))
+            writer.writeline("    mp_append(args, mp_take_obj_arg(\"%s\"));" % (func_name))
             writer.writeline("  }")
             writer.writeline("  locals[%s] = args;" % arg_index)
         elif op == OP_LOAD_LOCAL:

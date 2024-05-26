@@ -60,11 +60,11 @@ void mp_reg_builtin_func(char* name, MpObj (*native)()) {
 void mp_reg_method(MpObj class_obj, char* name, MpObj (*native)()) {
     mp_assert_type(class_obj, TYPE_CLASS, "mp_reg_method");
     MpClass* clazz = GET_CLASS(class_obj);
-    MpObj attr_dict = clazz->attr_dict;
+    MpDict* attr_dict = clazz->attr_dict;
     MpObj func = func_new(tm->builtins_mod, NONE_OBJECT, native);
     GET_FUNCTION(func)->name = string_new(name);
     
-    obj_set_by_cstr(attr_dict, name, func);
+    dict_set_by_cstr(attr_dict, name, func);
 }
 
 /**

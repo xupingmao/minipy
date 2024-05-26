@@ -16,7 +16,7 @@ inline void mp_assert(int value, char* msg) {
     }
 }
 
-const char* get_type_cstr(int type) {
+const char* mp_get_type_cstr(int type) {
     static char MP_TYPE_STR[64];
 
     switch (type) {
@@ -44,20 +44,20 @@ const char* get_type_cstr(int type) {
 }
 
 inline const char* get_object_type_cstr(MpObj o) {
-    return get_type_cstr(o.type);
+    return mp_get_type_cstr(o.type);
 }
 
 void mp_assert_type(MpObj o, int type, char* msg) {
     if (MP_TYPE(o) != type) {
-        mp_raise("%s: expect %s but see %s", msg, get_type_cstr(type),
-                 get_type_cstr(o.type));
+        mp_raise("%s: expect %s but see %s", msg, mp_get_type_cstr(type),
+                 mp_get_type_cstr(o.type));
     }
 }
 
 void mp_assert_type2(MpObj o, int type1, int type2, char* msg) {
     if (MP_TYPE(o) != type1 && MP_TYPE(o) != type2) {
-        mp_raise("%s: expect %s or %s but see %s", msg, get_type_cstr(type1),
-                 get_type_cstr(type2), get_type_cstr(o.type));
+        mp_raise("%s: expect %s or %s but see %s", msg, mp_get_type_cstr(type1),
+                 mp_get_type_cstr(type2), mp_get_type_cstr(o.type));
     }
 }
 
@@ -89,7 +89,7 @@ void obj_set(MpObj self, MpObj k, MpObj v) {
             return;
         case TYPE_CLASS: {
             MpClass* pclass = GET_CLASS(self);
-            dict_set0(GET_DICT(pclass->attr_dict), k, v);
+            dict_set0(pclass->attr_dict, k, v);
             return;
         }
     }
@@ -152,7 +152,10 @@ MpObj obj_get(MpObj self, MpObj k) {
             return GET_DATA(self)->get(GET_DATA(self), k);
         case TYPE_CLASS: {
             MpClass* pclass = GET_CLASS(self);
-            return obj_get(pclass->attr_dict, k);
+            DictNode *node = dict_get_node(pclass->attr_dict, k);
+            if (node != NULL) {
+                return node->val;
+            }
         }
     }
     mp_raise("keyError: %o", k);
@@ -215,10 +218,10 @@ MpObj obj_slice(MpObj self, MpObj first, MpObj second) {
         int i = 0;
         ret = list_new(end - start);
         for (i = start; i < end; i++) {
-            obj_append(ret, LIST_GET(self, i));
+            mp_append(ret, LIST_GET(self, i));
         }
     } else {
-        mp_raise("slice not implemented for type %s", get_type_cstr(self.type));
+        mp_raise("slice not implemented for type %s", mp_get_type_cstr(self.type));
     }
     return ret;
 }
@@ -293,8 +296,8 @@ int mp_is_equals(MpObj a, MpObj b) {
         case TYPE_CLASS:
             return GET_CLASS(a) == GET_CLASS(b);
         default: {
-            const char* ltype = get_type_cstr(a.type);
-            const char* rtype = get_type_cstr(b.type);
+            const char* ltype = mp_get_type_cstr(a.type);
+            const char* rtype = mp_get_type_cstr(b.type);
             mp_raise("mp_is_equals: not supported type %d:%s and %d:%s",
                      MP_TYPE(a), ltype, MP_TYPE(b), rtype);
         }
@@ -534,7 +537,7 @@ int mp_is_in(MpObj child, MpObj parent) {
         /* TODO DATA */
         default:
             mp_raise("obj_is_in: cant handle type (%s)",
-                     get_type_cstr(MP_TYPE(parent)));
+                     mp_get_type_cstr(MP_TYPE(parent)));
     }
     return 0;
 }
@@ -587,7 +590,7 @@ MpObj iter_new(MpObj collections) {
         case TYPE_DICT:
             return dict_iter_new(collections);
         case TYPE_CLASS:
-            return iter_new(GET_CLASS(collections)->attr_dict);
+            return iter_new(mp_to_obj(TYPE_DICT, GET_CLASS(collections)->attr_dict));
         case TYPE_STR:
             return string_iter_new(collections);
         case TYPE_DATA:
@@ -598,7 +601,7 @@ MpObj iter_new(MpObj collections) {
     return NONE_OBJECT;
 }
 
-MpObj* obj_next(MpObj iterator) {
+MpObj* mp_next(MpObj iterator) {
     return GET_DATA(iterator)->next(GET_DATA(iterator));
 }
 
@@ -614,15 +617,15 @@ void obj_del(MpObj self, MpObj k) {
         }
         default:
             mp_raise("obj_del: not supported type %s",
-                     get_type_cstr(self.type));
+                     mp_get_type_cstr(self.type));
     }
 }
 
-MpObj obj_append(MpObj a, MpObj item) {
+MpObj mp_append(MpObj a, MpObj item) {
     if (IS_LIST(a)) {
         list_append(GET_LIST(a), item);
     } else {
-        mp_raise("obj_append: not supported type %s", get_type_cstr(a.type));
+        mp_raise("mp_append: not supported type %s", mp_get_type_cstr(a.type));
     }
     return a;
 }
@@ -659,13 +662,13 @@ int mp_len(MpObj o) {
     return len;
 }
 
-const char* obj_to_cstr(MpObj a) {
-    MpObj b = obj_str(a);
+const char* mp_to_cstr(MpObj a) {
+    MpObj b = mp_str(a);
     return GET_CSTR(b);
 }
 
-// func MpObj obj_str(MpObj a)
-MpObj obj_str(MpObj a) {
+// func MpObj mp_str(MpObj a)
+MpObj mp_str(MpObj a) {
     char buf[100];
     memset(buf, 0, sizeof(buf));
     switch (MP_TYPE(a)) {
@@ -713,7 +716,7 @@ MpObj obj_str(MpObj a) {
         case TYPE_NONE:
             return string_static("None");
         case TYPE_MODULE:
-            sprintf(buf, "<module %s>", obj_to_cstr(GET_MODULE(a)->file));
+            sprintf(buf, "<module %s>", mp_to_cstr(GET_MODULE(a)->file));
             return string_new(buf);
         case TYPE_DATA:
             return GET_DATA(a)->str(GET_DATA(a));
@@ -749,12 +752,51 @@ MpObj mp_call_builtin(BuiltinFunc func, int n, ...) {
     return func();
 }
 
-MpObj obj_get_globals(MpObj fnc) {
-    mp_assert_type(fnc, TYPE_FUNCTION, "obj_get_globals");
+MpObj mp_get_globals(MpObj fnc) {
+    mp_assert_type(fnc, TYPE_FUNCTION, "mp_get_globals");
     return func_get_globals(GET_FUNCTION(fnc));
 }
 
-MpObj obj_get_globals_from_module(MpObj module) {
-    mp_assert_type(module, TYPE_MODULE, "obj_get_globals_from_module");
+MpObj mp_get_globals_from_module(MpObj module) {
+    mp_assert_type(module, TYPE_MODULE, "mp_get_globals_from_module");
     return GET_MODULE(module)->globals;
+}
+
+
+/**
+ * create new object
+ * @param type object type
+ * @value object pointer
+ */
+MpObj mp_to_obj(int type, void* value) {
+    MpObj o;
+    MP_TYPE(o) = type;
+    switch (type) {
+        case TYPE_NUM:
+            o.value.num = *(double*)value;
+            break;
+        case TYPE_STR:
+            o.value.str = value;
+            break;
+        case TYPE_LIST:
+            GET_LIST(o) = value;
+            break;
+        case TYPE_DICT:
+            GET_DICT(o) = value;
+            break;
+        case TYPE_MODULE:
+            GET_MODULE(o) = value;
+            break;
+        case TYPE_FUNCTION:
+            GET_FUNCTION(o) = value;
+            break;
+        case TYPE_CLASS:
+            GET_CLASS(o) = value;
+            break;
+        case TYPE_NONE:
+            break;
+        default:
+            mp_raise("mp_to_obj: not supported type %d", type);
+    }
+    return o;
 }

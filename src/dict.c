@@ -406,7 +406,7 @@ MpObj dict_keys(MpDict* dict){
     int i;
     for(i = 0; i < dict->cap; i++) {
         if (dict->nodes[i].used > 0) {
-            obj_append(list, dict->nodes[i].key);
+            mp_append(list, dict->nodes[i].key);
         }
     }
     return list;
@@ -434,7 +434,7 @@ MpObj dict_builtin_values() {
     MpObj list = list_new(dict->len);
     for(int i = 0; i < dict->cap; i++) {
         if (dict->nodes[i].used > 0) {
-            obj_append(list, dict->nodes[i].val);
+            mp_append(list, dict->nodes[i].val);
         }
     }
     return list;

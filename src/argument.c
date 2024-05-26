@@ -72,7 +72,7 @@ int mp_count_remain_args () {
 MpObj mp_take_str_obj_arg(const char* fnc) {
     MpObj value = mp_take_arg_from_vm0(fnc);
     if (NOT_STR(value)) {
-        mp_raise("%s: expect string but see %s", fnc, get_type_cstr(value.type));
+        mp_raise("%s: expect string but see %s", fnc, mp_get_type_cstr(value.type));
     }
     return value;
 }
@@ -80,7 +80,7 @@ MpObj mp_take_str_obj_arg(const char* fnc) {
 MpStr* mp_take_str_ptr_arg(const char* fnc) {
     MpObj value = mp_take_arg_from_vm0(fnc);
     if (NOT_STR(value)) {
-        mp_raise("%s: expect string but see %s", fnc, get_type_cstr(value.type));
+        mp_raise("%s: expect string but see %s", fnc, mp_get_type_cstr(value.type));
     }
     return value.value.str;
 }
@@ -88,7 +88,7 @@ MpStr* mp_take_str_ptr_arg(const char* fnc) {
 char* mp_take_cstr_arg(const char* fnc) {
     MpObj value = mp_take_arg_from_vm0(fnc);
     if (NOT_STR(value)) {
-        mp_raise("%s: expect string but see %s", fnc, get_type_cstr(value.type));
+        mp_raise("%s: expect string but see %s", fnc, mp_get_type_cstr(value.type));
     }
     return GET_CSTR(value);
 }
@@ -96,7 +96,7 @@ char* mp_take_cstr_arg(const char* fnc) {
 MpObj mp_take_func_obj_arg(const char* fnc) {
     MpObj value = mp_take_arg_from_vm0(fnc);
     if (NOT_FUNC(value)) {
-        mp_raise("%s: expect function but see %s", fnc, get_type_cstr(value.type));
+        mp_raise("%s: expect function but see %s", fnc, mp_get_type_cstr(value.type));
     }
     return value;
 }
@@ -104,7 +104,7 @@ MpObj mp_take_func_obj_arg(const char* fnc) {
 MpObj mp_take_list_obj_arg(const char* fnc) {
     MpObj v = mp_take_arg_from_vm0(fnc);
     if (NOT_LIST(v)) {
-        mp_raise("%s: expect list but see %s", fnc, get_type_cstr(v.type));
+        mp_raise("%s: expect list but see %s", fnc, mp_get_type_cstr(v.type));
     }
     return v;
 }
@@ -112,7 +112,7 @@ MpObj mp_take_list_obj_arg(const char* fnc) {
 MpObj mp_take_dict_obj_arg(const char* fnc) {
     MpObj v = mp_take_arg_from_vm0(fnc);
     if (NOT_DICT(v)) {
-        mp_raise("%s: expect dict but see %s", fnc, get_type_cstr(v.type));
+        mp_raise("%s: expect dict but see %s", fnc, mp_get_type_cstr(v.type));
     }
     return v;
 }
@@ -125,7 +125,7 @@ MpDict* mp_take_dict_ptr_arg(const char* fnc) {
 MpList* mp_take_list_ptr_arg(const char* fnc) {
     MpObj v = mp_take_arg_from_vm0(fnc);
     if (NOT_LIST(v)) {
-        mp_raise("%s: expect list but see %s", fnc, get_type_cstr(v.type));
+        mp_raise("%s: expect list but see %s", fnc, mp_get_type_cstr(v.type));
     }
     return GET_LIST(v);
 }
@@ -133,7 +133,7 @@ MpList* mp_take_list_ptr_arg(const char* fnc) {
 int mp_take_int_arg(const char* fnc) {
     MpObj v = mp_take_arg_from_vm0(fnc);
     if (MP_TYPE(v) != TYPE_NUM) {
-        mp_raise("%s: expect number but see %s", fnc, get_type_cstr(v.type));
+        mp_raise("%s: expect number but see %s", fnc, mp_get_type_cstr(v.type));
     }
     return (int) GET_NUM(v);
 }
@@ -141,7 +141,7 @@ int mp_take_int_arg(const char* fnc) {
 double mp_take_double_arg(const char* fnc) {
     MpObj v = mp_take_arg_from_vm0(fnc);
     if (MP_TYPE(v) != TYPE_NUM) {
-        mp_raise("%s: expect number but see %s", fnc, get_type_cstr(v.type));
+        mp_raise("%s: expect number but see %s", fnc, mp_get_type_cstr(v.type));
     }
     return GET_NUM(v);
 }
@@ -153,7 +153,7 @@ MpObj mp_take_obj_arg(const char* fnc) {
 MpObj mp_take_data_obj_arg(const char* fnc) {
     MpObj v = mp_take_arg_from_vm0(fnc);
     if (MP_TYPE(v) != TYPE_DATA) {
-        mp_raise("%s: expect data but see %s", fnc, get_type_cstr(v.type));
+        mp_raise("%s: expect data but see %s", fnc, mp_get_type_cstr(v.type));
     }
     return v;
 }

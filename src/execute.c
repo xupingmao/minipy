@@ -134,7 +134,7 @@ tailcall:
     locals  = f->locals;
     top     = f->stack;
     cur_fnc = f->fnc;
-    globals = obj_get_globals(cur_fnc);
+    globals = mp_get_globals(cur_fnc);
     MpDict *globals_dict = GET_DICT(globals);
     cache   = f->cache;
 
@@ -495,7 +495,7 @@ retry_op:
             if (tm->allocated > tm->gc_threshold) {
                 // gc_track(func);
                 // mp_printf("gc full at %o\n", func);
-                // printf("gc full at %s\n", obj_to_cstr(func));
+                // printf("gc full at %s\n", mp_to_cstr(func));
                 gc_full();
             }
             break;
@@ -580,7 +580,7 @@ retry_op:
             int arg_index = get_cache_int(cache);
             MpObj list = list_new(tm->arg_cnt);
             while (mp_count_remain_args() > 0) {
-                obj_append(list, mp_take_obj_arg(func_name_cstr));
+                mp_append(list, mp_take_obj_arg(func_name_cstr));
             }
             locals[arg_index] = list;
             break;
@@ -590,7 +590,7 @@ retry_op:
             break;
         }
         case OP_NEXT: {
-            MpObj *next = obj_next(*top);
+            MpObj *next = mp_next(*top);
             if (next != NULL) {
                 MP_PUSH(*next);
                 break;
@@ -741,7 +741,7 @@ retry_op:
 
         default:
             mp_raise("BAD INSTRUCTION, %d\n  globals() = \n%o", cache->op,
-                    obj_get_globals(f->fnc));
+                    mp_get_globals(f->fnc));
             goto end;
         }
 

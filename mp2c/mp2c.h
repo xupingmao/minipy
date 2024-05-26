@@ -192,7 +192,7 @@ MpObj argv_to_list(int n, ...) {
     va_start(ap, n);
     for (i = 0; i < n; i++) {
         MpObj item = va_arg(ap, MpObj);
-        obj_append(list, item);
+        mp_append(list, item);
     }
     va_end(ap);
     return list;
@@ -275,7 +275,7 @@ void tm2c_set(MpObj obj, char* key, MpObj value) {
 MpObj mp2c_def_func(MpObj module, char* func_name, MpNativeFunc natvie_func) {
     mp_assert_type(module, TYPE_MODULE, "mp2c_def_func");
 
-    MpObj globals  = obj_get_globals_from_module(module);
+    MpObj globals  = mp_get_globals_from_module(module);
     MpObj func_obj = func_new(module, NONE_OBJECT, natvie_func);
     obj_set_by_cstr(globals, func_name, func_obj);
     return func_obj;

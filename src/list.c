@@ -109,7 +109,7 @@ MpObj list_from_array(int n, ...) {
     va_start(ap, n);
     for (i = 0; i < n; i++) {
         MpObj item = va_arg(ap, MpObj);
-        obj_append(list, item);
+        mp_append(list, item);
     }
     va_end(ap);
     return list;
@@ -202,7 +202,7 @@ static MpObj list_builtin_append() {
     const char* sz_func = "list.append";
     MpObj self = mp_take_list_obj_arg(sz_func);
     MpObj v = mp_take_obj_arg(sz_func);
-    obj_append(self, v);
+    mp_append(self, v);
     return NONE_OBJECT;
 }
 

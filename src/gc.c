@@ -3,7 +3,7 @@
  * @email: 578749341@qq.com
  * @Date: 2023-12-07 22:03:29
  * @LastEditors: xupingmao
- * @LastEditTime: 2024-05-25 09:56:06
+ * @LastEditTime: 2024-05-26 23:13:30
  * @FilePath: /minipy/src/gc.c
  * @Description: 描述
  */
@@ -33,6 +33,7 @@ void gc_init_chars();
 void gc_init_frames();
 
 static const char* gc_mark_ex(MpObj, const char*);
+static void gc_mark_str(MpStr*str);
 
 #define GC_CONSTANS_LEN 10
 #define GC_REACHED_SIGN 1
@@ -77,7 +78,7 @@ void gc_init() {
 
     /* initialize exception */
     tm->ex_list = list_new(10);
-    obj_append(tm->root, tm->ex_list);
+    mp_append(tm->root, tm->ex_list);
 
 #ifdef RECORD_LAST_OP
     CodeQueue_Init(&tm->last_op_queue, 20);
@@ -98,9 +99,9 @@ void gc_init_chars() {
     int i = 0;
     ARRAY_CHARS = list_new(256);  // init global ARRAY_CHARS
     for (i = 0; i < 256; i++) {
-        obj_append(ARRAY_CHARS, string_char_new(i));
+        mp_append(ARRAY_CHARS, string_char_new(i));
     }
-    obj_append(tm->root, ARRAY_CHARS);
+    mp_append(tm->root, ARRAY_CHARS);
 }
 
 void gc_init_frames() {
@@ -243,6 +244,13 @@ const char* gc_mark_list(MpList* list) {
     return NULL;
 }
 
+static void gc_mark_str(MpStr* str) {
+    if (str->marked) {
+        return;
+    }
+    str->marked = GC_REACHED_SIGN;
+}
+
 void gc_mark_dict(MpDict* dict) {
     if (dict->marked)
         return;
@@ -271,8 +279,8 @@ void gc_mark_class(MpClass* pclass) {
     }
 
     pclass->marked = GC_REACHED_SIGN;
-    gc_mark_ex(pclass->name, "class.name");
-    gc_mark_ex(pclass->attr_dict, "class.attr_dict");
+    gc_mark_str(pclass->name);
+    gc_mark_dict(pclass->attr_dict);
 }
 
 /**
@@ -537,44 +545,6 @@ void gc_destroy() {
     }
 
     log_info("gc_destroy: done");
-}
-
-/**
- * create new object
- * @param type object type
- * @value object pointer
- */
-MpObj mp_to_obj(int type, void* value) {
-    MpObj o;
-    MP_TYPE(o) = type;
-    switch (type) {
-        case TYPE_NUM:
-            o.value.num = *(double*)value;
-            break;
-        case TYPE_STR:
-            o.value.str = value;
-            break;
-        case TYPE_LIST:
-            GET_LIST(o) = value;
-            break;
-        case TYPE_DICT:
-            GET_DICT(o) = value;
-            break;
-        case TYPE_MODULE:
-            GET_MODULE(o) = value;
-            break;
-        case TYPE_FUNCTION:
-            GET_FUNCTION(o) = value;
-            break;
-        case TYPE_CLASS:
-            GET_CLASS(o) = value;
-            break;
-        case TYPE_NONE:
-            break;
-        default:
-            mp_raise("mp_to_obj: not supported type %d", type);
-    }
-    return o;
 }
 
 /**

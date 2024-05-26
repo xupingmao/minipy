@@ -189,7 +189,7 @@ MpObj argv_to_list(int n, ...) {
     va_start(ap, n);
     for (i = 0; i < n; i++) {
         MpObj item = va_arg(ap, MpObj);
-        obj_append(list, item);
+        mp_append(list, item);
     }
     va_end(ap);
     return list;

@@ -49,7 +49,7 @@ static void os_listdir_unix(MpObj result, char *path) {
             continue;
         } else {
             MpObj name_obj = string_new(p->d_name);
-            obj_append(result, name_obj);
+            mp_append(result, name_obj);
         }
         memset(filename,0,64);
     }
@@ -76,7 +76,7 @@ MpObj os_listdir() {
             // do nothing.
         }
         MpObj file = string_new(Find_file_data.cFileName);
-        obj_append(list, file);
+        mp_append(list, file);
     } while (FindNextFile(h_find, &Find_file_data));
     FindClose(h_find);
 #else

@@ -3,7 +3,7 @@
  * @email: 578749341@qq.com
  * @Date: 2016
  * @LastEditors: xupingmao
- * @LastEditTime: 2024-05-25 17:56:20
+ * @LastEditTime: 2024-05-26 23:11:54
  * @FilePath: /minipy/src/function.c
  * @Description: minipy函数
  */
@@ -135,9 +135,10 @@ MpObj method_new(MpObj _fnc, MpObj self) {
 
 MpObj class_new(MpObj name) {
     // TODO add class type
+    assert(IS_STR(name));
     MpClass* clazz = mp_malloc(sizeof(MpClass), "class.new");
-    clazz->name = name;
-    clazz->attr_dict = dict_new();
+    clazz->name = name.value.str;
+    clazz->attr_dict = dict_new_ptr();
     return gc_track(mp_to_obj(TYPE_CLASS, clazz));
 }
 
@@ -148,7 +149,7 @@ MpObj class_new_by_cstr(char* name) {
 
 MpObj class_instance(MpObj clazz) {
     MpClass* pclass = GET_CLASS(clazz);
-    MpDict* cl = GET_DICT(pclass->attr_dict);
+    MpDict* cl = pclass->attr_dict;
     MpObj k, v;
     MpObj instance = dict_new();
     DictNode* nodes = cl->nodes;
@@ -177,7 +178,7 @@ void class_free(MpClass* pclass) {
 void class_format(char* dest, MpObj class_obj) {
     mp_assert_type(class_obj, TYPE_CLASS, "class_format");
     MpClass* clazz = GET_CLASS(class_obj);
-    sprintf(dest, "<class %s@%p>", GET_CSTR(clazz->name), clazz);
+    sprintf(dest, "<class %s@%p>", clazz->name->value, clazz);
 }
 
 void func_free(MpFunction* func) {

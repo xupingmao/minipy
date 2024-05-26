@@ -3,7 +3,7 @@
  * @email: 578749341@qq.com
  * @Date: 2023-12-07 22:03:29
  * @LastEditors: xupingmao
- * @LastEditTime: 2024-05-25 17:41:21
+ * @LastEditTime: 2024-05-26 23:09:34
  * @FilePath: /minipy/src/include/mp.h
  * @Description: 描述
  */
@@ -148,14 +148,13 @@ void data_set(MpData*, MpObj, MpObj);
 MpObj data_get(MpData*, MpObj);
 MpObj data_str(MpData* self);
 void obj_free(MpObj o);
-MpObj mp_to_obj(int type, void* value);
 
 /**
  * ops functions
  *  general object operation
  *  some tools
  */
-const char* get_type_cstr(int type);
+const char* mp_get_type_cstr(int type);
 const char* get_object_type_cstr(MpObj object);
 void obj_set(MpObj self, MpObj key, MpObj value);
 void obj_set_by_cstr(MpObj self, char* key, MpObj value);
@@ -172,20 +171,25 @@ MpObj obj_cmp(MpObj a, MpObj b);
 MpObj obj_is_in(MpObj left, MpObj right);
 MpObj obj_slice(MpObj self, MpObj first, MpObj second);
 MpObj iter_new(MpObj collections);
-MpObj obj_str(MpObj obj);
-const char* obj_to_cstr(MpObj a);
-MpObj obj_append(MpObj a, MpObj item);
-MpObj obj_get_globals(MpObj obj);
 
-MpObj* obj_next(MpObj iterator);
+MpObj mp_str(MpObj obj);
+MpObj mp_append(MpObj a, MpObj item);
+MpObj* mp_next(MpObj iterator);
+
 int mp_cmp(MpObj a, MpObj b);
 int mp_is_in(MpObj key, MpObj collection);
 int mp_is_equals(MpObj a, MpObj b);
 int mp_len(MpObj obj);
 int mp_is_true(MpObj v);
+
+MpObj mp_get_globals(MpObj obj);
 MpObj mp_get_global_by_cstr(MpObj globals, char* key);
+
 MpObj mp_call_builtin(BuiltinFunc func, int n, ...);
 MpObj mp_get_constant(int index);  // 读取常量
+
+const char* mp_to_cstr(MpObj a);
+MpObj mp_to_obj(int type, void* value);
 
 // vm functions
 void mp_reg_builtin_func(char* name, MpObj (*native_func)());
