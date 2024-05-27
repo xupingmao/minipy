@@ -110,7 +110,7 @@ MpFrame* mp_push_frame(MpObj fnc) {
         pc += i * 3; \
         continue;\
     } else { \
-        *top = number_obj(flag); \
+        *top = mp_number(flag); \
     }
 
 
@@ -360,55 +360,55 @@ retry_op:
         
         case OP_EQEQ: {
             PROFILE_START(cache);
-            *(top-1) = number_obj(mp_is_equals(*(top-1), *top)); 
+            *(top-1) = mp_number(mp_is_equals(*(top-1), *top)); 
             top--; 
             PROFILE_END(cache);
             break; 
         }
         
         case OP_NOTEQ: { 
-            *(top-1) = number_obj(!mp_is_equals(*(top-1), *top)); 
+            *(top-1) = mp_number(!mp_is_equals(*(top-1), *top)); 
             top--; 
             break; 
         }
         
         case OP_LT: {
-            *(top-1) = number_obj(mp_cmp(*(top-1), *top)<0);
+            *(top-1) = mp_number(mp_cmp(*(top-1), *top)<0);
             top--;
             break;
         }
         case OP_LTEQ: {
-            *(top-1) = number_obj(mp_cmp(*(top-1), *top)<=0);
+            *(top-1) = mp_number(mp_cmp(*(top-1), *top)<=0);
             top--;
             break;
         }
         case OP_GT: {
-            *(top-1) = number_obj(mp_cmp(*(top-1), *top)>0);
+            *(top-1) = mp_number(mp_cmp(*(top-1), *top)>0);
             top--;
             break;
         }
         case OP_GTEQ: {
-            *(top-1) = number_obj(mp_cmp(*(top-1), *top)>=0);
+            *(top-1) = mp_number(mp_cmp(*(top-1), *top)>=0);
             top--;
             break;
         }
         case OP_IN: {
-            *(top-1) = number_obj(mp_is_in(*(top-1), *top));
+            *(top-1) = mp_number(mp_is_in(*(top-1), *top));
             top--;
             break;
         }
         case OP_AND: {
-            *(top-1) = number_obj(mp_is_true(*(top-1)) && mp_is_true(*top));
+            *(top-1) = mp_number(mp_is_true(*(top-1)) && mp_is_true(*top));
             top--;
             break;
         }
         case OP_OR: {
-            *(top-1) = number_obj(mp_is_true(*(top-1)) || mp_is_true(*top));
+            *(top-1) = mp_number(mp_is_true(*(top-1)) || mp_is_true(*top));
             top--;
             break;
         }
         case OP_NOT:{
-            *top = number_obj(!mp_is_true(*top));
+            *top = mp_number(!mp_is_true(*top));
             break;
         }
 
@@ -729,7 +729,7 @@ retry_op:
             #if 0
             MpObj fdebug = mp_get_global_by_cstr(globals, "__debug__");
             f->top = top;
-            mp_call(0, fdebug, 1, number_obj(tm->frame - tm->frames));        
+            mp_call(0, fdebug, 1, mp_number(tm->frame - tm->frames));        
             break;
             #endif
         }

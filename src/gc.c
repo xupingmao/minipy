@@ -47,8 +47,8 @@ static void gc_mark_str(MpStr*str);
  */
 void gc_init() {
     /* initialize constants */
-    tm->_TRUE = number_obj(1);
-    tm->_FALSE = number_obj(0);
+    tm->_TRUE = mp_number(1);
+    tm->_FALSE = mp_number(0);
     NONE_OBJECT.type = TYPE_NONE;
 
     tm->init = 0;

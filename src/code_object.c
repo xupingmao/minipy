@@ -89,7 +89,7 @@ void mp_resolve_code(MpModule* m, const char* code) {
 
         switch(op) {
             case OP_NUMBER: {
-                int index = dict_set0(const_dict, number_obj(atof(buf)), tm->_TRUE);
+                int index = dict_set0(const_dict, mp_number(atof(buf)), tm->_TRUE);
                 cache.vtype = CACHE_VTYPE_OBJ;
                 if (index >= 0xffff) {
                     mp_raise("mp_resolve_code: constant overflow");

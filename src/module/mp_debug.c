@@ -21,33 +21,33 @@ static MpObj bf_inspect_ptr() {
 static MpObj bf_get_current_frame() {
     MpObj frame_info = dict_new();
     obj_set_by_cstr(frame_info, "function", tm->frame->fnc);
-    // obj_set_by_cstr(frame_info, "pc", number_obj((long long)tm->frame->pc));
-    obj_set_by_cstr(frame_info, "index", number_obj((long long) (tm->frame - tm->frames)));
+    // obj_set_by_cstr(frame_info, "pc", mp_number((long long)tm->frame->pc));
+    obj_set_by_cstr(frame_info, "index", mp_number((long long) (tm->frame - tm->frames)));
     return frame_info;
 }
 
 static MpObj bf_get_vm_info() {
     MpObj mp_info = dict_new();
     obj_set_by_cstr(mp_info, "name", string_new("tm"));
-    obj_set_by_cstr(mp_info, "vm_size", number_obj(sizeof(MpVm)));
-    obj_set_by_cstr(mp_info, "obj_size", number_obj(sizeof(MpObj)));
-    obj_set_by_cstr(mp_info, "obj_value_size", number_obj(sizeof(MpValue)));
-    obj_set_by_cstr(mp_info, "type_and_double_size", number_obj(sizeof(TypeAndDouble)));
-    obj_set_by_cstr(mp_info, "int_size", number_obj(sizeof(int)));
-    obj_set_by_cstr(mp_info, "long_size", number_obj(sizeof(long)));
-    obj_set_by_cstr(mp_info, "long_long_size", number_obj(sizeof(long long)));
-    obj_set_by_cstr(mp_info, "float_size", number_obj(sizeof(float)));
-    obj_set_by_cstr(mp_info, "double_size", number_obj(sizeof(double)));
-    obj_set_by_cstr(mp_info, "jmp_buf_size", number_obj(sizeof(jmp_buf)));
-    obj_set_by_cstr(mp_info, "code_cache_size", number_obj(sizeof(MpCodeCache)));
-    obj_set_by_cstr(mp_info, "mp_str_size", number_obj(sizeof(MpStr)));
-    obj_set_by_cstr(mp_info, "mp_func_size", number_obj(sizeof(MpFunction)));
-    obj_set_by_cstr(mp_info, "mp_dict_size", number_obj(sizeof(MpDict)));
-    obj_set_by_cstr(mp_info, "total_obj_len", number_obj(tm->all->len));
-    obj_set_by_cstr(mp_info, "alloc_mem", number_obj(tm->allocated));
-    obj_set_by_cstr(mp_info, "gc_threshold", number_obj(tm->gc_threshold));
-    obj_set_by_cstr(mp_info, "frame_index", number_obj(tm->frame - tm->frames));
-    obj_set_by_cstr(mp_info, "consts_len", number_obj(tm->constants->len));
+    obj_set_by_cstr(mp_info, "vm_size", mp_number(sizeof(MpVm)));
+    obj_set_by_cstr(mp_info, "obj_size", mp_number(sizeof(MpObj)));
+    obj_set_by_cstr(mp_info, "obj_value_size", mp_number(sizeof(MpValue)));
+    obj_set_by_cstr(mp_info, "type_and_double_size", mp_number(sizeof(TypeAndDouble)));
+    obj_set_by_cstr(mp_info, "int_size", mp_number(sizeof(int)));
+    obj_set_by_cstr(mp_info, "long_size", mp_number(sizeof(long)));
+    obj_set_by_cstr(mp_info, "long_long_size", mp_number(sizeof(long long)));
+    obj_set_by_cstr(mp_info, "float_size", mp_number(sizeof(float)));
+    obj_set_by_cstr(mp_info, "double_size", mp_number(sizeof(double)));
+    obj_set_by_cstr(mp_info, "jmp_buf_size", mp_number(sizeof(jmp_buf)));
+    obj_set_by_cstr(mp_info, "code_cache_size", mp_number(sizeof(MpCodeCache)));
+    obj_set_by_cstr(mp_info, "mp_str_size", mp_number(sizeof(MpStr)));
+    obj_set_by_cstr(mp_info, "mp_func_size", mp_number(sizeof(MpFunction)));
+    obj_set_by_cstr(mp_info, "mp_dict_size", mp_number(sizeof(MpDict)));
+    obj_set_by_cstr(mp_info, "total_obj_len", mp_number(tm->all->len));
+    obj_set_by_cstr(mp_info, "alloc_mem", mp_number(tm->allocated));
+    obj_set_by_cstr(mp_info, "gc_threshold", mp_number(tm->gc_threshold));
+    obj_set_by_cstr(mp_info, "frame_index", mp_number(tm->frame - tm->frames));
+    obj_set_by_cstr(mp_info, "consts_len", mp_number(tm->constants->len));
     return mp_info;
 }
 
@@ -66,9 +66,9 @@ static MpObj bf_get_memory_info() {
         }
     }
 
-    obj_set_by_cstr(mp_info, "cache_size", number_obj(cache_size));
-    obj_set_by_cstr(mp_info, "gc_all_size", number_obj(list_sizeof(tm->all)));
-    obj_set_by_cstr(mp_info, "constants_size", number_obj(dict_sizeof(tm->constants)));
+    obj_set_by_cstr(mp_info, "cache_size", mp_number(cache_size));
+    obj_set_by_cstr(mp_info, "gc_all_size", mp_number(list_sizeof(tm->all)));
+    obj_set_by_cstr(mp_info, "constants_size", mp_number(dict_sizeof(tm->constants)));
     return mp_info;
 }
 
@@ -141,16 +141,16 @@ static MpObj bf_vmopt() {
         int sidx = mp_take_int_arg("vminfo");
         return obj_getstack(fidx, sidx);
     } else if (strcmp(opt, "frame.index") == 0) {
-        return number_obj(tm->frame-tm->frames);
+        return mp_number(tm->frame-tm->frames);
     } else if (strcmp(opt, "frame.info") == 0) {
         int fidx = mp_take_int_arg("vminfo");
         MpFrame *f = obj_getframe(fidx);
         MpObj info = dict_new();
-        mp_setattr(info, "maxlocals", number_obj(f->maxlocals));
-        mp_setattr(info, "stacksize", number_obj(f->top - f->stack));
+        mp_setattr(info, "maxlocals", mp_number(f->maxlocals));
+        mp_setattr(info, "stacksize", mp_number(f->top - f->stack));
         mp_setattr(info, "func", f->fnc);
         mp_setattr(info, "fname", mp_getfname(f->fnc));
-        mp_setattr(info, "lineno", number_obj(f->lineno));
+        mp_setattr(info, "lineno", mp_number(f->lineno));
         return info;
     } else {
         mp_raise("invalid opt %s", opt);

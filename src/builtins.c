@@ -87,7 +87,7 @@ void mp_inspect_obj0(MpObj o, int padding) {
     char buf[128];
     switch(MP_TYPE(o)) {
         case TYPE_NUM: 
-            number_format(buf, o);
+            mp_format_number(buf, o);
             printf("%s\n", buf);
             break;
         case TYPE_NONE:
@@ -314,9 +314,9 @@ MpObj bf_input() {
 MpObj bf_int() {
     MpObj v = mp_take_obj_arg("int");
     if (v.type == TYPE_NUM) {
-        return number_obj((int) GET_NUM(v));
+        return mp_number((int) GET_NUM(v));
     } else if (v.type == TYPE_STR) {
-        return number_obj((int) atof(GET_CSTR(v)));
+        return mp_number((int) atof(GET_CSTR(v)));
     }
     mp_raise("int: %o can not be parsed to int ", v);
     return NONE_OBJECT;
@@ -327,7 +327,7 @@ MpObj bf_float() {
     if (v.type == TYPE_NUM) {
         return v;
     } else if (v.type == TYPE_STR) {
-        return number_obj(atof(GET_CSTR(v)));
+        return mp_number(atof(GET_CSTR(v)));
     }
     mp_raise("float: %o can not be parsed to float", v);
     return NONE_OBJECT;
@@ -397,7 +397,7 @@ MpObj bf_istype() {
         case TYPE_NONE: is_type = strcmp(type, "None") == 0; break;
         default: mp_raise("gettype(%o)", obj);
     }
-    return number_obj(is_type);
+    return mp_number(is_type);
 }
 
 MpObj bf_chr() {
@@ -408,7 +408,7 @@ MpObj bf_chr() {
 MpObj bf_ord() {
     MpObj c = mp_take_str_obj_arg("ord");
     MP_ASSERT(GET_STR_LEN(c) == 1, "ord() expected a character");
-    return number_obj((unsigned char) GET_CSTR(c)[0]);
+    return mp_number((unsigned char) GET_CSTR(c)[0]);
 }
 
 MpObj bf_code8() {
@@ -446,7 +446,7 @@ MpObj bf_raise() {
 MpObj bf_system() {
     MpObj m = mp_take_str_obj_arg("system");
     int rs = system(GET_CSTR(m));
-    return number_obj(rs);
+    return mp_number(rs);
 }
 
 MpObj bf_str() {
@@ -487,7 +487,7 @@ MpObj bf_dict() {
 
 MpObj bf_len() {
     MpObj o = mp_take_obj_arg("len");
-    return number_obj(mp_len(o));
+    return mp_number(mp_len(o));
 }
 
 MpObj bf_print() {
@@ -524,9 +524,9 @@ MpObj bf_remove(){
     MpObj fname = mp_take_str_obj_arg("remove");
     int flag = remove(GET_CSTR(fname));
     if(flag) {
-        return number_obj(0);
+        return mp_number(0);
     } else {
-        return number_obj(1);
+        return mp_number(1);
     }
 }
 
@@ -564,14 +564,14 @@ MpObj bf_write() {
         // buffer[i] = s[i];
     // }
     printf("%s", s);
-    // return list_from_array(2, number_obj(t2-t1), number_obj(t3-t2));
+    // return list_from_array(2, mp_number(t2-t1), mp_number(t3-t2));
     return NONE_OBJECT;
 }
 
 MpObj bf_pow() {
     double base = mp_take_double_arg("pow");
     double y = mp_take_double_arg("pow");
-    return number_obj(pow(base, y));
+    return mp_number(pow(base, y));
 }
 
 
@@ -579,11 +579,11 @@ MpObj* range_next(MpData* data) {
     long cur = data->cur;
     if (data->inc > 0 && cur < data->end) {
         data->cur += data->inc;
-        data->cur_obj = number_obj(cur);
+        data->cur_obj = mp_number(cur);
         return &data->cur_obj;
     } else if (data->inc < 0 && cur > data->end) {
         data->cur += data->inc;
-        data->cur_obj = number_obj(cur);
+        data->cur_obj = mp_number(cur);
         return &data->cur_obj;
     }
     return NULL;
@@ -641,7 +641,7 @@ MpObj* enumerate_next(MpData* iterator) {
     } else {
         int idx = iterator->cur;
         iterator->cur += 1;
-        iterator->cur_obj = list_from_array(2, number_obj(idx), *next_value);
+        iterator->cur_obj = list_from_array(2, mp_number(idx), *next_value);
         return &iterator->cur_obj;
     }
 }
@@ -664,7 +664,7 @@ MpObj bf_mmatch() {
     MpObj o_dst = mp_take_str_obj_arg("mmatch");
     char* dst = GET_CSTR(o_dst);
     int size = GET_STR_LEN(o_dst);
-    return number_obj(strncmp(str+start, dst, size) == 0);
+    return mp_number(strncmp(str+start, dst, size) == 0);
 }
 
 long mp_clock() {
@@ -780,7 +780,7 @@ MpObj bf_random() {
     int n = rand() % 77;
     // printf("%d\n", n);
     double val = (double)((double) n / (double)77);
-    return number_obj(val);
+    return mp_number(val);
 }
 
 MpObj bf_Exception() {
@@ -809,7 +809,7 @@ MpObj bf_hasattr() {
 
 MpObj bf_hash() {
     MpObj object = mp_take_obj_arg("hash");
-    return number_obj(mp_get_obj_hash(object));
+    return mp_number(mp_get_obj_hash(object));
 }
 
 MpObj bf_isinstance() {

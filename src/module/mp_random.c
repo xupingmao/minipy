@@ -13,7 +13,7 @@ static MpObj random_randint() {
 	
 	// rand() 生成 [0, RAND_MAX] 范围内的随机数
 	int value = rand() % gap;
-	return number_obj(start + value);
+	return mp_number(start + value);
 }
 
 void mp_random_init() {
@@ -26,6 +26,6 @@ void mp_random_init() {
 	// functions
     MpModule_RegFunc(module, "randint",  random_randint);
 	// attributes
-    MpModule_RegAttr(module, "RAND_MAX", number_obj(RAND_MAX));
+    MpModule_RegAttr(module, "RAND_MAX", mp_number(RAND_MAX));
 }
 

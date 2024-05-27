@@ -26,11 +26,11 @@
 
 static MpObj bf_time_time() {
     double ms = (double) time_get_milli_seconds();
-    return number_obj(ms / 1000.f);
+    return mp_number(ms / 1000.f);
 }
 
 static MpObj bf_time_clock() {
-    return number_obj((double)clock()/CLOCKS_PER_SEC);
+    return mp_number((double)clock()/CLOCKS_PER_SEC);
 }
 
 

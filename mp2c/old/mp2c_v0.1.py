@@ -9,7 +9,7 @@ mp_obj               = "MpObj "
 mp_const             = "MpObj const_"
 mp_pusharg           = "mp_pusharg("
 mp_call              = "mp_call("
-mp_num               = "number_obj("
+mp_num               = "mp_number("
 mp_str               = "string_static"
 mp_get_glo           = "mp_get_global_by_cstr"
 mp_define            = "def_func"
@@ -299,7 +299,7 @@ def gen_constants_init(env):
     for const in env.consts:
         h = env.get_const(const) + "="
         if gettype(const) == "number":
-            body = "number_obj(" + str(const) + ");"
+            body = "mp_number(" + str(const) + ");"
         elif gettype(const) == "string":
             body = "{}({});".format(mp_str, get_string_def(str(const)))
         define_lines.append(h+body)
@@ -326,7 +326,7 @@ class Generator:
         head += '#include "../src/vm.c"\n'
         head += '#include "../mp2c/mp2c.c"\n'
         head += "#define S string_new\n"
-        head += "#define N number_obj\n"
+        head += "#define N mp_number\n"
         return head
 
     def process(self, lines):

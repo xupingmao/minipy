@@ -24,7 +24,7 @@ static void init_version(MpObj sys_mod) {
 
 static MpObj sys_getsizeof() {
     MpObj obj = mp_take_obj_arg("sys.getsizeof");
-    return number_obj(mp_sizeof(obj));
+    return mp_number(mp_sizeof(obj));
 }
 
 void mp_sys_init() {

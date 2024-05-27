@@ -420,7 +420,7 @@ def convert(code, writer):
             line = "  locals[{}] = MP2C_POP();".format(val)
             writer.writeline(line)
         elif op == OP_NUMBER:
-            line = "  MP2C_PUSH(number_obj({}));".format(val)
+            line = "  MP2C_PUSH(mp_number({}));".format(val)
             writer.writeline(line)
         elif op == OP_STRING:
             str_var = writer.get_const_var(val)
@@ -478,7 +478,7 @@ def convert(code, writer):
         elif op == OP_SET:
             writer.emit_op_set()
         elif op == OP_NOT:
-            writer.writeline("*top = number_obj(!mp_is_true(*top));")
+            writer.writeline("*top = mp_number(!mp_is_true(*top));")
         elif op == OP_DEF_END:
             writer.emit_op_func_end()
         elif op == OP_STORE_GLOBAL:

@@ -13,68 +13,68 @@ static
 MpObj math_abs() {
     double angle = mp_take_double_arg("math.abs");
     if (angle < 0) { angle = -angle; }
-    return number_obj(angle);
+    return mp_number(angle);
 }
 
 static
 MpObj math_acos() {
     double angle = mp_take_double_arg("math.acos");
-    return number_obj(acos(angle));
+    return mp_number(acos(angle));
 }
 
 static
 MpObj math_asin() {
     double angle = mp_take_double_arg("math.asin");
-    return number_obj(asin(angle));
+    return mp_number(asin(angle));
 }
 
 static
 MpObj math_atan() {
     double angle = mp_take_double_arg("math.atan");
-    return number_obj(atan(angle));
+    return mp_number(atan(angle));
 }
 
 static
 MpObj math_atan2() {
     double y = mp_take_double_arg("math.atan2");
     double x = mp_take_double_arg("math.atan2");
-    return number_obj(atan2(y,x));
+    return mp_number(atan2(y,x));
 }
 
 static
 MpObj math_ceil() {
     double value = mp_take_double_arg("math.ceil");
-    return number_obj(ceil(value));
+    return mp_number(ceil(value));
 }
 
 static
 MpObj math_cos() {
     double angle = mp_take_double_arg("math.cos");
-    return number_obj(cos(angle));
+    return mp_number(cos(angle));
 }
 
 static
 MpObj math_cosh() {
     double value = mp_take_double_arg("math.cosh");
-    return number_obj(cosh(value));
+    return mp_number(cosh(value));
 }
 
 static
 MpObj math_sin() {
     double angle = mp_take_double_arg("math.sin");
-    return number_obj(sin(angle));
+    return mp_number(sin(angle));
 }
 
 static
 MpObj math_tan() {
     double angle = mp_take_double_arg("math.tan");
-    return number_obj(tan(angle));
+    return mp_number(tan(angle));
 }
 
 static MpObj math_pow() {
     double base = mp_take_double_arg("math.pow");
     double y = mp_take_double_arg("math.pow");
-    return number_obj(pow(base, y));
+    return mp_number(pow(base, y));
 }
 
 /**
@@ -84,7 +84,7 @@ static MpObj math_pow() {
 void mp_math_init() {
     MpObj math = mp_new_native_module("math");
 
-    obj_set_by_cstr(math, "PI", number_obj(3.141592653589793));
+    obj_set_by_cstr(math, "PI", mp_number(3.141592653589793));
     MpModule_RegFunc(math, "abs", math_abs);
     MpModule_RegFunc(math, "acos", math_acos);
     MpModule_RegFunc(math, "asin", math_asin);

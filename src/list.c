@@ -223,7 +223,7 @@ static MpObj list_builtin_insert() {
 static MpObj list_builtin_index() {
     MpList* self = mp_take_list_ptr_arg("list.index");
     MpObj v = mp_take_obj_arg("list.index");
-    return number_obj(list_index(self, v));
+    return mp_number(list_index(self, v));
 }
 
 static MpObj list_builtin_reverse() {

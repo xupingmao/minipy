@@ -305,8 +305,8 @@ int mp_is_equals(MpObj a, MpObj b) {
     return FALSE;
 }
 
-MpObj obj_cmp(MpObj a, MpObj b) {
-    return number_obj(mp_cmp(a, b));
+MpObj mp_cmp_as_obj(MpObj a, MpObj b) {
+    return mp_number(mp_cmp(a, b));
 }
 
 int mp_cmp(MpObj a, MpObj b) {
@@ -325,7 +325,7 @@ int mp_cmp(MpObj a, MpObj b) {
                 return strcmp(GET_CSTR(a), GET_CSTR(b));
         }
     }
-    mp_raise("obj_cmp: can not compare %o and %o", a, b);
+    mp_raise("mp_cmp: can not compare %o and %o", a, b);
     return 0;
 }
 
@@ -394,104 +394,9 @@ MpObj obj_div(MpObj a, MpObj b) {
     return NONE_OBJECT;
 }
 
-MpObj string_mod_list(MpObj str, MpObj list) {
-    assert(MP_TYPE(str) == TYPE_STR);
-    assert(MP_TYPE(list) == TYPE_LIST);
-
-    char* fmt = GET_CSTR(str);
-    int str_length = GET_STR_LEN(str);
-    MpList* plist = GET_LIST(list);
-    int i = 0;
-    int arg_index = 0;
-
-    MpObj result = string_new("");
-
-    for (i = 0; i < str_length; i++) {
-        char c = fmt[i];
-
-        if (c == '%') {
-            i++;
-            char num_buf[20];
-            int num_len = 0;
-            char* fmt_temp = fmt;
-            while (isdigit(fmt[i]) && num_len < sizeof(num_buf)) {
-                i++;
-                num_len++;
-            }
-
-            if (num_len > 0) {
-                strncpy(num_buf, fmt_temp, num_len);
-            }
-
-            if (num_len >= sizeof(num_buf)) {
-                mp_raise("obj_mod(%d): format too long", __LINE__);
-            }
-
-            // TODO 处理 %03d 中间的数字部分
-
-            switch (fmt[i]) {
-                case 's': {
-                    string_append_obj(result, list_get(plist, arg_index));
-                    arg_index++;
-                    break;
-                }
-                case 'd': {
-                    MpObj item = list_get(plist, arg_index);
-                    mp_assert_type(item, TYPE_NUM, "obj_mod");
-                    string_append_obj(result, item);
-                    arg_index++;
-                    break;
-                }
-                case 'r': {
-                    MpObj item = list_get(plist, arg_index);
-                    if (IS_STR(item)) {
-                        string_append_char(result, '\'');
-                        for (int j = 0; j < GET_STR_LEN(item); j++) {
-                            char c1 = GET_STR_CHAR(item, j);
-                            if (c1 == '\n') {
-                                string_append_cstr(result, "\\n");
-                            } else if (c1 == '\r') {
-                                string_append_cstr(result, "\\r");
-                            } else {
-                                string_append_char(result, c1);
-                            }
-                        }
-                        string_append_char(result, '\'');
-                    } else {
-                        string_append_obj(result, item);
-                    }
-                    arg_index++;
-                    break;
-                }
-                default:
-                    mp_raise("obj_mod(%d): unsupported format type '%c'(0x%x)",
-                             __LINE__, fmt[i], fmt[i]);
-            }
-        } else {
-            string_append_char(result, c);
-        }
-    }
-
-    return result;
-}
-
-MpObj string_ops_mod(MpObj a, MpObj b) {
-    assert(MP_TYPE(a) == TYPE_STR);
-    char* fmt = GET_CSTR(a);
-
-    if (MP_TYPE(b) == TYPE_LIST) {
-        return string_mod_list(a, b);
-    } else {
-        MpObj list = list_new(1);
-        MpList* plist = GET_LIST(list);
-        list_append(plist, b);
-        return string_mod_list(a, list);
-    }
-}
-
 MpObj obj_mod(MpObj a, MpObj b) {
     if (a.type == b.type && a.type == TYPE_NUM) {
-        return number_obj((long)GET_NUM(a) % (long)GET_NUM(b));
+        return mp_number((long)GET_NUM(a) % (long)GET_NUM(b));
     } else if (a.type == TYPE_STR) {
         MpObj* __mod__ = mp_get_builtin("__mod__");
         if (__mod__ == NULL) {
@@ -547,7 +452,7 @@ int mp_is_not_in(MpObj child, MpObj parent) {
 }
 
 MpObj obj_is_in(MpObj left, MpObj right) {
-    return number_obj(mp_is_in(left, right));
+    return mp_number(mp_is_in(left, right));
 }
 
 int mp_is_true(MpObj v) {
@@ -580,7 +485,7 @@ MpObj obj_neg(MpObj o) {
 }
 
 MpObj obj_or(MpObj a, MpObj b) {
-    return number_obj(mp_is_true(a) || mp_is_true(b));
+    return mp_number(mp_is_true(a) || mp_is_true(b));
 }
 
 MpObj iter_new(MpObj collections) {
@@ -677,7 +582,7 @@ MpObj mp_str(MpObj a) {
         case TYPE_NUM: {
             char s[20];
             double v = GET_NUM(a);
-            number_format(s, a);
+            mp_format_number(s, a);
             return string_new(s);
         }
         case TYPE_LIST: {
@@ -766,6 +671,7 @@ MpObj mp_get_globals_from_module(MpObj module) {
 /**
  * create new object
  * @param type object type
+ * @param value object pointer
  * @value object pointer
  */
 MpObj mp_to_obj(int type, void* value) {

@@ -90,16 +90,16 @@ MpObj os_stat(){
     struct stat stbuf;
     if (!stat(s,&stbuf)) { 
         MpObj st = dict_new();
-        obj_set_by_cstr(st, "st_mtime", number_obj(stbuf.st_mtime));
-        obj_set_by_cstr(st, "st_atime", number_obj(stbuf.st_atime));
-        obj_set_by_cstr(st, "st_ctime", number_obj(stbuf.st_ctime));
-        obj_set_by_cstr(st, "st_size" , number_obj(stbuf.st_size));
-        obj_set_by_cstr(st, "st_mode",  number_obj(stbuf.st_mode));
-        obj_set_by_cstr(st, "st_nlink", number_obj(stbuf.st_nlink));
-        obj_set_by_cstr(st, "st_dev",   number_obj(stbuf.st_dev));
-        obj_set_by_cstr(st, "st_ino",   number_obj(stbuf.st_ino));
-        obj_set_by_cstr(st, "st_uid",   number_obj(stbuf.st_uid));
-        obj_set_by_cstr(st, "st_gid",   number_obj(stbuf.st_gid));
+        obj_set_by_cstr(st, "st_mtime", mp_number(stbuf.st_mtime));
+        obj_set_by_cstr(st, "st_atime", mp_number(stbuf.st_atime));
+        obj_set_by_cstr(st, "st_ctime", mp_number(stbuf.st_ctime));
+        obj_set_by_cstr(st, "st_size" , mp_number(stbuf.st_size));
+        obj_set_by_cstr(st, "st_mode",  mp_number(stbuf.st_mode));
+        obj_set_by_cstr(st, "st_nlink", mp_number(stbuf.st_nlink));
+        obj_set_by_cstr(st, "st_dev",   mp_number(stbuf.st_dev));
+        obj_set_by_cstr(st, "st_ino",   mp_number(stbuf.st_ino));
+        obj_set_by_cstr(st, "st_uid",   mp_number(stbuf.st_uid));
+        obj_set_by_cstr(st, "st_gid",   mp_number(stbuf.st_gid));
         return st;
     }
     mp_raise("stat(%s): file not exists or accessable.",s);
@@ -157,7 +157,7 @@ MpObj os_get_name() {
 static MpObj os_system() {
     char* command = mp_take_cstr_arg("os.system");
     int ret_code = system(command);
-    return number_obj(ret_code);
+    return mp_number(ret_code);
 }
 
 /**

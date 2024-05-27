@@ -5,8 +5,8 @@
  * @modified 2022/06/10 22:59:13
  */
 
-#include "include/mp.h"
 #include "include/gc_debug.h"
+#include "include/mp.h"
 
 static MpObj string_rstrip_chars(MpStr* self, char* chars, int chars_len);
 static void string_update_hash(MpStr* str);
@@ -34,7 +34,7 @@ void code32(unsigned char* src, int value) {
 int uncode32(unsigned char** src) {
     unsigned char* s = *src;
     *src += 4;
-    return (s[0]<<20) + (s[1]<<16) + (s[2]<<8) + (s[3]);
+    return (s[0] << 20) + (s[1] << 16) + (s[2] << 8) + (s[3]);
 }
 /* encode/decode end */
 
@@ -43,8 +43,8 @@ int uncode32(unsigned char** src) {
  * @since 2015
  */
 MpObj string_char_new(int c) {
-    assert (c>=0);
-    assert (c<=255);
+    assert(c >= 0);
+    assert(c <= 255);
     char value[2];
     value[0] = c;
     value[1] = 0;
@@ -55,7 +55,7 @@ MpObj string_char_new(int c) {
  * allocate new string
  * use constant char if size <= 0
  */
-MpObj string_alloc(char *s, int size) {
+MpObj string_alloc(char* s, int size) {
     MpStr* str = mp_malloc(sizeof(MpStr), "str.alloc_obj");
     if (size > 0) {
         /* copy string data to new memory */
@@ -69,7 +69,7 @@ MpObj string_alloc(char *s, int size) {
         }
         str->value[size] = '\0';
         gc_debug_str_value(str->value);
-    } else if(size == 1){
+    } else if (size == 1) {
         return string_chr(s[0]);
     } else {
         /* use string ptr in C data section */
@@ -83,7 +83,7 @@ MpObj string_alloc(char *s, int size) {
         }
     }
 
-    MpObj v = string_to_obj(str); 
+    MpObj v = string_to_obj(str);
     string_update_hash(str);
     return gc_track(v);
 }
@@ -120,11 +120,9 @@ MpObj string_const(const char* s) {
     return string_from_cstr(s);
 }
 
-
 MpObj string_intern(const char* s) {
     return string_from_cstr(s);
 }
-
 
 /**
  * @since 2016-11-27
@@ -141,7 +139,7 @@ MpObj string_chr(int n) {
     return list_get(GET_LIST(ARRAY_CHARS), n);
 }
 
-void string_free(MpStr *str) {
+void string_free(MpStr* str) {
     if (str->stype == STR_TYPE_DYNAMIC) {
         mp_free(str->value, str->len + 1);
         mp_free(str, sizeof(MpStr));
@@ -163,7 +161,7 @@ int string_index(MpStr* s1, MpStr* s2, int start) {
     int i = 0;
     int len = s1->len - s2->len;
     for (i = start; i <= len; i++) {
-        if (memcmp(ss1+i, ss2, s2->len) == 0) {
+        if (memcmp(ss1 + i, ss2, s2->len) == 0) {
             return i;
         }
     }
@@ -177,7 +175,7 @@ static int string_size(MpStr* s) {
 int string_hash(MpStr* s) {
     if (s->hash < 0) {
         s->hash = mp_hash(s->value, s->len);
-    } 
+    }
     return s->hash;
 }
 
@@ -194,7 +192,6 @@ static char string_char_at(MpStr* s, int index) {
     return s->value[index];
 }
 
-
 int string_rfind(MpStr* s1, MpStr* s2) {
     char* ss1 = s1->value;
     char* ss2 = s2->value;
@@ -207,7 +204,7 @@ int string_rfind(MpStr* s1, MpStr* s2) {
     }
 
     for (i = end; i >= 0; i--) {
-        if (memcmp(ss1+i, ss2, s2->len) == 0) {
+        if (memcmp(ss1 + i, ss2, s2->len) == 0) {
             return i;
         }
     }
@@ -224,16 +221,17 @@ MpObj string_append_char(MpObj string, char c) {
     // return obj_add(string, string_chr(c));
     MpStr* str = GET_STR_OBJ(string);
     if (str->stype) {
-        str->value = mp_realloc(str->value, str->len+1, str->len+2, "str.append_char");
+        str->value = mp_realloc(str->value, str->len + 1, str->len + 2,
+                                "str.append_char");
     } else {
         // static string, must malloc a new memory
-        str->value = mp_malloc(str->len+2, "str.append_char");
+        str->value = mp_malloc(str->len + 2, "str.append_char");
     }
     str->value[str->len] = c;
-    str->value[str->len+1] = '\0';
+    str->value[str->len + 1] = '\0';
     str->len++;
     str->stype = 1;
-    
+
     string_update_hash(str);
     return string;
 }
@@ -246,13 +244,14 @@ MpObj string_append_cstr(MpObj string, const char* sz) {
     MpStr* str = GET_STR_OBJ(string);
     int sz_len = strlen(sz);
     if (str->stype) {
-        str->value = mp_realloc(str->value, str->len+1, str->len+1+sz_len, "str.append_cstr");
+        str->value = mp_realloc(str->value, str->len + 1, str->len + 1 + sz_len,
+                                "str.append_cstr");
     } else {
         char* old_value = str->value;
-        str->value = mp_malloc(str->len + sz_len+1, "str.append_cstr");
+        str->value = mp_malloc(str->len + sz_len + 1, "str.append_cstr");
         strcpy(str->value, old_value);
     }
-    strcpy(str->value+str->len, sz);
+    strcpy(str->value + str->len, sz);
     str->len += sz_len;
     str->stype = 1;
 
@@ -270,11 +269,10 @@ MpObj string_append_int(MpObj string, int64_t num) {
     // the maxium length of long is 20
     char buf[30];
     sprintf(buf, "%lld", (long long int)num);
-    string = string_append_cstr(string, buf); 
+    string = string_append_cstr(string, buf);
     // not use tail-call, prevent buf destroyed by compiler
     return string;
 }
-
 
 MpObj string_substring(MpStr* str, int start, int end) {
     int max_end, len, i;
@@ -313,7 +311,7 @@ MpObj string_add(MpStr* a, MpStr* b) {
 
     int len = la + lb;
     MpObj des = string_alloc(NULL, len);
-    char*s = GET_CSTR(des);
+    char* s = GET_CSTR(des);
     memcpy(s, sa, la);
     memcpy(s + la, sb, lb);
     string_update_hash(GET_STR_OBJ(des));
@@ -324,13 +322,13 @@ MpObj string_builtin_find() {
     static const char* sz_func = "find";
     MpObj self = mp_take_str_obj_arg(sz_func);
     MpObj str = mp_take_str_obj_arg(sz_func);
-    return number_obj(string_index(self.value.str, str.value.str, 0));
+    return mp_number(string_index(self.value.str, str.value.str, 0));
 }
 
 MpObj string_builtin_rfind() {
     MpObj self = mp_take_str_obj_arg("rfind");
-    MpObj  str = mp_take_str_obj_arg("rfind");
-    return number_obj(string_rfind(self.value.str, str.value.str));
+    MpObj str = mp_take_str_obj_arg("rfind");
+    return mp_number(string_rfind(self.value.str, str.value.str));
 }
 
 MpObj string_builtin_substring() {
@@ -344,10 +342,10 @@ MpObj string_builtin_substring() {
 MpObj string_builtin_upper() {
     MpObj self = mp_take_str_obj_arg("upper");
     int i;
-    char*s = GET_CSTR(self);
+    char* s = GET_CSTR(self);
     int len = GET_STR_LEN(self);
     MpObj nstr = string_alloc(NULL, len);
-    char*news = GET_CSTR(nstr);
+    char* news = GET_CSTR(nstr);
     for (i = 0; i < len; i++) {
         news[i] = toupper(s[i]);
     }
@@ -358,17 +356,16 @@ MpObj string_builtin_upper() {
 MpObj string_builtin_lower() {
     MpObj self = mp_take_str_obj_arg("lower");
     int i;
-    char*s = GET_CSTR(self);
+    char* s = GET_CSTR(self);
     int len = GET_STR_LEN(self);
     MpObj nstr = string_alloc(NULL, len);
-    char*news = GET_CSTR(nstr);
+    char* news = GET_CSTR(nstr);
     for (i = 0; i < len; i++) {
         news[i] = tolower(s[i]);
     }
     string_update_hash(GET_STR_OBJ(nstr));
     return nstr;
 }
-
 
 MpObj string_builtin_replace() {
     static const char* sz_func;
@@ -379,23 +376,24 @@ MpObj string_builtin_replace() {
     MpObj nstr = string_alloc("", 0);
     int pos = string_index(self.value.str, src.value.str, 0);
     int lastpos = 0;
-    while (pos >=0 && pos < GET_STR_LEN(self)) {
-        if (pos != 0){
-            nstr = obj_add(nstr,
-                    string_substring(self.value.str, lastpos, pos));
+    while (pos >= 0 && pos < GET_STR_LEN(self)) {
+        if (pos != 0) {
+            nstr =
+                obj_add(nstr, string_substring(self.value.str, lastpos, pos));
         }
         nstr = obj_add(nstr, des);
         lastpos = pos + GET_STR_LEN(src);
         pos = string_index(self.value.str, src.value.str, lastpos);
         // printf("lastpos = %d\n", lastpos);
     }
-    nstr = obj_add(nstr, string_substring(self.value.str, lastpos, GET_STR_LEN(self)));
+    nstr = obj_add(
+        nstr, string_substring(self.value.str, lastpos, GET_STR_LEN(self)));
     return nstr;
 }
 
 MpObj string_builtin_split() {
     const char* sz_func = "split";
-    MpObj self    = mp_take_str_obj_arg(sz_func);
+    MpObj self = mp_take_str_obj_arg(sz_func);
     MpObj pattern = mp_take_str_obj_arg(sz_func);
     int pos, lastpos;
     MpObj nstr, list;
@@ -417,14 +415,16 @@ MpObj string_builtin_split() {
         lastpos = pos + GET_STR_LEN(pattern);
         pos = string_index(self.value.str, pattern.value.str, lastpos);
     }
-    mp_append(list, string_substring(self.value.str, lastpos, GET_STR_LEN(self)));
+    mp_append(list,
+              string_substring(self.value.str, lastpos, GET_STR_LEN(self)));
     return list;
 }
 
 MpObj string_builtin_startswith() {
     MpObj self = mp_take_str_obj_arg("str.startswith");
     MpObj arg0 = mp_take_str_obj_arg("str.startswith");
-    return number_obj(string_index(GET_STR_OBJ(self), GET_STR_OBJ(arg0), 0) == 0);
+    return mp_number(string_index(GET_STR_OBJ(self), GET_STR_OBJ(arg0), 0) ==
+                     0);
 }
 
 MpObj string_builtin_endswith() {
@@ -433,9 +433,9 @@ MpObj string_builtin_endswith() {
     MpObj arg0 = mp_take_str_obj_arg(func_name);
     int idx = string_index(GET_STR_OBJ(self), GET_STR_OBJ(arg0), 0);
     if (idx < 0) {
-        return number_obj(0);
+        return mp_number(0);
     }
-    return number_obj(idx + mp_len(arg0) == mp_len(self));
+    return mp_number(idx + mp_len(arg0) == mp_len(self));
 }
 
 MpObj string_builtin_format() {
@@ -474,7 +474,7 @@ MpObj string_builtin_format() {
         // string_append_char(nstr, '{');
         mp_raise("ValueError: Single '{' encountered in format string");
     }
-    
+
     return nstr;
 }
 
@@ -482,9 +482,7 @@ static MpObj string_rstrip_blank(MpStr* self) {
     return string_rstrip_chars(self, "\t\r\n ", 4);
 }
 
-static MpObj string_rstrip_chars(MpStr* self, 
-                            char* chars, 
-                            int chars_len) {
+static MpObj string_rstrip_chars(MpStr* self, char* chars, int chars_len) {
     int length = 0;
     int i = 0;
     int j = 0;
@@ -493,7 +491,7 @@ static MpObj string_rstrip_chars(MpStr* self,
         char c = string_char_at(self, i);
 
         int match = 0;
-        for (j = 0; j<chars_len; j++) {
+        for (j = 0; j < chars_len; j++) {
             if (c == chars[j]) {
                 match = 1;
                 break;
@@ -507,7 +505,7 @@ static MpObj string_rstrip_chars(MpStr* self,
         }
     }
     char* value = self->value;
-    return string_alloc(value, string_size(self) - length);   
+    return string_alloc(value, string_size(self) - length);
 }
 
 MpObj string_builtin_rstrip() {
@@ -518,24 +516,119 @@ MpObj string_builtin_rstrip() {
         return string_rstrip_blank(GET_STR_OBJ(self));
     } else {
         MpObj chars = mp_take_str_obj_arg("str.rstrip");
-        return string_rstrip_chars(GET_STR_OBJ(self), 
-            GET_CSTR(chars), GET_STR_LEN(chars));
+        return string_rstrip_chars(GET_STR_OBJ(self), GET_CSTR(chars),
+                                   GET_STR_LEN(chars));
+    }
+}
+
+MpObj string_mod_list(MpObj str, MpObj list) {
+    assert(MP_TYPE(str) == TYPE_STR);
+    assert(MP_TYPE(list) == TYPE_LIST);
+
+    char* fmt = GET_CSTR(str);
+    int str_length = GET_STR_LEN(str);
+    MpList* plist = GET_LIST(list);
+    int i = 0;
+    int arg_index = 0;
+
+    MpObj result = string_new("");
+
+    for (i = 0; i < str_length; i++) {
+        char c = fmt[i];
+
+        if (c == '%') {
+            i++;
+            char num_buf[20];
+            int num_len = 0;
+            char* fmt_temp = fmt;
+            while (isdigit(fmt[i]) && num_len < sizeof(num_buf)) {
+                i++;
+                num_len++;
+            }
+
+            if (num_len > 0) {
+                strncpy(num_buf, fmt_temp, num_len);
+            }
+
+            if (num_len >= sizeof(num_buf)) {
+                mp_raise("obj_mod(%d): format too long", __LINE__);
+            }
+
+            // TODO 处理 %03d 中间的数字部分
+
+            switch (fmt[i]) {
+                case 's': {
+                    string_append_obj(result, list_get(plist, arg_index));
+                    arg_index++;
+                    break;
+                }
+                case 'd': {
+                    MpObj item = list_get(plist, arg_index);
+                    mp_assert_type(item, TYPE_NUM, "obj_mod");
+                    string_append_obj(result, item);
+                    arg_index++;
+                    break;
+                }
+                case 'r': {
+                    MpObj item = list_get(plist, arg_index);
+                    if (IS_STR(item)) {
+                        string_append_char(result, '\'');
+                        for (int j = 0; j < GET_STR_LEN(item); j++) {
+                            char c1 = GET_STR_CHAR(item, j);
+                            if (c1 == '\n') {
+                                string_append_cstr(result, "\\n");
+                            } else if (c1 == '\r') {
+                                string_append_cstr(result, "\\r");
+                            } else {
+                                string_append_char(result, c1);
+                            }
+                        }
+                        string_append_char(result, '\'');
+                    } else {
+                        string_append_obj(result, item);
+                    }
+                    arg_index++;
+                    break;
+                }
+                default:
+                    mp_raise("obj_mod(%d): unsupported format type '%c'(0x%x)",
+                             __LINE__, fmt[i], fmt[i]);
+            }
+        } else {
+            string_append_char(result, c);
+        }
+    }
+
+    return result;
+}
+
+MpObj string_ops_mod(MpObj a, MpObj b) {
+    assert(MP_TYPE(a) == TYPE_STR);
+    char* fmt = GET_CSTR(a);
+
+    if (MP_TYPE(b) == TYPE_LIST) {
+        return string_mod_list(a, b);
+    } else {
+        MpObj list = list_new(1);
+        MpList* plist = GET_LIST(list);
+        list_append(plist, b);
+        return string_mod_list(a, list);
     }
 }
 
 void MpStr_InitMethods() {
     tm->str_proto = dict_new();
-    MpModule_RegFunc(tm->str_proto, "replace",    string_builtin_replace);
-    MpModule_RegFunc(tm->str_proto, "find",       string_builtin_find);
-    MpModule_RegFunc(tm->str_proto, "rfind",      string_builtin_rfind);
-    MpModule_RegFunc(tm->str_proto, "substring",  string_builtin_substring);
-    MpModule_RegFunc(tm->str_proto, "upper",      string_builtin_upper);
-    MpModule_RegFunc(tm->str_proto, "lower",      string_builtin_lower);
-    MpModule_RegFunc(tm->str_proto, "split",      string_builtin_split);
+    MpModule_RegFunc(tm->str_proto, "replace", string_builtin_replace);
+    MpModule_RegFunc(tm->str_proto, "find", string_builtin_find);
+    MpModule_RegFunc(tm->str_proto, "rfind", string_builtin_rfind);
+    MpModule_RegFunc(tm->str_proto, "substring", string_builtin_substring);
+    MpModule_RegFunc(tm->str_proto, "upper", string_builtin_upper);
+    MpModule_RegFunc(tm->str_proto, "lower", string_builtin_lower);
+    MpModule_RegFunc(tm->str_proto, "split", string_builtin_split);
     MpModule_RegFunc(tm->str_proto, "startswith", string_builtin_startswith);
-    MpModule_RegFunc(tm->str_proto, "endswith",   string_builtin_endswith);
-    MpModule_RegFunc(tm->str_proto, "format",     string_builtin_format);
-    MpModule_RegFunc(tm->str_proto, "rstrip",     string_builtin_rstrip);
+    MpModule_RegFunc(tm->str_proto, "endswith", string_builtin_endswith);
+    MpModule_RegFunc(tm->str_proto, "format", string_builtin_format);
+    MpModule_RegFunc(tm->str_proto, "rstrip", string_builtin_rstrip);
 }
 
 MpObj* string_next(MpData* iterator) {
@@ -546,18 +639,16 @@ MpObj* string_next(MpData* iterator) {
     }
     iterator->cur += 1;
     MpStr* str = GET_STR_OBJ(iterator->data_ptr[0]);
-    iterator->cur_obj = string_chr(str->value[iterator->cur-1]);
+    iterator->cur_obj = string_chr(str->value[iterator->cur - 1]);
     return &iterator->cur_obj;
 }
-
 
 MpObj string_iter_new(MpObj str) {
     MpObj data = data_new(1);
     MpData* iterator = GET_DATA(data);
-    iterator->cur  = 0;
-    iterator->end  = GET_STR_LEN(str);
+    iterator->cur = 0;
+    iterator->end = GET_STR_LEN(str);
     iterator->next = string_next;
     iterator->data_ptr[0] = str;
     return data;
 }
-

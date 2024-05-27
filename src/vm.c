@@ -153,17 +153,17 @@ int vm_init(int argc, char* argv[]) {
     tm->argv   = argv;
     tm->code   = NULL;
     tm->steps  = 0;
-    tm->_TRUE  = number_obj(1);
-    tm->_FALSE = number_obj(0);
+    tm->_TRUE  = mp_number(1);
+    tm->_FALSE = mp_number(0);
     tm->vm_size = sizeof(MpVm);
 
     /* set module boot */
     MpObj boot = mp_new_native_module("boot");
 
     /* builtins constants */
-    obj_set_by_cstr(tm->builtins, "tm",    number_obj(1));
-    obj_set_by_cstr(tm->builtins, "True",  number_obj(1));
-    obj_set_by_cstr(tm->builtins, "False", number_obj(0));
+    obj_set_by_cstr(tm->builtins, "tm",    mp_number(1));
+    obj_set_by_cstr(tm->builtins, "True",  mp_number(1));
+    obj_set_by_cstr(tm->builtins, "False", mp_number(0));
     obj_set_by_cstr(tm->builtins, "__builtins__", tm->builtins);
     obj_set_by_cstr(tm->builtins, "__modules__",  tm->modules);
     

@@ -85,9 +85,9 @@ int uncode16(unsigned char** s);
 #include "string.h"
 
 // number functions
-MpObj number_obj(double v);
-void number_format(char* des, MpObj num);
-double number_get_double(MpObj num);
+MpObj mp_number(double v);
+void mp_format_number(char* des, MpObj num);
+double mp_number_to_double(MpObj num);
 
 /**
  * list functions
@@ -167,7 +167,7 @@ MpObj obj_div(MpObj a, MpObj b);
 MpObj obj_mod(MpObj a, MpObj b);
 MpObj obj_or(MpObj a, MpObj b);
 MpObj obj_neg(MpObj o);
-MpObj obj_cmp(MpObj a, MpObj b);
+MpObj mp_cmp_as_obj(MpObj a, MpObj b);
 MpObj obj_is_in(MpObj left, MpObj right);
 MpObj obj_slice(MpObj self, MpObj first, MpObj second);
 MpObj iter_new(MpObj collections);
