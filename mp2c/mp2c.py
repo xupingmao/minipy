@@ -20,7 +20,7 @@ OP_FUNC_MAP = {
     OP_OR:  "obj_or",
     OP_AND: "obj_and",
 
-    OP_GET: "obj_get",
+    OP_GET: "mp_getattr",
     OP_EQEQ: "obj_EQEQ",
     OP_NOTEQ: "obj_not_eq",
     
@@ -519,22 +519,34 @@ def convert(code, writer):
 
     writer.end()
 
+def get_cmd_str(value):
+    if os.name == "nt":
+        value = value.replace("/", "\\")
+    value = value.replace('"', '\\"')
+    return '"%s"' % value
+
+def get_minipy_exe():
+    if os.name == "nt":
+        return "minipy.exe"
+    return "./minipy"
+
 def do_benchmark(fpath, target):
     print("")
     print("Test File: %s" % fpath)
     print("-" * 50)
     print(">>> Run with minipy")
-    os.system("./minipy %r" % fpath)
+    os.system("%s %s" % (get_minipy_exe(), get_cmd_str(fpath)))
     
+    target = get_cmd_str(target)
     print("")
     print("-" * 50)
     print(">>> Run with %s" % target)
-    os.system("./%s" % target)
+    os.system("%s" % target)
 
     print("")
     print("-" * 50)
     print(">>> Run with python3")
-    os.system("python3 %r" % fpath)
+    os.system("python3 %s" % get_cmd_str(fpath))
 
 
 class AotCompiler:

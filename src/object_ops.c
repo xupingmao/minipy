@@ -646,7 +646,7 @@ MpObj mp_str(MpObj a) {
         case TYPE_MODULE: {
             MpModule* module = GET_MODULE(a);
             assert(module->file != NULL);
-            sprintf(buf, "<module at %s>", module->file->value);
+            sprintf(buf, "<module %s at %p>", module->file->value, module);
             return string_new(buf);
         }
         case TYPE_DATA:
