@@ -32,5 +32,7 @@ int string_hash(MpStr* str);
 MpObj string_add(MpStr* a, MpStr* b);
 MpObj string_const_with_len(char* s, int len);
 MpObj string_ops_mod(MpObj a, MpObj b);
-
+MpObj string_append_char(MpObj string, char c);
+MpObj string_append_cstr(MpObj string, const char*sz);
+MpObj string_append_obj(MpObj string, MpObj obj);
 #endif

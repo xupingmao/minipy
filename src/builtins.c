@@ -5,6 +5,7 @@
  * @modified 2022/06/09 23:12:02
  */
 #include "include/mp.h"
+#include "include/string.h"
 #include <ctype.h>
 #include <sys/stat.h>
 #include <errno.h>
@@ -372,6 +373,7 @@ MpObj bf_gettype() {
         case TYPE_DATA: return string_from_cstr("data");
         case TYPE_NONE: return string_from_cstr("None");
         case TYPE_INSTANTCE: return string_from_cstr("object");
+        case TYPE_PTR: return string_from_cstr("ptr");
         default: mp_raise("gettype(%o)", obj);
     }
     return NONE_OBJECT;
@@ -773,7 +775,7 @@ MpObj bf_newobj() {
 /**
  * random
  */
-MpObj bf_random() {
+static MpObj bf_random() {
     static long seed = 0;
     if (seed == 0) {
         seed = time(NULL);
@@ -789,13 +791,13 @@ MpObj bf_Exception() {
     return mp_take_obj_arg("Exception");
 }
 
-MpObj bf_getattr() {
+static MpObj bf_getattr() {
     MpObj self = mp_take_obj_arg("getattr");
     MpObj key  = mp_take_obj_arg("getattr");
     return mp_getattr(self, key);
 }
 
-MpObj bf_setattr() {
+static MpObj bf_setattr() {
     MpObj self = mp_take_obj_arg("setattr");
     MpObj key  = mp_take_obj_arg("setattr");
     MpObj val  = mp_take_obj_arg("setattr");
@@ -803,18 +805,18 @@ MpObj bf_setattr() {
     return NONE_OBJECT;
 }
 
-MpObj bf_hasattr() {
+static MpObj bf_hasattr() {
     MpObj self = mp_take_obj_arg("hasattr");
     MpObj key  = mp_take_obj_arg("hasattr");
     return obj_is_in(self, key);
 }
 
-MpObj bf_hash() {
+static MpObj bf_hash() {
     MpObj object = mp_take_obj_arg("hash");
     return mp_number(mp_get_obj_hash(object));
 }
 
-MpObj bf_isinstance() {
+static MpObj bf_isinstance() {
     MpObj first = mp_take_obj_arg("isinstance");
     MpObj type = mp_take_obj_arg("isinstance");
     if (IS_FUNC(type) && GET_FUNCTION(type)->native == bf_list && IS_LIST(first)) {

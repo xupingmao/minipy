@@ -20,7 +20,11 @@ static MpObj instance_getattr() {
 
     mp_assert_type(self, TYPE_INSTANTCE, "instance_getattr");
     MpInstance* instance = GET_INSTANCE(self);
-    
+    return mp_get_instance_attr(instance, key);
+}
+
+MpObj mp_get_instance_attr(MpInstance* instance, MpObj key) {
+    assert(instance != NULL);
     // 查询对象属性
     DictNode* attr_node = dict_get_node(instance->dict, key);
     if (attr_node != NULL) {
@@ -45,11 +49,18 @@ static MpObj instance_getattr() {
             if (instance->method_cache==NULL) {
                 instance->method_cache = dict_new_ptr();
             }
-            MpObj method = method_new(class_attr_node->val, self);
+            MpObj method = method_new(class_attr_node->val, mp_to_obj(TYPE_INSTANTCE, instance));
             dict_set0(instance->method_cache, key, method);
             return method;
         }
         return class_attr_node->val;
+    }
+
+    if (obj_eq_cstr(key, "__class__")) {
+        return mp_to_obj(TYPE_CLASS, instance->klass);
+    }
+    if (obj_eq_cstr(key, "__dict__")) {
+        return mp_to_obj(TYPE_DICT, instance->dict);
     }
 
     mp_raise("AttributeError: object has no attribute %o", key);
@@ -67,6 +78,7 @@ MpObj class_new(MpObj name, MpObj module) {
     klass->setattr_method = mp_new_native_func_obj(module, instance_setattr);
     klass->contains_method = NONE_OBJECT;
     klass->len_method = NONE_OBJECT;
+    klass->__str__ = NONE_OBJECT;
 
     return gc_track(mp_to_obj(TYPE_CLASS, klass));
 }
@@ -82,6 +94,11 @@ void class_set_attr(MpClass* klass, MpObj key, MpObj value) {
 MpObj class_new_by_cstr(char* name, MpObj module) {
     MpObj name_obj = string_new(name);
     return class_new(name_obj, module);
+}
+
+MpClass* class_new_ptr_by_cstr(char* name, MpModule* module) {
+    MpObj klass = class_new_by_cstr(name, mp_to_obj(TYPE_MODULE, module));
+    return GET_CLASS(klass);
 }
 
 MpInstance* class_instance(MpClass* pclass) {
@@ -114,6 +131,15 @@ void class_format(char* dest, MpObj class_obj) {
 
 MpObj mp_format_instance(MpInstance* instance) {
     assert(instance != NULL);
+    assert(instance->klass != NULL);
+
+    MpObj self = mp_to_obj(TYPE_INSTANTCE, instance);
+
+    if (!IS_NONE(instance->klass->__str__)) {
+        MpObj method = method_new(instance->klass->__str__, self);
+        return MP_CALL_EX(method);
+    }
+
     char fmt[100];
     // todo module name
     char* klass_name = instance->klass->name->value;

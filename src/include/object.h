@@ -3,7 +3,7 @@
  * @email: 578749341@qq.com
  * @Date: 2024-04-14 19:14:16
  * @LastEditors: xupingmao
- * @LastEditTime: 2024-06-02 11:31:59
+ * @LastEditTime: 2024-06-02 16:20:18
  * @FilePath: /minipy/src/include/object.h
  * @Description: 描述
  */
@@ -134,6 +134,7 @@ typedef struct MpClass {
     MpObj contains_method;  // __contains__
     MpObj getattr_method;   // __getattr__
     MpObj setattr_method;   // __setattr__
+    MpObj __str__; // __str__
 } MpClass;
 
 typedef struct MpInstance {
@@ -261,7 +262,7 @@ typedef struct MpVm {
     MpObj list_proto;
     MpObj dict_proto;
     MpObj str_proto;
-
+    
     MpDict* constants;  /* type: dict */
     MpObj modules;      /* type: dict */
     MpObj builtins;     /* type: dict, builtins functions */

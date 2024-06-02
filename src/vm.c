@@ -3,7 +3,7 @@
  * @email: 578749341@qq.com
  * @Date: 2023-12-07 22:03:29
  * @LastEditors: xupingmao
- * @LastEditTime: 2024-06-01 23:08:32
+ * @LastEditTime: 2024-06-02 16:05:22
  * @FilePath: /minipy/src/vm.c
  * @Description: 描述
  */
@@ -34,13 +34,13 @@
 #include "object.c"
 #include "module.c"
 
-#include "module/time.c"
-#include "module/sys.c"
-#include "module/math.c"
-#include "module/os.c"
+#include "module/mp_time.c"
+#include "module/mp_sys.c"
+#include "module/mp_math.c"
+#include "module/mp_os.c"
 #include "module/mp_debug.c"
 #include "module/mp_random.c"
-#include "module/file.c"
+#include "module/mp_file.c"
 
 
 #include "gen/mp_init.gen.c"

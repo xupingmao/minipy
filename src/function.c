@@ -3,7 +3,7 @@
  * @email: 578749341@qq.com
  * @Date: 2016
  * @LastEditors: xupingmao
- * @LastEditTime: 2024-06-02 02:25:15
+ * @LastEditTime: 2024-06-02 15:55:12
  * @FilePath: /minipy/src/function.c
  * @Description: minipy函数
  */
@@ -118,7 +118,7 @@ MpObj func_new(MpObj mod, MpObj self, MpNativeFunc native_func) {
     return gc_track(mp_to_obj(TYPE_FUNCTION, f));
 }
 
-MpFunction *mp_new_native_func(MpObj module, MpNativeFunc native_func) {
+MpFunction* mp_new_native_func(MpObj module, MpNativeFunc native_func) {
     assert(native_func != NULL);
     MpObj result = func_new(module, NONE_OBJECT, native_func);
     return GET_FUNC(result);
@@ -187,11 +187,11 @@ void func_format(char* des, MpFunction* func) {
 
     strncpy(sz_buf, sz_fnc, 19);
     if (func->self.type != TYPE_NONE) {
-        sprintf(des, "<method %p %s>", func, sz_buf);
+        sprintf(des, "<method %s at %p>", sz_buf, func);
     } else if (func->native != NULL) {
-        sprintf(des, "<function (native) %p %s>", func, sz_buf);
+        sprintf(des, "<native function %s at %p>", sz_buf, func);
     } else {
-        sprintf(des, "<function %p %s>", func, sz_buf);
+        sprintf(des, "<function %s at %p>", sz_buf, func);
     }
 }
 
@@ -220,16 +220,19 @@ MpObj func_get_attr(MpFunction* fnc, MpObj key) {
 }
 
 MpObj func_get_mod_obj(MpFunction* fnc) {
+    assert(fnc != NULL);
     return fnc->mod;
 }
 
 unsigned char* func_get_code(MpFunction* fnc) {
+    assert(fnc != NULL);
     assert(fnc->resolved == 1);
     // resolve_module(GET_MODULE(fnc->mod), fnc);
     return fnc->code;
 }
 
 MpObj func_get_globals(MpFunction* fnc) {
+    assert(fnc != NULL);
     if (MP_TYPE(fnc->mod) != TYPE_MODULE) {
         mp_raise(
             "func_get_globals: expect module but see type:%d (func:%o) "
@@ -240,6 +243,7 @@ MpObj func_get_globals(MpFunction* fnc) {
 }
 
 int func_get_max_locals(MpFunction* fnc) {
+    assert(fnc != NULL);
     assert(fnc->resolved == 1);
     // resolve_module(GET_MODULE(fnc->mod), fnc);
     return fnc->maxlocals;
@@ -273,50 +277,51 @@ MpObj func_get_name_obj(MpObj func) {
     return NONE_OBJECT;
 }
 
+static MpObj mp_call_func(MpFunction* func) {
+    assert(func != NULL);
+
+    mp_resolve_self_by_func_ptr(func);
+    mp_log_call(func);
+
+    /* call native function */
+    if (func->native != NULL) {
+        return func->native();
+    } else {
+        assert(func->resolved == 1);
+        MpFrame* f = mp_push_frame(mp_to_obj(TYPE_FUNCTION, func));
+        assert(f != NULL);
+
+    L_recall:
+        if (setjmp(f->buf) == 0) {
+            return mp_eval(f);
+        } else {
+            /* handle exception in this frame */
+            f = tm->frame;
+            if (f->cache_jmp != NULL) {
+                f->cache = f->cache_jmp;
+                f->cache_jmp = NULL;
+                goto L_recall;
+            } else {
+                /* there is no handler, throw to prev frame */
+                mp_push_exception(f);
+                mp_pop_frame();
+                longjmp(tm->frame->buf, 1);
+            }
+        }
+    }
+
+    return NONE_OBJECT;
+}
+
 #ifdef MP_DEBUG
-MpObj mp_call_func(MpObj func, const char* source, int lineno)
+MpObj mp_call_obj(MpObj func, const char* source, int lineno)
 #else
-MpObj mp_call_func(MpObj func)
+MpObj mp_call_obj(MpObj func)
 #endif
 {
     MpObj ret = NONE_OBJECT;
     if (IS_FUNC(func)) {
-        RESOLVE_METHOD_SELF(func);
-        mp_log_call(func);
-
-        /* call native function */
-        if (GET_FUNCTION(func)->native != NULL) {
-            return GET_FUNCTION(func)->native();
-        } else {
-#ifdef MP_DEBUG
-            if (GET_FUNCTION(func)->resolved == 0) {
-                mp_printf("\nERROR: function not resolved\n");
-                mp_printf("module: %o\n", GET_FUNCTION(func)->mod);
-                mp_printf("func: %o\nsource: %s:%d\n", func, source, lineno);
-            }
-#endif
-
-            assert(GET_FUNCTION(func)->resolved == 1);
-            MpFrame* f = mp_push_frame(func);
-
-        L_recall:
-            if (setjmp(f->buf) == 0) {
-                return mp_eval(f);
-            } else {
-                f = tm->frame;
-                /* handle exception in this frame */
-                if (f->cache_jmp != NULL) {
-                    f->cache = f->cache_jmp;
-                    f->cache_jmp = NULL;
-                    goto L_recall;
-                } else {
-                    /* there is no handler, throw to prev frame */
-                    mp_push_exception(f);
-                    mp_pop_frame();
-                    longjmp(tm->frame->buf, 1);
-                }
-            }
-        }
+        return mp_call_func(GET_FUNC(func));
     } else if (IS_CLASS(func)) {
         MpInstance* obj_ptr = class_instance(GET_CLASS(func));
         return mp_to_obj(TYPE_INSTANTCE, obj_ptr);
@@ -338,7 +343,7 @@ MpObj mp_call_with_nargs(MpObj func, int n, MpObj* args) {
     return MP_CALL_EX(func);
 }
 
-MpObj mp_call_func_safe(MpObj func, int n, MpObj* args) {
+MpObj mp_call_obj_safe(MpObj func, int n, MpObj* args) {
     MpArgument mp_arg = mp_save_args();
     mp_set_args(args, n);
     MpObj result = MP_CALL_EX(func);

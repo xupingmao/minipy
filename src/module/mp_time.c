@@ -18,9 +18,9 @@
 #include "../include/mp.h"
 
 #ifdef _WIN32
-    #include "time_win32.c"
+    #include "mp_time_win32.c"
 #else
-    #include "time_posix.c"
+    #include "mp_time_posix.c"
 #endif
 
 

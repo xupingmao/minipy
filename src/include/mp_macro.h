@@ -125,9 +125,9 @@
 
 
 #ifdef MP_DEBUG
-    #define MP_CALL_EX(a) mp_call_func((a), __FILE__, __LINE__)
+    #define MP_CALL_EX(a) mp_call_obj((a), __FILE__, __LINE__)
 #else
-    #define MP_CALL_EX(a) mp_call_func((a))
+    #define MP_CALL_EX(a) mp_call_obj((a))
 #endif
 
 

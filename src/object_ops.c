@@ -99,7 +99,7 @@ void obj_set(MpObj self, MpObj k, MpObj v) {
             assert(instance->klass->setattr_method.type == TYPE_FUNCTION);
 
             MpObj args[3] = {self, k, v};
-            mp_call_func_safe(instance->klass->setattr_method, 3, args);
+            mp_call_obj_safe(instance->klass->setattr_method, 3, args);
             return;
         }
     }
@@ -173,7 +173,7 @@ MpObj mp_getattr(MpObj self, MpObj k) {
             assert(instance->klass->getattr_method.type == TYPE_FUNCTION);
 
             MpObj args[2] = {self, k};
-            return mp_call_func_safe(instance->klass->getattr_method, 2, args);
+            return mp_call_obj_safe(instance->klass->getattr_method, 2, args);
         }
     }
     mp_raise("keyError: %o", k);
@@ -645,12 +645,15 @@ MpObj mp_str(MpObj a) {
         case TYPE_NONE:
             return string_static("None");
         case TYPE_MODULE:
-            sprintf(buf, "<module %s>", mp_to_cstr(GET_MODULE(a)->file));
+            sprintf(buf, "<module at %s>", mp_to_cstr(GET_MODULE(a)->file));
             return string_new(buf);
         case TYPE_DATA:
             return GET_DATA(a)->str(GET_DATA(a));
         case TYPE_INSTANTCE:
             return mp_format_instance(GET_INSTANCE(a));
+        case TYPE_PTR:
+            sprintf(buf, "<ptr at %p>", GET_PTR(a));
+            return string_new(buf);
         default:
             sprintf(buf, "<unknown(%d)>", a.type);
             return string_new(buf);

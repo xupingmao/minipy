@@ -205,9 +205,9 @@ void vm_destroy();
 #define GET_CONST(i) tm->constants->nodes[i].key
 
 #ifdef MP_DEBUG
-MpObj mp_call_func(MpObj, const char*, int);
+MpObj mp_call_obj(MpObj, const char*, int);
 #else
-MpObj mp_call_func(MpObj);
+MpObj mp_call_obj(MpObj);
 #endif
 
 MpObj mp_call_with_nargs(MpObj func, int n, MpObj* args);

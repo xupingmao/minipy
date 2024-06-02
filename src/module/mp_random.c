@@ -1,5 +1,15 @@
+/*
+ * @Author: xupingmao
+ * @email: 578749341@qq.com
+ * @Date: 2023-12-07 22:03:29
+ * @LastEditors: xupingmao
+ * @LastEditTime: 2024-06-02 16:04:28
+ * @FilePath: /minipy/src/module/mp_random.c
+ * @Description: 描述
+ */
 #include <stdlib.h>
 #include <time.h>
+#include "../include/mp.h"
 
 static MpObj random_randint() {
 	int start = mp_take_int_arg("random.randint");

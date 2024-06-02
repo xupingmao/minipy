@@ -3,7 +3,7 @@
  * @email: 578749341@qq.com
  * @Date: 2023-12-07 22:03:29
  * @LastEditors: xupingmao
- * @LastEditTime: 2024-06-02 00:06:11
+ * @LastEditTime: 2024-06-02 16:44:25
  * @FilePath: /minipy/src/gc.c
  * @Description: 描述
  */
@@ -189,6 +189,7 @@ MpObj gc_track(MpObj v) {
     switch (v.type) {
         case TYPE_NUM:
         case TYPE_NONE:
+        case TYPE_PTR:
             return v;
         case TYPE_STR:
             v.value.str->marked = 0;
@@ -301,6 +302,7 @@ void gc_mark_class(MpClass* pclass) {
     gc_mark(pclass->setattr_method);
     gc_mark(pclass->contains_method);
     gc_mark(pclass->len_method);
+    gc_mark(pclass->__str__);
 }
 
 static void gc_mark_instance(MpInstance* instance) {
@@ -355,7 +357,6 @@ static const char* gc_mark_ex(MpObj o, const char* source) {
         }
         case TYPE_LIST:
             return gc_mark_list(GET_LIST(o));
-
         case TYPE_DICT:
             gc_mark_dict(GET_DICT(o));
             break;
@@ -377,6 +378,8 @@ static const char* gc_mark_ex(MpObj o, const char* source) {
             break;
         case TYPE_INSTANTCE:
             gc_mark_instance(GET_INSTANCE(o));
+            break;
+        case TYPE_PTR:
             break;
         default: {
             printf("%s:%d/%s unknown object type(%d), source(%s)\n", __FILE__,
