@@ -640,13 +640,15 @@ MpObj mp_str(MpObj a) {
             FUNCTION_FORMAT(buf, a);
             return string_new(buf);
         case TYPE_CLASS:
-            class_format(buf, a);
-            return string_new(buf);
+            return mp_format_class(GET_CLASS(a));
         case TYPE_NONE:
             return string_static("None");
-        case TYPE_MODULE:
-            sprintf(buf, "<module at %s>", mp_to_cstr(GET_MODULE(a)->file));
+        case TYPE_MODULE: {
+            MpModule* module = GET_MODULE(a);
+            assert(module->file != NULL);
+            sprintf(buf, "<module at %s>", module->file->value);
             return string_new(buf);
+        }
         case TYPE_DATA:
             return GET_DATA(a)->str(GET_DATA(a));
         case TYPE_INSTANTCE:

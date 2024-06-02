@@ -671,3 +671,13 @@ MpObj string_iter_new(MpObj str) {
     iterator->data_ptr[0] = str;
     return data;
 }
+
+
+size_t str_sizeof(MpStr* str) {
+    assert(str != NULL);
+    if (str->stype == STR_TYPE_DYNAMIC) {
+        return sizeof(MpStr) + str->len + 1;
+    } else {
+        return sizeof(MpStr) + str->len;
+    }
+}

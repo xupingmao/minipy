@@ -3,7 +3,7 @@
  * @email: 578749341@qq.com
  * @Date: 2023-12-07 22:03:29
  * @LastEditors: xupingmao
- * @LastEditTime: 2024-06-02 16:44:25
+ * @LastEditTime: 2024-06-02 17:13:45
  * @FilePath: /minipy/src/gc.c
  * @Description: 描述
  */
@@ -333,8 +333,8 @@ void gc_mark_module(MpModule* pmodule) {
 
     pmodule->marked = GC_REACHED_SIGN;
     gc_mark_ex(pmodule->code, "module.code");
-    gc_mark_ex(pmodule->file, "module.file");
     gc_mark_ex(pmodule->globals, "module.globals");
+    gc_mark_str(pmodule->file);
 }
 
 void gc_mark(MpObj o) {
@@ -691,6 +691,8 @@ MpObj data_new(size_t data_size) {
 
 size_t mp_sizeof(MpObj obj) {
     switch (obj.type) {
+        case TYPE_STR:
+            return str_sizeof(GET_STR_OBJ(obj));
         case TYPE_LIST:
             return list_sizeof(obj.value.list);
         case TYPE_DICT:

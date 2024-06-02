@@ -70,7 +70,10 @@ MpObj mp_get_instance_attr(MpInstance* instance, MpObj key) {
 MpObj class_new(MpObj name, MpObj module) {
     // TODO add class type
     assert(IS_STR(name));
+    assert(IS_MODULE(module));
+
     MpClass* klass = mp_malloc(sizeof(MpClass), "class.new");
+    klass->module = GET_MODULE(module);
     klass->name = name.value.str;
     klass->attr_dict = dict_new_ptr();
     klass->__init__ = NONE_OBJECT;
@@ -123,10 +126,12 @@ void class_free(MpClass* pclass) {
     mp_free(pclass, sizeof(MpClass));
 }
 
-void class_format(char* dest, MpObj class_obj) {
-    mp_assert_type(class_obj, TYPE_CLASS, "class_format");
-    MpClass* klass = GET_CLASS(class_obj);
-    sprintf(dest, "<class '%s' at %p>", klass->name->value, klass);
+MpObj mp_format_class(MpClass* klass) {
+    char dest[100];
+    assert(klass != NULL);
+    MpModule* module = klass->module;
+    sprintf(dest, "<class '%s.%s' at %p>", module->file->value, klass->name->value, klass);
+    return string_new(dest);
 }
 
 MpObj mp_format_instance(MpInstance* instance) {

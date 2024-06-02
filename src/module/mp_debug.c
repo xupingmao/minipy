@@ -101,7 +101,8 @@ static MpObj mp_getfname(MpObj fnc) {
     if (NOT_FUNC(fnc)) {
         mp_raise("mp_getfname expect function");
     }
-    return GET_MODULE(GET_FUNCTION(fnc)->mod)->file;
+    MpModule*module = GET_MODULE(GET_FUNCTION(fnc)->mod);
+    return mp_to_obj(TYPE_STR, module->file);
 }
 
 static MpObj bf_get_mp_local_list() {

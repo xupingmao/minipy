@@ -3,7 +3,7 @@
  * @email: 578749341@qq.com
  * @Date: 2023-12-07 22:35:37
  * @LastEditors: xupingmao
- * @LastEditTime: 2024-06-02 11:56:20
+ * @LastEditTime: 2024-06-02 17:23:42
  * @FilePath: /minipy/src/include/function.h
  * @Description: minipy函数的定义
  */
@@ -36,7 +36,7 @@ MpObj class_new(MpObj name, MpObj module);
 MpObj class_new_by_cstr(char* name, MpObj module);
 MpClass* class_new_ptr_by_cstr(char* name, MpModule* module);
 MpInstance* class_instance(MpClass* klass);
-void class_format(char* dest, MpObj clazz);
+MpObj mp_format_class(MpClass* clazz);
 void class_free(MpClass* pclass);
 void mp_resolve_code(MpModule* m, const char* code);
 void class_set_attr(MpClass* klass, MpObj key, MpObj value);

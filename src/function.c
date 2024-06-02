@@ -3,7 +3,7 @@
  * @email: 578749341@qq.com
  * @Date: 2016
  * @LastEditors: xupingmao
- * @LastEditTime: 2024-06-02 15:55:12
+ * @LastEditTime: 2024-06-02 17:18:14
  * @FilePath: /minipy/src/function.c
  * @Description: minipy函数
  */
@@ -265,7 +265,7 @@ char* func_get_name_cstr(MpObj func) {
  */
 MpObj func_get_file_name_obj(MpObj func) {
     if (IS_FUNC(func)) {
-        return GET_MODULE(GET_FUNCTION(func)->mod)->file;
+        return mp_to_obj(TYPE_STR, GET_MODULE(GET_FUNCTION(func)->mod)->file);
     }
     return NONE_OBJECT;
 }

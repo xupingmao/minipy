@@ -13,7 +13,7 @@ void module_free(MpModule* mod){
  */
 MpObj module_new(MpObj fname, MpObj name, MpObj code){
   MpModule *mod = mp_malloc(sizeof(MpModule), "module.new");
-  mod->file = fname;
+  mod->file = GET_STR_OBJ(fname);
   mod->code = code;
   mod->resolved = 0;
   mod->cache = NULL;

@@ -3,7 +3,7 @@
  * @email: 578749341@qq.com
  * @Date: 2024-04-14 19:14:16
  * @LastEditors: xupingmao
- * @LastEditTime: 2024-06-02 16:20:18
+ * @LastEditTime: 2024-06-02 17:14:22
  * @FilePath: /minipy/src/include/object.h
  * @Description: 描述
  */
@@ -97,7 +97,7 @@ typedef struct MpModule {
     int resolved;
     MpObj globals;
     MpObj code;
-    MpObj file;
+    struct MpStr *file; // module file
     MpCodeCache* cache;
     int cache_cap;
     int cache_len;
@@ -127,6 +127,8 @@ typedef struct MpClass {
     struct MpStr* name;
     // class attributes
     struct MpDict* attr_dict;
+    // module
+    struct MpModule* module;
 
     // meta methods
     MpObj __init__; // __init__

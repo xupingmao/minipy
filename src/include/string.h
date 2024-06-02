@@ -35,4 +35,5 @@ MpObj string_ops_mod(MpObj a, MpObj b);
 MpObj string_append_char(MpObj string, char c);
 MpObj string_append_cstr(MpObj string, const char*sz);
 MpObj string_append_obj(MpObj string, MpObj obj);
+size_t str_sizeof(MpStr* str);
 #endif
