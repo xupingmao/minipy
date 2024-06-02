@@ -1,3 +1,12 @@
+/*
+ * @Author: xupingmao
+ * @email: 578749341@qq.com
+ * @Date: 2024-04-14 19:14:17
+ * @LastEditors: xupingmao
+ * @LastEditTime: 2024-06-02 18:14:26
+ * @FilePath: /minipy/src/module/mp_debug.c
+ * @Description: 描述
+ */
 #include "../include/mp.h"
 #include <math.h>
 
@@ -54,8 +63,24 @@ static MpObj bf_get_vm_info() {
 static MpObj bf_get_memory_info() {
     MpObj mp_info = dict_new();
     size_t cache_size = 0;
+    size_t str_count = 0;
+    size_t list_count = 0;
+    size_t dict_count = 0;
+    size_t instance_count = 0;
+    size_t func_count = 0;
+    size_t other_count = 0;
+
+    size_t str_size = 0;
+    size_t list_size = 0;
+    size_t dict_size = 0;
+    size_t func_size = 0;
+    size_t instance_size = 0;
+
     MpList* all = tm->all;
     int i = 0;
+
+    MpDict* count_dict = dict_new_ptr();
+    MpDict* size_dict = dict_new_ptr();
 
     for (i = 0; i < all->len; i++) {
         MpObj node = all->nodes[i];
@@ -63,12 +88,36 @@ static MpObj bf_get_memory_info() {
             if (GET_MODULE(node)->cache != NULL) {
                 cache_size += sizeof(MpCodeCache) * GET_MODULE(node)->cache_cap;
             }
+        } 
+
+        MpObj type_obj = mp_number(node.type);
+        DictNode* dict_item = dict_get_node(count_dict, type_obj);
+        if (dict_item == NULL) {
+            dict_set0(count_dict, type_obj, mp_number(1));
+        } else {
+            assert(IS_NUM(dict_item->val));
+            double new_count = GET_NUM(dict_item->val) + 1;
+            dict_set0(count_dict, type_obj, mp_number(new_count));
+        }
+
+        DictNode* size_item = dict_get_node(size_dict, type_obj);
+        if (size_item == NULL) {
+            dict_set0(size_dict, type_obj, mp_number(mp_sizeof(node)));
         }
     }
 
-    obj_set_by_cstr(mp_info, "cache_size", mp_number(cache_size));
+    obj_set_by_cstr(mp_info, "code_cache_size", mp_number(cache_size));
     obj_set_by_cstr(mp_info, "gc_all_size", mp_number(list_sizeof(tm->all)));
     obj_set_by_cstr(mp_info, "constants_size", mp_number(dict_sizeof(tm->constants)));
+    obj_set_by_cstr(mp_info, "alloc_mem", mp_number(tm->allocated));
+    obj_set_by_cstr(mp_info, "gc_threshold", mp_number(tm->gc_threshold));
+
+    // object count
+    obj_set_by_cstr(mp_info, "count_dict", mp_to_obj(TYPE_DICT, count_dict));
+
+    // object size
+    obj_set_by_cstr(mp_info, "size_dict", mp_to_obj(TYPE_DICT, size_dict));
+
     return mp_info;
 }
 

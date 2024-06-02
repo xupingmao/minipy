@@ -28,6 +28,6 @@ const char* gc_mark_list(MpList*);
 void        gc_mark_dict(MpDict*);
 void        gc_check_native_call(int size, MpObj ret);
 void gc_mark_and_check(MpObj, const char*);
-size_t mp_sizeof(MpObj);
+size_t mp_sizeof(MpObj obj);
 
 #endif

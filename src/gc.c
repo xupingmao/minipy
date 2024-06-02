@@ -3,7 +3,7 @@
  * @email: 578749341@qq.com
  * @Date: 2023-12-07 22:03:29
  * @LastEditors: xupingmao
- * @LastEditTime: 2024-06-02 17:13:45
+ * @LastEditTime: 2024-06-02 18:16:10
  * @FilePath: /minipy/src/gc.c
  * @Description: 描述
  */
@@ -697,8 +697,10 @@ size_t mp_sizeof(MpObj obj) {
             return list_sizeof(obj.value.list);
         case TYPE_DICT:
             return dict_sizeof(obj.value.dict);
-        default:
-            mp_raise("type(%s) not implemented", get_object_type_cstr(obj));
+        case TYPE_FUNCTION:
+            return sizeof(MpFunction);
+        case TYPE_INSTANTCE:
+            return sizeof(MpInstance);
     }
     return 0;
 }
