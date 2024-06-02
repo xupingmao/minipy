@@ -616,6 +616,24 @@ MpObj string_ops_mod(MpObj a, MpObj b) {
     }
 }
 
+MpObj string_builtin_join() {
+    MpObj sep = mp_take_str_obj_arg("list.join");
+    MpList* list = mp_take_list_ptr_arg("list.join");
+    MpObj result = string_new("");
+    int i = 0;
+    for (i = 0; i < list->len; i++) {
+        MpObj list_item = list->nodes[i];
+        if (!IS_STR(list_item)) {
+            mp_raise("TypeError: sequence item %d: expected str instance, %ot found", i, list_item);
+        }
+        string_append_obj(result, list_item);
+        if (i != list->len-1) {
+            string_append_obj(result, sep);
+        }
+    }
+    return result;
+}
+
 void MpStr_InitMethods() {
     tm->str_proto = dict_new();
     MpModule_RegFunc(tm->str_proto, "replace", string_builtin_replace);
@@ -629,6 +647,7 @@ void MpStr_InitMethods() {
     MpModule_RegFunc(tm->str_proto, "endswith", string_builtin_endswith);
     MpModule_RegFunc(tm->str_proto, "format", string_builtin_format);
     MpModule_RegFunc(tm->str_proto, "rstrip", string_builtin_rstrip);
+    MpModule_RegFunc(tm->str_proto, "join", string_builtin_join);
 }
 
 MpObj* string_next(MpData* iterator) {

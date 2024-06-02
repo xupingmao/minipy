@@ -4,7 +4,7 @@ Author: xupingmao
 email: 578749341@qq.com
 Date: 2023-12-07 22:03:29
 LastEditors: xupingmao
-LastEditTime: 2024-05-25 11:27:31
+LastEditTime: 2024-06-02 01:07:24
 FilePath: /minipy/src/python/mp_init.py
 Description: 描述
 '''
@@ -89,19 +89,6 @@ def sformat0(args):
     
 def sformat(*narg):
     return sformat0(narg)
-
-def str_join(sep, list):
-    # TODO implement in native code
-    text = ''
-    for i in range(len(list)):
-        if i != 0:
-            text += sep + str(list[i])
-        else:
-            text += list[i]
-    return text
-
-def list_join(list, sep):
-    return str_join(sep, list)
     
 def _list_copy(self):
     l = []
@@ -179,7 +166,7 @@ def _import(des_glo, fname, tar = None):
         fpath = find_module_path(fname)
 
         if fpath is None:
-            raise(sformat("import error, can not open file \"%s.py\"", fname))
+            raise(sformat("ModuleNotFoundError: No module named '%s'", fname))
 
         try:
             #__modules__[fname] = {}
@@ -326,8 +313,6 @@ def update_sys_path(fpath):
 add_obj_method('str', 'ljust', ljust)
 add_obj_method('str', 'rjust', rjust)
 add_obj_method('str', 'center', center)
-add_obj_method('str', 'join', str_join)
-add_obj_method('list', 'join', list_join)
 add_builtin("uncode16", uncode16)
 add_builtin("add_builtin", add_builtin)
 add_builtin("Exception", Exception)

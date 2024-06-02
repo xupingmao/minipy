@@ -911,7 +911,14 @@ def dis_code(code, return_str = False, fname = "<string>"):
     ins_list = compile_to_list(code, fname)
     for index, item in enumerate(ins_list):
         op = int(item[0])
-        line = "%s %s %r" % (to_fixed(index+1,4), opcodes[op].ljust(22), item[1])
+        value = item[1]
+        if op == OP_LOAD_PARAMS:
+            parg = int(value/256)
+            varg = int(value%256)
+            value = "%s,%s" % (parg, varg)
+        else:
+            value = "%r" % value
+        line = "%s %s %s" % (to_fixed(index+1,4), opcodes[op].ljust(22), value)
         # line = to_fixed(index+1, 4) + ' ' + opcodes[op].ljust(22) + str(item[1])
 
         if return_str:

@@ -3,7 +3,7 @@
  * @email: 578749341@qq.com
  * @Date: 2016
  * @LastEditors: xupingmao
- * @LastEditTime: 2024-05-26 23:11:54
+ * @LastEditTime: 2024-06-02 02:25:15
  * @FilePath: /minipy/src/function.c
  * @Description: minipy函数
  */
@@ -118,6 +118,17 @@ MpObj func_new(MpObj mod, MpObj self, MpNativeFunc native_func) {
     return gc_track(mp_to_obj(TYPE_FUNCTION, f));
 }
 
+MpFunction *mp_new_native_func(MpObj module, MpNativeFunc native_func) {
+    assert(native_func != NULL);
+    MpObj result = func_new(module, NONE_OBJECT, native_func);
+    return GET_FUNC(result);
+}
+
+MpObj mp_new_native_func_obj(MpObj module, MpNativeFunc native_func) {
+    assert(native_func != NULL);
+    return func_new(module, NONE_OBJECT, native_func);
+}
+
 /**
  * create new method from function
  */
@@ -131,54 +142,6 @@ MpObj method_new(MpObj _fnc, MpObj self) {
     GET_FUNCTION(nfnc)->cache = GET_FUNCTION(_fnc)->cache;
     GET_FUNCTION(nfnc)->resolved = 1;
     return nfnc;
-}
-
-MpObj class_new(MpObj name) {
-    // TODO add class type
-    assert(IS_STR(name));
-    MpClass* clazz = mp_malloc(sizeof(MpClass), "class.new");
-    clazz->name = name.value.str;
-    clazz->attr_dict = dict_new_ptr();
-    return gc_track(mp_to_obj(TYPE_CLASS, clazz));
-}
-
-MpObj class_new_by_cstr(char* name) {
-    MpObj name_obj = string_new(name);
-    return class_new(name_obj);
-}
-
-MpObj class_instance(MpObj clazz) {
-    MpClass* pclass = GET_CLASS(clazz);
-    MpDict* cl = pclass->attr_dict;
-    MpObj k, v;
-    MpObj instance = dict_new();
-    DictNode* nodes = cl->nodes;
-    int i;
-    for (i = 0; i < cl->cap; i++) {
-        k = nodes[i].key;
-        v = nodes[i].val;
-        if (IS_DICT_NODE_USED(nodes[i]) && IS_FUNC(v)) {
-            MpObj method = method_new(v, instance);
-            obj_set(instance, k, method);
-        }
-    }
-
-    MpObj* _fnc = dict_get_by_cstr(GET_DICT(instance), "__init__");
-    if (_fnc != NULL) {
-        MP_CALL_EX(*_fnc);
-    }
-
-    return instance;
-}
-
-void class_free(MpClass* pclass) {
-    mp_free(pclass, sizeof(MpClass));
-}
-
-void class_format(char* dest, MpObj class_obj) {
-    mp_assert_type(class_obj, TYPE_CLASS, "class_format");
-    MpClass* clazz = GET_CLASS(class_obj);
-    sprintf(dest, "<class %s@%p>", clazz->name->value, clazz);
 }
 
 void func_free(MpFunction* func) {
@@ -355,7 +318,8 @@ MpObj mp_call_func(MpObj func)
             }
         }
     } else if (IS_CLASS(func)) {
-        return class_instance(func);
+        MpInstance* obj_ptr = class_instance(GET_CLASS(func));
+        return mp_to_obj(TYPE_INSTANTCE, obj_ptr);
     }
     mp_raise("File %o, line=%d: obj_call:invalid object %o",
              GET_FUNCTION_FILE(tm->frame->fnc), tm->frame->lineno, func);
@@ -372,4 +336,12 @@ MpObj mp_call_with_args(MpObj func, MpObj args) {
 MpObj mp_call_with_nargs(MpObj func, int n, MpObj* args) {
     mp_set_args(args, n);
     return MP_CALL_EX(func);
+}
+
+MpObj mp_call_func_safe(MpObj func, int n, MpObj* args) {
+    MpArgument mp_arg = mp_save_args();
+    mp_set_args(args, n);
+    MpObj result = MP_CALL_EX(func);
+    mp_restore_args(mp_arg);
+    return result;
 }

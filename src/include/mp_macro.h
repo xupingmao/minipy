@@ -59,6 +59,7 @@
 #define GET_MOD(obj) GET_VAL(obj).mod
 #define GET_LIST(obj) GET_VAL(obj).list
 #define GET_CLASS(obj) GET_VAL(obj).clazz
+#define GET_INSTANCE(obj) GET_VAL(obj).instance
 
 #define DICT_LEN(obj)  GET_DICT(obj)->len
 #define DICT_NODES(obj) GET_DICT(obj)->nodes
@@ -77,6 +78,7 @@
 #define IS_DATA(obj)   (MP_TYPE(obj) == TYPE_DATA)
 #define IS_NATIVE(obj) (GET_FUNCTION(obj)->native != NULL)
 #define IS_MODULE(obj) (MP_TYPE(obj) == TYPE_MODULE)
+#define IS_INSTANCE(obj) (MP_TYPE(obj) == TYPE_INSTANTCE)
 
 #define NOT_NONE(obj) (MP_TYPE(obj) != TYPE_NONE)
 #define NOT_LIST(obj) (MP_TYPE(obj) != TYPE_LIST)

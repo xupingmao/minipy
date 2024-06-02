@@ -3,7 +3,7 @@
  * @email: 578749341@qq.com
  * @Date: 2023-12-07 22:35:37
  * @LastEditors: xupingmao
- * @LastEditTime: 2023-12-07 22:36:35
+ * @LastEditTime: 2024-06-02 11:56:20
  * @FilePath: /minipy/src/include/function.h
  * @Description: minipy函数的定义
  */
@@ -14,6 +14,9 @@
 
 // function functions
 MpObj func_new(MpObj mod, MpObj self, MpNativeFunc);
+MpFunction* mp_new_native_func(MpObj module, MpNativeFunc native_func);
+MpObj mp_new_native_func_obj(MpObj module, MpNativeFunc native_func);
+
 MpObj func_get_attr(MpFunction* fnc, MpObj key);
 void func_free(MpFunction*);
 unsigned char* func_get_code(MpFunction*);
@@ -29,11 +32,14 @@ MpObj method_new(MpObj _fnc, MpObj self);
 MpObj module_new(MpObj file, MpObj name, MpObj code);
 void module_free(MpModule*);
 
-MpObj class_new(MpObj name);
-MpObj class_new_by_cstr(char* name);
-MpObj class_instance(MpObj dict);
+MpObj class_new(MpObj name, MpObj module);
+MpObj class_new_by_cstr(char* name, MpObj module);
+MpInstance* class_instance(MpClass* klass);
 void class_format(char* dest, MpObj clazz);
 void class_free(MpClass* pclass);
 void mp_resolve_code(MpModule* m, const char* code);
+void class_set_attr(MpClass* klass, MpObj key, MpObj value);
+MpObj mp_call_func_safe(MpObj func, int n, MpObj* args);
+MpObj mp_format_instance(MpInstance* instance);
 
 #endif

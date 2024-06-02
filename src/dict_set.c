@@ -1,3 +1,12 @@
+/*
+ * @Author: xupingmao
+ * @email: 578749341@qq.com
+ * @Date: 2024-05-25 20:50:31
+ * @LastEditors: xupingmao
+ * @LastEditTime: 2024-06-01 23:48:34
+ * @FilePath: /minipy/src/dict_set.c
+ * @Description: 描述
+ */
 /**
  * HashSet
  * @author xupingmao <578749341@qq.com>
@@ -60,7 +69,7 @@ static MpObj DictSet_init() {
 
 void DictSet_InitMethods() {
     // TODO 目前实现有问题
-    MpObj set_class = class_new_by_cstr("set");
+    MpObj set_class = class_new_by_cstr("set", tm->builtins_mod);
     /* build dict class */
     mp_reg_method(set_class, "add", DictSet_add);
     mp_reg_method(set_class, "remove", DictSet_remove);

@@ -260,7 +260,7 @@ int mp2c_run_func(int argc, char* argv[], char* mod_name, MpNativeFunc func) {
  */
 MpObj tm2c_get(MpObj obj, char* key) {
     MpObj obj_key = string_new(key);
-    return obj_get(obj, obj_key);
+    return mp_getattr(obj, obj_key);
 }
 
 /**

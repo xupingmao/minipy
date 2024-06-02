@@ -528,13 +528,13 @@ def parse_arg_def(p):
         2. name = expr,
         3. *name
         '''   
-        varg = 0 # mark varg is met or not.
+        has_varg = False # mark varg is met or not.
         while p.token.type == 'name':
             arg = AstNode("arg")
             arg.first = p.token
             arg.second = None
             p.next()
-            if varg == 1:
+            if has_varg:
                 expect_and_next(p, '=')
                 baseitem(p)
                 arg.second = p.pop()
@@ -542,7 +542,7 @@ def parse_arg_def(p):
                 p.next()
                 baseitem(p) # problem
                 arg.second = p.pop()
-                varg = 1
+                has_varg = True
             args.append(arg)
             if p.token.type != ',':break
             p.next()

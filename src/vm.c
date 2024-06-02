@@ -3,7 +3,7 @@
  * @email: 578749341@qq.com
  * @Date: 2023-12-07 22:03:29
  * @LastEditors: xupingmao
- * @LastEditTime: 2024-05-25 17:00:19
+ * @LastEditTime: 2024-06-01 23:08:32
  * @FilePath: /minipy/src/vm.c
  * @Description: 描述
  */
@@ -24,6 +24,7 @@
 #include "dict.c"
 #include "dict_set.c"
 #include "function.c"
+#include "klass.c"
 #include "exception.c"
 #include "argument.c"
 #include "execute.c"
@@ -111,8 +112,8 @@ MpObj load_boot_module(char* sz_filename, const char* sz_code) {
  * @param sz_fnc, function name
  */
 MpObj vm_call_mod_func(const char* mod, const char* sz_fnc) {
-    MpObj module = obj_get(tm->modules, string_static(mod));
-    MpObj fnc = obj_get(module, string_static(sz_fnc));
+    MpObj module = mp_getattr(tm->modules, string_static(mod));
+    MpObj fnc = mp_getattr(module, string_static(sz_fnc));
     #ifdef MP_DEBUG
         mp_printf("vm_call_mod_func.function: %o\n", fnc);
         mp_printf("vm_call_mod_func.module: %o\n", func_get_mod_obj(GET_FUNCTION(fnc)));

@@ -17,6 +17,20 @@ void mp_reset_args() {
     tm->arg_cnt = 0;
 }
 
+MpArgument mp_save_args() {
+    MpArgument result;
+    result.arguments = tm->arguments;
+    result.arg_loaded = tm->arg_loaded;
+    result.arg_cnt = tm->arg_cnt;
+    return result;
+}
+
+void mp_restore_args(MpArgument arg) {
+    tm->arguments = arg.arguments;
+    tm->arg_loaded = arg.arg_loaded;
+    tm->arg_cnt = arg.arg_cnt;
+}
+
 void mp_push_arg(MpObj obj) {
     tm->arguments = tm->internal_arg_stack;
     tm->arg_loaded = 0;

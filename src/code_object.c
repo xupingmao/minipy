@@ -227,8 +227,8 @@ MpObj CodeQueue_ToString(CodeQueue* queue) {
         const char* line = CodeCache_ToString(&cache);
         MpObj line_obj = mp_format("%03d: %s", count+1, line);
         string_append_obj(result, line_obj);
-
-        start = (++start) % queue->cap;
+        start++;
+        start = start % queue->cap;
         count++;
     }
 

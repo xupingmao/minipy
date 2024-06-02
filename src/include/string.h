@@ -31,5 +31,6 @@ MpObj* string_next(MpData* iterator);
 int string_hash(MpStr* str);
 MpObj string_add(MpStr* a, MpStr* b);
 MpObj string_const_with_len(char* s, int len);
+MpObj string_ops_mod(MpObj a, MpObj b);
 
 #endif

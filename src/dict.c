@@ -534,38 +534,6 @@ MpObj* dict_next(MpData* iterator) {
     return NULL;
 }
 
-
-/**
- * get attribute by char array
- * @since 2016-09-02
- */
-MpObj mp_getattr(MpObj obj, const char* key) {
-    // TODO optimize string find
-    MpObj obj_key = string_static(key);
-    return obj_get(obj, obj_key);
-}
-
-
-/**
- * get attribute by char array
- * @since 2016-09-02
- */
-void mp_setattr(MpObj obj, const char* key, MpObj value) {
-    MpObj obj_key = string_static(key);
-    obj_set(obj, obj_key, value);
-}
-
-int mp_hasattr(MpObj obj, const char* key) {
-    mp_assert_type(obj, TYPE_DICT, "mp_hasattr");
-
-    MpObj obj_key = string_static(key);
-    DictNode* node = dict_get_node(GET_DICT(obj), obj_key);
-    if (node == NULL) {
-        return 0;
-    }
-    return 1;
-}
-
 size_t dict_sizeof(MpDict* dict) {
     size_t result = 0;
     result += sizeof(MpDict);

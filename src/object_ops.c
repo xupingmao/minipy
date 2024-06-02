@@ -89,7 +89,17 @@ void obj_set(MpObj self, MpObj k, MpObj v) {
             return;
         case TYPE_CLASS: {
             MpClass* pclass = GET_CLASS(self);
-            dict_set0(pclass->attr_dict, k, v);
+            // dict_set0(pclass->attr_dict, k, v);
+            class_set_attr(pclass, k, v);
+            return;
+        }
+        case TYPE_INSTANTCE: {
+            MpInstance* instance = GET_INSTANCE(self);
+            assert(instance->klass != NULL);
+            assert(instance->klass->setattr_method.type == TYPE_FUNCTION);
+
+            MpObj args[3] = {self, k, v};
+            mp_call_func_safe(instance->klass->setattr_method, 3, args);
             return;
         }
     }
@@ -100,7 +110,7 @@ inline void obj_set_by_cstr(MpObj self, char* key, MpObj value) {
     obj_set(self, string_new(key), value);
 }
 
-MpObj obj_get(MpObj self, MpObj k) {
+MpObj mp_getattr(MpObj self, MpObj k) {
     MpObj v;
     switch (MP_TYPE(self)) {
         case TYPE_STR: {
@@ -157,13 +167,21 @@ MpObj obj_get(MpObj self, MpObj k) {
                 return node->val;
             }
         }
+        case TYPE_INSTANTCE: {
+            MpInstance* instance = GET_INSTANCE(self);
+            assert(instance->klass != NULL);
+            assert(instance->klass->getattr_method.type == TYPE_FUNCTION);
+
+            MpObj args[2] = {self, k};
+            return mp_call_func_safe(instance->klass->getattr_method, 2, args);
+        }
     }
     mp_raise("keyError: %o", k);
     return NONE_OBJECT;
 }
 
 MpObj obj_get_by_cstr(MpObj obj, char* key) {
-    return obj_get(obj, string_new(key));
+    return mp_getattr(obj, string_new(key));
 }
 
 /**
@@ -439,6 +457,8 @@ int mp_is_in(MpObj child, MpObj parent) {
             return 0;
         case TYPE_FUNCTION:
             return 0;
+        case TYPE_INSTANTCE:
+            return 0;
         /* TODO DATA */
         default:
             mp_raise("obj_is_in: cant handle type (%s)",
@@ -471,6 +491,10 @@ int mp_is_true(MpObj v) {
         case TYPE_CLASS:
         case TYPE_DATA:
             return 1;
+        case TYPE_INSTANTCE:
+            return 1;
+        default:
+            mp_raise("mp_is_true: unknown type(%d)", MP_TYPE(v));
     }
     return 0;
 }
@@ -625,6 +649,8 @@ MpObj mp_str(MpObj a) {
             return string_new(buf);
         case TYPE_DATA:
             return GET_DATA(a)->str(GET_DATA(a));
+        case TYPE_INSTANTCE:
+            return mp_format_instance(GET_INSTANCE(a));
         default:
             sprintf(buf, "<unknown(%d)>", a.type);
             return string_new(buf);
@@ -701,8 +727,43 @@ MpObj mp_to_obj(int type, void* value) {
             break;
         case TYPE_NONE:
             break;
+        case TYPE_INSTANTCE:
+            GET_INSTANCE(o) = value;
+            break;
         default:
             mp_raise("mp_to_obj: not supported type %d", type);
     }
     return o;
+}
+
+
+/**
+ * get attribute by char array
+ * @since 2016-09-02
+ */
+MpObj mp_getattr_by_cstr(MpObj obj, const char* key) {
+    // TODO optimize string find
+    MpObj obj_key = string_static(key);
+    return mp_getattr(obj, obj_key);
+}
+
+
+/**
+ * get attribute by char array
+ * @since 2016-09-02
+ */
+void mp_setattr(MpObj obj, const char* key, MpObj value) {
+    MpObj obj_key = string_static(key);
+    obj_set(obj, obj_key, value);
+}
+
+int mp_hasattr(MpObj obj, const char* key) {
+    mp_assert_type(obj, TYPE_DICT, "mp_hasattr");
+
+    MpObj obj_key = string_static(key);
+    DictNode* node = dict_get_node(GET_DICT(obj), obj_key);
+    if (node == NULL) {
+        return 0;
+    }
+    return 1;
 }

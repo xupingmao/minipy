@@ -40,7 +40,7 @@ debug-cache:
 	$(cc) -g -DLOG_LEVEL=5 -DMP_DEBUG_CACHE=1 -o minipy src/main.c -lm
 
 debug:src/*.c src/include/*.h
-	bash ./script/build-debug.sh
+	$(cc) -g -DLOG_LEVEL=3 -DMP_DEBUG=0 -o minipy src/main.c -lm
 
 nogc:
 	$(cc) -g -DGC_DESABLED -o minipy src/main.c -lm
@@ -59,7 +59,7 @@ test-dict:
 	make && ./minipy ./test/test_case/030_test_debug.py
 	
 test:
-	make minipy
+	make debug
 	./minipy ./test/test_main.py
 
 test-tokenize:

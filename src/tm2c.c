@@ -164,7 +164,7 @@ void mp_def_mod(char* fname, MpObj mod) {
 }
 
 MpObj mp_import(MpObj globals, MpObj mod_name) {
-    MpObj mod = obj_get(tm->modules, mod_name);
+    MpObj mod = mp_getattr(tm->modules, mod_name);
     obj_set(globals, mod_name, mod);
     return mod;
 }
@@ -172,7 +172,7 @@ MpObj mp_import(MpObj globals, MpObj mod_name) {
 void mp_import_all(MpObj globals, MpObj mod_name) {
     int b_has = obj_is_in(mod_name, tm->modules);
     if (b_has) {
-        MpObj mod_value = obj_get(tm->modules, mod_name);
+        MpObj mod_value = mp_getattr(tm->modules, mod_name);
         // do something here.
         mp_call_native_2(dict_builtin_update, globals, mod_value);
     }
@@ -253,7 +253,7 @@ int mp_run_func(int argc, char* argv[], char* mod_name, MpObj (*func)(void)) {
  */
 MpObj tm2c_get(MpObj obj, char* key) {
     MpObj obj_key = string_new(key);
-    return obj_get(obj, obj_key);
+    return mp_getattr(obj, obj_key);
 }
 
 /**

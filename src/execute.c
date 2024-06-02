@@ -8,6 +8,7 @@
 
 #include "include/mp.h"
 #include "include/code_cache.h"
+#include "include/debug.h"
 #include "execute_profile.c"
 
 void mp_reset_frame(MpFrame*);
@@ -70,6 +71,8 @@ MpFrame* mp_push_frame(MpObj fnc) {
     // make extra space for self in method call
     // top包含当前frame的stack-value
     // top+1 需要为self预留空间
+    assert(IS_FUNCTION(fnc));
+
     MpObj *top = tm->frame->top + 2;
     tm->frame ++ ;
     MpFrame* f = tm->frame;
@@ -155,6 +158,10 @@ tailcall:
             CodeQueue_Append(&tm->last_op_queue, *cache);
         #endif
 
+        #if MP_DEBUG_OPCODE
+            log_debug("%s %d", inst_get_name_by_code(cache->op), get_cache_int(cache));
+        #endif
+
 retry_op:
         switch (cache->op) {
 
@@ -221,18 +228,17 @@ retry_op:
             /* mp_printf("load global %o\n", GET_CONST(i)); */
             MpObj obj = get_cache_obj(cache);
 
-            int idx = dict_get0(globals_dict, obj);
-            if (idx == -1) {
+            DictNode* dict_node = dict_get_node(globals_dict, obj);
+            if (dict_node == NULL) {
                 MpDict *builtins_dict = GET_DICT(tm->builtins);
-                idx = dict_get0(builtins_dict, obj);
-                if (idx == -1) {
+                dict_node = dict_get_node(builtins_dict, obj);
+                if (dict_node == NULL) {
                     mp_raise("NameError: name %o is not defined", obj);
                 } else {
-                    MpObj value = builtins_dict->nodes[idx].val;
-                    MP_PUSH(value);
+                    MP_PUSH(dict_node->val);
                 }
             } else {
-                MP_PUSH(globals_dict->nodes[idx].val);
+                MP_PUSH(dict_node->val);
             }
 
             PROFILE_END(cache);
@@ -321,7 +327,7 @@ retry_op:
 
             #endif
             
-            *top = obj_get(*obj, *key);
+            *top = mp_getattr(*obj, *key);
             PROFILE_END(cache);
             break;
         }
@@ -342,7 +348,7 @@ retry_op:
                 }
             }
 
-            *top = obj_get(*obj, *key);
+            *top = mp_getattr(*obj, *key);
 
             cache->op = OP_GET;
             set_cache_int(cache, 0);
@@ -557,11 +563,11 @@ retry_op:
             break;
         }
         case OP_LOAD_PARAMS: {
-            int parg = cache->a;
-            int narg = cache->b;
-            if (tm->arg_cnt < parg || tm->arg_cnt > parg + narg) {
-                mp_raise("ArgError: parg=%d,narg=%d,given=%d", 
-                    parg, narg, tm->arg_cnt);
+            int parg = cache->a; // positional-argument
+            int varg = cache->b; // argument with default value
+            if (tm->arg_cnt < parg || tm->arg_cnt > parg + varg) {
+                mp_raise("ArgError: parg=%d,varg=%d,given=%d,int=%d", 
+                    parg, varg, tm->arg_cnt, get_cache_int(cache));
             }
             int i;
             for(i = 0; i < tm->arg_cnt; i++){
@@ -615,7 +621,8 @@ retry_op:
         }
         case OP_CLASS: {
             MpObj class_name = get_cache_obj(cache);
-            MpObj clazz = class_new(class_name);
+            MpObj mod = GET_FUNCTION(cur_fnc)->mod;
+            MpObj clazz = class_new(class_name, mod);
             dict_set0(GET_DICT(globals), class_name, clazz);
             break;
         }

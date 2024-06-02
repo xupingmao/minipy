@@ -3,7 +3,7 @@
  * @email: 578749341@qq.com
  * @Date: 2024-04-14 19:14:16
  * @LastEditors: xupingmao
- * @LastEditTime: 2024-05-26 23:20:39
+ * @LastEditTime: 2024-06-02 11:31:59
  * @FilePath: /minipy/src/include/object.h
  * @Description: 描述
  */
@@ -36,6 +36,7 @@
 #define MP_TYPE(o) (o).type
 #define MAX_FILE_SIZE 1024 * 1024 * 5 /* max file size loaded into memery */
 #include <stdint.h>
+#include <setjmp.h>
 
 #ifndef BOOL
 #define BOOL char
@@ -60,6 +61,7 @@ typedef union MpValue {
     struct MpData* data;
     struct MpRecycle* gc;
     struct MpClass* clazz;
+    struct MpInstance* instance;
 } MpValue;
 
 typedef struct MpObj {
@@ -127,15 +129,17 @@ typedef struct MpClass {
     struct MpDict* attr_dict;
 
     // meta methods
-    MpObj(*len_method);       // __len__
-    MpObj(*contains_method);  // __contains__
-    MpObj(*getattr_method);   // __getattr__
-    MpObj(*setattr_method);   // __setattr__
+    MpObj __init__; // __init__
+    MpObj len_method;       // __len__
+    MpObj contains_method;  // __contains__
+    MpObj getattr_method;   // __getattr__
+    MpObj setattr_method;   // __setattr__
 } MpClass;
 
 typedef struct MpInstance {
     int marked;
     struct MpClass* klass;  // __class__
+    struct MpDict* method_cache; // __dict__
     struct MpDict* dict;    // __dict__
 } MpInstance;
 
@@ -250,14 +254,13 @@ typedef struct MpVm {
 
     /* MpObj *top; */
     MpObj* arguments;
+    int arg_cnt;
+    int arg_loaded;
 
     /* prototypes */
     MpObj list_proto;
     MpObj dict_proto;
     MpObj str_proto;
-
-    int arg_cnt;
-    int arg_loaded;
 
     MpDict* constants;  /* type: dict */
     MpObj modules;      /* type: dict */

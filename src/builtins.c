@@ -371,6 +371,7 @@ MpObj bf_gettype() {
         case TYPE_CLASS: return string_from_cstr("class");
         case TYPE_DATA: return string_from_cstr("data");
         case TYPE_NONE: return string_from_cstr("None");
+        case TYPE_INSTANTCE: return string_from_cstr("object");
         default: mp_raise("gettype(%o)", obj);
     }
     return NONE_OBJECT;
@@ -395,7 +396,8 @@ MpObj bf_istype() {
         case TYPE_DATA: is_type = strcmp(type, "data") == 0; break;
         case TYPE_CLASS: is_type = strcmp(type, "class") == 0; break;
         case TYPE_NONE: is_type = strcmp(type, "None") == 0; break;
-        default: mp_raise("gettype(%o)", obj);
+        case TYPE_INSTANTCE: is_type = strcmp(type, "object") == 0; break;
+        default: mp_raise("istype(%o)", obj);
     }
     return mp_number(is_type);
 }
@@ -790,7 +792,7 @@ MpObj bf_Exception() {
 MpObj bf_getattr() {
     MpObj self = mp_take_obj_arg("getattr");
     MpObj key  = mp_take_obj_arg("getattr");
-    return obj_get(self, key);
+    return mp_getattr(self, key);
 }
 
 MpObj bf_setattr() {

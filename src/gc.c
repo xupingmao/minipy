@@ -3,7 +3,7 @@
  * @email: 578749341@qq.com
  * @Date: 2023-12-07 22:03:29
  * @LastEditors: xupingmao
- * @LastEditTime: 2024-05-26 23:13:30
+ * @LastEditTime: 2024-06-02 00:06:11
  * @FilePath: /minipy/src/gc.c
  * @Description: 描述
  */
@@ -34,6 +34,8 @@ void gc_init_frames();
 
 static const char* gc_mark_ex(MpObj, const char*);
 static void gc_mark_str(MpStr*str);
+static void gc_mark_instance(MpInstance* instance);
+static void free_instance(MpInstance* instance);
 
 #define GC_CONSTANS_LEN 10
 #define GC_REACHED_SIGN 1
@@ -209,6 +211,9 @@ MpObj gc_track(MpObj v) {
         case TYPE_CLASS:
             GET_CLASS(v)->marked = 0;
             break;
+        case TYPE_INSTANTCE:
+            GET_INSTANCE(v)->marked = 0;
+            break;
         default:
             mp_raise("gc_track: unsupported type %d", v.type);
             return v;
@@ -252,8 +257,12 @@ static void gc_mark_str(MpStr* str) {
 }
 
 void gc_mark_dict(MpDict* dict) {
-    if (dict->marked)
+    if (dict == NULL) {
         return;
+    }
+    if (dict->marked) {
+        return;        
+    }
     dict->marked = GC_REACHED_SIGN;
     int i;
     for (i = 0; i < dict->cap; i++) {
@@ -265,8 +274,12 @@ void gc_mark_dict(MpDict* dict) {
 }
 
 void gc_mark_func(MpFunction* func) {
-    if (func->marked)
+    if (func == NULL) {
         return;
+    }
+    if (func->marked) {
+        return;   
+    }
     func->marked = GC_REACHED_SIGN;
     gc_mark_ex(func->mod, "func.mod");
     gc_mark_ex(func->self, "func.self");
@@ -281,6 +294,23 @@ void gc_mark_class(MpClass* pclass) {
     pclass->marked = GC_REACHED_SIGN;
     gc_mark_str(pclass->name);
     gc_mark_dict(pclass->attr_dict);
+
+    // mark meta functions
+    gc_mark(pclass->__init__);
+    gc_mark(pclass->getattr_method);
+    gc_mark(pclass->setattr_method);
+    gc_mark(pclass->contains_method);
+    gc_mark(pclass->len_method);
+}
+
+static void gc_mark_instance(MpInstance* instance) {
+    if (instance->marked) {
+        return;
+    }
+    instance->marked = GC_REACHED_SIGN;
+    gc_mark_dict(instance->dict);
+    gc_mark_class(instance->klass);
+    gc_mark_dict(instance->method_cache);
 }
 
 /**
@@ -344,6 +374,9 @@ static const char* gc_mark_ex(MpObj o, const char* source) {
             GET_DATA(o)->marked = GC_REACHED_SIGN;
             GET_DATA(o)->mark(GET_DATA(o));
             // GET_DATA(o)->proto->mark(GET_DATA(o));
+            break;
+        case TYPE_INSTANTCE:
+            gc_mark_instance(GET_INSTANCE(o));
             break;
         default: {
             printf("%s:%d/%s unknown object type(%d), source(%s)\n", __FILE__,
@@ -575,6 +608,9 @@ void obj_free(MpObj o) {
             GET_DATA(o)->func_free(GET_DATA(o));
             // GET_DATA_PROTO(o)->free(GET_DATA(o));
             break;
+        case TYPE_INSTANTCE:
+            free_instance(GET_INSTANCE(o));
+            break;
         default:
             mp_raise("gc_free: Unknown type: %d", MP_TYPE(o));
     }
@@ -660,4 +696,8 @@ size_t mp_sizeof(MpObj obj) {
             mp_raise("type(%s) not implemented", get_object_type_cstr(obj));
     }
     return 0;
+}
+
+static void free_instance(MpInstance* instance) {
+    mp_free(instance, sizeof(MpInstance));
 }

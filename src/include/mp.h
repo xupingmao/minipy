@@ -83,6 +83,7 @@ int uncode16(unsigned char** s);
 
 #include "gc.h"
 #include "string.h"
+#include "argument.h"
 
 // number functions
 MpObj mp_number(double v);
@@ -159,7 +160,7 @@ const char* get_object_type_cstr(MpObj object);
 void obj_set(MpObj self, MpObj key, MpObj value);
 void obj_set_by_cstr(MpObj self, char* key, MpObj value);
 void obj_del(MpObj self, MpObj k);
-MpObj obj_get(MpObj self, MpObj key);
+MpObj mp_getattr(MpObj self, MpObj key);
 MpObj obj_add(MpObj a, MpObj b);
 MpObj obj_sub(MpObj a, MpObj b);
 MpObj obj_mul(MpObj a, MpObj b);
