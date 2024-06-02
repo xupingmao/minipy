@@ -1,13 +1,15 @@
 #ifndef TM2C_C
 #define TM2C_C
 
+#include "include/mp.h"
+
 MpObj mp_call(MpObj func, int args, ...) {
     int i = 0;
     va_list ap;
     va_start(ap, args);
-    arg_start();
+    mp_reset_args();
     for (i = 0; i < args; i++) {
-        arg_push(va_arg(ap, MpObj));
+        mp_push_arg(va_arg(ap, MpObj));
     }
     va_end(ap);
     // mp_printf("at line %d, try to call %o with %d args\n", lineno, func_get_name_obj(func), args);
@@ -60,10 +62,10 @@ MpObj mp_call_native(MpObj (*fn)(), int args, ...) {
     MpObj obj_arg;
 
     va_start(ap, args);
-    arg_start();
+    mp_reset_args();
     for (i = 0; i < args; i++) {
         obj_arg = va_arg(ap, MpObj);
-        arg_push(obj_arg);
+        mp_push_arg(obj_arg);
     }
     va_end(ap);
 
@@ -82,24 +84,24 @@ MpObj mp_call_native(MpObj (*fn)(), int args, ...) {
  * @since 2016-08-27
  */
 MpObj mp_call_native_0(MpObj (*fn)()) {
-    arg_start();
+    mp_reset_args();
     int size = tm->local_obj_list->len;
     MpObj ret = fn();
     gc_check_native_call(size, ret);
 }
 
 MpObj mp_call_native_1(MpObj (*fn)(), MpObj arg1) {
-    arg_start();
-    arg_push(arg1);
+    mp_reset_args();
+    mp_push_arg(arg1);
     int size = tm->local_obj_list->len;
     MpObj ret = fn();
     gc_check_native_call(size, ret);
 }
 
 MpObj mp_call_native_2(MpObj (*fn)(), MpObj arg1, MpObj arg2) {
-    arg_start();
-    arg_push(arg1);
-    arg_push(arg2);
+    mp_reset_args();
+    mp_push_arg(arg1);
+    mp_push_arg(arg2);
     int size = tm->local_obj_list->len;
     MpObj ret = fn();
     gc_check_native_call(size, ret);
@@ -118,10 +120,10 @@ MpObj mp_call_native_debug(int lineno, char* func_name, MpObj (*fn)(), int args,
     tm->frame->lineno = lineno;
     LOG(LEVEL_ERROR, "call,%d,%s,start", lineno, func_name, 0);
     va_start(ap, args);
-    arg_start();
+    mp_reset_args();
     for (i = 0; i < args; i++) {
         obj_arg = va_arg(ap, MpObj);
-        arg_push(obj_arg);
+        mp_push_arg(obj_arg);
     }
     va_end(ap);
 
@@ -153,7 +155,7 @@ void def_native_method(MpObj dict, MpObj name, MpObj (*native)()) {
 }
 
 MpObj mp_take_arg() {
-    return arg_take_obj("getarg");
+    return mp_take_obj_arg("getarg");
 }
 
 void mp_def_mod(char* fname, MpObj mod) {
@@ -162,7 +164,7 @@ void mp_def_mod(char* fname, MpObj mod) {
 }
 
 MpObj mp_import(MpObj globals, MpObj mod_name) {
-    MpObj mod = obj_get(tm->modules, mod_name);
+    MpObj mod = mp_getattr(tm->modules, mod_name);
     obj_set(globals, mod_name, mod);
     return mod;
 }
@@ -170,7 +172,7 @@ MpObj mp_import(MpObj globals, MpObj mod_name) {
 void mp_import_all(MpObj globals, MpObj mod_name) {
     int b_has = obj_is_in(mod_name, tm->modules);
     if (b_has) {
-        MpObj mod_value = obj_get(tm->modules, mod_name);
+        MpObj mod_value = mp_getattr(tm->modules, mod_name);
         // do something here.
         mp_call_native_2(dict_builtin_update, globals, mod_value);
     }
@@ -187,7 +189,7 @@ MpObj argv_to_list(int n, ...) {
     va_start(ap, n);
     for (i = 0; i < n; i++) {
         MpObj item = va_arg(ap, MpObj);
-        obj_append(list, item);
+        mp_append(list, item);
     }
     va_end(ap);
     return list;
@@ -251,7 +253,7 @@ int mp_run_func(int argc, char* argv[], char* mod_name, MpObj (*func)(void)) {
  */
 MpObj tm2c_get(MpObj obj, char* key) {
     MpObj obj_key = string_new(key);
-    return obj_get(obj, obj_key);
+    return mp_getattr(obj, obj_key);
 }
 
 /**

@@ -1,3 +1,12 @@
+/*
+ * @Author: xupingmao
+ * @email: 578749341@qq.com
+ * @Date: 2023-12-07 22:03:29
+ * @LastEditors: xupingmao
+ * @LastEditTime: 2024-06-02 16:05:22
+ * @FilePath: /minipy/src/vm.c
+ * @Description: 描述
+ */
 /**
  * description here
  * @author xupingmao
@@ -11,10 +20,11 @@
 #include "number.c"
 #include "gc.c"
 #include "builtins.c"
-#include "obj_ops.c"
+#include "object_ops.c"
 #include "dict.c"
 #include "dict_set.c"
 #include "function.c"
+#include "klass.c"
 #include "exception.c"
 #include "argument.c"
 #include "execute.c"
@@ -22,14 +32,15 @@
 #include "code_object.c"
 #include "constant_pool.c"
 #include "object.c"
+#include "module.c"
 
-#include "module/time.c"
-#include "module/sys.c"
-#include "module/math.c"
-#include "module/os.c"
+#include "module/mp_time.c"
+#include "module/mp_sys.c"
+#include "module/mp_math.c"
+#include "module/mp_os.c"
 #include "module/mp_debug.c"
 #include "module/mp_random.c"
-#include "module/file.c"
+#include "module/mp_file.c"
 
 
 #include "gen/mp_init.gen.c"
@@ -40,47 +51,21 @@
 #include "gen/pyeval.gen.c"
 #include "gen/repl.gen.c"
 
-
-/**
- * register module
- */
-void reg_mod(char* name, MpObj mod) {
-    mp_assert_type(mod, TYPE_DICT, "reg_module");
-    obj_set(tm->modules, string_new(name), mod);
-}
-
-/**
- * register module function
- * @param mod, module object, dict
- */
-void reg_mod_func(MpObj mod, char* name, MpObj (*native)()) {
-    assert(MP_TYPE(mod) == TYPE_DICT);
-    MpObj func = func_new(tm->builtins_mod, NONE_OBJECT, native);
-    GET_FUNCTION(func)->name = string_from_cstr(name);
-    obj_set(mod,GET_FUNCTION(func)->name, func);
-}
-
-// 注册模块的变量
-void reg_mod_attr(MpObj module, char* name, MpObj value) {
-    // assert(MP_TYPE(module) == TYPE_MODULE);
-    obj_set(module, string_from_cstr(name), value);
-}
-
 /**
  * register built-in function
  */
-void reg_builtin_func(char* name, MpObj (*native)()) {
-    reg_mod_func(tm->builtins, name, native);
+void mp_reg_builtin_func(char* name, MpObj (*native)()) {
+    MpModule_RegFunc(tm->builtins, name, native);
 }
 
-void reg_method_by_cstr(MpObj class_obj, char* name, MpObj (*native)()) {
-    mp_assert_type(class_obj, TYPE_CLASS, "reg_method_by_cstr");
+void mp_reg_method(MpObj class_obj, char* name, MpObj (*native)()) {
+    mp_assert_type(class_obj, TYPE_CLASS, "mp_reg_method");
     MpClass* clazz = GET_CLASS(class_obj);
-    MpObj attr_dict = clazz->attr_dict;
+    MpDict* attr_dict = clazz->attr_dict;
     MpObj func = func_new(tm->builtins_mod, NONE_OBJECT, native);
     GET_FUNCTION(func)->name = string_new(name);
     
-    obj_set_by_cstr(attr_dict, name, func);
+    dict_set_by_cstr(attr_dict, name, func);
 }
 
 /**
@@ -96,7 +81,7 @@ MpObj load_file_module(MpObj file, MpObj code, MpObj name) {
     GET_FUNCTION(fnc)->name = string_new("#main");
     GET_FUNCTION(fnc)->cache = GET_MODULE(mod)->cache;
     GET_FUNCTION(fnc)->resolved = 1;
-    OBJ_CALL_EX(fnc);
+    MP_CALL_EX(fnc);
     return GET_MODULE(mod)->globals;
 }
 
@@ -116,7 +101,7 @@ MpObj load_boot_module(char* sz_filename, const char* sz_code) {
     GET_FUNCTION(fnc)->cache = GET_MODULE(mod)->cache;
     GET_FUNCTION(fnc)->resolved = 1;
     
-    OBJ_CALL_EX(fnc);
+    MP_CALL_EX(fnc);
     
     return GET_MODULE(mod)->globals;
 }
@@ -127,14 +112,14 @@ MpObj load_boot_module(char* sz_filename, const char* sz_code) {
  * @param sz_fnc, function name
  */
 MpObj vm_call_mod_func(const char* mod, const char* sz_fnc) {
-    MpObj module = obj_get(tm->modules, string_static(mod));
-    MpObj fnc = obj_get(module, string_static(sz_fnc));
+    MpObj module = mp_getattr(tm->modules, string_static(mod));
+    MpObj fnc = mp_getattr(module, string_static(sz_fnc));
     #ifdef MP_DEBUG
         mp_printf("vm_call_mod_func.function: %o\n", fnc);
         mp_printf("vm_call_mod_func.module: %o\n", func_get_mod_obj(GET_FUNCTION(fnc)));
     #endif
-    arg_start();
-    return OBJ_CALL_EX(fnc);
+    mp_reset_args();
+    return MP_CALL_EX(fnc);
 }
 
 /**
@@ -169,39 +154,34 @@ int vm_init(int argc, char* argv[]) {
     tm->argv   = argv;
     tm->code   = NULL;
     tm->steps  = 0;
-    tm->_TRUE  = number_obj(1);
-    tm->_FALSE = number_obj(0);
+    tm->_TRUE  = mp_number(1);
+    tm->_FALSE = mp_number(0);
     tm->vm_size = sizeof(MpVm);
 
     /* set module boot */
-    MpObj boot = dict_new();
-    obj_set(boot, string_from_cstr("__name__"), string_from_cstr("boot"));
-
-    reg_mod("boot", boot);
+    MpObj boot = mp_new_native_module("boot");
 
     /* builtins constants */
-    obj_set_by_cstr(tm->builtins, "tm",    number_obj(1));
-    obj_set_by_cstr(tm->builtins, "True",  number_obj(1));
-    obj_set_by_cstr(tm->builtins, "False", number_obj(0));
+    obj_set_by_cstr(tm->builtins, "tm",    mp_number(1));
+    obj_set_by_cstr(tm->builtins, "True",  mp_number(1));
+    obj_set_by_cstr(tm->builtins, "False", mp_number(0));
     obj_set_by_cstr(tm->builtins, "__builtins__", tm->builtins);
     obj_set_by_cstr(tm->builtins, "__modules__",  tm->modules);
     
-    list_methods_init();
-    string_methods_init();
-    dict_methods_init();
-    dict_set_methods_init();
-    builtins_init();
+    MpList_InitMethods();
+    MpStr_InitMethods();
+    MpDict_InitMethods();
+    DictSet_InitMethods();
+    mp_init_builtins();
 
     /* init c modules */
-    time_mod_init();
-    sys_mod_init();
-    math_mod_init();
-    os_mod_init();
-    file_mod_init();
-    
-    init_mod_for_random();
-    init_mod_for_debug();
-    
+    mp_time_init();
+    mp_sys_init();
+    mp_math_init();
+    mp_os_init();
+    mp_file_init();
+    mp_random_init();
+    mp_debug_init();
     return 0;
 }
 

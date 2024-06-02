@@ -1,8 +1,23 @@
 # -*- coding:utf-8 -*-
+'''
+Author: xupingmao
+email: 578749341@qq.com
+Date: 2023-12-07 22:03:29
+LastEditors: xupingmao
+LastEditTime: 2024-06-02 12:26:44
+FilePath: /minipy/src/python/mp_init.py
+Description: 描述
+'''
+# -*- coding:utf-8 -*-
 # @author xupingmao
 # @since 2016
 # @modified 2022/06/08 23:47:53
 """Minipy初始化, 这里_import函数还没准备好，无法调用"""
+
+try:
+    __modules__ # type: dict
+except:
+    raise Exception("not minipy runtime")
 
 def add_builtin(name, func):
     __builtins__[name] = func
@@ -74,19 +89,6 @@ def sformat0(args):
     
 def sformat(*narg):
     return sformat0(narg)
-
-def str_join(sep, list):
-    # TODO implement in native code
-    text = ''
-    for i in range(len(list)):
-        if i != 0:
-            text += sep + str(list[i])
-        else:
-            text += list[i]
-    return text
-
-def list_join(list, sep):
-    return str_join(sep, list)
     
 def _list_copy(self):
     l = []
@@ -159,14 +161,12 @@ def _import(des_glo, fname, tar = None):
         pass
     else:
         import os
-        exists = os.exists
-        # printf("try to load module %s\n", fname)
-        from mp_encode import *
+        from mp_encode import compilefile
         # can not find file in current dir.
         fpath = find_module_path(fname)
 
         if fpath is None:
-            raise(sformat("import error, can not open file \"%s.py\"", fname))
+            raise(sformat("ModuleNotFoundError: No module named '%s'", fname))
 
         try:
             #__modules__[fname] = {}
@@ -175,6 +175,7 @@ def _import(des_glo, fname, tar = None):
             #del __modules__[fname]
             raise(sformat('import error: fail to compile file "%s.py":\n\t%s', fname, e))
         load_module(fname, _code)
+    
     g = __modules__[fname]
     if tar == '*':
         for k in g:
@@ -312,8 +313,6 @@ def update_sys_path(fpath):
 add_obj_method('str', 'ljust', ljust)
 add_obj_method('str', 'rjust', rjust)
 add_obj_method('str', 'center', center)
-add_obj_method('str', 'join', str_join)
-add_obj_method('list', 'join', list_join)
 add_builtin("uncode16", uncode16)
 add_builtin("add_builtin", add_builtin)
 add_builtin("Exception", Exception)
@@ -366,6 +365,9 @@ def boot(loadlibs=True):
             execfile(argv[0])
         elif argv[0] == "-dis":
             dis(argv[1])
+        elif argv[0] == "-parse":
+            tree = parsefile(sys.argv[1])
+            print_ast(tree)
         elif argv[0] == "-h" or argv[0] == "--help":
             print_init_help()
         else:

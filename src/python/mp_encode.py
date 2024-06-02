@@ -59,13 +59,16 @@ _tag_cnt = 0
 _global_index = 0
 
 
-def init_pop_value_type_set():
-    result = set(["call"])
+def init_pop_value_type_dict():
+    keys = ["call", "name"]
+    result = {}
     for item in _op_dict:
-        result.add(item)
+        result[item] = True
+    for item in keys:
+        result[item] = True
     return result
 
-POP_VALUE_TYPE_SET = init_pop_value_type_set()
+POP_VALUE_TYPE_DICT = init_pop_value_type_dict()
 
 class Scope:
     def __init__(self):
@@ -482,7 +485,7 @@ def encode_call(tk):
     
 def encode_apply(tk):
     encode_item(tk.first)
-    encode_item(tk.second)
+    encode_item(tk.second, True)
     emit(OP_APPLY)
 
     
@@ -600,16 +603,12 @@ def _import_name2str(mod):
     elif mod.type == 'string':
         return mod
     
-def encode_import_multi(mod, items):
+def do_encode_from(mod, items):
     mod = _import_name2str(mod)
-    if items.type == ',':
-        encode_import_multi(mod, items.first)
-        encode_import_multi(mod, items.second)
-    else:
-        encode_import_one(mod, items)
+    encode_import_one(mod, items)
 
 def encode_from(tk):
-    encode_import_multi(tk.first, tk.second)
+    do_encode_from(tk.first, tk.second)
 
 def _encode_import(item):
     item.type = 'string'
@@ -789,7 +788,7 @@ def getlineno(tk):
         return getlineno(tk.first)
     return None
     
-def encode_item(tk):
+def encode_item(tk, need_result=False):
     """encode ast item.
     @param tk ast token
     @return opstack height
@@ -798,7 +797,7 @@ def encode_item(tk):
         return 0
     # encode for statement list.
     if gettype(tk) == 'list':
-        return encode_block(tk)
+        return encode_block(tk, need_result)
 
     r = _encode_dict[tk.type](tk)
     if r != None:
@@ -806,9 +805,9 @@ def encode_item(tk):
     return 1
 
 def need_pop_value(type):
-    return type in POP_VALUE_TYPE_SET
+    return type in POP_VALUE_TYPE_DICT
 
-def encode_block(tk):
+def encode_block(tk, need_result=False):
     assert gettype(tk) == "list"
     for i in tk:
         # comment 
@@ -818,7 +817,7 @@ def encode_block(tk):
         if lineno != None: 
             emit(OP_LINE, lineno)
         encode_item(i)
-        if need_pop_value(i.type):
+        if not need_result and need_pop_value(i.type):
             emit(OP_POP)
 
 def encode(content):
@@ -912,7 +911,14 @@ def dis_code(code, return_str = False, fname = "<string>"):
     ins_list = compile_to_list(code, fname)
     for index, item in enumerate(ins_list):
         op = int(item[0])
-        line = "%s %s %r" % (to_fixed(index+1,4), opcodes[op].ljust(22), item[1])
+        value = item[1]
+        if op == OP_LOAD_PARAMS:
+            parg = int(value/256)
+            varg = int(value%256)
+            value = "%s,%s" % (parg, varg)
+        else:
+            value = "%r" % value
+        line = "%s %s %s" % (to_fixed(index+1,4), opcodes[op].ljust(22), value)
         # line = to_fixed(index+1, 4) + ' ' + opcodes[op].ljust(22) + str(item[1])
 
         if return_str:
@@ -926,7 +932,6 @@ def dis_code(code, return_str = False, fname = "<string>"):
 def dis(path, return_str = False):
     code = load(path)
     return dis_code(code, return_str, path)
-
 
 class Compiler:
 

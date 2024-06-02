@@ -36,24 +36,30 @@ minipyc: minipyc_bin
 debug-gc:
 	$(cc) -g -DLOG_LEVEL=5 -DMP_DEBUG -o minipy src/main.c -lm
 
+debug-cache:
+	$(cc) -g -DLOG_LEVEL=5 -DMP_DEBUG_CACHE=1 -o minipy src/main.c -lm
+
 debug:src/*.c src/include/*.h
-	bash ./script/build-debug.sh
+	$(cc) -g -DLOG_LEVEL=3 -DMP_DEBUG=0 -o minipy src/main.c -lm
 
 nogc:
 	$(cc) -g -DGC_DESABLED -o minipy src/main.c -lm
 
+bdwgc:
+	$(cc) -g -DMP_USE_BDWGC -o minipy src/main.c -lm -I src/deps/bdwgc/include
+
 check-mem: 
 	$(cc) -DTM_CHECK_MEM -o minipy src/main.c -lm
 
-test-reg-vs-stack:
-	$(cc) -o build/reg_vs_stack test/reg_vs_stack/reg_vs_stack.c -lm
+test-reg-vs-stack: test/benchmark/reg_vs_stack/reg_vs_stack.c
+	$(cc) -o build/reg_vs_stack test/benchmark/reg_vs_stack/reg_vs_stack.c -lm
 	./build/reg_vs_stack
 
 test-dict:
 	make && ./minipy ./test/test_case/030_test_debug.py
 	
 test:
-	make minipy
+	make debug
 	./minipy ./test/test_main.py
 
 test-tokenize:

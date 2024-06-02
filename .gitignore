@@ -29,4 +29,5 @@ minipy.dSYM
 /test/micropython/
 ctest
 pack_main
+.vscode/*
 

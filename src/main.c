@@ -18,7 +18,7 @@ int main(int argc, char *argv[]) {
     int code = setjmp(tm->frames->buf);
     if (code == 0) {
         vm_load_py_modules();
-        obj_set_by_cstr(tm->builtins, "MP_USE_CACHE", number_obj(1));
+        obj_set_by_cstr(tm->builtins, "MP_USE_CACHE", mp_number(1));
 
         log_debug("before vm_call_mod_func!\n");
 

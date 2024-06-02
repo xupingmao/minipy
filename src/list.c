@@ -11,13 +11,13 @@
  * create a list which will not be tracked by garbage collector
  */
 MpList* list_new_untracked(int cap) {
-    MpList* list = mp_malloc(sizeof(MpList));
+    MpList* list = mp_malloc(sizeof(MpList), "list.new_obj");
     list->len = 0;
     if (cap <= 0) {
         cap = 2;
     }
     list->cap = cap;
-    list->nodes = mp_malloc(OBJ_SIZE * list->cap);
+    list->nodes = mp_malloc(MP_OBJ_SIZE * list->cap, "list.new_nodes");
     return list;
 }
 
@@ -36,10 +36,10 @@ MpObj list_to_obj(MpList* list) {
 }
 
 void list_free(MpList* list) {
-    PRINT_OBJ_GC_INFO_START();
-    mp_free(list->nodes, list->cap * OBJ_SIZE);
+    PRINT_MP_GC_INFO_START();
+    mp_free(list->nodes, list->cap * MP_OBJ_SIZE);
     mp_free(list, sizeof(MpList));
-    PRINT_OBJ_GC_INFO_END("list", list);
+    PRINT_MP_GC_INFO_END("list", list);
 }
 
 MpObj list_get(MpList* list, int n) {
@@ -70,6 +70,8 @@ void list_clear(MpList* list) {
 
 
 static void _list_check_cap(MpList* list) {
+    assert(list != NULL);
+    
     if (list->len >= list->cap) {
         int ocap = list->cap;
         int newsize;
@@ -80,16 +82,18 @@ static void _list_check_cap(MpList* list) {
             newsize = ocap / 2 + ocap + 1;
         }
         /*int newsize = list->cap * 3 / 2 + 1;*/
-        list->nodes = mp_realloc(list->nodes, OBJ_SIZE * ocap,
-                OBJ_SIZE * newsize);
+        list->nodes = mp_realloc(list->nodes, MP_OBJ_SIZE * ocap,
+                MP_OBJ_SIZE * newsize, "list.check_cap");
         list->cap = newsize;
 #if GC_DEBUG_LIST
-        printf("resize list: from %d to %d\n", OBJ_SIZE * ocap, OBJ_SIZE * list->cap);
+        printf("resize list: from %d to %d\n", MP_OBJ_SIZE * ocap, MP_OBJ_SIZE * list->cap);
 #endif
     }
 }
 
 void list_append(MpList* list, MpObj obj) {
+    assert(list != NULL);
+
     _list_check_cap(list);
 
     ASSERT_VALID_OBJ(obj);
@@ -105,7 +109,7 @@ MpObj list_from_array(int n, ...) {
     va_start(ap, n);
     for (i = 0; i < n; i++) {
         MpObj item = va_arg(ap, MpObj);
-        obj_append(list, item);
+        mp_append(list, item);
     }
     va_end(ap);
     return list;
@@ -117,6 +121,8 @@ MpObj list_from_array(int n, ...) {
  after node at index of *n*
  */
 void list_insert(MpList* list, int n, MpObj obj) {
+    assert(list != NULL);
+
     _list_check_cap(list);
 
     ASSERT_VALID_OBJ(obj);
@@ -141,7 +147,7 @@ int list_index(MpList* list, MpObj v) {
     int len = list->len;
     MpObj* nodes = list->nodes;
     for (i = 0; i < len; i++) {
-        if (is_obj_equals(nodes[i], v)) {
+        if (mp_is_equals(nodes[i], v)) {
             return i;
         }
     }
@@ -185,43 +191,43 @@ MpObj list_add(MpList* list1, MpList*list2) {
     MpObj newlist = list_new(newl);
     MpList* list = GET_LIST(newlist);
     list->len = newl;
-    int list1_nodes_size = list1->len * OBJ_SIZE;
+    int list1_nodes_size = list1->len * MP_OBJ_SIZE;
     memcpy(list->nodes, list1->nodes, list1_nodes_size);
-    memcpy(list->nodes + list1->len, list2->nodes, list2->len * OBJ_SIZE);
+    memcpy(list->nodes + list1->len, list2->nodes, list2->len * MP_OBJ_SIZE);
     return newlist;
 }
 
 // belows are builtin methods
-
-MpObj list_builtin_append() {
+static MpObj list_builtin_append() {
     const char* sz_func = "list.append";
-    MpObj self = arg_take_list_obj(sz_func);
-    MpObj v = arg_take_obj(sz_func);
-    obj_append(self, v);
+    MpObj self = mp_take_list_obj_arg(sz_func);
+    MpObj v = mp_take_obj_arg(sz_func);
+    mp_append(self, v);
     return NONE_OBJECT;
 }
 
-MpObj list_builtin_pop() {
-    MpObj self = arg_take_list_obj("list.pop");
+static MpObj list_builtin_pop() {
+    MpObj self = mp_take_list_obj_arg("list.pop");
     return list_pop(GET_LIST(self));
 }
-MpObj list_builtin_insert() {
+
+static MpObj list_builtin_insert() {
     const char* sz_func = "list.insert";
-    MpObj self = arg_take_list_obj(sz_func);
-    int n = arg_take_int(sz_func);
-    MpObj v = arg_take_obj(sz_func);
+    MpObj self = mp_take_list_obj_arg(sz_func);
+    int n = mp_take_int_arg(sz_func);
+    MpObj v = mp_take_obj_arg(sz_func);
     list_insert(GET_LIST(self), n, v);
     return self;
 }
 
-MpObj list_builtin_index() {
-    MpList* self = arg_take_list_ptr("list.index");
-    MpObj v = arg_take_obj("list.index");
-    return number_obj(list_index(self, v));
+static MpObj list_builtin_index() {
+    MpList* self = mp_take_list_ptr_arg("list.index");
+    MpObj v = mp_take_obj_arg("list.index");
+    return mp_number(list_index(self, v));
 }
 
-MpObj list_builtin_reverse() {
-    MpList* self = arg_take_list_ptr("list.reverse");
+static MpObj list_builtin_reverse() {
+    MpList* self = mp_take_list_ptr_arg("list.reverse");
     int start = 0, end = self->len - 1;
     while (end > start) {
         MpObj temp = self->nodes[start];
@@ -233,13 +239,13 @@ MpObj list_builtin_reverse() {
     return NONE_OBJECT;
 }
 
-MpObj list_builtin_remove() {
-    MpList* list = arg_take_list_ptr("list.remove");
-    MpObj obj = arg_take_obj("list.remove");
+static MpObj list_builtin_remove() {
+    MpList* list = mp_take_list_ptr_arg("list.remove");
+    MpObj obj = mp_take_obj_arg("list.remove");
     int i = 0;
     for (i = 0; i < list->len; i++) {
         MpObj item = list->nodes[i];
-        if (is_obj_equals(item, obj)) {
+        if (mp_is_equals(item, obj)) {
             _list_del(list, i);
             return item;
         }
@@ -247,26 +253,26 @@ MpObj list_builtin_remove() {
     return NONE_OBJECT;
 }
 
-MpObj list_builtin_copy() {
-    MpObj self = arg_take_obj("list.copy");
+static MpObj list_builtin_copy() {
+    MpObj self = mp_take_obj_arg("list.copy");
     MpList* list = GET_LIST(self);
     MpObj _newlist = list_new(list->cap);
     MpList* newlist = GET_LIST(_newlist);
     newlist->len = list->len;
-    memcpy(newlist->nodes, list->nodes, list->len * OBJ_SIZE);
+    memcpy(newlist->nodes, list->nodes, list->len * MP_OBJ_SIZE);
     return _newlist;
 }
 
 MpObj list_builtin_clear() {
-    MpObj self = arg_take_obj("list.clear");
+    MpObj self = mp_take_obj_arg("list.clear");
     MpList* list = GET_LIST(self);
     list->len = 0;
     return self;
 }
 
 MpObj list_builtin_extend() {
-    MpObj self = arg_take_list_obj("list.extend");
-    MpList* other = arg_take_list_ptr("list.extend");
+    MpObj self = mp_take_list_obj_arg("list.extend");
+    MpList* other = mp_take_list_ptr_arg("list.extend");
     MpList* selfptr = GET_LIST(self);
     int i = 0;
     for (i = 0; i < other->len; i++) {
@@ -275,17 +281,25 @@ MpObj list_builtin_extend() {
     return self;
 }
 
-void list_methods_init() {
+size_t list_sizeof(MpList* list) {
+    size_t size = 0;
+    size += sizeof(MpList);
+    size += sizeof(MpObj) * list->cap;
+    return size;
+}
+
+
+void MpList_InitMethods() {
     tm->list_proto = dict_new();
-    reg_mod_func(tm->list_proto, "append", list_builtin_append);
-    reg_mod_func(tm->list_proto, "pop", list_builtin_pop);
-    reg_mod_func(tm->list_proto, "insert", list_builtin_insert);
-    reg_mod_func(tm->list_proto, "index", list_builtin_index);
-    reg_mod_func(tm->list_proto, "reverse", list_builtin_reverse);
-    reg_mod_func(tm->list_proto, "remove", list_builtin_remove);
-    reg_mod_func(tm->list_proto, "copy", list_builtin_copy);
-    reg_mod_func(tm->list_proto, "clear", list_builtin_clear);
-    reg_mod_func(tm->list_proto, "extend", list_builtin_extend);
+    MpModule_RegFunc(tm->list_proto, "append", list_builtin_append);
+    MpModule_RegFunc(tm->list_proto, "pop", list_builtin_pop);
+    MpModule_RegFunc(tm->list_proto, "insert", list_builtin_insert);
+    MpModule_RegFunc(tm->list_proto, "index", list_builtin_index);
+    MpModule_RegFunc(tm->list_proto, "reverse", list_builtin_reverse);
+    MpModule_RegFunc(tm->list_proto, "remove", list_builtin_remove);
+    MpModule_RegFunc(tm->list_proto, "copy", list_builtin_copy);
+    MpModule_RegFunc(tm->list_proto, "clear", list_builtin_clear);
+    MpModule_RegFunc(tm->list_proto, "extend", list_builtin_extend);
 }
 
 MpObj list_iter_new(MpObj list) {

@@ -1,3 +1,12 @@
+/*
+ * @Author: xupingmao
+ * @email: 578749341@qq.com
+ * @Date: 2024-05-25 20:50:31
+ * @LastEditors: xupingmao
+ * @LastEditTime: 2024-06-01 23:48:34
+ * @FilePath: /minipy/src/dict_set.c
+ * @Description: 描述
+ */
 /**
  * HashSet
  * @author xupingmao <578749341@qq.com>
@@ -5,40 +14,66 @@
  * @modified 2022/04/12 21:13:38
  */
 #include "include/mp.h"
+#include "include/dict.h"
+
+static MpDict* DictSet_GetItems(MpDict* dictSet) {
+    assert(dictSet != NULL);
+    MpObj *items = dict_get_by_cstr(dictSet, "__items");
+    if (items == NULL) {
+        mp_raise("set: __items is empty");
+        return NULL;
+    } else {
+        if (IS_DICT(*items)) {
+            return GET_DICT(*items);
+        } else {
+            mp_raise("set: __items is not dict");
+        }
+    }
+    return NULL;
+}
 
 /* TODO: set.contains */
-static MpObj dict_set_builtin_add() {
-    MpObj self = arg_take_dict_obj("set.add");
-    MpObj key  = arg_take_obj("set.add");
-    obj_set(self, key, tm->_TRUE);
+static MpObj DictSet_add() {
+    MpDict* self = mp_take_dict_ptr_arg("set.add");
+    MpObj key  = mp_take_obj_arg("set.add");
+    MpDict *items = DictSet_GetItems(self);
+    assert(items != NULL);
+    dict_set0(items, key, tm->_TRUE);
     return NONE_OBJECT;
 }
 
-static MpObj dict_set_builtin_remove() {
-    MpObj self = arg_take_dict_obj("set.remove");
-    MpObj key  = arg_take_obj("set.remove");
-    obj_del(self, key);
+static MpObj DictSet_remove() {
+    MpDict* self = mp_take_dict_ptr_arg("set.remove");
+    MpObj key  = mp_take_obj_arg("set.remove");
+    MpDict* items = DictSet_GetItems(self);
+    assert (items != NULL);
+    dict_pop(items, key, &NONE_OBJECT);
     return NONE_OBJECT;
 }
 
-static MpObj dict_set_builtin_init() {
-    MpObj self = arg_take_dict_obj("set.init");
-    if (arg_count() == 0) {
+static MpObj DictSet_init() {
+    MpDict* self = mp_take_dict_ptr_arg("set.init");
+    MpObj items = dict_new();
+
+    dict_set_by_cstr(self, "__items", items);
+
+    if (mp_count_arg() == 1) {
         return NONE_OBJECT;
     }
-    MpList *list = arg_take_list_ptr("set.init");
+    MpList *list = mp_take_list_ptr_arg("set.init");
     for (int i = 0; i < list->len; i++) {
-        obj_set(self, list_get(list, i), tm->_TRUE);
+        obj_set(items, list_get(list, i), tm->_TRUE);
     }
     return NONE_OBJECT;
 }
 
-void dict_set_methods_init() {
-    MpObj set_class = class_new_by_cstr("set");
+void DictSet_InitMethods() {
+    // TODO 目前实现有问题
+    MpObj set_class = class_new_by_cstr("set", tm->builtins_mod);
     /* build dict class */
-    reg_method_by_cstr(set_class, "add", dict_set_builtin_add);
-    reg_method_by_cstr(set_class, "remove", dict_set_builtin_remove);
-    reg_method_by_cstr(set_class, "__init__", dict_set_builtin_init);
+    mp_reg_method(set_class, "add", DictSet_add);
+    mp_reg_method(set_class, "remove", DictSet_remove);
+    mp_reg_method(set_class, "__init__", DictSet_init);
 
     obj_set_by_cstr(tm->builtins, "set", set_class);
 }

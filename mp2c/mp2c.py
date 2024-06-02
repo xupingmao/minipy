@@ -46,6 +46,7 @@ class CodeWriter:
         self.py_func_name = None
         # 当前的Python类名
         self.py_class_name = None
+        self.debug = False
 
     def indent(self):
         pass
@@ -59,11 +60,11 @@ class CodeWriter:
     def write_debug_opcode(self, op, val):
         op_name = opcodes[op]
         self.writeline("  // %s %r" % (op_name, val))
-        return
-        self.writeline("  puts(\"%s %r\");" % (op_name, val));
+
 
     def write_debug_lineno(self, lineno):
-        return
+        if not self.debug:
+            return
         self.writeline("  tm->mp2c_lineno = %d;" % lineno)
 
     def goto_label(self, val, indent = 2):
@@ -255,7 +256,7 @@ class CodeWriter:
 
     def emit_op_next(self, op_index, val):
         self.writeline("  {")
-        self.writeline("    MpObj *next = obj_next(*top);")
+        self.writeline("    MpObj *next = mp_next(*top);")
         self.writeline("    if (next != NULL) { MP2C_PUSH(*next); }")
         self.writeline("    else {")
         self.goto_label(op_index + val, 6)
@@ -371,6 +372,7 @@ def do_convert_op(writer, op, val, func_name):
     writer.writeline("  *top = %s(*top, *(top+1));" % func_name)
 
 def convert(code, writer):
+    # type: (str, CodeWriter)->None
     inst_list = compile_to_list(code, "test.py")
     module_name = None
     func_name   = None
@@ -400,15 +402,15 @@ def convert(code, writer):
             line = "  /* OP_LOAD_PARAMS(%s) */" % parg
             writer.writeline(line)
             for i in range(parg):
-                writer.writeline("  locals[%d] = arg_take_obj(\"%s\");" % (i, func_name))
+                writer.writeline("  locals[%d] = mp_take_obj_arg(\"%s\");" % (i, func_name))
         elif op == OP_LOAD_PARG:
             for i in range(val):
-                writer.writeline("  locals[%d] = arg_take_obj(\"\");" % (i, func_name))
+                writer.writeline("  locals[%d] = mp_take_obj_arg(\"\");" % (i, func_name))
         elif op == OP_LOAD_NARG:
             arg_index = val
-            writer.writeline("  MpObj args = list_new(arg_remains());")
-            writer.writeline("  while(arg_remains() > 0) {")
-            writer.writeline("    obj_append(args, arg_take_obj(\"%s\"));" % (func_name))
+            writer.writeline("  MpObj args = list_new(mp_count_remain_args());")
+            writer.writeline("  while(mp_count_remain_args() > 0) {")
+            writer.writeline("    mp_append(args, mp_take_obj_arg(\"%s\"));" % (func_name))
             writer.writeline("  }")
             writer.writeline("  locals[%s] = args;" % arg_index)
         elif op == OP_LOAD_LOCAL:
@@ -418,7 +420,7 @@ def convert(code, writer):
             line = "  locals[{}] = MP2C_POP();".format(val)
             writer.writeline(line)
         elif op == OP_NUMBER:
-            line = "  MP2C_PUSH(number_obj({}));".format(val)
+            line = "  MP2C_PUSH(mp_number({}));".format(val)
             writer.writeline(line)
         elif op == OP_STRING:
             str_var = writer.get_const_var(val)
@@ -437,10 +439,10 @@ def convert(code, writer):
         elif op == OP_CALL or op == OP_TAILCALL:
             argc = val
             writer.writeline("  top -= %s; /* args */" % argc)
-            writer.writeline("  *top = obj_call_nargs(*top, %s, top + 1);" % argc)
+            writer.writeline("  *top = mp_call_with_nargs(*top, %s, top + 1);" % argc)
         elif op == OP_APPLY:
             writer.writeline("  top--;")
-            writer.writeline("  *top = obj_apply(*top, *(top+1));")
+            writer.writeline("  *top = mp_call_with_args(*top, *(top+1));")
         elif op == OP_POP:
             writer.writeline("  MP2C_POP();")
         elif op == OP_JUMP:
@@ -457,15 +459,15 @@ def convert(code, writer):
             # writer.writeline("  printf(\"%%d: %%s\n\", %d, %s);" % (val, line))
             # writer.writeline("L%s:" % val)
         elif op == OP_POP_JUMP_ON_FALSE:
-            writer.writeline("  if(!is_true_obj(MP2C_POP())) {")
+            writer.writeline("  if(!mp_is_true(MP2C_POP())) {")
             writer.goto_label(op_index + val, 4)
             writer.writeline("  }")
         elif op == OP_JUMP_ON_TRUE:
-            writer.writeline("  if (is_true_obj(MP2C_TOP())) {");
+            writer.writeline("  if (mp_is_true(MP2C_TOP())) {");
             writer.goto_label(op_index + val, 4)
             writer.writeline("  }");
         elif op == OP_JUMP_ON_FALSE:
-            writer.writeline("  if (!is_true_obj(MP2C_TOP())) {");
+            writer.writeline("  if (!mp_is_true(MP2C_TOP())) {");
             writer.goto_label(op_index + val, 4)
             writer.writeline("  }");
         elif op == OP_RETURN:
@@ -476,7 +478,7 @@ def convert(code, writer):
         elif op == OP_SET:
             writer.emit_op_set()
         elif op == OP_NOT:
-            writer.writeline("*top = number_obj(!is_true_obj(*top));")
+            writer.writeline("*top = mp_number(!mp_is_true(*top));")
         elif op == OP_DEF_END:
             writer.emit_op_func_end()
         elif op == OP_STORE_GLOBAL:
@@ -544,7 +546,7 @@ class AotCompiler:
         print("building %s ..." % c_file_path)
         print("target: %s" % target)
         
-        build_cmd = "gcc -O2 %r -o %r -lm -Isrc -Imp2c" % (c_file_path, target)
+        build_cmd = "gcc -O2 %s -o %s -lm -Isrc -Imp2c" % (c_file_path, target)
         print("build command:", build_cmd)
         result = os.system(build_cmd)
         if result == 0:
@@ -555,16 +557,19 @@ class AotCompiler:
 
 
     def get_base_name(self, fpath):
+        fpath = fpath.replace("\\", "/")
         fname = fpath.split("/")[-1]
         name = fname.split(".")[0]
         return name
 
     def get_default_target(self, fpath):
         name = self.get_base_name(fpath)
+        if os.name == "nt":
+            return "build/%s.exe" % name
         return "build/%s.out" % name
 
     def compile(self, fpath, target = None):
-        code = load(fpath)    
+        code = load(fpath)
         name = self.get_base_name(fpath)
         writer = CodeWriter(code, name)
         convert(code, writer)
@@ -582,6 +587,7 @@ class AotCompiler:
             print("saved to %s" % c_file_path)
 
         self.do_build(c_file_path, target)
+        return target
 
 
 def main():
@@ -596,7 +602,7 @@ def main():
         raise Exception("参数异常")
 
     compiler = AotCompiler(True)
-    compiler.compile(fpath)
+    target = compiler.compile(fpath)
 
     do_benchmark(fpath, target)
 

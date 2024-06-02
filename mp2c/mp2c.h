@@ -15,39 +15,39 @@
 #define MP2C_THIDRD() (top[-2])
 
 MpObj obj_LT(MpObj left, MpObj right) {
-    return number_obj(mp_cmp(left, right) < 0);
+    return mp_number(mp_cmp(left, right) < 0);
 }
 
 MpObj obj_LE(MpObj left, MpObj right) {
-    return number_obj(mp_cmp(left, right) <= 0);
+    return mp_number(mp_cmp(left, right) <= 0);
 }
 
 MpObj obj_GT(MpObj left, MpObj right) {
-    return number_obj(mp_cmp(left, right) > 0);
+    return mp_number(mp_cmp(left, right) > 0);
 }
 
 MpObj obj_GE(MpObj left, MpObj right) {
-    return number_obj(mp_cmp(left, right) >= 0);
+    return mp_number(mp_cmp(left, right) >= 0);
 }
 
 MpObj obj_EQEQ(MpObj left, MpObj right) {
-    return number_obj(is_obj_equals(left, right));
+    return mp_number(mp_is_equals(left, right));
 }
 
 MpObj obj_LTEQ(MpObj left, MpObj right) {
-    return number_obj(mp_cmp(left, right) <= 0);
+    return mp_number(mp_cmp(left, right) <= 0);
 }
 
 MpObj obj_GTEQ(MpObj left, MpObj right) {
-    return number_obj(mp_cmp(left, right) >= 0);
+    return mp_number(mp_cmp(left, right) >= 0);
 }
 
 MpObj obj_not_eq(MpObj left, MpObj right) {
-    return number_obj(!is_obj_equals(left, right)); 
+    return mp_number(!mp_is_equals(left, right)); 
 }
 
 MpObj obj_and(MpObj left, MpObj right) {
-    return number_obj(is_true_obj(left) && is_true_obj(right));
+    return mp_number(mp_is_true(left) && mp_is_true(right));
 }
 
 void gc_local_add(MpObj object) {
@@ -77,10 +77,10 @@ MpObj mp_call_native(MpObj (*fn)(), int args, ...) {
     MpObj obj_arg;
 
     va_start(ap, args);
-    arg_start();
+    mp_reset_args();
     for (i = 0; i < args; i++) {
         obj_arg = va_arg(ap, MpObj);
-        arg_push(obj_arg);
+        mp_push_arg(obj_arg);
     }
     va_end(ap);
 
@@ -99,7 +99,7 @@ MpObj mp_call_native(MpObj (*fn)(), int args, ...) {
  * @since 2016-08-27
  */
 MpObj mp_call_native_0(MpObj (*fn)()) {
-    arg_start();
+    mp_reset_args();
     int size = tm->local_obj_list->len;
     MpObj ret = fn();
     gc_check_native_call(size, ret);
@@ -107,8 +107,8 @@ MpObj mp_call_native_0(MpObj (*fn)()) {
 }
 
 MpObj mp_call_native_1(MpObj (*fn)(), MpObj arg1) {
-    arg_start();
-    arg_push(arg1);
+    mp_reset_args();
+    mp_push_arg(arg1);
     int size = tm->local_obj_list->len;
     MpObj ret = fn();
     gc_check_native_call(size, ret);
@@ -116,9 +116,9 @@ MpObj mp_call_native_1(MpObj (*fn)(), MpObj arg1) {
 }
 
 MpObj mp_call_native_2(MpObj (*fn)(), MpObj arg1, MpObj arg2) {
-    arg_start();
-    arg_push(arg1);
-    arg_push(arg2);
+    mp_reset_args();
+    mp_push_arg(arg1);
+    mp_push_arg(arg2);
     int size = tm->local_obj_list->len;
     MpObj ret = fn();
     gc_check_native_call(size, ret);
@@ -138,10 +138,10 @@ MpObj mp_call_native_debug(int lineno, char* func_name, MpObj (*fn)(), int args,
     tm->frame->lineno = lineno;
     LOG(LEVEL_ERROR, "call,%d,%s,start", lineno, func_name, 0);
     va_start(ap, args);
-    arg_start();
+    mp_reset_args();
     for (i = 0; i < args; i++) {
         obj_arg = va_arg(ap, MpObj);
-        arg_push(obj_arg);
+        mp_push_arg(obj_arg);
     }
     va_end(ap);
 
@@ -173,7 +173,7 @@ void def_native_method(MpObj dict, MpObj name, MpNativeFunc native) {
 }
 
 MpObj mp_take_arg() {
-    return arg_take_obj("getarg");
+    return mp_take_obj_arg("getarg");
 }
 
 void mp_def_mod(char* fname, MpObj mod) {
@@ -192,7 +192,7 @@ MpObj argv_to_list(int n, ...) {
     va_start(ap, n);
     for (i = 0; i < n; i++) {
         MpObj item = va_arg(ap, MpObj);
-        obj_append(list, item);
+        mp_append(list, item);
     }
     va_end(ap);
     return list;
@@ -260,7 +260,7 @@ int mp2c_run_func(int argc, char* argv[], char* mod_name, MpNativeFunc func) {
  */
 MpObj tm2c_get(MpObj obj, char* key) {
     MpObj obj_key = string_new(key);
-    return obj_get(obj, obj_key);
+    return mp_getattr(obj, obj_key);
 }
 
 /**
@@ -275,7 +275,7 @@ void tm2c_set(MpObj obj, char* key, MpObj value) {
 MpObj mp2c_def_func(MpObj module, char* func_name, MpNativeFunc natvie_func) {
     mp_assert_type(module, TYPE_MODULE, "mp2c_def_func");
 
-    MpObj globals  = obj_get_globals_from_module(module);
+    MpObj globals  = mp_get_globals_from_module(module);
     MpObj func_obj = func_new(module, NONE_OBJECT, natvie_func);
     obj_set_by_cstr(globals, func_name, func_obj);
     return func_obj;

@@ -1,10 +1,27 @@
+# -*- coding:utf-8 -*-
+'''
+Author: xupingmao
+email: 578749341@qq.com
+Date: 2021-09-29 23:28:26
+LastEditors: xupingmao
+LastEditTime: 2024-06-02 01:39:25
+FilePath: /minipy/test/logging.py
+Description: 描述
+'''
+
+DEBUG = False
 
 def toBaseStr(obj):
     if istype(obj, 'string'):
-        return obj
+        result = obj
     elif istype(obj, 'number'):
-        return str(obj)
-    return str(obj)
+        result = str(obj)
+    else:
+        result = str(obj)
+    
+    if DEBUG:
+        print("toBaseStr", obj, "->", result)
+    return result
 
 def toDictStr(dict):
     dictStr = '{'
@@ -13,17 +30,30 @@ def toDictStr(dict):
             dictStr += ','
         dictStr += toBaseStr(key) + ':' + toBaseStr(dict[key])
     dictStr += '}'
+    if DEBUG:
+        print("toDictStr", dict, "->", dictStr)
     return dictStr
 
 def toLoggingStr(obj):
     if istype(obj, 'dict'):
-        return toDictStr(obj)
-    return toBaseStr(obj)
+        result = toDictStr(obj)
+    else:
+        result = toBaseStr(obj)
+    if DEBUG:
+        print("toLoggingStr", obj, "->", result)
+    return result
+
 # @list args
 def _log(level, args):
+    # print("_log", level, args)
+    
     newArgs = []
     for arg in args:
-        newArgs.append(toLoggingStr(arg))
+        new_arg = toLoggingStr(arg)
+        newArgs.append(new_arg)
+    
+    # print("_log", level, newArgs)
+
     sArgs = " ".join(newArgs)
     print(level, ":", sArgs)
 

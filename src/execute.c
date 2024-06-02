@@ -7,18 +7,25 @@
  **/
 
 #include "include/mp.h"
+#include "include/code_cache.h"
+#include "include/debug.h"
 #include "execute_profile.c"
 
-void pop_frame() {
+void mp_reset_frame(MpFrame*);
+
+void mp_pop_frame() {
     if (tm->frame < tm->frames) {
-        printf("pop_frame: invalid call\n");
+        printf("mp_pop_frame: invalid call\n");
         exit(1);
     }
+    /* reset locals and stack */
+    mp_reset_frame(tm->frame);
+
     tm->frame --;
 }
 
 #define MP_PUSH(x) *(++top) = (x); \
-    assert(top->type >= TYPE_MIN && top->type <= TYPE_MAX); \
+    assert(top->type >= TYPE_MIN && top->type <= TYPE_MAX);  \
     if(top > tm->stack_end) \
         mp_raise("mp_eval: stack overflow");
 
@@ -46,39 +53,8 @@ if (tm->allocated > tm->gc_threshold) {   \
     gc_full();                            \
 }
 
-MpFrame* push_frame(MpObj fnc) {
-    // make extra space for self in method call
-    // top包含当前frame的stack-value
-    // top+1 需要为self预留空间
-    MpObj *top = tm->frame->top + 2;
-    tm->frame ++ ;
-    MpFrame* f = tm->frame;
 
-    /* check oprand stack */
-    if (top >= tm->stack + STACK_SIZE) {
-        pop_frame();
-        mp_raise("mp_eval: stack overflow (%d)", STACK_SIZE);
-    }
-    
-    /* check frame stack*/
-    if (tm->frame >= tm->frames + FRAMES_COUNT-1) {
-        pop_frame();
-        mp_raise("mp_eval: frame overflow (%d)", FRAMES_COUNT-1);
-    }
-
-    f->pc    = GET_FUNCTION(fnc)->code;
-    f->cache = GET_FUNCTION(fnc)->cache;
-
-    assert(GET_FUNCTION(fnc)->resolved == 1);
-
-    f->maxlocals = func_get_max_locals(GET_FUNCTION(fnc));
-
-    f->locals = top;
-    /* stack starts after locals */
-    f->stack  = f->locals + f->maxlocals;
-    f->top    = f->stack;
-    f->fnc    = fnc;
- 
+void mp_reset_frame(MpFrame* f) {
     // clear local variables
     int i = 0;
     for(i = 0; i < f->maxlocals; i++) {
@@ -89,6 +65,43 @@ MpFrame* push_frame(MpObj fnc) {
 
     f->jmp = NULL;
     f->cache_jmp = NULL;
+}
+
+MpFrame* mp_push_frame(MpObj fnc) {
+    // make extra space for self in method call
+    // top包含当前frame的stack-value
+    // top+1 需要为self预留空间
+    assert(IS_FUNCTION(fnc));
+
+    MpObj *top = tm->frame->top + 2;
+    tm->frame ++ ;
+    MpFrame* f = tm->frame;
+
+    /* check oprand stack */
+    if (top >= tm->stack + STACK_SIZE) {
+        mp_pop_frame();
+        mp_raise("mp_eval: stack overflow (%d)", STACK_SIZE);
+    }
+    
+    /* check frame stack*/
+    if (tm->frame >= tm->frames + FRAMES_COUNT-1) {
+        mp_pop_frame();
+        mp_raise("mp_eval: frame overflow (%d)", FRAMES_COUNT-1);
+    }
+
+    f->pc    = GET_FUNCTION(fnc)->code;
+    f->cache = GET_FUNCTION(fnc)->cache;
+
+    assert(GET_FUNCTION(fnc)->resolved == 1);
+
+    f->maxlocals = func_get_max_locals(GET_FUNCTION(fnc));
+    f->locals = top;
+    /* stack starts after locals */
+    f->stack  = f->locals + f->maxlocals;
+    f->top    = f->stack;
+    f->fnc    = fnc;
+    
+    mp_reset_frame(f);
     return f;
 }
 
@@ -100,7 +113,7 @@ MpFrame* push_frame(MpObj fnc) {
         pc += i * 3; \
         continue;\
     } else { \
-        *top = number_obj(flag); \
+        *top = mp_number(flag); \
     }
 
 
@@ -124,7 +137,7 @@ tailcall:
     locals  = f->locals;
     top     = f->stack;
     cur_fnc = f->fnc;
-    globals = obj_get_globals(cur_fnc);
+    globals = mp_get_globals(cur_fnc);
     MpDict *globals_dict = GET_DICT(globals);
     cache   = f->cache;
 
@@ -145,26 +158,31 @@ tailcall:
             CodeQueue_Append(&tm->last_op_queue, *cache);
         #endif
 
+        #if MP_DEBUG_OPCODE
+            log_debug("%s %d", inst_get_name_by_code(cache->op), get_cache_int(cache));
+        #endif
+
 retry_op:
         switch (cache->op) {
 
         case OP_NUMBER: {
             PROFILE_START(cache);
-            MP_PUSH(cache->v.obj);
+            MP_PUSH(get_cache_obj(cache));
             PROFILE_END(cache);
             break;
         }
 
         case OP_STRING: {
             PROFILE_START(cache);
-            MP_PUSH(cache->v.obj);
+            MP_PUSH(get_cache_obj(cache));
             PROFILE_END(cache);
             break;
         }
 
         case OP_IMPORT: {
             // _import(des_globals, fname, tar);
-            if (cache->v.ival == 1) {
+            int value = get_cache_int(cache);
+            if (value == 1) {
                 // import name
                 MpObj modname = MP_POP();
                 obj_import(globals, modname);
@@ -178,7 +196,7 @@ retry_op:
         }
         case OP_CONSTANT: {
             PROFILE_START(cache);
-            MP_PUSH(GET_CONST(cache->v.ival));
+            MP_PUSH(get_cache_obj(cache));
             PROFILE_END(cache);
             break;
         }
@@ -192,37 +210,35 @@ retry_op:
 
         case OP_LOAD_LOCAL: {
             PROFILE_START(cache);
-            MP_PUSH(locals[cache->v.ival]);
+            int index = get_cache_int(cache);
+            MP_PUSH(locals[index]);
             PROFILE_END(cache);
             break;
         }
 
         case OP_STORE_LOCAL:
             PROFILE_START(cache);
-            locals[cache->v.ival] = MP_POP();
+            int index = get_cache_int(cache);
+            locals[index] = MP_POP();
             PROFILE_END(cache);
             break;
 
         case OP_LOAD_GLOBAL: {
             PROFILE_START(cache);
             /* mp_printf("load global %o\n", GET_CONST(i)); */
-            int idx = dict_get0(globals_dict, cache->v.obj);
-            if (idx == -1) {
+            MpObj obj = get_cache_obj(cache);
+
+            DictNode* dict_node = dict_get_node(globals_dict, obj);
+            if (dict_node == NULL) {
                 MpDict *builtins_dict = GET_DICT(tm->builtins);
-                idx = dict_get0(builtins_dict, cache->v.obj);
-                if (idx == -1) {
-                    mp_raise("NameError: name %o is not defined", cache->v.obj);
+                dict_node = dict_get_node(builtins_dict, obj);
+                if (dict_node == NULL) {
+                    mp_raise("NameError: name %o is not defined", obj);
                 } else {
-                    MpObj value = builtins_dict->nodes[idx].val;
-                    MP_PUSH(value);
+                    MP_PUSH(dict_node->val);
                 }
             } else {
-                MP_PUSH(globals_dict->nodes[idx].val);
-
-                #ifdef FAST_LOAD_GLOBAL
-                    cache->op = OP_LOAD_GLOBAL_FAST;
-                    cache->index = idx;
-                #endif
+                MP_PUSH(dict_node->val);
             }
 
             PROFILE_END(cache);
@@ -231,31 +247,12 @@ retry_op:
         case OP_STORE_GLOBAL: {
             PROFILE_START(cache);
             MpObj value = MP_POP();
-            int idx = dict_set0(globals_dict, cache->v.obj, value);
+            
+            MpObj obj = get_cache_obj(cache);
+
+            int idx = dict_set0(globals_dict, obj, value);
             // cache->op = OP_STORE_GLOBAL_FAST;
             // cache->index = idx;
-            PROFILE_END(cache);
-            break;
-        }
-        case OP_LOAD_GLOBAL_FAST: {
-            PROFILE_START(cache);
-            // 需要对比一下key是否匹配,处理命中失败的情况
-            DictNode *node = dict_get_node_by_index(GET_DICT(globals), cache->index);
-            if (node != NULL && is_obj_equals(node->key, cache->v.obj)) {
-                MP_PUSH(node->val);
-                PROFILE_END(cache);
-            } else {
-                cache->index = -1;
-                cache->op = OP_LOAD_GLOBAL;
-                PROFILE_END(cache);
-                goto retry_op;
-            }
-            break;
-        }
-        case OP_STORE_GLOBAL_FAST: {
-            PROFILE_START(cache);
-            // TODO 需要对比一下key是否匹配,处理命中失败的情况
-            GET_DICT(globals)->nodes[cache->index].val = MP_POP();
             PROFILE_END(cache);
             break;
         }
@@ -330,7 +327,7 @@ retry_op:
 
             #endif
             
-            *top = obj_get(*obj, *key);
+            *top = mp_getattr(*obj, *key);
             PROFILE_END(cache);
             break;
         }
@@ -342,18 +339,19 @@ retry_op:
             top--;
 
             if (IS_DICT(*obj)) {
-                DictNode* node = dict_get_node_by_index(GET_DICT(*obj), cache->index);
-                if (node != NULL && is_obj_equals(node->key, *key)) {
+                int index = get_cache_int(cache);
+                DictNode* node = dict_get_node_by_index(GET_DICT(*obj), index);
+                if (node != NULL && mp_is_equals(node->key, *key)) {
                     *top = node->val;
                     PROFILE_END(cache);
                     break;
                 }
             }
 
-            *top = obj_get(*obj, *key);
+            *top = mp_getattr(*obj, *key);
 
             cache->op = OP_GET;
-            cache->index = -1;
+            set_cache_int(cache, 0);
 
             PROFILE_END(cache);
             break;
@@ -368,55 +366,55 @@ retry_op:
         
         case OP_EQEQ: {
             PROFILE_START(cache);
-            *(top-1) = number_obj(is_obj_equals(*(top-1), *top)); 
+            *(top-1) = mp_number(mp_is_equals(*(top-1), *top)); 
             top--; 
             PROFILE_END(cache);
             break; 
         }
         
         case OP_NOTEQ: { 
-            *(top-1) = number_obj(!is_obj_equals(*(top-1), *top)); 
+            *(top-1) = mp_number(!mp_is_equals(*(top-1), *top)); 
             top--; 
             break; 
         }
         
         case OP_LT: {
-            *(top-1) = number_obj(mp_cmp(*(top-1), *top)<0);
+            *(top-1) = mp_number(mp_cmp(*(top-1), *top)<0);
             top--;
             break;
         }
         case OP_LTEQ: {
-            *(top-1) = number_obj(mp_cmp(*(top-1), *top)<=0);
+            *(top-1) = mp_number(mp_cmp(*(top-1), *top)<=0);
             top--;
             break;
         }
         case OP_GT: {
-            *(top-1) = number_obj(mp_cmp(*(top-1), *top)>0);
+            *(top-1) = mp_number(mp_cmp(*(top-1), *top)>0);
             top--;
             break;
         }
         case OP_GTEQ: {
-            *(top-1) = number_obj(mp_cmp(*(top-1), *top)>=0);
+            *(top-1) = mp_number(mp_cmp(*(top-1), *top)>=0);
             top--;
             break;
         }
         case OP_IN: {
-            *(top-1) = number_obj(mp_is_in(*(top-1), *top));
+            *(top-1) = mp_number(mp_is_in(*(top-1), *top));
             top--;
             break;
         }
         case OP_AND: {
-            *(top-1) = number_obj(is_true_obj(*(top-1)) && is_true_obj(*top));
+            *(top-1) = mp_number(mp_is_true(*(top-1)) && mp_is_true(*top));
             top--;
             break;
         }
         case OP_OR: {
-            *(top-1) = number_obj(is_true_obj(*(top-1)) || is_true_obj(*top));
+            *(top-1) = mp_number(mp_is_true(*(top-1)) || mp_is_true(*top));
             top--;
             break;
         }
         case OP_NOT:{
-            *top = number_obj(!is_true_obj(*top));
+            *top = mp_number(!mp_is_true(*top));
             break;
         }
 
@@ -429,7 +427,8 @@ retry_op:
 
             if (obj->type == TYPE_DICT) {
                 /* 没有命中缓存 */
-                cache->index = dict_set0(obj->value.dict, *key, *value);
+                int index = dict_set0(obj->value.dict, *key, *value);
+                set_cache_int(cache, index);
                 cache->op = OP_SET_FAST;
             } else {
                obj_set(*obj, *key, *value);
@@ -448,8 +447,9 @@ retry_op:
             top-=3;
 
             if (IS_DICT(*obj)) {
-                DictNode* node = dict_get_node_by_index(GET_DICT(*obj), cache->index);
-                if (node != NULL && is_obj_equals(node->key, *key)) {
+                int index = get_cache_int(cache);
+                DictNode* node = dict_get_node_by_index(GET_DICT(*obj), index);
+                if (node != NULL && mp_is_equals(node->key, *key)) {
                     // printf("OP_SET_FAST: cache hit, index(%d)\n", cache->index);
                     node->val = *value; 
                     PROFILE_END(cache);
@@ -459,8 +459,8 @@ retry_op:
 
             // printf("OP_SET_FAST: cache miss, index(%d)\n", cache->index);
             // 缓存失效了，重新按照 OP_SET 执行
-            cache->index = -1;
             cache->op = OP_SET;
+            set_cache_int(cache, 0);
             obj_set(*obj, *key, *value);
             break;
         }
@@ -479,20 +479,20 @@ retry_op:
         case OP_CALL: {
             PROFILE_START(cache);
             // n是参数的个数
-            int n = cache->v.ival;
+            int n = get_cache_int(cache);
             
             f->top = top;
             top -= n;
 
             // 当前的*top就是函数对象, top+1开始是参数
             // TODO top+1 can be optimized as locals
-            arg_set_arguments(top + 1, n);
+            mp_set_args(top + 1, n);
             MpObj func = MP_POP();
 
             PROFILE_END(cache);
 
             // 调用函数的时间不算到 OP_CALL的执行时间内
-            MP_PUSH(OBJ_CALL_EX(func));
+            MP_PUSH(MP_CALL_EX(func));
 
             // 恢复当前frame的值
             tm->frame = f;
@@ -501,7 +501,7 @@ retry_op:
             if (tm->allocated > tm->gc_threshold) {
                 // gc_track(func);
                 // mp_printf("gc full at %o\n", func);
-                // printf("gc full at %s\n", obj_to_cstr(func));
+                // printf("gc full at %s\n", mp_to_cstr(func));
                 gc_full();
             }
             break;
@@ -509,11 +509,11 @@ retry_op:
 
         // 尾递归调用
         case OP_TAILCALL: {
-            int n = cache->v.ival;
+            int n = get_cache_int(cache);
             f->top = top;
             top -= n;
             MpObj* first_arg = top+1;
-            arg_set_arguments(top+1, n);
+            mp_set_args(top+1, n);
             MpObj func = MP_POP();
 
             if (NOT_FUNC(func) && NOT_CLASS(func)) {
@@ -523,10 +523,10 @@ retry_op:
             // class也可以直接调用
             if (IS_FUNC(func) && GET_FUNCTION(func)->native == NULL) {
                 /** tail call python function **/
-                arg_start();
+                mp_reset_args();
                 int i = 0;
                 for (i = 0; i < n; i++) {
-                    arg_push(first_arg[i]);
+                    mp_push_arg(first_arg[i]);
                 }
 
                 assert(GET_FUNCTION(func)->resolved == 1);
@@ -546,7 +546,7 @@ retry_op:
                 }
                 goto tailcall;
             } else {
-                return OBJ_CALL_EX(func);
+                return MP_CALL_EX(func);
             }
             break;
         }
@@ -554,20 +554,20 @@ retry_op:
             f->top = top;
             MpObj args = MP_POP();
             mp_assert_type(args, TYPE_LIST, "mp_eval: OP_APPLY");
-            arg_set_arguments(LIST_NODES(args), LIST_LEN(args));
+            mp_set_args(LIST_NODES(args), LIST_LEN(args));
             MpObj func = MP_POP();
-            x = OBJ_CALL_EX(func);
+            x = MP_CALL_EX(func);
             MP_PUSH(x);
             tm->frame = f;
             FRAME_CHECK_GC();
             break;
         }
         case OP_LOAD_PARAMS: {
-            int parg = (cache->v.ival >> 8) & 0xff;
-            int narg = cache->v.ival & 0xff;
-            if (tm->arg_cnt < parg || tm->arg_cnt > parg + narg) {
-                mp_raise("ArgError: parg=%d,narg=%d,given=%d", 
-                    parg, narg, tm->arg_cnt);
+            int parg = cache->a; // positional-argument
+            int varg = cache->b; // argument with default value
+            if (tm->arg_cnt < parg || tm->arg_cnt > parg + varg) {
+                mp_raise("ArgError: parg=%d,varg=%d,given=%d,int=%d", 
+                    parg, varg, tm->arg_cnt, get_cache_int(cache));
             }
             int i;
             for(i = 0; i < tm->arg_cnt; i++){
@@ -576,17 +576,17 @@ retry_op:
             break;
         }
         case OP_LOAD_PARG: {
-            int parg = cache->v.ival;
+            int parg = get_cache_int(cache);
             for (i = 0; i < parg; i++) {
-                locals[i] = arg_take_obj(func_name_cstr);
+                locals[i] = mp_take_obj_arg(func_name_cstr);
             }
             break;
         }
         case OP_LOAD_NARG: {
-            int arg_index = cache->v.ival;
+            int arg_index = get_cache_int(cache);
             MpObj list = list_new(tm->arg_cnt);
-            while (arg_remains() > 0) {
-                obj_append(list, arg_take_obj(func_name_cstr));
+            while (mp_count_remain_args() > 0) {
+                mp_append(list, mp_take_obj_arg(func_name_cstr));
             }
             locals[arg_index] = list;
             break;
@@ -596,13 +596,13 @@ retry_op:
             break;
         }
         case OP_NEXT: {
-            MpObj *next = obj_next(*top);
+            MpObj *next = mp_next(*top);
             if (next != NULL) {
                 MP_PUSH(*next);
                 break;
             } else {
                 // pc += i * 3;
-                cache += cache->v.ival;
+                cache += get_cache_int(cache);
                 continue;
             }
             break;
@@ -610,7 +610,7 @@ retry_op:
         case OP_DEF: {
             MpObj mod = GET_FUNCTION(cur_fnc)->mod;
             MpObj fnc = func_new(mod, NONE_OBJECT, NULL);
-            GET_FUNCTION_NAME(fnc) = cache->v.obj;
+            GET_FUNCTION_NAME(fnc) = get_cache_obj(cache);
             cache = func_resolve_cache(GET_FUNCTION(fnc), cache);
             MP_PUSH(fnc);
             continue;
@@ -620,8 +620,9 @@ retry_op:
             goto end;
         }
         case OP_CLASS: {
-            MpObj class_name = cache->v.obj;
-            MpObj clazz = class_new(class_name);
+            MpObj class_name = get_cache_obj(cache);
+            MpObj mod = GET_FUNCTION(cur_fnc)->mod;
+            MpObj clazz = class_new(class_name, mod);
             dict_set0(GET_DICT(globals), class_name, clazz);
             break;
         }
@@ -633,7 +634,7 @@ retry_op:
         // 翻转堆栈
         // rotate stack
         case OP_ROT: {
-            MpObj* left = top - cache->v.ival + 1;
+            MpObj* left = top - get_cache_int(cache) + 1;
             MpObj* right = top;
             for (; left < right; left++, right--) {
                 MpObj temp = *left;
@@ -660,9 +661,9 @@ retry_op:
         }
 
         case OP_POP_JUMP_ON_FALSE: {
-            if (!is_true_obj(MP_POP())) {
+            if (!mp_is_true(MP_POP())) {
                 // pc += i * 3;
-                cache += cache->v.ival;
+                cache += get_cache_int(cache);
                 continue;
             }
             break;
@@ -670,9 +671,9 @@ retry_op:
 
         case OP_JUMP_ON_TRUE: {
             PROFILE_START(cache);
-            if (is_true_obj(MP_TOP())) {
+            if (mp_is_true(MP_TOP())) {
                 PROFILE_END(cache);
-                cache += cache->v.ival;
+                cache += get_cache_int(cache);
                 continue;
             } else {
                 PROFILE_END(cache);
@@ -682,9 +683,9 @@ retry_op:
 
         case OP_JUMP_ON_FALSE: {
             PROFILE_START(cache);
-            if (!is_true_obj(MP_TOP())) {
+            if (!mp_is_true(MP_TOP())) {
                 PROFILE_END(cache);
-                cache += cache->v.ival;
+                cache += get_cache_int(cache);
                 continue;
             } else {
                 PROFILE_END(cache);
@@ -693,11 +694,11 @@ retry_op:
         }
 
         case OP_UP_JUMP:
-            cache -= cache->v.ival;
+            cache -= get_cache_int(cache);
             continue;
 
         case OP_JUMP:
-            cache += cache->v.ival;
+            cache += get_cache_int(cache);
             continue;
 
         case OP_EOP:
@@ -714,7 +715,7 @@ retry_op:
 
         case OP_SETJUMP: { 
             f->last_top = top; 
-            f->cache_jmp = cache + cache->v.ival;
+            f->cache_jmp = cache + get_cache_int(cache);
             break; 
         }
 
@@ -726,7 +727,7 @@ retry_op:
 
         case OP_LINE: {
             PROFILE_START(cache);
-            f->lineno = cache->v.ival; 
+            f->lineno = get_cache_int(cache);
             PROFILE_END(cache);
             break;
         }
@@ -735,7 +736,7 @@ retry_op:
             #if 0
             MpObj fdebug = mp_get_global_by_cstr(globals, "__debug__");
             f->top = top;
-            mp_call(0, fdebug, 1, number_obj(tm->frame - tm->frames));        
+            mp_call(0, fdebug, 1, mp_number(tm->frame - tm->frames));        
             break;
             #endif
         }
@@ -747,7 +748,7 @@ retry_op:
 
         default:
             mp_raise("BAD INSTRUCTION, %d\n  globals() = \n%o", cache->op,
-                    obj_get_globals(f->fnc));
+                    mp_get_globals(f->fnc));
             goto end;
         }
 
@@ -759,6 +760,6 @@ retry_op:
     if (top != f->stack) {
         mp_raise("mp_eval: operand stack overflow");
     }*/
-    pop_frame();
+    mp_pop_frame();
     return ret;
 }

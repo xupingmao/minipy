@@ -5,7 +5,7 @@
 
 import mp_encode
 
-PRINT_STR_LEN = 40
+PRINT_STR_LEN = 100
 compilefile = mp_encode.compilefile
 
 def repl_print(p, n = 0, depth = 2):

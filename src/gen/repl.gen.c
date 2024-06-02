@@ -1,6 +1,6 @@
 const char* repl_bin="31\n2#string\n32\n2#number\n32\n26##10\n69#\n"
 "63#6\n2#mp_encode\n1#1\n"
-"63#8\n3#40.0\n26#PRINT_STR_LEN\n"
+"63#8\n3#100.0\n26#PRINT_STR_LEN\n"
 "63#9\n28#mp_encode\n2#compilefile\n22\n26#compilefile\n"
 "63#11\n51#repl_print\n3\n25#1\n3#2.0\n25#2\n"
 "63#11\n57#258\n"

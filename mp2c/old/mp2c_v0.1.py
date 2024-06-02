@@ -9,7 +9,7 @@ mp_obj               = "MpObj "
 mp_const             = "MpObj const_"
 mp_pusharg           = "mp_pusharg("
 mp_call              = "mp_call("
-mp_num               = "number_obj("
+mp_num               = "mp_number("
 mp_str               = "string_static"
 mp_get_glo           = "mp_get_global_by_cstr"
 mp_define            = "def_func"
@@ -18,8 +18,8 @@ mp_call_native       = "mp_call_native"
 mp_call_native_0     = "mp_call_native_0"
 mp_call_native_1     = "mp_call_native_1"
 mp_call_native_2     = "mp_call_native_2"
-arg_insert           = "arg_insert"
-func_bool            = "is_true_obj"
+mp_insert_arg           = "mp_insert_arg"
+func_bool            = "mp_is_true"
 func_add             = "obj_add"
 func_sub             = "obj_sub"
 func_mul             = "obj_mul"
@@ -299,7 +299,7 @@ def gen_constants_init(env):
     for const in env.consts:
         h = env.get_const(const) + "="
         if gettype(const) == "number":
-            body = "number_obj(" + str(const) + ");"
+            body = "mp_number(" + str(const) + ");"
         elif gettype(const) == "string":
             body = "{}({});".format(mp_str, get_string_def(str(const)))
         define_lines.append(h+body)
@@ -326,7 +326,7 @@ class Generator:
         head += '#include "../src/vm.c"\n'
         head += '#include "../mp2c/mp2c.c"\n'
         head += "#define S string_new\n"
-        head += "#define N number_obj\n"
+        head += "#define N mp_number\n"
         return head
 
     def process(self, lines):
@@ -535,7 +535,7 @@ def do_for(item, env, indent=0):
     key = do_name(names[0], env);
     init = sformat("%s = iter_new(%s);", temp, iterator)
     init += "\n" + "MpObj* " + temp_ptr + ";";
-    get_next = "{} = obj_next({})".format(temp_ptr, temp)
+    get_next = "{} = mp_next({})".format(temp_ptr, temp)
     # head = "while ({} != NULL)".format(temp_ptr)
     key_assignment = "{} = *{};".format(keyname, temp_ptr)
 
@@ -686,7 +686,7 @@ def do_class(item, env):
         lines.append("{}(d, {}, {});".format(def_native_method, constname, env.get_c_func_def(method_name)))
 
     if init_func != None:
-        lines.append("{}(d);".format(arg_insert))
+        lines.append("{}(d);".format(mp_insert_arg))
         lines.append("{}();".format(init_func))
 
     lines.append("return d;");
@@ -763,17 +763,17 @@ def do_ge(item, env):
     return do_op(item, env, func_GE)
 
 def do_ne(item, env):
-    return "(" + do_op(item, env, "!is_obj_equals", "!=") + ")"
+    return "(" + do_op(item, env, "!mp_is_equals", "!=") + ")"
     
 def do_eq(item, env):
-    return do_op(item, env, "is_obj_equals", "==")
+    return do_op(item, env, "mp_is_equals", "==")
     
 def do_not(item, env):
     value = do_item(item.first, env)
     if value is None:
         raise Exception("do_not: value is None")
-    if not value.startswith("is_true_obj"):
-        return "!is_true_obj(" + value + ")"
+    if not value.startswith("mp_is_true"):
+        return "!mp_is_true(" + value + ")"
     return sformat("!(%s)", value)
 
 def do_notin(item, env):

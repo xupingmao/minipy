@@ -1,5 +1,5 @@
 
-import debug
+import mp_debug
 import random
 
 def rand_str(length):
@@ -16,7 +16,7 @@ def main(n):
 	for i in range(n):
 		key = rand_str(5)
 		d[key] = 1
-	debug.print_dict_info(d)
+	mp_debug.print_dict_info(d)
 
 main(5)
 print("-" * 50)

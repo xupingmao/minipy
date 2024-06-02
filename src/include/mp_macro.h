@@ -59,6 +59,7 @@
 #define GET_MOD(obj) GET_VAL(obj).mod
 #define GET_LIST(obj) GET_VAL(obj).list
 #define GET_CLASS(obj) GET_VAL(obj).clazz
+#define GET_INSTANCE(obj) GET_VAL(obj).instance
 
 #define DICT_LEN(obj)  GET_DICT(obj)->len
 #define DICT_NODES(obj) GET_DICT(obj)->nodes
@@ -77,6 +78,7 @@
 #define IS_DATA(obj)   (MP_TYPE(obj) == TYPE_DATA)
 #define IS_NATIVE(obj) (GET_FUNCTION(obj)->native != NULL)
 #define IS_MODULE(obj) (MP_TYPE(obj) == TYPE_MODULE)
+#define IS_INSTANCE(obj) (MP_TYPE(obj) == TYPE_INSTANTCE)
 
 #define NOT_NONE(obj) (MP_TYPE(obj) != TYPE_NONE)
 #define NOT_LIST(obj) (MP_TYPE(obj) != TYPE_LIST)
@@ -86,7 +88,7 @@
 #define NOT_NATIVE(obj) (GET_FUNCTION(obj)->native == NULL)
 #define NOT_CLASS(obj) (MP_TYPE(obj) != TYPE_CLASS)
 
-#define ASSERT_VALID_OBJ(obj) assert((obj).type >= TYPE_STR && (obj).type <= TYPE_CLASS)
+#define ASSERT_VALID_OBJ(obj) assert((obj).type >= TYPE_MIN && (obj).type <= TYPE_MAX)
 
 #define ASSERT_TYPE_WITH_INFO(obj, type, info) \
     if(MP_TYPE(obj)!=type){                    \
@@ -102,7 +104,7 @@
 
 /* assert macro */
 #define MP_ASSERT(cond, msg) if(!(cond)) {mp_raise( msg );}
-#define RESOLVE_METHOD_SELF(fnc) resolve_self_by_func_ptr(GET_FUNCTION((fnc)))
+#define RESOLVE_METHOD_SELF(fnc) mp_resolve_self_by_func_ptr(GET_FUNCTION((fnc)))
 
 /* gcc process ++ from right to left */
 #define READ_BYTE(s) *s++
@@ -123,9 +125,9 @@
 
 
 #ifdef MP_DEBUG
-    #define OBJ_CALL_EX(a) obj_call((a), __FILE__, __LINE__)
+    #define MP_CALL_EX(a) mp_call_obj((a), __FILE__, __LINE__)
 #else
-    #define OBJ_CALL_EX(a) obj_call((a))
+    #define MP_CALL_EX(a) mp_call_obj((a))
 #endif
 
 

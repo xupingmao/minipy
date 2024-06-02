@@ -3,9 +3,9 @@
 # @author xupingmao
 # @since 2016
 # @modified 2020/09/30 16:49:29
-from encode import *
+from mp_encode import *
 from boot import *
-from mp_code import *
+from mp_opcode import *
 import sys
 
 if "exists" not in globals():
@@ -21,8 +21,8 @@ class Lib:
         self.path = path
         
 __libs = [
-    Lib("init", "init.py"),
-    Lib("mp_tokenize", "mp_lex.py"), 
+    Lib("mp_init", "mp_init.py"),
+    Lib("mp_tokenize", "mp_tokenize.py"), 
     Lib("mp_parse",  "mp_parse.py"), 
     Lib("mp_opcode", "mp_opcode.py"),
     Lib("mp_encode", "mp_encode.py"),
@@ -67,7 +67,7 @@ def build(cc="tcc", libs=None, dst_path = "../bin.c"):
         print("file not modified, bye")
         return
     print("generate instruction.h ...")
-    export_clang_define("../include/instruction.h", "mpcode.py")
+    export_clang_define("../include/instruction.h", "mp_opcode.py")
     print("build successfull!")
     """
     if cc != None:

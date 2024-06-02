@@ -15,7 +15,7 @@ int main(int argc, char *argv[]) {
     /* use first frame */
     int code = setjmp(tm->frames->buf);
     if (code == 0) {
-        obj_set_by_cstr(tm->builtins, "MP_USE_CACHE", number_obj(1));
+        obj_set_by_cstr(tm->builtins, "MP_USE_CACHE", mp_number(1));
         vm_load_py_modules();
         load_pack_main();
     } else if (code == 1){
