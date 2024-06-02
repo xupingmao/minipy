@@ -24,6 +24,10 @@ def exec_bench(executable, fpath):
 	# print("CMD:", cmd)
 	os.system(cmd)
 
+def exists_tinypy():
+	ret = os.system("build/tinypy")
+	return ret == 0
+
 def main():
 	parser = argparse.ArgumentParser("Minipy基准测试")
 	parser.add_argument("--micropython", action = "store_true")
@@ -56,9 +60,10 @@ def main():
 		# print(">>> Run with minipy-mp2c")
 		# os.system("./minipyc %r -o %r.out && ./%r.out" % fpath)
 
-		print("-" * 60)
-		print(">>> Run with tinypy")
-		exec_bench("build/tinypy", fpath)
+		if exists_tinypy():
+			print("-" * 60)
+			print(">>> Run with tinypy")
+			exec_bench("build/tinypy", fpath)
 
 		if args.micropython:
 			print("-" * 60)

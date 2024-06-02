@@ -41,5 +41,6 @@ void mp_resolve_code(MpModule* m, const char* code);
 void class_set_attr(MpClass* klass, MpObj key, MpObj value);
 MpObj mp_call_func_safe(MpObj func, int n, MpObj* args);
 MpObj mp_format_instance(MpInstance* instance);
+int mp_is_in_instance(MpInstance* instance, MpObj key);
 
 #endif

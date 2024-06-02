@@ -4,7 +4,7 @@ Author: xupingmao
 email: 578749341@qq.com
 Date: 2023-12-07 22:03:29
 LastEditors: xupingmao
-LastEditTime: 2024-06-02 01:07:24
+LastEditTime: 2024-06-02 12:26:44
 FilePath: /minipy/src/python/mp_init.py
 Description: 描述
 '''
@@ -365,6 +365,9 @@ def boot(loadlibs=True):
             execfile(argv[0])
         elif argv[0] == "-dis":
             dis(argv[1])
+        elif argv[0] == "-parse":
+            tree = parsefile(sys.argv[1])
+            print_ast(tree)
         elif argv[0] == "-h" or argv[0] == "--help":
             print_init_help()
         else:

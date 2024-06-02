@@ -121,3 +121,21 @@ MpObj mp_format_instance(MpInstance* instance) {
     return string_new(fmt);
 }
 
+int mp_is_in_instance(MpInstance* instance, MpObj key) {
+    assert(instance != NULL);
+    
+    // 查询对象属性
+    DictNode* attr_node = dict_get_node(instance->dict, key);
+    if (attr_node != NULL) {
+        return 1;
+    }
+    // 查询类属性
+    MpClass* klass = instance->klass;
+    assert (klass != NULL);
+
+    DictNode* class_attr_node = dict_get_node(klass->attr_dict, key);
+    if (class_attr_node != NULL) {
+        return 1;
+    }
+    return 0;
+}

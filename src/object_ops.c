@@ -458,7 +458,7 @@ int mp_is_in(MpObj child, MpObj parent) {
         case TYPE_FUNCTION:
             return 0;
         case TYPE_INSTANTCE:
-            return 0;
+            return mp_is_in_instance(GET_INSTANCE(parent), child);
         /* TODO DATA */
         default:
             mp_raise("obj_is_in: cant handle type (%s)",
