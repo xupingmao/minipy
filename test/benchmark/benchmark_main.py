@@ -1,12 +1,12 @@
 # -*- coding:utf-8 -*-
 '''
-Author: xupingmao
-email: 578749341@qq.com
-Date: 2023-12-07 22:03:29
-LastEditors: xupingmao
-LastEditTime: 2024-05-25 07:27:33
-FilePath: /minipy/test/benchmark/benchmark_main.py
-Description: 描述
+@Author: xupingmao
+@email: 578749341@qq.com
+@Date: 2023-12-07 22:03:29
+@LastEditors: xupingmao
+@LastEditTime: 2024-05-25 07:27:33
+@FilePath: /minipy/test/benchmark/benchmark_main.py
+@Description: 描述
 '''
 import time
 import os
@@ -49,7 +49,7 @@ def main():
 		print("File:", fname)
 		print("-" * 60)
 		print(">>> Run with Python3")
-		exec_bench("python3", fpath)
+		exec_bench(sys.executable, fpath)
 		
 
 		print("-" * 60)

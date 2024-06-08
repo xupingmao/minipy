@@ -3,8 +3,8 @@
  * @email: 578749341@qq.com
  * @Date: 2024-04-14 19:14:16
  * @LastEditors: xupingmao
- * @LastEditTime: 2024-06-02 17:14:22
- * @FilePath: /minipy/src/include/object.h
+ * @LastEditTime: 2024-06-08 21:35:46
+ * @FilePath: \minipy\src\include\object.h
  * @Description: 描述
  */
 /*
@@ -37,10 +37,6 @@
 #define MAX_FILE_SIZE 1024 * 1024 * 5 /* max file size loaded into memery */
 #include <stdint.h>
 #include <setjmp.h>
-
-#ifndef BOOL
-#define BOOL char
-#endif
 
 #define TRUE 1
 #define FALSE 0
@@ -226,7 +222,7 @@ typedef struct MpVm {
     int debug;
 
     // mp2c模式
-    BOOL mp2c_mode;
+    char mp2c_mode;
     int mp2c_lineno;
 
     /* program arguments */
