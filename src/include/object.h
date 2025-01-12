@@ -38,10 +38,7 @@
 #include <stdint.h>
 #include <setjmp.h>
 
-#ifndef BOOL
-#define BOOL char
-#endif
-
+#define MpBool char
 #define TRUE 1
 #define FALSE 0
 
@@ -226,7 +223,7 @@ typedef struct MpVm {
     int debug;
 
     // mp2c模式
-    BOOL mp2c_mode;
+    MpBool mp2c_mode;
     int mp2c_lineno;
 
     /* program arguments */
