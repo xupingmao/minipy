@@ -96,16 +96,9 @@ MpCodeCache* func_resolve_cache(MpFunction* fnc, MpCodeCache* cache) {
     return fnc->cache_end;
 }
 
-MpObj func_new(MpObj mod, MpObj self, MpNativeFunc native_func) {
+MpObj func_new(MpModule* mod, MpObj self, MpNativeFunc native_func) {
     /* module可以为空或者Module类型 */
-    if (MP_TYPE(mod) != TYPE_MODULE) {
-        printf("func_new: expect <module> but got %d\n", MP_TYPE(mod));
-        mp_raise("func_new: expect <module>");
-    }
-
-    assert(MP_TYPE(mod) == TYPE_MODULE);
-
-    mp_assert_type2(mod, TYPE_MODULE, TYPE_NONE, "func_new");
+    assert(mod != NULL);
 
     MpFunction* f = mp_malloc(sizeof(MpFunction), "func.new");
     f->resolved = 0;
@@ -118,13 +111,13 @@ MpObj func_new(MpObj mod, MpObj self, MpNativeFunc native_func) {
     return gc_track(mp_to_obj(TYPE_FUNCTION, f));
 }
 
-MpFunction* mp_new_native_func(MpObj module, MpNativeFunc native_func) {
+MpFunction* mp_new_native_func(MpModule* module, MpNativeFunc native_func) {
     assert(native_func != NULL);
     MpObj result = func_new(module, NONE_OBJECT, native_func);
     return GET_FUNC(result);
 }
 
-MpObj mp_new_native_func_obj(MpObj module, MpNativeFunc native_func) {
+MpObj mp_new_native_func_obj(MpModule* module, MpNativeFunc native_func) {
     assert(native_func != NULL);
     return func_new(module, NONE_OBJECT, native_func);
 }
@@ -221,7 +214,7 @@ MpObj func_get_attr(MpFunction* fnc, MpObj key) {
 
 MpObj func_get_mod_obj(MpFunction* fnc) {
     assert(fnc != NULL);
-    return fnc->mod;
+    return mp_to_obj(TYPE_MODULE, fnc->mod);
 }
 
 unsigned char* func_get_code(MpFunction* fnc) {
@@ -233,13 +226,8 @@ unsigned char* func_get_code(MpFunction* fnc) {
 
 MpObj func_get_globals(MpFunction* fnc) {
     assert(fnc != NULL);
-    if (MP_TYPE(fnc->mod) != TYPE_MODULE) {
-        mp_raise(
-            "func_get_globals: expect module but see type:%d (func:%o) "
-            "func_addr:%p",
-            MP_TYPE(fnc->mod), fnc->name, fnc);
-    }
-    return GET_MODULE(fnc->mod)->globals;
+    assert(fnc->mod != NULL);
+    return fnc->mod->globals;
 }
 
 int func_get_max_locals(MpFunction* fnc) {
@@ -265,7 +253,7 @@ char* func_get_name_cstr(MpObj func) {
  */
 MpObj func_get_file_name_obj(MpObj func) {
     if (IS_FUNC(func)) {
-        return mp_to_obj(TYPE_STR, GET_MODULE(GET_FUNCTION(func)->mod)->file);
+        return mp_to_obj(TYPE_STR, GET_FUNCTION(func)->mod->file);
     }
     return NONE_OBJECT;
 }

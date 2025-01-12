@@ -24,7 +24,7 @@
 #include "dict.c"
 #include "dict_set.c"
 #include "function.c"
-#include "klass.c"
+#include "class_.c"
 #include "exception.c"
 #include "argument.c"
 #include "execute.c"
@@ -58,31 +58,21 @@ void mp_reg_builtin_func(char* name, MpObj (*native)()) {
     MpModule_RegFunc(tm->builtins, name, native);
 }
 
-void mp_reg_method(MpObj class_obj, char* name, MpObj (*native)()) {
-    mp_assert_type(class_obj, TYPE_CLASS, "mp_reg_method");
-    MpClass* clazz = GET_CLASS(class_obj);
-    MpDict* attr_dict = clazz->attr_dict;
-    MpObj func = func_new(tm->builtins_mod, NONE_OBJECT, native);
-    GET_FUNCTION(func)->name = string_new(name);
-    
-    dict_set_by_cstr(attr_dict, name, func);
-}
-
 /**
  * @since 2016-11-20
  */
 MpObj load_file_module(MpObj file, MpObj code, MpObj name) {
-    MpObj mod = module_new(file, name, code);
+    MpModule* mod = module_new(file, name, code);
     // resolve cache
-    mp_resolve_code(GET_MODULE(mod), GET_CSTR(code));
+    mp_resolve_code(mod, GET_CSTR(code));
 
     MpObj fnc = func_new(mod, NONE_OBJECT, NULL);
     GET_FUNCTION(fnc)->code = (unsigned char*) GET_CSTR(code);
     GET_FUNCTION(fnc)->name = string_new("#main");
-    GET_FUNCTION(fnc)->cache = GET_MODULE(mod)->cache;
+    GET_FUNCTION(fnc)->cache = mod->cache;
     GET_FUNCTION(fnc)->resolved = 1;
     MP_CALL_EX(fnc);
-    return GET_MODULE(mod)->globals;
+    return mod->globals;
 }
 
 /**
@@ -92,18 +82,18 @@ MpObj load_boot_module(char* sz_filename, const char* sz_code) {
     MpObj name = string_new(sz_filename);
     MpObj file = name;
     MpObj code = string_new("");
-    MpObj mod  = module_new(file, name, code);
+    MpModule* mod  = module_new(file, name, code);
     
-    mp_resolve_code(GET_MODULE(mod), sz_code);
+    mp_resolve_code(mod, sz_code);
     MpObj fnc = func_new(mod, NONE_OBJECT, NULL);
     GET_FUNCTION(fnc)->code = (unsigned char*) GET_CSTR(code);
     GET_FUNCTION(fnc)->name = string_new("#main");
-    GET_FUNCTION(fnc)->cache = GET_MODULE(mod)->cache;
+    GET_FUNCTION(fnc)->cache = mod->cache;
     GET_FUNCTION(fnc)->resolved = 1;
     
     MP_CALL_EX(fnc);
     
-    return GET_MODULE(mod)->globals;
+    return mod->globals;
 }
 
 /**

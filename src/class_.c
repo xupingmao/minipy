@@ -1,3 +1,4 @@
+#include "include/class_.h"
 #include "include/mp.h"
 
 static MpObj instance_getattr();
@@ -67,13 +68,13 @@ MpObj mp_get_instance_attr(MpInstance* instance, MpObj key) {
     return NONE_OBJECT;
 }
 
-MpObj class_new(MpObj name, MpObj module) {
+MpObj class_new(MpObj name, MpModule* module) {
     // TODO add class type
     assert(IS_STR(name));
-    assert(IS_MODULE(module));
+    assert(module != NULL);
 
     MpClass* klass = mp_malloc(sizeof(MpClass), "class.new");
-    klass->module = GET_MODULE(module);
+    klass->module = module;
     klass->name = name.value.str;
     klass->attr_dict = dict_new_ptr();
     klass->__init__ = NONE_OBJECT;
@@ -94,13 +95,16 @@ void class_set_attr(MpClass* klass, MpObj key, MpObj value) {
     dict_set0(klass->attr_dict, key, value);
 }
 
-MpObj class_new_by_cstr(char* name, MpObj module) {
+MpObj class_new_by_cstr(char* name, MpModule* module) {
     MpObj name_obj = string_new(name);
     return class_new(name_obj, module);
 }
 
-MpClass* class_new_ptr_by_cstr(char* name, MpModule* module) {
-    MpObj klass = class_new_by_cstr(name, mp_to_obj(TYPE_MODULE, module));
+MpClass* MpClass_New(char* name, MpModule* module) {
+    assert (name != NULL);
+    assert (module != NULL);
+
+    MpObj klass = class_new_by_cstr(name, module);
     return GET_CLASS(klass);
 }
 
@@ -169,4 +173,16 @@ int mp_is_in_instance(MpInstance* instance, MpObj key) {
         return 1;
     }
     return 0;
+}
+
+void MpClass_RegNativeMethod(MpClass* clazz, char* name, MpObj (*native)()) {
+    MpDict* attr_dict = clazz->attr_dict;
+    MpObj func = func_new(tm->builtins_mod, NONE_OBJECT, native);
+    GET_FUNCTION(func)->name = string_new(name);
+    dict_set_by_cstr(attr_dict, name, func);
+}
+
+MpObj MpClass_ToObj(MpClass* class_) {
+    assert (class_ != NULL);
+    return mp_to_obj(TYPE_CLASS, class_);
 }

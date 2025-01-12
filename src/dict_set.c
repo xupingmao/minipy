@@ -69,11 +69,10 @@ static MpObj DictSet_init() {
 
 void DictSet_InitMethods() {
     // TODO 目前实现有问题
-    MpObj set_class = class_new_by_cstr("set", tm->builtins_mod);
+    MpClass* set_class = MpClass_New("set", tm->builtins_mod);
     /* build dict class */
-    mp_reg_method(set_class, "add", DictSet_add);
-    mp_reg_method(set_class, "remove", DictSet_remove);
-    mp_reg_method(set_class, "__init__", DictSet_init);
-
-    obj_set_by_cstr(tm->builtins, "set", set_class);
+    MpClass_RegNativeMethod(set_class, "add", DictSet_add);
+    MpClass_RegNativeMethod(set_class, "remove", DictSet_remove);
+    MpClass_RegNativeMethod(set_class, "__init__", DictSet_init);
+    obj_set_by_cstr(tm->builtins, "set", MpClass_ToObj(set_class));
 }

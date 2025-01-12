@@ -11,7 +11,7 @@ void module_free(MpModule* mod){
  * @param file filename
  * @name  __name__
  */
-MpObj module_new(MpObj fname, MpObj name, MpObj code){
+MpModule* module_new(MpObj fname, MpObj name, MpObj code){
   MpModule *mod = mp_malloc(sizeof(MpModule), "module.new");
   mod->file = GET_STR_OBJ(fname);
   mod->code = code;
@@ -24,7 +24,7 @@ MpObj module_new(MpObj fname, MpObj name, MpObj code){
   /* set module */
   obj_set(tm->modules, fname, mod->globals);
   obj_set(mod->globals, string_static("__name__"), name);
-  return m;
+  return mod;
 }
 
 

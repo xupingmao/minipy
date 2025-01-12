@@ -150,7 +150,7 @@ static MpObj mp_getfname(MpObj fnc) {
     if (NOT_FUNC(fnc)) {
         mp_raise("mp_getfname expect function");
     }
-    MpModule*module = GET_MODULE(GET_FUNCTION(fnc)->mod);
+    MpModule*module = GET_FUNCTION(fnc)->mod;
     return mp_to_obj(TYPE_STR, module->file);
 }
 

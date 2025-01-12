@@ -98,7 +98,7 @@
 
 /* for instruction read */
 
-#define GET_FUNCTION_FILE(fnc) GET_MODULE(GET_FUNCTION(fnc)->mod)->file
+#define GET_FUNCTION_FILE(fnc) GET_FUNCTION(fnc)->mod->file
 #define GET_FUNCTION_NAME(fnc) GET_FUNCTION(fnc)->name
 // #define GET_FUNCTION_GLOBALS(fnc) GET_MODULE(GET_FUNCTION(fnc)->mod)->globals
 

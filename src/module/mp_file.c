@@ -49,7 +49,7 @@ MpObj bf_open() {
     }
 
     if (file_class == NULL) {
-        file_class = class_new_ptr_by_cstr("fileobject", GET_MODULE(tm->builtins_mod));
+        file_class = MpClass_New("fileobject", tm->builtins_mod);
         file_class->__str__ = mp_new_native_func_obj(tm->builtins_mod, bf_file_str);
         class_set_attr(file_class, string_const("write"), mp_new_native_func_obj(tm->builtins_mod, bf_file_write));
         class_set_attr(file_class, string_const("read"), mp_new_native_func_obj(tm->builtins_mod, bf_file_read));

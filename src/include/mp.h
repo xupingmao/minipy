@@ -139,6 +139,7 @@ int mp_count_arg();
 int mp_count_remain_args();
 
 #include "function.h"
+#include "class_.h"
 
 MpObj data_new(size_t size);
 MpData* data_new_ptr(size_t size);
@@ -195,7 +196,6 @@ void mp_reg_builtin_func(char* name, MpObj (*native_func)());
 MpObj mp_new_native_module(char* name);
 void MpModule_RegFunc(MpObj mod, char* name, MpObj (*native_func)());
 void MpModule_RegAttr(MpObj mod, char* attr, MpObj value);
-void mp_reg_method(MpObj clazz, char* name, MpObj (*native_func)());
 int obj_eq_cstr(MpObj str, const char* value);
 void mp_raise(char* fmt, ...);
 void vm_destroy();

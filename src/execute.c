@@ -608,7 +608,7 @@ retry_op:
             break;
         }
         case OP_DEF: {
-            MpObj mod = GET_FUNCTION(cur_fnc)->mod;
+            MpModule* mod = GET_FUNCTION(cur_fnc)->mod;
             MpObj fnc = func_new(mod, NONE_OBJECT, NULL);
             GET_FUNCTION_NAME(fnc) = get_cache_obj(cache);
             cache = func_resolve_cache(GET_FUNCTION(fnc), cache);
@@ -621,7 +621,7 @@ retry_op:
         }
         case OP_CLASS: {
             MpObj class_name = get_cache_obj(cache);
-            MpObj mod = GET_FUNCTION(cur_fnc)->mod;
+            MpModule* mod = GET_FUNCTION(cur_fnc)->mod;
             MpObj clazz = class_new(class_name, mod);
             dict_set0(GET_DICT(globals), class_name, clazz);
             break;

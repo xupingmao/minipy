@@ -113,7 +113,7 @@ typedef struct MpFunction {
     MpObj self;
     // type: None or MpModule
     // desc: Includes globals, constants, etc.
-    MpObj mod;
+    MpModule* mod;
     MpObj name;
     MpObj (*native)();
 } MpFunction;
@@ -266,7 +266,7 @@ typedef struct MpVm {
     MpObj modules;      /* type: dict */
     MpObj builtins;     /* type: dict, builtins functions */
     MpObj root;         /* type: list */
-    MpObj builtins_mod; /* 内置模块 */
+    MpModule* builtins_mod; /* 内置模块 */
 
     int steps; /* record opcode steps executed */
     int init;  /* modules and builtins init */

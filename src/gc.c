@@ -35,6 +35,7 @@ void gc_init_frames();
 static const char* gc_mark_ex(MpObj, const char*);
 static void gc_mark_str(MpStr*str);
 static void gc_mark_instance(MpInstance* instance);
+static void gc_mark_module(MpModule* pmodule);
 static void free_instance(MpInstance* instance);
 static void obj_free(MpObj o);
 static void data_free(MpData* data);
@@ -245,7 +246,7 @@ void gc_mark_func(MpFunction* func) {
         return;   
     }
     func->marked = GC_REACHED_SIGN;
-    gc_mark_ex(func->mod, "func.mod");
+    gc_mark_module(func->mod);
     gc_mark_ex(func->self, "func.self");
     gc_mark_ex(func->name, "func.name");
 }
@@ -289,7 +290,8 @@ void gc_mark_single(MpObj o) {
     GC_MARKED(o) = 1;
 }
 
-void gc_mark_module(MpModule* pmodule) {
+static void gc_mark_module(MpModule* pmodule) {
+    assert (pmodule != NULL);
     if (pmodule->marked) {
         return;
     }
@@ -456,7 +458,7 @@ void gc_mark_all() {
     gc_mark_and_check(tm->builtins, "builtins");
     gc_mark_and_check(tm->modules, "modules");
     gc_mark_dict(tm->constants);
-    gc_mark_and_check(tm->builtins_mod, "builtins_mod");
+    gc_mark_module(tm->builtins_mod);
 
     gc_mark_obj(tm->root);
     gc_mark_frames();
