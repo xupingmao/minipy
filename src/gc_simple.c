@@ -18,3 +18,47 @@
  * 
  */
 
+void mp_gc_start() {}
+void mp_gc_stop() {}
+
+void* mp_malloc(size_t size, const char* scene) {
+    void* block = NULL;
+    MpObj* func = NULL;
+
+    if (size <= 0) {
+        mp_raise("mp_malloc: attempts to allocate a memory block of size %d!",
+                 size);
+        return NULL;
+    }
+    block = malloc(size);
+    if (block == NULL) {
+        mp_raise("mp_malloc: fail to malloc memory block of size %d", size);
+    }
+
+    memset(block, 0, size);
+
+    tm->allocated += size;
+    tm->max_allocated = max(tm->max_allocated, tm->allocated);
+
+#ifdef MP_DEBUG
+    gc_debug_malloc(block, scene, size);
+#endif
+
+    return block;
+}
+
+
+void mp_free(void* ptr, size_t size) {
+    if (ptr == NULL) {
+        return;
+    }
+
+#ifdef MP_DEBUG
+    gc_debug_free(ptr, size);
+#endif
+
+    memset(ptr, 0, size);
+
+    free(ptr);
+    tm->allocated -= size;
+}

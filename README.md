@@ -115,6 +115,8 @@ python3 build.py pack
 更多有意思的编译器项目
 - [ShivyC](https://github.com/ShivamSarodia/ShivyC) 一个Python编写的C语言编译器
 - [NASM](https://github.com/netwide-assembler/nasm) 跨平台的x86汇编和反汇编器
+- [bdwgc](https://github.com/ivmai/bdwgc) 一个为C/C++语言打造的GC模块，生产环境广泛应用
+- [mkirchner/gc]() 一个更简单的C语言GC库，用于学习
 
 ### 协议
 

@@ -139,7 +139,6 @@ int vm_init(int argc, char* argv[]) {
     #endif
 
     tm = &_vm;
-
     log_init();
     
     // vm init done at gc_init()

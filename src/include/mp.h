@@ -144,11 +144,9 @@ MpObj data_new(size_t size);
 MpData* data_new_ptr(size_t size);
 MpObj data_ptr_to_obj(MpData* ptr);
 void data_mark(MpData* ptr);
-void data_free(MpData* ptr);
 void data_set(MpData*, MpObj, MpObj);
 MpObj data_get(MpData*, MpObj);
 MpObj data_str(MpData* self);
-void obj_free(MpObj o);
 
 /**
  * ops functions

@@ -21,7 +21,7 @@ void        gc_init();
 MpObj       gc_track(MpObj obj);
 void        gc_destroy();
 void        gc_full();
-void        gc_mark(MpObj);
+void        gc_mark_obj(MpObj);
 void        gc_unmark(MpObj);
 void        gc_mark_single(MpObj);
 const char* gc_mark_list(MpList*);

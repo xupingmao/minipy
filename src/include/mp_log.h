@@ -20,7 +20,7 @@
 #define DEBUG2(msg1, msg2) \
     printf("--DEBUG %s %s\n", msg1, msg2);
 
-#define LOG_INFO printf
+#define MP_LOG_INFO printf
 
 void log_init();
 void log_destroy();

@@ -45,8 +45,8 @@ debug:src/*.c src/include/*.h
 nogc:
 	$(cc) -g -DGC_DESABLED -o minipy src/main.c -lm
 
-bdwgc:
-	$(cc) -g -DMP_USE_BDWGC -o minipy src/main.c -lm -I src/deps/bdwgc/include
+gc_malloc:
+	$(cc) -g -DMP_ENABLE_GC_MALLOC -DENABLE_MINI_GC_DEBUG -o minipy src/main.c -lm -I src/deps/bdwgc/include
 
 check-mem: 
 	$(cc) -DTM_CHECK_MEM -o minipy src/main.c -lm

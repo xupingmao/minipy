@@ -1,4 +1,5 @@
 #include <Windows.h>
+#include <stdint.h>
 
 static int64_t win32_get_nano_seconds() {
     /* FILETIME 包含一个 64 位值，表示自 1601 年 1 月 1 日 (UTC) 以来的 100 纳秒间隔数。*/

@@ -23,7 +23,7 @@ typedef struct TypeAndDouble_t {
 static MpObj bf_inspect_ptr() {
     double _ptr = mp_take_double_arg("inspect_ptr");
     int idx = mp_take_int_arg("inspect_ptr");
-    char* ptr = (char*)(long long)_ptr;
+    char* ptr = (char*)(int)_ptr;
     return string_chr(ptr[idx]);
 }
 

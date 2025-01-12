@@ -21,10 +21,10 @@
 #include "include/mp.h"
 #include "log.c"
 
-#ifdef MP_USE_BDWGC
-#include "gc_bdwgc.c"
+#ifdef MP_ENABLE_GC_MALLOC
+    #include "gc_malloc.c"
 #else
-#include "gc_simple.c"
+    #include "gc_simple.c"
 #endif
 
 #include "gc_debug.c"
@@ -36,6 +36,9 @@ static const char* gc_mark_ex(MpObj, const char*);
 static void gc_mark_str(MpStr*str);
 static void gc_mark_instance(MpInstance* instance);
 static void free_instance(MpInstance* instance);
+static void obj_free(MpObj o);
+static void data_free(MpData* data);
+
 
 #define GC_CONSTANS_LEN 10
 #define GC_REACHED_SIGN 1
@@ -48,6 +51,7 @@ static void free_instance(MpInstance* instance);
  * @since 2016
  */
 void gc_init() {
+    mp_gc_start();
     /* initialize constants */
     tm->_TRUE = mp_number(1);
     tm->_FALSE = mp_number(0);
@@ -131,52 +135,11 @@ void gc_init_frames() {
     tm->stack_end = tm->stack + STACK_SIZE;
 }
 
-void* mp_malloc(size_t size, const char* scene) {
-    void* block = NULL;
-    MpObj* func = NULL;
-
-    if (size <= 0) {
-        mp_raise("mp_malloc: attempts to allocate a memory block of size %d!",
-                 size);
-        return NULL;
-    }
-    block = malloc(size);
-    if (block == NULL) {
-        mp_raise("mp_malloc: fail to malloc memory block of size %d", size);
-    }
-
-    memset(block, 0, size);
-
-    tm->allocated += size;
-    tm->max_allocated = max(tm->max_allocated, tm->allocated);
-
-#ifdef MP_DEBUG
-    gc_debug_malloc(block, scene, size);
-#endif
-
-    return block;
-}
-
 void* mp_realloc(void* o, size_t osize, size_t nsize, const char* scene) {
     void* block = mp_malloc(nsize, scene);
     memcpy(block, o, osize);
     mp_free(o, osize);
     return block;
-}
-
-void mp_free(void* ptr, size_t size) {
-    if (ptr == NULL) {
-        return;
-    }
-
-#ifdef MP_DEBUG
-    gc_debug_free(ptr, size);
-#endif
-
-    memset(ptr, 0, size);
-
-    free(ptr);
-    tm->allocated -= size;
 }
 
 /**
@@ -297,12 +260,12 @@ void gc_mark_class(MpClass* pclass) {
     gc_mark_dict(pclass->attr_dict);
 
     // mark meta functions
-    gc_mark(pclass->__init__);
-    gc_mark(pclass->getattr_method);
-    gc_mark(pclass->setattr_method);
-    gc_mark(pclass->contains_method);
-    gc_mark(pclass->len_method);
-    gc_mark(pclass->__str__);
+    gc_mark_obj(pclass->__init__);
+    gc_mark_obj(pclass->getattr_method);
+    gc_mark_obj(pclass->setattr_method);
+    gc_mark_obj(pclass->contains_method);
+    gc_mark_obj(pclass->len_method);
+    gc_mark_obj(pclass->__str__);
 }
 
 static void gc_mark_instance(MpInstance* instance) {
@@ -337,7 +300,7 @@ void gc_mark_module(MpModule* pmodule) {
     gc_mark_str(pmodule->file);
 }
 
-void gc_mark(MpObj o) {
+void gc_mark_obj(MpObj o) {
     gc_mark_ex(o, "default");
 }
 
@@ -426,7 +389,7 @@ void gc_mark_frames() {
  * @since ? before 2016
  * @modified 2016-08-20
  */
-void gc_sweep() {
+void MpGC_sweep() {
     int n, i;
 
     int deleted_cnt = 0;
@@ -495,7 +458,7 @@ void gc_mark_all() {
     gc_mark_dict(tm->constants);
     gc_mark_and_check(tm->builtins_mod, "builtins_mod");
 
-    gc_mark(tm->root);
+    gc_mark_obj(tm->root);
     gc_mark_frames();
     gc_mark_and_check(tm->ex, "ex");
     gc_mark_and_check(tm->ex_line, "ex_line");
@@ -535,7 +498,7 @@ void gc_full() {
     gc_mark_all();
 
     // 清理垃圾,这个操作可以增量处理
-    gc_sweep();
+    MpGC_sweep();
     tm->gc_threshold = tm->allocated + tm->allocated / 2;
 
     int64_t cost_time = time_get_milli_seconds() - t1;
@@ -580,6 +543,7 @@ void gc_destroy() {
         gc_debug_print();
     }
 
+    mp_gc_stop();
     log_info("gc_destroy: done");
 }
 
@@ -587,7 +551,7 @@ void gc_destroy() {
  * free a object
  * @since 2016
  */
-void obj_free(MpObj o) {
+static void obj_free(MpObj o) {
     switch (MP_TYPE(o)) {
         case TYPE_STR:
             string_free(GET_STR_OBJ(o));
@@ -631,7 +595,7 @@ void data_mark(MpData* data) {
     }
 }
 
-void data_free(MpData* data) {
+static void data_free(MpData* data) {
     // printf("data_free: %x\n", data);
     mp_free(data, sizeof(MpData) + (data->data_size - 1) * sizeof(MpObj));
 }

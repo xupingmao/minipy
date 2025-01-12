@@ -1,11 +1,11 @@
 
-#ifdef DO_DEBUG
+#ifdef ENABLE_MINI_GC_DEBUG
     #define MINI_GC_DEBUG(exp) (exp)
 #else
     #define MINI_GC_DEBUG(exp)
 #endif
 
-#ifndef DO_DEBUG
+#ifndef ENABLE_MINI_GC_DEBUG
     #define NDEBUG
 #endif
 

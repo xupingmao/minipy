@@ -9,6 +9,7 @@
 
 #include <stdlib.h>
 #include <sys/time.h>
+#include <stdint.h>
 
 int64_t time_get_milli_seconds() {
     struct timeval tv;
