@@ -1,0 +1,14 @@
+= mini gc
+
+= Description
+
+This is a simple and minimum GC. The purpose of this project is education.
+
+= Algorithms
+
+* mark and sweep
+
+= Usage
+
+    $ make
+    $ ./gc test
