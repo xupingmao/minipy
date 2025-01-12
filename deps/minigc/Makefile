@@ -1,6 +1,6 @@
 #
 CC = gcc
-SRCS = gc.c
+SRCS = gc_test.c
 BIN = gc
 
 all: clean gc

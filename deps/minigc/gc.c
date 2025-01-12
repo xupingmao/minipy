@@ -1,11 +1,12 @@
+
 #ifdef DO_DEBUG
-#define DEBUG(exp) (exp)
+    #define MINI_GC_DEBUG(exp) (exp)
 #else
-#define DEBUG(exp)
+    #define MINI_GC_DEBUG(exp)
 #endif
 
 #ifndef DO_DEBUG
-#define NDEBUG
+    #define NDEBUG
 #endif
 
 #include <stdio.h>
@@ -16,13 +17,13 @@
 #include <unistd.h>
 #include <setjmp.h>
 #include <string.h>
+#include <stdint.h>
 #include "gc.h"
 #include "gc_fix.c"
 
 /* ========================================================================== */
 /*  mini_gc_malloc                                                            */
 /* ========================================================================== */
-
 typedef struct header {
     size_t flags;
     size_t size;
@@ -33,6 +34,7 @@ typedef struct gc_heap {
     Header *slot;
     size_t size;
 } GC_Heap;
+
 
 #define TINY_HEAP_SIZE 0x4000
 #define PTRSIZE ((size_t) sizeof(void *))
@@ -127,7 +129,7 @@ mini_gc_malloc(size_t req_size)
         }
         if (p == free_list) {
             if (!do_gc) {
-                garbage_collect();
+                mini_gc_garbage_collect();
                 do_gc = 1;
             }
             else if ((p = grow(req_size)) == NULL)
@@ -268,7 +270,7 @@ gc_mark(void * ptr)
 
     /* marking */
     FL_SET(hdr, FL_MARK);
-    DEBUG(printf("mark ptr : %p, header : %p\n", ptr, hdr));
+    MINI_GC_DEBUG(printf("mark ptr : %p, header : %p\n", ptr, hdr));
 
     /* mark children */
     gc_mark_range((void *)(hdr+1), (void *)NEXT_HEADER(hdr));
@@ -350,7 +352,7 @@ mini_gc_add_roots(void * start, void * end)
 }
 
 void
-garbage_collect(void)
+mini_gc_garbage_collect(void)
 {
     size_t i;
 
@@ -407,7 +409,7 @@ test_garbage_collect(void) {
     p = mini_gc_malloc(100);
     assert(FL_TEST((((Header *)p)-1), FL_ALLOC));
     p = 0;
-    garbage_collect();
+    mini_gc_garbage_collect();
 }
 
 static void
@@ -430,10 +432,3 @@ test(void)
     test_garbage_collect_load_test();
 }
 
-
-int
-main(int argc, char **argv)
-{
-    if (argc == 2 && strcmp(argv[1], "test") == 0)  test();
-    return 0;
-}
