@@ -1,0 +1,32 @@
+name: C/C++ CI
+
+on: [push]
+
+jobs:
+  build:
+    name: ${{ matrix.os }} | ${{ matrix.compiler }} 
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+        compiler: [clang, gcc]
+    steps:
+    - uses: actions/checkout@v1      
+    - name: make test (${{ matrix.compiler }})
+      run: make test CC=${{ matrix.compiler }}
+  coverage:
+    name: Coverage
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v1    
+      - name: Install lcov
+        run: sudo apt-get install -y lcov
+      - name: Build & test
+        run: make CC=gcc
+      - name: Collect coverage
+        run: make coverage
+      - name: Push to Coveralls
+        uses: coverallsapp/github-action@master
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          path-to-lcov: ./build/test/coverage.info  
