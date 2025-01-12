@@ -15,7 +15,9 @@
 #include <assert.h>
 #include <unistd.h>
 #include <setjmp.h>
+#include <string.h>
 #include "gc.h"
+#include "gc_fix.c"
 
 /* ========================================================================== */
 /*  mini_gc_malloc                                                            */
@@ -227,7 +229,7 @@ get_header(GC_Heap *gh, void *ptr)
 }
 
 void
-gc_init(void)
+mini_gc_init(void)
 {
     long dummy;
 
@@ -329,7 +331,7 @@ gc_sweep(void)
 }
 
 void
-add_roots(void * start, void * end)
+mini_gc_add_roots(void * start, void * end)
 {
     void *tmp;
     if (start > end) {
@@ -422,7 +424,7 @@ test_garbage_collect_load_test(void) {
 static void
 test(void)
 {
-    gc_init();
+    mini_gc_init();
     test_mini_gc_malloc_free();
     test_garbage_collect();
     test_garbage_collect_load_test();
