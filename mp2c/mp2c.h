@@ -161,13 +161,13 @@ MpObj mp_call_native_debug(int lineno, char* func_name, MpObj (*fn)(), int args,
 }
 
 void def_func(MpObj globals, MpObj name, MpNativeFunc native) {
-    MpObj func = func_new(NONE_OBJECT, NONE_OBJECT, native);
+    MpObj func = func_new(NULL, NONE_OBJECT, native);
     GET_FUNCTION(func)->name = name;
     obj_set(globals,name, func);
 }
 
 void def_native_method(MpObj dict, MpObj name, MpNativeFunc native) {
-    MpObj func = func_new(NONE_OBJECT, NONE_OBJECT, native);
+    MpObj func = func_new(NULL, NONE_OBJECT, native);
     MpObj method = method_new(func, dict);
     obj_set(dict, name, method);
 }
@@ -272,10 +272,9 @@ void tm2c_set(MpObj obj, char* key, MpObj value) {
     obj_set(obj, obj_key, value);
 }
 
-MpObj mp2c_def_func(MpObj module, char* func_name, MpNativeFunc natvie_func) {
-    mp_assert_type(module, TYPE_MODULE, "mp2c_def_func");
-
-    MpObj globals  = mp_get_globals_from_module(module);
+MpObj mp2c_def_func(MpModule* module, char* func_name, MpNativeFunc natvie_func) {
+    assert(module != NULL);
+    MpObj globals  = module->globals;
     MpObj func_obj = func_new(module, NONE_OBJECT, natvie_func);
     obj_set_by_cstr(globals, func_name, func_obj);
     return func_obj;

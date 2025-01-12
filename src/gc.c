@@ -291,7 +291,10 @@ void gc_mark_single(MpObj o) {
 }
 
 static void gc_mark_module(MpModule* pmodule) {
-    assert (pmodule != NULL);
+    if (pmodule == NULL) {
+        return;
+    }
+    
     if (pmodule->marked) {
         return;
     }

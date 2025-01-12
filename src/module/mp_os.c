@@ -1,5 +1,15 @@
 #include "../include/mp.h"
-#include <dirent.h>
+#include <errno.h>
+#include <unistd.h>
+#include <sys/stat.h>
+
+static void os_listdir_impl(MpObj list, MpObj path);
+
+#if _WIN32
+    #include "mp_os_win32.c"
+#else
+    #include "mp_os_posix.c"
+#endif
 
 MpObj os_getcwd() {
     const char* sz_func = "getcwd";
@@ -29,59 +39,10 @@ MpObj os_chdir() {
     return NONE_OBJECT;
 }
 
-#ifndef _WIN32
-static void os_listdir_unix(MpObj result, char *path) {
-    DIR *db = NULL;
-    char filename[128];
-    struct dirent *p;
-
-    // 打开文件夹
-    db = opendir(path);
-    if(db==NULL) {
-        mp_raise("os.listdir: opendir failed");
-        return;
-    }
-
-    memset(filename,0,128);
-
-    while ((p=readdir(db))) {
-        if((strcmp(p->d_name,".")==0)||(strcmp(p->d_name,"..")==0)) {
-            continue;
-        } else {
-            MpObj name_obj = string_new(p->d_name);
-            mp_append(result, name_obj);
-        }
-        memset(filename,0,64);
-    }
-    closedir(db);
-}
-#endif
-
-
 MpObj os_listdir() {
     MpObj list = list_new(10);
     MpObj path = mp_take_str_obj_arg("listdir");
-#ifdef _WIN32
-    WIN32_FIND_DATA Find_file_data;
-    MpObj _path = obj_add(path, string_new("\\*.*"));
-    HANDLE h_find = FindFirstFile(GET_CSTR(_path), &Find_file_data);
-    if (h_find == INVALID_HANDLE_VALUE) {
-        mp_raise("os.listdir: %s is not a directory", path);
-    }
-    do {
-        if (strcmp(Find_file_data.cFileName, "..")==0 || strcmp(Find_file_data.cFileName, ".") == 0) {
-            continue;
-        }
-        if (Find_file_data.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) {
-            // do nothing.
-        }
-        MpObj file = string_new(Find_file_data.cFileName);
-        mp_append(list, file);
-    } while (FindNextFile(h_find, &Find_file_data));
-    FindClose(h_find);
-#else
-    os_listdir_unix(list, GET_CSTR(path));
-#endif
+    os_listdir_impl(list, path);
     return list;
 }
 
@@ -109,12 +70,10 @@ MpObj os_stat(){
 MpObj os_exists(){
     MpObj _fname = mp_take_str_obj_arg("exists");
     char* fname = GET_CSTR(_fname);
-    FILE*fp = fopen(fname, "rb");
-    if(fp == NULL) {
-        return tm->_FALSE;
+    if (access(fname, F_OK) == 0) {
+        return tm->_TRUE;
     }
-    fclose(fp);
-    return tm->_TRUE;
+    return tm->_FALSE;
 }
 
 MpObj os_path_dirname0(MpObj fpath) {
@@ -137,7 +96,7 @@ MpObj os_path_dirname0(MpObj fpath) {
     return string_static("");
 }
 
-MpObj os_path_join0(MpObj dirname, MpObj fname) {
+static MpObj os_path_join0(MpObj dirname, MpObj fname) {
     mp_assert_type(dirname, TYPE_STR, "os_path_join");
     mp_assert_type(dirname, TYPE_STR, "os_path_join");
 
@@ -160,11 +119,23 @@ static MpObj os_system() {
     return mp_number(ret_code);
 }
 
+static MpObj os_mkdir() {
+    char* dirname = mp_take_cstr_arg("os.mkdir");
+    int status = mkdir(dirname);
+    if (status == 0) {
+        return NONE_OBJECT;
+    } else {
+        mp_raise("mkdir failed");
+    }
+    return NONE_OBJECT;
+}
+
 /**
  * @brief OS模块
  */
 void mp_os_init() {
     MpObj os_mod = mp_new_native_module("os");
+    MpObj os_path_mod = mp_new_native_module("os.path");
 
     MpModule_RegFunc(os_mod, "getcwd",  os_getcwd);
     MpModule_RegFunc(os_mod, "listdir", os_listdir);
@@ -172,9 +143,14 @@ void mp_os_init() {
     MpModule_RegFunc(os_mod, "stat",    os_stat);
     MpModule_RegFunc(os_mod, "exists",  os_exists);
     MpModule_RegFunc(os_mod, "system",  os_system);
+    MpModule_RegFunc(os_mod, "mkdir", os_mkdir);
+
+    // 注册os.path属性
+    MpModule_RegFunc(os_path_mod, "exists", os_exists);
 
     // 注册os模块的属性
     MpModule_RegAttr(os_mod, "name", os_get_name());
+    MpModule_RegAttr(os_mod, "path", os_path_mod);
     
     mp_reg_builtin_func("exists", os_exists);
 }

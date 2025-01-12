@@ -288,7 +288,7 @@ class CodeWriter:
         # 入口的__name__默认为__main__
         buf.append("  MpObj module_name = string_const(\"__main__\");")
         buf.append("  module = module_new(fname, module_name, NONE_OBJECT);")
-        buf.append("  globals = GET_MODULE(module)->globals;")
+        buf.append("  globals = module->globals;")
         buf.append("  MpObj op_stack[256];")
         buf.append("  MpObj *top = op_stack;")
         buf.append("  MpObj func = NONE_OBJECT;")
@@ -349,7 +349,7 @@ class CodeWriter:
         buf.append("#include <include/mp.h>")
         buf.append("#include <mp2c.h>")
 
-        buf.append("static MpObj module;")
+        buf.append("static MpModule* module;")
         buf.append("static MpObj globals;")
         buf.append(const_section)
         buf.append(func_section)
@@ -590,6 +590,9 @@ class AotCompiler:
 
         if target == None:
             target = self.get_default_target(fpath)
+
+        if not os.path.exists("build"):
+            os.mkdir("build")
 
         c_file_path = "build/%s.c" % name
 

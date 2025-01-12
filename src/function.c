@@ -98,8 +98,6 @@ MpCodeCache* func_resolve_cache(MpFunction* fnc, MpCodeCache* cache) {
 
 MpObj func_new(MpModule* mod, MpObj self, MpNativeFunc native_func) {
     /* module可以为空或者Module类型 */
-    assert(mod != NULL);
-
     MpFunction* f = mp_malloc(sizeof(MpFunction), "func.new");
     f->resolved = 0;
     f->mod = mod;
