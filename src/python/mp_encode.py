@@ -529,16 +529,27 @@ def encode_def(tk, in_class = 0):
         emit_store(tk.first)
  
 
-def encode_class(tk):
+def encode_class(tk: AstNode):
     buildclass = []
     emit(OP_CLASS, tk.first.val)
     for func in tk.second:
-        if func.type == "pass": continue
+        if func.type == "pass": 
+            continue
+
+        if func.type == "=":
+            encode_item(func.second) # value
+            emit_load(tk.first) # class instance
+            load_attr(func.first) # field name
+            emit(OP_SET)
+            continue
+
         if func.type != "def":
-            encode_error(func, "non-func expression in class is invalid")
-        encode_def(func, 1)
-        emit_load(tk.first)
-        load_attr(func.first)
+            error_msg = str(func.type) + " expression is not supported in class body"
+            encode_error(func, error_msg)
+        
+        encode_def(func, 1) # func body
+        emit_load(tk.first) # class instance
+        load_attr(func.first) # func name
         emit(OP_SET)
     emit(OP_CLASS_END)
 
@@ -781,8 +792,8 @@ for k in _op_dict:
 for k in _op_ext_dict:
     _encode_dict[k] = encode_inplace_op
 
-def getlineno(tk):
-    if hasattr(tk, 'pos'):
+def getlineno(tk: Token):
+    if hasattr(tk, "pos") and tk.pos[0] >= 0:
         return tk.pos[0]
     elif hasattr(tk, 'first'):
         return getlineno(tk.first)
@@ -855,7 +866,7 @@ def _compile(src, filename, des = None):
     asm_init()
     _ctx = EncodeCtx(src)
     _ctx.set_file_name(name)
-    _ctx.compie()
+    _ctx.compile()
     return _ctx.gen_code()
 
 def escape_for_compile(s):

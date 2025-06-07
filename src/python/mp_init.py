@@ -19,6 +19,7 @@ try:
 except:
     raise Exception("not minipy runtime")
 
+
 def add_builtin(name, func):
     __builtins__[name] = func
  
@@ -95,6 +96,7 @@ def _list_copy(self):
     for item in self:
         l.append(item)
     return l
+
 add_obj_method("list", "copy", _list_copy)
   
 def printf(*args):
@@ -135,7 +137,7 @@ def mtime(fname):
     obj = os.stat(fname)
     return obj.st_mtime
 
-def find_module_path(name):
+def find_module_path(name: str):
     import sys
     # try load from working dir
     fpath = name + ".py"
@@ -160,7 +162,6 @@ def _import(des_glo, fname, tar = None):
     if fname in __modules__:
         pass
     else:
-        import os
         from mp_encode import compilefile
         # can not find file in current dir.
         fpath = find_module_path(fname)
@@ -175,8 +176,9 @@ def _import(des_glo, fname, tar = None):
             #del __modules__[fname]
             raise(sformat('import error: fail to compile file "%s.py":\n\t%s', fname, e))
         load_module(fname, _code)
-    
+
     g = __modules__[fname]
+
     if tar == '*':
         for k in g:
             # _ stands for private variable

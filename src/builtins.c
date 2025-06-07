@@ -819,8 +819,18 @@ static MpObj bf_hash() {
 static MpObj bf_isinstance() {
     MpObj first = mp_take_obj_arg("isinstance");
     MpObj type = mp_take_obj_arg("isinstance");
-    if (IS_FUNC(type) && GET_FUNCTION(type)->native == bf_list && IS_LIST(first)) {
-        return tm->_TRUE;
+
+    if (IS_FUNC(type)) {
+        MpFunction* func = GET_FUNCTION(type);
+        if (func->native == bf_list && IS_LIST(first)) {
+            return tm->_TRUE;
+        } else if (func->native == bf_dict && IS_DICT(first)) {
+            return tm->_TRUE;
+        } else if (func->native == bf_str && IS_DICT(first)) {
+            return tm->_TRUE;
+        }
+    } else if (IS_CLASS(type)) {
+        // TODO check if is same type
     }
     mp_raise("bf_isinstance: unsupported check");
     return tm->_FALSE;

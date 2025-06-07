@@ -76,8 +76,9 @@ MpObj os_exists(){
     return tm->_FALSE;
 }
 
-MpObj os_path_dirname0(MpObj fpath) {
-    mp_assert_type(fpath, TYPE_STR, "os_path_dirname");
+MpObj os_path_dirname() {
+    MpObj fpath = mp_take_str_obj_arg("os.path.dirname");
+    mp_assert_type(fpath, TYPE_STR, "os.path.dirname");
 
     char* fpath_cstr = GET_CSTR(fpath);
     char* end_char = strrchr(fpath_cstr, '/');
@@ -147,6 +148,7 @@ void mp_os_init() {
 
     // 注册os.path属性
     MpModule_RegFunc(os_path_mod, "exists", os_exists);
+    MpModule_RegFunc(os_path_mod, "dirname", os_path_dirname);
 
     // 注册os模块的属性
     MpModule_RegAttr(os_mod, "name", os_get_name());

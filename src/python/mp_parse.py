@@ -15,13 +15,17 @@ _skip_op = ['nl', ';']
 
 class AstNode:
 
+    third = None
+    pos = [-1,-1]
+    children = []
+
     def __init__(self, type=None, first=None, second=None):
         self.type = type
         self.first = first
         self.second = second
     
 class ParserCtx:
-    def __init__(self, tokens, txt):
+    def __init__(self, tokens: list, txt):
         # current token
         self.token = Token("nl", 'nl', None)
         self.eof = Token("eof", 'eof', None)
@@ -67,37 +71,41 @@ class ParserCtx:
             v = self.tree.pop()
         body.reverse() # reverse the body
         return body
+    
+    def parse_typing_exp(self):
+        exp(self, "factor")
+        return self.pop()
 
-def expect_and_next(ctx, v, msg=None):
+def expect_and_next(ctx: ParserCtx, v, msg=None):
     # type: (ParserCtx, any, None|str) -> None
     if ctx.token.type != v:
         error_msg = "expect %r but now is %r::%s" % (v, ctx.token.type, msg)
         compile_error("parse", ctx.src, ctx.token, error_msg)
     ctx.next()
 
-def assert_type(p, type, msg):
+def assert_type(p: ParserCtx, type, msg):
     if p.token.type != type:
         parse_error(p, p.token, msg)
     #p.next()
 
-def add_op(p, v):
+def add_op(p: ParserCtx, v):
     r = p.tree.pop()
     l = p.tree.pop()
     p.add(AstNode(v, l, r))
 
-def build_op(p, type):
+def build_op(p: ParserCtx, type):
     right = p.tree.pop()
     left = p.tree.pop()
     return AstNode(type, left, right)
 
 
-def parse_error(p, token=None, msg="Unknown"):
+def parse_error(p: ParserCtx, token: Token=None, msg="Unknown"):
     if token != None:
         compile_error('parse', p.src, token, msg)
     else:
         raise("assert_type error")
 
-def baseitem(p):
+def baseitem(p: ParserCtx):
     t = p.token.type
     token = p.token
     if t in ('number', 'string', 'name', 'None'):
@@ -207,7 +215,7 @@ def parse_name(p):
 #  Attr       = ('.' Name) | ('[' Rvalue ']')
 #  Expression = CommaExp ( ',' CommaExp)*
 #  CommaExp   = OrExp ('or' OrExp)*
-def exp(p, level):
+def exp(p: ParserCtx, level):
     # Low -> High operator
     if level == '=':
         # TODO: parse_var_list(p)
@@ -277,7 +285,7 @@ def exp(p, level):
             fnc(p)
             add_op(p, t)
 
-def parse_arg_list(p):
+def parse_arg_list(p: ParserCtx):
     node = AstNode('call', p.pop()) # name
     if p.token.type == ')':
         p.next()
@@ -303,7 +311,7 @@ def parse_arg_list(p):
     # print(args[0].pos[0])
     return node
                     
-def call_or_get_exp(p):
+def call_or_get_exp(p: ParserCtx):
     if p.token.type == '-':
         p.next()
         call_or_get_exp(p)
@@ -353,7 +361,8 @@ def call_or_get_exp(p):
                 node.second = b
                 p.add(node)
 
-def _get_path(obj):
+
+def _get_path(obj: AstNode):
     t = obj.type
     if t == 'get':
         return _get_path(obj.first) + '/' \
@@ -365,7 +374,7 @@ def _get_path(obj):
     else:
         raise
 
-def _path_check(p, node):
+def _path_check(p: ParserCtx, node: AstNode):
     if node.type == 'attr':
         _path_check(p, node.first)
         _path_check(p, node.second)
@@ -413,7 +422,7 @@ def parse_import(p):
     p.add(node)
 
 # count = 1
-def skip_nl(p):
+def skip_nl(p: ParserCtx):
     while p.token.type in _skip_op:
         p.next()
 
@@ -507,7 +516,7 @@ def parse_while(p):
     parse_for_while(p, 'while')
 
 
-def parse_for_while(p, type):
+def parse_for_while(p: ParserCtx, type):
     ast = AstNode(type)
     p.next()
     expr(p)
@@ -516,7 +525,7 @@ def parse_for_while(p, type):
     ast.second = p.visit_block()
     p.add(ast)
 
-def parse_arg_def(p):
+def parse_arg_def(p: ParserCtx):
     expect_and_next(p, '(')
     if p.token.type == ')':
         p.next()
@@ -534,7 +543,14 @@ def parse_arg_def(p):
             arg.first = p.token
             arg.second = None
             p.next()
+
+            if p.token.type == ":":
+                # typing hint
+                p.next()
+                p.parse_typing_exp()
+
             if has_varg:
+                # arg=value
                 expect_and_next(p, '=')
                 baseitem(p)
                 arg.second = p.pop()
@@ -544,30 +560,37 @@ def parse_arg_def(p):
                 arg.second = p.pop()
                 has_varg = True
             args.append(arg)
-            if p.token.type != ',':break
+            if p.token.type != ',':
+                break
             p.next()
+        
         if p.token.type == '*':
+            # nargs
             p.next()
             assert_type(p, 'name', 'Invalid arguments')
             arg = AstNode("narg", p.token)
             arg.second = None
             args.append(arg)
             p.next()
+        
         expect_and_next(p, ')')
         return args
 
-def parse_def(p):
+def parse_def(p: ParserCtx):
     p.next()
     assert_type(p, 'name', 'DefException')
     func = AstNode("def")
     func.first = p.token
     p.next()
     func.second = parse_arg_def(p)
+    if p.token.type == "->":
+        p.next()
+        p.parse_typing_exp()
     expect_and_next(p, ':')
     func.third = p.visit_block()
     p.add(func)
 
-def parse_class(p):
+def parse_class(p: ParserCtx):
     expect_and_next(p, "class")
     # assert_type(p, 'name','ClassException')
     clazz = AstNode()
@@ -578,7 +601,7 @@ def parse_class(p):
     if p.token.type == '(':
         p.next()
         assert_type(p, 'name', 'ClassException')
-        p.third = p.token
+        clazz.third = p.token
         p.next()
         expect_and_next(p, ')')
     expect_and_next(p, ':')
@@ -592,7 +615,7 @@ def parse_class(p):
 
     p.add(clazz)
 
-def parse_stm1(p, type):
+def parse_stm1(p: ParserCtx, type):
     p.next()
     node = AstNode(type)
     if p.token.type in _smp_end_list:
@@ -604,7 +627,7 @@ def parse_stm1(p, type):
 
             
 
-def parse_if(p):
+def parse_if(p: ParserCtx):
     ast = AstNode("if")
     p.next()
     expr(p)
@@ -642,7 +665,7 @@ def parse_annotation(p):
 def parse_skip(p):
     p.next()
     
-def parse_multi_assign(p):
+def parse_multi_assign(p: ParserCtx):
     p.next()
     expr(p) # left
     expect_and_next(p, ']')
@@ -677,15 +700,15 @@ stmt_map = {
 }
 
 
-def parse_stm(p):
+def parse_stm(p: ParserCtx):
     t = p.token.type
     if t not in stmt_map:
         parse_error(p, p.token, "Unknown Expression")
     else:
-        stmt_map[t](p)
+        return stmt_map[t](p)
 
 
-def parse_block(p):
+def parse_block(p: ParserCtx):
     skip_nl(p)
     if p.token.type == 'indent':
         p.next()
@@ -706,7 +729,7 @@ def parse_block(p):
         skip_nl(p)
             
     
-def parse(content):
+def parse(content: str):
     """解析入口"""
     tokens = tokenize(content)
     p = ParserCtx(tokens, content)
@@ -717,7 +740,7 @@ def parse(content):
         x = p.tree
         # except:
         if x == None:
-            p.error()
+            parse_error(p, p.token, "tree is None")
         return x
     except Exception as e:
         # print(e, v)
@@ -736,7 +759,7 @@ def xml_close(type):
 def xml_line_head(n):
     return " " * n
 
-def print_ast_line_pos(tree):
+def print_ast_line_pos(tree: AstNode):
     if hasattr(tree, "pos"):
         pos = tree.pos
         # skip invalid pos
@@ -765,7 +788,7 @@ def print_ast_block_close(n, node):
     print(xml_line_head(n), xml_close(node.type))
 
 # MP_TEST
-def print_ast_obj(tree, n=0):
+def print_ast_obj(tree: AstNode, n=0):
     if tree == None:
         return
     if gettype(tree) == "list":
@@ -810,7 +833,7 @@ def parsefile(fname):
     except Exception as e:
         printf("parse file %s FAIL", fname)
 
-def tk_list_len(tk):
+def tk_list_len(tk: AstNode):
     if tk == None: return 0
     if tk.type == ',':return tk_list_len(tk.first) + tk_list_len(tk.second)
     return 1
@@ -820,7 +843,7 @@ def tk_list_len(tk):
 class ArgReader:
     """参数阅读器,使用了迭代器模式"""
 
-    def __init__(self, args):
+    def __init__(self, args: list):
         self.args = args
         self.index = -1
         self.max_index = len(args) - 1

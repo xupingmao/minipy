@@ -4,8 +4,13 @@
 # @modified 2022/01/12 22:59:45
 import mp_init
 import os
+import sys
 
 import_func = mp_init._import
+
+test_dir = os.path.dirname(__file__)
+if test_dir not in sys.path:
+    sys.path.append(test_dir)
 
 def testfiles():
     suc = False

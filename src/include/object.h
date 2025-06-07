@@ -94,7 +94,7 @@ typedef struct MpModule {
     int resolved;
     MpObj globals;
     MpObj code;
-    struct MpStr *file; // module file
+    struct MpStr *file; // module file path
     MpCodeCache* cache;
     int cache_cap;
     int cache_len;

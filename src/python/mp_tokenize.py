@@ -12,13 +12,15 @@ except:
     from boot import *
 
 class Token:
+    pos = [-1, -1]
+    
     def __init__(self, type='symbol', val=None, pos=None):
         self.pos  = pos
         self.type = type
         self.val  = val
 
 
-def findpos(token):
+def findpos(token: Token):
     if not hasattr(token, 'pos'):
         if hasattr(token, "first"):
             return findpos(token.first)
@@ -27,7 +29,7 @@ def findpos(token):
     return token.pos
 
 
-def find_error_line(s, pos):
+def find_error_line(s: str, pos: "list[int]"):
     """
     @param {str} s: source code
     @param {int} pos: position
@@ -45,18 +47,18 @@ def find_error_line(s, pos):
     r += "     "+" "*x+"^" +'\n'
     return r
 
-def print_token(token):
+def print_token(token: Token):
     for key in token:
         print(key, token[key])
         if gettype(token[key]) == "dict":
             print_token(token[key])
     
-def compile_error(ctx, s, token, e_msg = ""):
+def compile_error(module_name, s, token, e_msg = ""):
     if token != None:
         # print_token(token)
         pos = findpos(token)
         r = find_error_line(s, pos)
-        raise Exception('Error at '+ctx+':\n'+r + e_msg)
+        raise Exception('Error at ' + module_name + ':\n' + r + e_msg)
     else:
         raise Exception(e_msg)
     #raise
@@ -71,6 +73,7 @@ KEYWORDS = [
 
 SYMBOLS = [
     '-=','+=','*=','/=','==','!=','<=','>=',
+    '->', # typing return
     '=','-','+','*', '/', '%',
     '<','>',
     '[',']','{','}','(',')','.',':',',',';',
@@ -85,7 +88,7 @@ class Tokenizer:
         self.y=1
         self.yi=0
         self.nl=True
-        self.res=[]
+        self.res=[] # type: list[Token]
         self.indent=[0]
         self.braces=0
 
@@ -108,11 +111,11 @@ class Tokenizer:
         else:
             self.res.append(Token(t,v,self.f))
 
-def clean(s):
+def clean(s: str):
     s = s.replace('\r','')
     return s
 
-def tokenize(s):
+def tokenize(s: str):
     s = clean(s)
     return do_tokenize(s)
 

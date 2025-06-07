@@ -24,6 +24,7 @@ MpModule* module_new(MpObj fname, MpObj name, MpObj code){
   /* set module */
   obj_set(tm->modules, fname, mod->globals);
   obj_set(mod->globals, string_static("__name__"), name);
+  obj_set(mod->globals, string_static("__file__"), fname);
   return mod;
 }
 
@@ -44,7 +45,7 @@ MpObj mp_new_native_module(char* name) {
  * register module function
  * @param mod, module object, dict
  */
-void MpModule_RegFunc(MpObj mod, char* name, MpObj (*native)()) {
+void MpModule_RegFunc(MpObj mod, char* name, MpNativeFunc native) {
     assert(MP_TYPE(mod) == TYPE_DICT);
     MpObj func = func_new(tm->builtins_mod, NONE_OBJECT, native);
     GET_FUNCTION(func)->name = string_from_cstr(name);
