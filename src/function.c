@@ -123,14 +123,18 @@ MpObj mp_new_native_func_obj(MpModule* module, MpNativeFunc native_func) {
 /**
  * create new method from function
  */
-MpObj method_new(MpObj _fnc, MpObj self) {
-    mp_assert_type(_fnc, TYPE_FUNCTION, "method_new");
-    MpFunction* fnc = GET_FUNCTION(_fnc);
+MpObj method_new(MpObj func, MpObj self) {
+    if (!IS_FUNC(func)) {
+        mp_raise("method_new: expect function but see %s, self=%ot", get_object_type_cstr(func), self);
+        return NONE_OBJECT;
+    }
+    MpFunction* fnc = GET_FUNCTION(func);
     MpObj nfnc = func_new(fnc->mod, self, fnc->native);
-    GET_FUNCTION(nfnc)->name = GET_FUNCTION(_fnc)->name;
-    GET_FUNCTION(nfnc)->maxlocals = GET_FUNCTION(_fnc)->maxlocals;
-    GET_FUNCTION(nfnc)->code = GET_FUNCTION(_fnc)->code;
-    GET_FUNCTION(nfnc)->cache = GET_FUNCTION(_fnc)->cache;
+    GET_FUNCTION(nfnc)->name = fnc->name;
+    GET_FUNCTION(nfnc)->maxlocals = fnc->maxlocals;
+    GET_FUNCTION(nfnc)->code = fnc->code;
+    GET_FUNCTION(nfnc)->cache = fnc->cache;
+    GET_FUNCTION(nfnc)->cache_end = fnc->cache_end;
     GET_FUNCTION(nfnc)->resolved = 1;
     return nfnc;
 }

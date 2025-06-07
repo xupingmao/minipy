@@ -5,6 +5,12 @@ sys.path.append("src/python")
 import mp_encode
 import mp_parse
 
+try:
+    import mp_debug
+    mp_debug.vmopt("gc.disable") # 关闭gc后可以自举
+except ImportError:
+    pass
+
 def compile_and_save(fpath: str, target: str):
     print("compile %s to %s ..." % (fpath, target))
     c = mp_encode.Compiler()
@@ -18,15 +24,17 @@ def compile_and_save(fpath: str, target: str):
     #     print(k, __builtins__[k])
     # print("===\n\n")
     try:
-        fp = open(target, "w+")
+        fp = open(target, "w+")  # 报错了 method_new: expect function but see unknown(109)
         fp.write(code)
         fp.close()
         print("done")
     except Exception as e:
         import mp_debug
+        g = globals()
         f = mp_debug.get_current_frame()
         print("current_frame", f)
-        g = globals()
+        # mp_debug.print_dict_info(g)
+        # mp_debug.print_dict_info(__builtins__)
         print(open) # OK
 
         raise e

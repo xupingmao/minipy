@@ -657,7 +657,7 @@ MpObj mp_str(MpObj a) {
             sprintf(buf, "<ptr at %p>", GET_PTR(a));
             return string_new(buf);
         default:
-            sprintf(buf, "<unknown(%d)>", a.type);
+            sprintf(buf, "<unknown(%d) at %p>", a.type, GET_PTR(a));
             return string_new(buf);
             // mp_raise("str: not supported type %d", a.type);
     }

@@ -231,23 +231,7 @@ def join_code():
     global _code_list
     global _ext_code_list
     return _ext_code_list + _code_list
-    
-def _gen_code(lst = False):
-    global _code_list
-    global _ext_code_list
 
-    emit(OP_EOP)
-    #x = gen_constants(tagsize) + _code_list
-    x = _ext_code_list + _code_list
-    # release memory
-    _code_list = []
-    _ext_code_list = []
-    x = optimize(x)
-    if lst:return x
-    for i in x:
-        if i[1] == None:
-            print(i)
-    return save_as_bin(x)
 
 def gen_code(lst = False):
     global _code_list
@@ -568,7 +552,7 @@ def encode_return(tk):
                 emit(OP_TAILCALL, value)
     else:
         # is this necessary ?
-        emit_load(None);
+        emit_load(None)
     emit(OP_RETURN)
 
 def encode_while(tk):

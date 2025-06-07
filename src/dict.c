@@ -295,8 +295,8 @@ int dict_get0(MpDict* dict, MpObj key) {
 }
 
 static int dict_find_start(MpDict* dict, int hash) {
-    // 取模运算只用到了hash的右侧部分的数字
-    // 使用&位运算可以充分使用全部的数字，但是要求mask=(2^n-1)
+    // 取模运算只用到了hash的右侧部分的数字,散列效果不是很好
+    // 使用&位运算可以充分使用全部的数字,打散更充分,但是要求mask=(2^n-1)
     return hash % dict->mask;
 }
 

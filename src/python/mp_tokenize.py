@@ -213,19 +213,24 @@ def do_symbol(tokenizer, s,i,l):
         tokenizer.braces -= 1
     return i
 
-def do_number(tokenizer, s,i,l):
+def do_number(tokenizer: Tokenizer, s,i,l):
     v=s[i];i+=1;c=None
+    is_float = False
     while i<l:
         c = s[i]
         if (c < '0' or c > '9') and (c < 'a' or c > 'f') and c != 'x': break
         v+=c;i+=1
     if c == '.':
+        is_float = True
         v+=c;i+=1
         while i<l:
             c = s[i]
             if c < '0' or c > '9': break
             v+=c;i+=1
-    tokenizer.add('number',float(v))
+    if is_float:
+        tokenizer.add('number',float(v))
+    else:
+        tokenizer.add('number',int(v))
     return i
 
 def is_name_begin(c):

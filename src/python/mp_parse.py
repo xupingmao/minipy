@@ -843,7 +843,7 @@ def tk_list_len(tk: AstNode):
 class ArgReader:
     """参数阅读器,使用了迭代器模式"""
 
-    def __init__(self, args: list):
+    def __init__(self, args: "list[str]"):
         self.args = args
         self.index = -1
         self.max_index = len(args) - 1

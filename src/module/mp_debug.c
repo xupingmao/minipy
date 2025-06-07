@@ -177,23 +177,25 @@ static MpObj bf_set_vm_state() {
 }
 
 static MpObj bf_vmopt() {
-    char* opt = mp_take_cstr_arg("vminfo");
+    char* opt = mp_take_cstr_arg("vmopt");
     if (strcmp(opt, "gc") == 0) {
         gc_full();
+    } else if (strcmp(opt, "gc.disable") == 0) {
+        tm->gc_state = 0;
     } else if (strcmp(opt, "help") == 0) {
         return string_from_cstr("gc, help");
     } else if (strcmp(opt, "frame.local") == 0) {
-        int fidx = mp_take_int_arg("vminfo");
-        int lidx = mp_take_int_arg("vminfo");
+        int fidx = mp_take_int_arg("vmopt");
+        int lidx = mp_take_int_arg("vmopt");
         return obj_getlocal(fidx, lidx);
     } else if (strcmp(opt, "frame.stack") == 0) {
-        int fidx = mp_take_int_arg("vminfo");
-        int sidx = mp_take_int_arg("vminfo");
+        int fidx = mp_take_int_arg("vmopt");
+        int sidx = mp_take_int_arg("vmopt");
         return obj_getstack(fidx, sidx);
     } else if (strcmp(opt, "frame.index") == 0) {
         return mp_number(tm->frame-tm->frames);
     } else if (strcmp(opt, "frame.info") == 0) {
-        int fidx = mp_take_int_arg("vminfo");
+        int fidx = mp_take_int_arg("vmopt");
         MpFrame *f = obj_getframe(fidx);
         MpObj info = dict_new();
         mp_setattr(info, "maxlocals", mp_number(f->maxlocals));
