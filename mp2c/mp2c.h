@@ -286,11 +286,11 @@ MpObj mp2c_load_global(MpObj globals, MpObj name_obj) {
 
     int idx = dict_get0(GET_DICT(globals), name_obj);
     if (idx == -1) {
-        idx = dict_get0(GET_DICT(tm->builtins), name_obj);
+        idx = dict_get0(tm->builtins, name_obj);
         if (idx == -1) {
             mp_raise("NameError: name %o is not defined", name_obj);
         } else {
-            return GET_DICT(tm->builtins)->nodes[idx].val;
+            return tm->builtins->nodes[idx].val;
         }
     } else {
         return GET_DICT(globals)->nodes[idx].val;

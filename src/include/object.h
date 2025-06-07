@@ -264,7 +264,7 @@ typedef struct MpVm {
     
     MpDict* constants;  /* type: dict */
     MpObj modules;      /* type: dict */
-    MpObj builtins;     /* type: dict, builtins functions */
+    MpDict* builtins;     /* type: dict, builtins functions */
     MpObj root;         /* type: list */
     MpModule* builtins_mod; /* 内置模块 */
 

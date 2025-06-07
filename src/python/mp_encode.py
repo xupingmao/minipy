@@ -915,7 +915,7 @@ def split_instr(instr):
 def to_fixed(num, length):
     return str(num).rjust(length).replace(' ', '0')
 
-def dis_code(code, return_str = False, fname = "<string>"):
+def dis_code(code: str, return_str = False, fname = "<string>"):
     if return_str == True:
         result = []
 
@@ -998,7 +998,7 @@ class Compiler:
         cstring += '";'
         return cstring
 
-    def compile_to_c_code(self, filename, const_name = None):
+    def compile_to_c_code(self, filename: str, const_name = None):
         src = load(filename)
         code = self.gen_code(src, filename)
         result = []

@@ -35,7 +35,7 @@ class ParserCtx:
         self.r = tokens
         self.i = 0
         self.l = len(tokens)
-        self.tree = []
+        self.tree = [] # type: list[AstNode]
         self.src = txt
         self.last_token = None
 

@@ -25,7 +25,7 @@ int main(int argc, char *argv[]) {
     if (code == 0) {
         vm_load_py_modules();
         load_minipyc();
-        obj_set_by_cstr(tm->builtins, "MP_USE_CACHE", mp_number(1));
+        dict_set_by_cstr(tm->builtins, "MP_USE_CACHE", mp_number(1));
         // call boot function
         vm_call_mod_func("minipyc", "boot");
     } else if (code == 1){

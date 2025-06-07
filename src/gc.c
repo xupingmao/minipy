@@ -75,7 +75,7 @@ void gc_init() {
 
     tm->all = list_new_untracked(100);
     tm->root = list_new(100);
-    tm->builtins = dict_new();
+    tm->builtins = dict_new_ptr();
     tm->modules = dict_new();
     tm->constants = dict_new_ptr();
 
@@ -458,8 +458,8 @@ void gc_mark_all() {
     gc_mark_and_check(tm->list_proto, "list_proto");
     gc_mark_and_check(tm->dict_proto, "dict_proto");
     gc_mark_and_check(tm->str_proto, "str_proto");
-    gc_mark_and_check(tm->builtins, "builtins");
     gc_mark_and_check(tm->modules, "modules");
+    gc_mark_dict(tm->builtins);
     gc_mark_dict(tm->constants);
     gc_mark_module(tm->builtins_mod);
 

@@ -564,7 +564,7 @@ MpObj mp_get_global_by_cstr(MpObj globals, char* key) {
     MpObj okey = string_new(key);
     DictNode* node = dict_get_node(GET_DICT(globals), okey);
     if (node == NULL) {
-        node = dict_get_node(GET_DICT(tm->builtins), okey);
+        node = dict_get_node(tm->builtins, okey);
         if (node == NULL) {
             mp_raise("NameError: name %o is not defined", okey);
         }

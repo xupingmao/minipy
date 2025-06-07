@@ -230,8 +230,7 @@ retry_op:
 
             DictNode* dict_node = dict_get_node(globals_dict, obj);
             if (dict_node == NULL) {
-                MpDict *builtins_dict = GET_DICT(tm->builtins);
-                dict_node = dict_get_node(builtins_dict, obj);
+                dict_node = dict_get_node(tm->builtins, obj);
                 if (dict_node == NULL) {
                     mp_raise("NameError: name %o is not defined", obj);
                 } else {

@@ -74,5 +74,5 @@ void DictSet_InitMethods() {
     MpClass_RegNativeMethod(set_class, "add", DictSet_add);
     MpClass_RegNativeMethod(set_class, "remove", DictSet_remove);
     MpClass_RegNativeMethod(set_class, "__init__", DictSet_init);
-    obj_set_by_cstr(tm->builtins, "set", MpClass_ToObj(set_class));
+    dict_set_by_cstr(tm->builtins, "set", MpClass_ToObj(set_class));
 }

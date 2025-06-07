@@ -21,7 +21,7 @@ MpObj* mp_get_builtin(char* key) {
     if (!tm->init) {
         return NULL;
     }
-    return dict_get_by_str(tm->builtins, key);
+    return dict_get_by_cstr(tm->builtins, key);
 }
 
 void mp_putchar(int c){
