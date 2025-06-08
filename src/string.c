@@ -25,6 +25,7 @@ int uncode16(unsigned char** src) {
 }
 
 void code32(unsigned char* src, int value) {
+    // big-endian encode
     src[0] = (value >> 20) & 0xff;
     src[1] = (value >> 16) & 0xff;
     src[2] = (value >> 8) & 0xff;
@@ -421,10 +422,12 @@ MpObj string_builtin_split() {
 }
 
 MpObj string_builtin_startswith() {
-    MpObj self = mp_take_str_obj_arg("str.startswith");
-    MpObj arg0 = mp_take_str_obj_arg("str.startswith");
-    return mp_number(string_index(GET_STR_OBJ(self), GET_STR_OBJ(arg0), 0) ==
-                     0);
+    MpStr* self = mp_take_str_ptr_arg("str.startswith");
+    MpStr* arg0 = mp_take_str_ptr_arg("str.startswith");
+    int start = 0;
+    mp_take_optional_int_arg(&start, "str.startswith");
+    int index = string_index(self, arg0, start);
+    return mp_bool(index==start);
 }
 
 MpObj string_builtin_endswith() {

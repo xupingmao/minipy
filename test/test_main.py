@@ -2,18 +2,37 @@
 # @author xupingmao
 # @since 2016
 # @modified 2022/01/12 22:59:45
-import mp_init
 import os
 import sys
+sys.path.append("src/python")
 
-import_func = mp_init._import
+try:
+    import mp_debug
+    import mp_init
+    print_exc = traceback
+except ImportError:
+    # python标准环境
+    mp_init = None
+    mp_debug = None
+    from boot import load
+    from traceback import print_exc
+
+
+def exec_file(globals:dict, name: str):
+    if mp_init is None:
+        if not name.endswith(".py"):
+            name += ".py"
+        code = load(name)
+        return exec(code, globals)
+    else:
+        return mp_init._import(globals, name)
+
 
 test_dir = os.path.dirname(__file__)
 if test_dir not in sys.path:
     sys.path.append(test_dir)
 
 def testfiles():
-    suc = False
     for filename in os.listdir("test/test_case"):
         if not filename.endswith(".py"):
             continue
@@ -33,10 +52,10 @@ def testfiles():
             print("\n\n")
             print("File: %s" % fpath)
             print("-" * 60)
-            import_func(g, modpath)
+            exec_file(g, modpath)
         except Exception as e:
             print("test failed -- " + fpath)
-            traceback()
+            print_exc()
             exit(1)
             return
             

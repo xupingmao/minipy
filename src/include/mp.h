@@ -190,6 +190,7 @@ MpObj mp_get_constant(int index);  // 读取常量
 
 const char* mp_to_cstr(MpObj a);
 MpObj mp_to_obj(int type, void* value);
+MpObj mp_bool(int expression);
 
 // vm functions
 void mp_reg_builtin_func(char* name, MpObj (*native_func)());

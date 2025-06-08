@@ -1,5 +1,16 @@
 # test tools
 import logging
+import sys
+
+is_minipy = True
+
+try:
+    import mp_debug
+except ImportError:
+    sys.path.append("src/python")
+    from boot import istype
+    from boot import apply
+    is_minipy = False
 
 class Result:
 
@@ -69,7 +80,8 @@ def assertStarts(result, expect, msg=None):
         
 def assertTrue(value, msg=None):
     if not value:
-        logging.error('FAIL, msg=(%s)' % msg)
-        raise
+        error_msg = 'FAIL, msg=(%s)' % msg
+        logging.error(error_msg)
+        raise Exception(error_msg)
 
 

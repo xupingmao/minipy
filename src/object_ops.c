@@ -772,3 +772,12 @@ int mp_hasattr(MpObj obj, const char* key) {
     }
     return 1;
 }
+
+
+MpObj mp_bool(int expression) {
+    if (expression) {
+        return tm->_TRUE;
+    } else {
+        return tm->_FALSE;
+    }
+}

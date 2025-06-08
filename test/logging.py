@@ -9,7 +9,14 @@ FilePath: /minipy/test/logging.py
 Description: 描述
 '''
 
+import sys
 DEBUG = False
+
+try:
+    import mp_debug
+except ImportError:
+    sys.path.append("src/python")
+    from boot import istype
 
 def toBaseStr(obj):
     if istype(obj, 'string'):

@@ -67,9 +67,10 @@ void mp_resolve_self_by_func_ptr(MpFunction *fnc) {
 }
 
 MpObj mp_take_arg_from_vm0(const char* fnc) {
-    if (tm->arg_loaded >= tm->arg_cnt)
+    if (tm->arg_loaded >= tm->arg_cnt) {
         mp_raise("%s :no argument! total %d, current %d",
                 fnc, tm->arg_cnt, tm->arg_loaded);
+    }
     tm->arg_loaded += 1;
     return tm->arguments[tm->arg_loaded - 1];
 }
@@ -150,6 +151,19 @@ int mp_take_int_arg(const char* fnc) {
         mp_raise("%s: expect number but see %s", fnc, mp_get_type_cstr(v.type));
     }
     return (int) GET_NUM(v);
+}
+
+/// @brief 读取可选的int参数
+/// @param result 
+/// @param fnc 
+/// @return bool
+MpBool mp_take_optional_int_arg(int* result, const char* fnc) {
+    if (tm->arg_loaded < tm->arg_cnt) {
+        *result = mp_take_int_arg(fnc);
+        return 1;
+    } else {
+        return 0;
+    }
 }
 
 double mp_take_double_arg(const char* fnc) {

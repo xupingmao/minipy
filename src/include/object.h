@@ -255,7 +255,7 @@ typedef struct MpVm {
     /* MpObj *top; */
     MpObj* arguments;
     int arg_cnt;
-    int arg_loaded;
+    int arg_loaded; /* argument count of taken */
 
     /* prototypes */
     MpObj list_proto;
@@ -276,7 +276,7 @@ typedef struct MpVm {
     int allocated;
     int max_allocated;
     int gc_threshold;
-    int gc_state;
+    MpBool gc_state;
 
     /* constants */
     MpObj _TRUE;

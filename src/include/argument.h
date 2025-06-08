@@ -12,4 +12,6 @@ typedef struct MpArgument {
 MpArgument mp_save_args();
 void mp_restore_args(MpArgument arg);
 
+MpBool mp_take_optional_int_arg(int*, const char*);
+
 #endif

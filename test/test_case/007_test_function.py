@@ -15,20 +15,22 @@ def cursive_overflow(n):
     if n > 0:
         cursive_overflow(n-1)
 
-result = testfunc(cursive_overflow, [200], None)
 
-logging.info("result:", result)
-logging.info(result.exception != None)
-if result.exception != None:
-    logging.info("result.exception is not None")
+def test_overflow():
+    result = testfunc(cursive_overflow, [200], None)
 
-value = result.exception != None
-if not value:
-    logging.info("result.exception is None")
+    logging.info("result:", result)
+    logging.info(result.exception != None)
+    if result.exception != None:
+        logging.info("result.exception is not None")
 
-assertTrue(result.exception != None, "result.exception != None")
+    value = result.exception != None
+    if not value:
+        logging.info("result.exception is None")
 
-def test(func, args, expect):
+    assertTrue(result.exception != None, "result.exception != None")
+
+def test(func: "function", args: list, expect):
     """
     func: 函数名
     args: 参数列表
@@ -36,7 +38,7 @@ def test(func, args, expect):
     """
     try:
         logging.logCall(func, args)
-        r = apply(func, args)
+        r = func(*args)
         if r != expect:
             error_msg = "expect %s but see %s" % (expect, r)
             print(error_msg)
@@ -48,12 +50,17 @@ def test(func, args, expect):
 def foo(parg, varg = 10):
     return parg + varg
     
-test(foo, [], "ArgError: parg=1,varg=1,given=0,int=257")
 test(foo, [0], 10)
 test(foo, [1,2], 3)
-test(foo, [1,2,3], "ArgError: parg=1,varg=1,given=3,int=257")
+
+if is_minipy:
+    test(foo, [], "ArgError: parg=1,varg=1,given=0,int=257")
+    test(foo, [1,2,3], "ArgError: parg=1,varg=1,given=3,int=257")
 
 def add(a,b):
     return a+b
     
 print("add(*[1,2])=", add(*[1,2]))
+
+if is_minipy:
+    test_overflow()

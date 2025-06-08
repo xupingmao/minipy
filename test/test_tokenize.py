@@ -24,13 +24,14 @@ def tk_vals(r):
         rr.append(tk.val)
     return rr
     
-def tk_test(filename, string, tokens):
-    print("test:", filename)
+def tk_test(filename:str, string:str, tokens:"list"):
+    print("test", filename, "...", end="")
     r = mp_tokenize.tokenize(string)
     for i in range(len(r)):
         tk = r[i]
         assert tk.type == tokens[i*2],   (tk.type, tokens[i*2])
         assert tk.val  == tokens[i*2+1], (tk.val, tokens[i*2+1])
+    print(" PASS")
 
 def main():
     dirname = "test/test_tokenize"
