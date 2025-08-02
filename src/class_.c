@@ -21,11 +21,22 @@ static MpObj instance_getattr() {
 
     mp_assert_type(self, TYPE_INSTANTCE, "instance_getattr");
     MpInstance* instance = GET_INSTANCE(self);
-    return mp_get_instance_attr(instance, key);
+    return MpInstance_getattr(instance, key);
 }
 
-MpObj mp_get_instance_attr(MpInstance* instance, MpObj key) {
+MpObj MpInstance_getattr(MpInstance* instance, MpObj key) {
     assert(instance != NULL);
+    MpClass* klass = instance->klass;
+    assert (klass != NULL);
+
+    // 处理 __getattr__
+    if (NOT_NONE(klass->getattr_method)) {
+        MpObj self = mp_to_obj(TYPE_INSTANTCE, instance);
+        MpObj args[2] = {self, key};
+        return mp_call_obj_safe(klass->getattr_method, 2, args);
+    }
+
+
     // 查询对象属性
     DictNode* attr_node = dict_get_node(instance->dict, key);
     if (attr_node != NULL) {
@@ -39,11 +50,8 @@ MpObj mp_get_instance_attr(MpInstance* instance, MpObj key) {
             return method->val;
         }
     }
-
+    
     // 查询类属性
-    MpClass* klass = instance->klass;
-    assert (klass != NULL);
-
     DictNode* class_attr_node = dict_get_node(klass->attr_dict, key);
     if (class_attr_node != NULL) {
         if (IS_FUNC(class_attr_node->val)) {
@@ -68,6 +76,25 @@ MpObj mp_get_instance_attr(MpInstance* instance, MpObj key) {
     return NONE_OBJECT;
 }
 
+
+void MpInstance_setattr(MpInstance* instance, MpObj key, MpObj value) {
+    assert(instance != NULL);
+    MpClass* klass = instance->klass;
+    assert (klass != NULL);
+
+    // 处理 __setattr__
+    if (NOT_NONE(klass->setattr_method)) {
+        MpObj self = mp_to_obj(TYPE_INSTANTCE, instance);
+        MpObj args[3] = {self, key, value};
+        mp_call_obj_safe(klass->setattr_method, 3, args);
+        return;
+    }
+
+
+    // 更新对象属性
+    dict_set0(instance->dict, key, value);
+}
+
 MpObj class_new(MpObj name, MpModule* module) {
     // TODO add class type
     assert(IS_STR(name));
@@ -77,13 +104,14 @@ MpObj class_new(MpObj name, MpModule* module) {
     klass->module = module;
     klass->name = name.value.str;
     klass->attr_dict = dict_new_ptr();
-    klass->__init__ = NONE_OBJECT;
-    klass->getattr_method = mp_new_native_func_obj(module, instance_getattr);
-    klass->setattr_method = mp_new_native_func_obj(module, instance_setattr);
-    klass->contains_method = NONE_OBJECT;
-    klass->len_method = NONE_OBJECT;
-    klass->__str__ = NONE_OBJECT;
-    klass->__contains__ = NONE_OBJECT;
+    // malloc会默认清零
+    // klass->__init__ = NONE_OBJECT;
+    // klass->getattr_method = NONE_OBJECT;
+    // klass->setattr_method = NONE_OBJECT;
+    // klass->contains_method = NONE_OBJECT;
+    // klass->len_method = NONE_OBJECT;
+    // klass->__str__ = NONE_OBJECT;
+    // klass->__contains__ = NONE_OBJECT;
 
     return gc_track(mp_to_obj(TYPE_CLASS, klass));
 }
@@ -165,7 +193,6 @@ int MpInstance_contains(MpInstance* instance, MpObj key) {
     // 查询自定义的__contains__方法
     if (NOT_NONE(klass->__contains__)) {
         MpObj self = mp_to_obj(TYPE_INSTANTCE, instance);
-        log_info("__contains__ called, sekf=%s, key=%s", mp_to_cstr(self), mp_to_cstr(key));
         MpObj method = method_new(instance->klass->__contains__, self);
         MpObj result = MP_CALL_EX(method);
         return mp_obj_to_bool(result);

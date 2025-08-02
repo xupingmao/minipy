@@ -14,7 +14,8 @@ void class_set_attr(MpClass* klass, MpObj key, MpObj value);
 MpObj mp_call_obj_safe(MpObj func, int n, MpObj* args);
 MpObj mp_format_instance(MpInstance* instance);
 int MpInstance_contains(MpInstance* instance, MpObj key);
-MpObj mp_get_instance_attr(MpInstance* instance, MpObj key);
+MpObj MpInstance_getattr(MpInstance* instance, MpObj key);
+void MpInstance_setattr(MpInstance* instance, MpObj key, MpObj value);
 
 MpClass* MpClass_New(char*name, MpModule*);
 void MpClass_RegNativeMethod(MpClass* clazz, char* name, MpObj (*native_func)());

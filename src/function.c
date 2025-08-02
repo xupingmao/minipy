@@ -125,7 +125,8 @@ MpObj mp_new_native_func_obj(MpModule* module, MpNativeFunc native_func) {
  */
 MpObj method_new(MpObj func, MpObj self) {
     if (!IS_FUNC(func)) {
-        mp_raise("method_new: expect function but see %s, self=%ot", get_object_type_cstr(func), self);
+        const char* self_str = mp_to_cstr(self);
+        mp_raise("method_new: expect function but see %s, self=%s", get_object_type_cstr(func), self_str);
         return NONE_OBJECT;
     }
     MpFunction* fnc = GET_FUNCTION(func);

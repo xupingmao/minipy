@@ -100,10 +100,7 @@ void obj_set(MpObj self, MpObj k, MpObj v) {
         case TYPE_INSTANTCE: {
             MpInstance* instance = GET_INSTANCE(self);
             assert(instance->klass != NULL);
-            assert(instance->klass->setattr_method.type == TYPE_FUNCTION);
-
-            MpObj args[3] = {self, k, v};
-            mp_call_obj_safe(instance->klass->setattr_method, 3, args);
+            MpInstance_setattr(instance, k, v);
             return;
         }
     }
@@ -175,10 +172,7 @@ MpObj mp_getattr(MpObj self, MpObj k) {
         case TYPE_INSTANTCE: {
             MpInstance* instance = GET_INSTANCE(self);
             assert(instance->klass != NULL);
-            assert(instance->klass->getattr_method.type == TYPE_FUNCTION);
-
-            MpObj args[2] = {self, k};
-            return mp_call_obj_safe(instance->klass->getattr_method, 2, args);
+            return MpInstance_getattr(instance, k);
         }
     }
     mp_raise("keyError: %o", k);

@@ -67,7 +67,7 @@ MpObj bf_open() {
 }
 
 static int is_file_open(MpInstance* data) {
-    MpObj is_open = mp_get_instance_attr(data, string_const("is_open"));
+    MpObj is_open = MpInstance_getattr(data, string_const("is_open"));
     return mp_is_true(is_open);
 }
 
@@ -76,7 +76,7 @@ static void set_file_open(MpInstance* data, MpObj flag) {
 }
 
 static FILE* get_file_ptr(MpInstance* data) {
-    MpObj fp = mp_get_instance_attr(data, string_const("fp"));
+    MpObj fp = MpInstance_getattr(data, string_const("fp"));
     if (MP_TYPE(fp) != TYPE_PTR) {
         mp_raise("expect fp type <ptr> but see %ot", fp);
     }
