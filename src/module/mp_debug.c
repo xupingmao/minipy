@@ -220,6 +220,9 @@ static MpObj bf_get_ex_list() {
     return tm->ex_list;
 }
 
+static MpObj debug_get_constants() {
+    return mp_to_obj(TYPE_DICT, tm->constants);
+}
 
 /**
  * init debug module
@@ -236,5 +239,6 @@ void mp_debug_init() {
     MpModule_RegFunc(debug, "get_mp_local_list", bf_get_mp_local_list);
     MpModule_RegFunc(debug, "vmopt", bf_vmopt);
     MpModule_RegFunc(debug, "print_dict_info", bf_print_dict_info);
+    MpModule_RegFunc(debug, "get_constants", debug_get_constants);
 }
 

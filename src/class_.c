@@ -130,7 +130,6 @@ MpObj class_new(MpObj name, MpModule* module) {
     // klass->__init__ = NONE_OBJECT;
     // klass->__getattr__ = NONE_OBJECT;
     // klass->__setattr__ = NONE_OBJECT;
-    // klass->contains_method = NONE_OBJECT;
     // klass->__len__ = NONE_OBJECT;
     // klass->__str__ = NONE_OBJECT;
     // klass->__contains__ = NONE_OBJECT;
