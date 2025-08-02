@@ -13,7 +13,7 @@ void mp_resolve_code(MpModule* m, const char* code);
 void class_set_attr(MpClass* klass, MpObj key, MpObj value);
 MpObj mp_call_obj_safe(MpObj func, int n, MpObj* args);
 MpObj mp_format_instance(MpInstance* instance);
-int mp_is_in_instance(MpInstance* instance, MpObj key);
+int MpInstance_contains(MpInstance* instance, MpObj key);
 MpObj mp_get_instance_attr(MpInstance* instance, MpObj key);
 
 MpClass* MpClass_New(char*name, MpModule*);

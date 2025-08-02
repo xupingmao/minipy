@@ -130,12 +130,14 @@ MpObj method_new(MpObj func, MpObj self) {
     }
     MpFunction* fnc = GET_FUNCTION(func);
     MpObj nfnc = func_new(fnc->mod, self, fnc->native);
-    GET_FUNCTION(nfnc)->name = fnc->name;
-    GET_FUNCTION(nfnc)->maxlocals = fnc->maxlocals;
-    GET_FUNCTION(nfnc)->code = fnc->code;
-    GET_FUNCTION(nfnc)->cache = fnc->cache;
-    GET_FUNCTION(nfnc)->cache_end = fnc->cache_end;
-    GET_FUNCTION(nfnc)->resolved = 1;
+    MpFunction* new_func = GET_FUNCTION(nfnc);
+
+    new_func->name = fnc->name;
+    new_func->maxlocals = fnc->maxlocals;
+    new_func->code = fnc->code;
+    new_func->cache = fnc->cache;
+    new_func->cache_end = fnc->cache_end;
+    new_func->resolved = 1;
     return nfnc;
 }
 

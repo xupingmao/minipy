@@ -189,3 +189,12 @@ MpObj mp_take_data_obj_arg(const char* fnc) {
 int mp_count_arg() {
     return tm->arg_cnt;
 }
+
+
+MpInstance* mp_take_instance_arg(const char* fnc) {
+    MpObj v = mp_take_arg_from_vm0(fnc);
+    if (MP_TYPE(v) != TYPE_INSTANTCE) {
+        mp_raise("%s: instance data but see %s", fnc, mp_get_type_cstr(v.type));
+    }
+    return GET_INSTANCE(v);
+}

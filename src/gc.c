@@ -267,6 +267,7 @@ void gc_mark_class(MpClass* pclass) {
     gc_mark_obj(pclass->contains_method);
     gc_mark_obj(pclass->len_method);
     gc_mark_obj(pclass->__str__);
+    gc_mark_obj(pclass->__contains__);
 }
 
 static void gc_mark_instance(MpInstance* instance) {

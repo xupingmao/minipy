@@ -77,7 +77,7 @@ struct MpRecycle {
 
 typedef struct _mp_code_cache {
     unsigned char op;
-    char vtype; /* value type: CACHE_VTYPE_XXX */
+    unsigned char vtype; /* value type: CACHE_VTYPE_XXX */
     unsigned char a;
     unsigned char b;
 
@@ -128,12 +128,14 @@ typedef struct MpClass {
     struct MpModule* module;
 
     // meta methods
+    // 新增元方法需要修改 class_new, gc_mark_class, MpClass_RegNativeMethod 这些方法
     MpObj __init__; // __init__
     MpObj len_method;       // __len__
     MpObj contains_method;  // __contains__
     MpObj getattr_method;   // __getattr__
     MpObj setattr_method;   // __setattr__
     MpObj __str__; // __str__
+    MpObj __contains__; // __contains__ 方法
 } MpClass;
 
 typedef struct MpInstance {

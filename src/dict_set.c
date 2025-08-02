@@ -5,7 +5,7 @@
  * @LastEditors: xupingmao
  * @LastEditTime: 2024-06-01 23:48:34
  * @FilePath: /minipy/src/dict_set.c
- * @Description: 描述
+ * @Description: collection structure
  */
 /**
  * HashSet
@@ -32,30 +32,42 @@ static MpDict* DictSet_GetItems(MpDict* dictSet) {
     return NULL;
 }
 
-/* TODO: set.contains */
 static MpObj DictSet_add() {
-    MpDict* self = mp_take_dict_ptr_arg("set.add");
+    MpInstance* self = mp_take_instance_arg("set.add");
     MpObj key  = mp_take_obj_arg("set.add");
-    MpDict *items = DictSet_GetItems(self);
+    MpDict *items = DictSet_GetItems(self->dict);
     assert(items != NULL);
     dict_set0(items, key, tm->_TRUE);
     return NONE_OBJECT;
 }
 
 static MpObj DictSet_remove() {
-    MpDict* self = mp_take_dict_ptr_arg("set.remove");
+    MpInstance* self = mp_take_instance_arg("set.remove");
     MpObj key  = mp_take_obj_arg("set.remove");
-    MpDict* items = DictSet_GetItems(self);
+    MpDict* items = DictSet_GetItems(self->dict);
     assert (items != NULL);
     dict_pop(items, key, &NONE_OBJECT);
     return NONE_OBJECT;
 }
 
+static MpObj DictSet_contains() {
+    MpInstance* self = mp_take_instance_arg("set.contains");
+    MpObj value = mp_take_obj_arg("set.contains");
+    MpDict* items = DictSet_GetItems(self->dict);
+    assert (items != NULL); 
+    DictNode* result = dict_get_node(items, value);
+    if (result == NULL) {
+        return tm->_FALSE;
+    } else {
+        return tm->_TRUE;
+    }
+}
+
 static MpObj DictSet_init() {
-    MpDict* self = mp_take_dict_ptr_arg("set.init");
+    MpInstance* self = mp_take_instance_arg("set.init");
     MpObj items = dict_new();
 
-    dict_set_by_cstr(self, "__items", items);
+    dict_set_by_cstr(self->dict, "__items", items);
 
     if (mp_count_arg() == 1) {
         return NONE_OBJECT;
@@ -73,6 +85,7 @@ void DictSet_InitMethods() {
     /* build dict class */
     MpClass_RegNativeMethod(set_class, "add", DictSet_add);
     MpClass_RegNativeMethod(set_class, "remove", DictSet_remove);
+    MpClass_RegNativeMethod(set_class, "__contains__", DictSet_contains);
     MpClass_RegNativeMethod(set_class, "__init__", DictSet_init);
     dict_set_by_cstr(tm->builtins, "set", MpClass_ToObj(set_class));
 }

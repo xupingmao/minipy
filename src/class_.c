@@ -83,6 +83,7 @@ MpObj class_new(MpObj name, MpModule* module) {
     klass->contains_method = NONE_OBJECT;
     klass->len_method = NONE_OBJECT;
     klass->__str__ = NONE_OBJECT;
+    klass->__contains__ = NONE_OBJECT;
 
     return gc_track(mp_to_obj(TYPE_CLASS, klass));
 }
@@ -156,18 +157,27 @@ MpObj mp_format_instance(MpInstance* instance) {
     return string_new(fmt);
 }
 
-int mp_is_in_instance(MpInstance* instance, MpObj key) {
+int MpInstance_contains(MpInstance* instance, MpObj key) {
     assert(instance != NULL);
-    
+    MpClass* klass = instance->klass;
+    assert (klass != NULL);
+
+    // 查询自定义的__contains__方法
+    if (NOT_NONE(klass->__contains__)) {
+        MpObj self = mp_to_obj(TYPE_INSTANTCE, instance);
+        log_info("__contains__ called, sekf=%s, key=%s", mp_to_cstr(self), mp_to_cstr(key));
+        MpObj method = method_new(instance->klass->__contains__, self);
+        MpObj result = MP_CALL_EX(method);
+        return mp_obj_to_bool(result);
+    }
+
     // 查询对象属性
     DictNode* attr_node = dict_get_node(instance->dict, key);
     if (attr_node != NULL) {
         return 1;
     }
-    // 查询类属性
-    MpClass* klass = instance->klass;
-    assert (klass != NULL);
 
+    // 查询类属性
     DictNode* class_attr_node = dict_get_node(klass->attr_dict, key);
     if (class_attr_node != NULL) {
         return 1;
@@ -179,6 +189,15 @@ void MpClass_RegNativeMethod(MpClass* clazz, char* name, MpObj (*native)()) {
     MpDict* attr_dict = clazz->attr_dict;
     MpObj func = func_new(tm->builtins_mod, NONE_OBJECT, native);
     GET_FUNCTION(func)->name = string_new(name);
+    if (name == "__contains__") {
+        clazz->__contains__ = func;
+    }
+    if (name == "__str__") {
+        clazz->__str__ = func;
+    }
+    if (name == "__init__") {
+        clazz->__init__ = func;
+    }
     dict_set_by_cstr(attr_dict, name, func);
 }
 

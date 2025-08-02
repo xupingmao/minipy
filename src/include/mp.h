@@ -135,6 +135,7 @@ MpObj mp_take_dict_obj_arg(const char* fnc);
 MpDict* mp_take_dict_ptr_arg(const char* fnc);
 MpObj mp_take_obj_arg(const char* fnc);
 MpObj mp_take_data_obj_arg(const char* fnc);
+MpInstance* mp_take_instance_arg(const char* fnc);
 int mp_count_arg();
 int mp_count_remain_args();
 
@@ -191,6 +192,7 @@ MpObj mp_get_constant(int index);  // 读取常量
 const char* mp_to_cstr(MpObj a);
 MpObj mp_to_obj(int type, void* value);
 MpObj mp_bool(int expression);
+int mp_obj_to_bool(MpObj);
 
 // vm functions
 void mp_reg_builtin_func(char* name, MpObj (*native_func)());

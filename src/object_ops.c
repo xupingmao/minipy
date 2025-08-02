@@ -20,6 +20,8 @@ const char* mp_get_type_cstr(int type) {
     static char MP_TYPE_STR[64];
 
     switch (type) {
+        case TYPE_NONE:
+            return "None";
         case TYPE_STR:
             return "str";
         case TYPE_NUM:
@@ -30,14 +32,16 @@ const char* mp_get_type_cstr(int type) {
             return "function";
         case TYPE_DICT:
             return "dict";
+        case TYPE_MODULE:
+            return "module";
         case TYPE_DATA:
             return "data";
         case TYPE_CLASS:
             return "class";
-        case TYPE_NONE:
-            return "None";
-        case TYPE_MODULE:
-            return "module";
+        case TYPE_INSTANTCE:
+            return "instance";
+        case TYPE_PTR:
+            return "ptr";
     }
     sprintf(MP_TYPE_STR, "unknown(%d)", type);
     return MP_TYPE_STR;
@@ -121,10 +125,11 @@ MpObj mp_getattr(MpObj self, MpObj k) {
                 if (n < 0) {
                     n += GET_STR_LEN(self);
                 }
-                if (n >= GET_STR_LEN(self) || n < 0)
+                if (n >= GET_STR_LEN(self) || n < 0) {
                     mp_raise(
                         "MpStr_get: index overflow ,len=%d,index=%d, str=%o",
                         GET_STR_LEN(self), n, self);
+                }
                 return string_chr(0xff & GET_CSTR(self)[n]);
             }
             // string method
@@ -458,7 +463,7 @@ int mp_is_in(MpObj child, MpObj parent) {
         case TYPE_FUNCTION:
             return 0;
         case TYPE_INSTANTCE:
-            return mp_is_in_instance(GET_INSTANCE(parent), child);
+            return MpInstance_contains(GET_INSTANCE(parent), child);
         /* TODO DATA */
         default:
             mp_raise("obj_is_in: cant handle type (%s)",
@@ -780,4 +785,8 @@ MpObj mp_bool(int expression) {
     } else {
         return tm->_FALSE;
     }
+}
+
+int mp_obj_to_bool(MpObj obj) {
+    return mp_is_true(obj);
 }

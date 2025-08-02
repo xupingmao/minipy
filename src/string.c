@@ -118,6 +118,7 @@ static void string_update_hash(MpStr* s) {
  * @since 2016-08-22
  */
 MpObj string_const(const char* s) {
+    // TODO find in constant pool
     return string_from_cstr(s);
 }
 
