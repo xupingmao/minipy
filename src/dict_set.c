@@ -63,6 +63,13 @@ static MpObj DictSet_contains() {
     }
 }
 
+static MpObj DictSet_len() {
+    MpInstance* self = mp_take_instance_arg("set.len");
+    MpDict* items = DictSet_GetItems(self->dict);
+    assert (items != NULL); 
+    return mp_number(items->len);
+}
+
 static MpObj DictSet_init() {
     MpInstance* self = mp_take_instance_arg("set.init");
     MpObj items = dict_new();
@@ -87,5 +94,6 @@ void DictSet_InitMethods() {
     MpClass_RegNativeMethod(set_class, "remove", DictSet_remove);
     MpClass_RegNativeMethod(set_class, "__contains__", DictSet_contains);
     MpClass_RegNativeMethod(set_class, "__init__", DictSet_init);
+    MpClass_RegNativeMethod(set_class, "__len__", DictSet_len);
     dict_set_by_cstr(tm->builtins, "set", MpClass_ToObj(set_class));
 }

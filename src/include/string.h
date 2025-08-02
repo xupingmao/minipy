@@ -24,6 +24,7 @@ MpObj string_from_cstr(const char*);
 MpObj string_const(const char*);
 void string_free(MpStr*);
 int string_equals(MpStr* s0, MpStr* s1);
+int string_eq_cstr(MpStr*a, const char*b);
 MpObj string_substring(MpStr* str, int start, int end);
 void MpStr_InitMethods();
 MpObj string_iter_new(MpObj s);

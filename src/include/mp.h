@@ -193,6 +193,7 @@ const char* mp_to_cstr(MpObj a);
 MpObj mp_to_obj(int type, void* value);
 MpObj mp_bool(int expression);
 int mp_obj_to_bool(MpObj);
+int mp_toInt(MpObj);
 
 // vm functions
 void mp_reg_builtin_func(char* name, MpObj (*native_func)());

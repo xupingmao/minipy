@@ -129,11 +129,11 @@ typedef struct MpClass {
 
     // meta methods
     // 新增元方法需要修改 class_new, gc_mark_class, MpClass_RegNativeMethod 这些方法
+    // 这里定义成MpObj是因为python的元方法可以是对象类型（调用的时候会报错）
     MpObj __init__; // __init__
-    MpObj len_method;       // __len__
-    MpObj contains_method;  // __contains__
-    MpObj getattr_method;   // __getattr__
-    MpObj setattr_method;   // __setattr__
+    MpObj __len__;       // __len__
+    MpObj __getattr__;   // __getattr__
+    MpObj __setattr__;   // __setattr__
     MpObj __str__; // __str__
     MpObj __contains__; // __contains__ 方法
 } MpClass;

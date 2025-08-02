@@ -51,9 +51,9 @@ MpObj bf_open() {
     if (file_class == NULL) {
         file_class = MpClass_New("fileobject", tm->builtins_mod);
         file_class->__str__ = mp_new_native_func_obj(tm->builtins_mod, bf_file_str);
-        class_set_attr(file_class, string_const("write"), mp_new_native_func_obj(tm->builtins_mod, bf_file_write));
-        class_set_attr(file_class, string_const("read"), mp_new_native_func_obj(tm->builtins_mod, bf_file_read));
-        class_set_attr(file_class, string_const("close"), mp_new_native_func_obj(tm->builtins_mod, bf_file_close));
+        MpClass_setattr(file_class, string_const("write"), mp_new_native_func_obj(tm->builtins_mod, bf_file_write));
+        MpClass_setattr(file_class, string_const("read"), mp_new_native_func_obj(tm->builtins_mod, bf_file_read));
+        MpClass_setattr(file_class, string_const("close"), mp_new_native_func_obj(tm->builtins_mod, bf_file_close));
     }
 
     MpInstance* fileobject = class_instance(file_class);
@@ -67,7 +67,7 @@ MpObj bf_open() {
 }
 
 static int is_file_open(MpInstance* data) {
-    MpObj is_open = MpInstance_getattr(data, string_const("is_open"));
+    MpObj is_open = MpInstance_getattr(data, string_const("is_open"), NULL);
     return mp_is_true(is_open);
 }
 
@@ -76,7 +76,7 @@ static void set_file_open(MpInstance* data, MpObj flag) {
 }
 
 static FILE* get_file_ptr(MpInstance* data) {
-    MpObj fp = MpInstance_getattr(data, string_const("fp"));
+    MpObj fp = MpInstance_getattr(data, string_const("fp"), NULL);
     if (MP_TYPE(fp) != TYPE_PTR) {
         mp_raise("expect fp type <ptr> but see %ot", fp);
     }

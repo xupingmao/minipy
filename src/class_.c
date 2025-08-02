@@ -21,23 +21,18 @@ static MpObj instance_getattr() {
 
     mp_assert_type(self, TYPE_INSTANTCE, "instance_getattr");
     MpInstance* instance = GET_INSTANCE(self);
-    return MpInstance_getattr(instance, key);
+    return MpInstance_getattr(instance, key, NULL);
 }
 
-MpObj MpInstance_getattr(MpInstance* instance, MpObj key) {
+MpObj MpInstance_getattr(MpInstance* instance, MpObj key, MpObj* default_) {
+    // 1. 检查 __dict__
+    // 2. 检查 class的属性
+    // 3. 调用 __getattr__
     assert(instance != NULL);
     MpClass* klass = instance->klass;
     assert (klass != NULL);
 
-    // 处理 __getattr__
-    if (NOT_NONE(klass->getattr_method)) {
-        MpObj self = mp_to_obj(TYPE_INSTANTCE, instance);
-        MpObj args[2] = {self, key};
-        return mp_call_obj_safe(klass->getattr_method, 2, args);
-    }
-
-
-    // 查询对象属性
+    // 1. 查询对象属性
     DictNode* attr_node = dict_get_node(instance->dict, key);
     if (attr_node != NULL) {
         return attr_node->val;
@@ -51,7 +46,7 @@ MpObj MpInstance_getattr(MpInstance* instance, MpObj key) {
         }
     }
     
-    // 查询类属性
+    // 2. 查询类属性
     DictNode* class_attr_node = dict_get_node(klass->attr_dict, key);
     if (class_attr_node != NULL) {
         if (IS_FUNC(class_attr_node->val)) {
@@ -72,6 +67,18 @@ MpObj MpInstance_getattr(MpInstance* instance, MpObj key) {
         return mp_to_obj(TYPE_DICT, instance->dict);
     }
 
+    // 3. 处理 __getattr__
+    if (NOT_NONE(klass->__getattr__)) {
+        MpObj self = mp_to_obj(TYPE_INSTANTCE, instance);
+        if (default_ == NULL) {
+            MpObj args[2] = {self, key};
+            return mp_call_obj_safe(klass->__getattr__, 2, args);
+        } else {
+            MpObj args[3] = {self, key, *default_};
+            return mp_call_obj_safe(klass->__getattr__, 3, args);
+        }
+    }
+
     mp_raise("AttributeError: object has no attribute %o", key);
     return NONE_OBJECT;
 }
@@ -83,16 +90,31 @@ void MpInstance_setattr(MpInstance* instance, MpObj key, MpObj value) {
     assert (klass != NULL);
 
     // 处理 __setattr__
-    if (NOT_NONE(klass->setattr_method)) {
+    if (NOT_NONE(klass->__setattr__)) {
         MpObj self = mp_to_obj(TYPE_INSTANTCE, instance);
         MpObj args[3] = {self, key, value};
-        mp_call_obj_safe(klass->setattr_method, 3, args);
+        mp_call_obj_safe(klass->__setattr__, 3, args);
         return;
     }
 
-
     // 更新对象属性
     dict_set0(instance->dict, key, value);
+}
+
+int MpInstance_len(MpInstance* instance) {
+    assert(instance != NULL);
+    MpClass* klass = instance->klass;
+    assert (klass != NULL);
+
+    if (NOT_NONE(klass->__len__)) {
+        MpObj self = mp_to_obj(TYPE_INSTANTCE, instance);
+        MpObj args[1] = {self};
+        MpObj result = mp_call_obj_safe(klass->__len__, 1, args);
+        return mp_toInt(result);
+    }
+
+    mp_raise("mp_len: %o has no attribute len", MpInstance_str(instance));
+    return 0;
 }
 
 MpObj class_new(MpObj name, MpModule* module) {
@@ -106,21 +128,34 @@ MpObj class_new(MpObj name, MpModule* module) {
     klass->attr_dict = dict_new_ptr();
     // malloc会默认清零
     // klass->__init__ = NONE_OBJECT;
-    // klass->getattr_method = NONE_OBJECT;
-    // klass->setattr_method = NONE_OBJECT;
+    // klass->__getattr__ = NONE_OBJECT;
+    // klass->__setattr__ = NONE_OBJECT;
     // klass->contains_method = NONE_OBJECT;
-    // klass->len_method = NONE_OBJECT;
+    // klass->__len__ = NONE_OBJECT;
     // klass->__str__ = NONE_OBJECT;
     // klass->__contains__ = NONE_OBJECT;
 
     return gc_track(mp_to_obj(TYPE_CLASS, klass));
 }
 
-void class_set_attr(MpClass* klass, MpObj key, MpObj value) {
-    if (obj_eq_cstr(key, "__init__")) {
-        klass->__init__ = value;
+void MpClass_setattr(MpClass* klass, MpObj key, MpObj value) {
+    if (IS_STR(key)) {
+        // TODO 优化遍历性能
+        MpStr* attr = GET_STR_OBJ(key);
+        if (string_eq_cstr(attr, "__init__")) {
+            klass->__init__ = value;
+        } else if (string_eq_cstr(attr, "__contains__")) {
+            klass->__contains__ = value;
+        } else if (string_eq_cstr(attr, "__setattr__")) {
+            klass->__setattr__ = value;
+        } else if (string_eq_cstr(attr, "__getattr__")) {
+            klass->__getattr__ = value;
+        } else if (string_eq_cstr(attr, "__len__")) {
+            klass->__len__ = value;
+        } else if (string_eq_cstr(attr, "__str__")) {
+            klass->__str__ = value;
+        }
     }
-
     dict_set0(klass->attr_dict, key, value);
 }
 
@@ -167,15 +202,16 @@ MpObj mp_format_class(MpClass* klass) {
     return string_new(dest);
 }
 
-MpObj mp_format_instance(MpInstance* instance) {
+MpObj MpInstance_str(MpInstance* instance) {
     assert(instance != NULL);
     assert(instance->klass != NULL);
 
     MpObj self = mp_to_obj(TYPE_INSTANTCE, instance);
 
     if (!IS_NONE(instance->klass->__str__)) {
-        MpObj method = method_new(instance->klass->__str__, self);
-        return MP_CALL_EX(method);
+        MpObj func = instance->klass->__str__;
+        MpObj args[1] = {self};
+        return mp_call_obj_safe(func, 1, args);
     }
 
     char fmt[100];
@@ -186,6 +222,9 @@ MpObj mp_format_instance(MpInstance* instance) {
 }
 
 int MpInstance_contains(MpInstance* instance, MpObj key) {
+    // 1. 检查 __contains__ 方法
+    // 2. 检查 __iter__ (目前没实现, 先遍历 __dict__ 和父类) 
+    // 3. 检查 __getitem__ 没有实现
     assert(instance != NULL);
     MpClass* klass = instance->klass;
     assert (klass != NULL);
@@ -212,20 +251,11 @@ int MpInstance_contains(MpInstance* instance, MpObj key) {
     return 0;
 }
 
-void MpClass_RegNativeMethod(MpClass* clazz, char* name, MpObj (*native)()) {
+void MpClass_RegNativeMethod(MpClass* clazz, char* name, MpNativeFunc native) {
     MpDict* attr_dict = clazz->attr_dict;
     MpObj func = func_new(tm->builtins_mod, NONE_OBJECT, native);
     GET_FUNCTION(func)->name = string_new(name);
-    if (name == "__contains__") {
-        clazz->__contains__ = func;
-    }
-    if (name == "__str__") {
-        clazz->__str__ = func;
-    }
-    if (name == "__init__") {
-        clazz->__init__ = func;
-    }
-    dict_set_by_cstr(attr_dict, name, func);
+    MpClass_setattr(clazz, string_from_cstr(name), func);
 }
 
 MpObj MpClass_ToObj(MpClass* class_) {

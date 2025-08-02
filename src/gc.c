@@ -262,10 +262,9 @@ void gc_mark_class(MpClass* pclass) {
 
     // mark meta functions
     gc_mark_obj(pclass->__init__);
-    gc_mark_obj(pclass->getattr_method);
-    gc_mark_obj(pclass->setattr_method);
-    gc_mark_obj(pclass->contains_method);
-    gc_mark_obj(pclass->len_method);
+    gc_mark_obj(pclass->__getattr__);
+    gc_mark_obj(pclass->__setattr__);
+    gc_mark_obj(pclass->__len__);
     gc_mark_obj(pclass->__str__);
     gc_mark_obj(pclass->__contains__);
 }

@@ -320,6 +320,10 @@ MpObj string_add(MpStr* a, MpStr* b) {
     return des;
 }
 
+int string_eq_cstr(MpStr*a, const char* b) {
+    return a->value == b || strcmp(a->value, b) == 0;
+}
+
 MpObj string_builtin_find() {
     static const char* sz_func = "find";
     MpObj self = mp_take_str_obj_arg(sz_func);

@@ -71,7 +71,7 @@ void gc_check_native_call(int size, MpObj returnMpObj) {
  *       t1 = mp_call_native(wrapper, 2)  <local> = ['test', 1, 2]
  *       mp_call_native(add, t1, t2)      <local> = ['test', 1, 2]
  */
-MpObj mp_call_native(MpObj (*fn)(), int args, ...) {
+MpObj mp_call_native(MpNativeFunc fn, int args, ...) {
     int i = 0;
     va_list ap;
     MpObj obj_arg;

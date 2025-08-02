@@ -94,7 +94,7 @@ void obj_set(MpObj self, MpObj k, MpObj v) {
         case TYPE_CLASS: {
             MpClass* pclass = GET_CLASS(self);
             // dict_set0(pclass->attr_dict, k, v);
-            class_set_attr(pclass, k, v);
+            MpClass_setattr(pclass, k, v);
             return;
         }
         case TYPE_INSTANTCE: {
@@ -172,7 +172,7 @@ MpObj mp_getattr(MpObj self, MpObj k) {
         case TYPE_INSTANTCE: {
             MpInstance* instance = GET_INSTANCE(self);
             assert(instance->klass != NULL);
-            return MpInstance_getattr(instance, k);
+            return MpInstance_getattr(instance, k, NULL);
         }
     }
     mp_raise("keyError: %o", k);
@@ -575,14 +575,13 @@ int mp_len(MpObj o) {
     int len = -1;
     switch (MP_TYPE(o)) {
         case TYPE_STR:
-            len = GET_STR_LEN(o);
-            break;
+            return GET_STR_LEN(o);
         case TYPE_LIST:
-            len = LIST_LEN(o);
-            break;
+            return LIST_LEN(o);
         case TYPE_DICT:
-            len = DICT_LEN(o);
-            break;
+            return DICT_LEN(o);
+        case TYPE_INSTANTCE:
+            return MpInstance_len(GET_INSTANCE(o));
     }
     if (len < 0) {
         mp_raise("mp_len: %o has no attribute len", o);
@@ -651,7 +650,7 @@ MpObj mp_str(MpObj a) {
         case TYPE_DATA:
             return GET_DATA(a)->str(GET_DATA(a));
         case TYPE_INSTANTCE:
-            return mp_format_instance(GET_INSTANCE(a));
+            return MpInstance_str(GET_INSTANCE(a));
         case TYPE_PTR:
             sprintf(buf, "<ptr at %p>", GET_PTR(a));
             return string_new(buf);
@@ -738,6 +737,14 @@ MpObj mp_to_obj(int type, void* value) {
             mp_raise("mp_to_obj: not supported type %d", type);
     }
     return o;
+}
+
+int mp_toInt(MpObj obj) {
+    if (IS_NUM(obj)) {
+        return (int) GET_NUM(obj);
+    }
+    mp_raise("mp_toInt: can not convert %s to int", mp_get_type_cstr(obj.type));
+    return 0;
 }
 
 
