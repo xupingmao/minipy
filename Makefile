@@ -40,7 +40,7 @@ debug-cache:
 	$(cc) -g -DLOG_LEVEL=5 -DMP_DEBUG_CACHE=1 -o minipy src/main.c -lm
 
 debug:src/*.c src/include/*.h
-	$(cc) -g -DLOG_LEVEL=3 -DMP_DEBUG -DRECORD_LAST_OP -o minipy src/main.c -lm
+	$(cc) -g -DLOG_LEVEL=3 -DMP_DEBUG=0 -o minipy src/main.c -lm
 
 nogc:
 	$(cc) -g -DGC_DESABLED -o minipy src/main.c -lm

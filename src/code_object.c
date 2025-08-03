@@ -195,6 +195,7 @@ const char* CodeCache_ToString(MpCodeCache* cache) {
 #ifdef RECORD_LAST_OP
 
 CodeQueue* CodeQueue_Init(CodeQueue* queue, int cap) {
+    assert(queue != NULL);
     assert(cap > 0);
     assert(cap <= 20);
     queue->size = 0;
@@ -204,6 +205,7 @@ CodeQueue* CodeQueue_Init(CodeQueue* queue, int cap) {
 }
 
 void CodeQueue_Append(CodeQueue* queue, MpCodeCache cache) {
+    assert(queue != NULL);
     if (queue->size < queue->cap) {
         queue->size++;
     } else {
@@ -216,6 +218,7 @@ void CodeQueue_Append(CodeQueue* queue, MpCodeCache cache) {
 }
 
 MpObj CodeQueue_ToString(CodeQueue* queue) {
+    assert(queue != NULL);
     int start = queue->start;
     int count = 0;
     MpObj result = string_new("");

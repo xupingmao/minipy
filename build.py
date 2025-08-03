@@ -5,12 +5,7 @@ sys.path.append("src/python")
 import mp_encode
 import mp_parse
 
-try:
-    pass
-    # import mp_debug
-    # mp_debug.vmopt("gc.disable") # 关闭gc后可以自举
-except ImportError:
-    pass
+# 使用CPython编译成minipy之后,可以再通过minipy编译本项目
 
 def compile_and_save(fpath: str, target: str):
     print("compile %s to %s ..." % (fpath, target))
