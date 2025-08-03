@@ -146,6 +146,8 @@ tailcall:
     MpDict *globals_dict = GET_DICT(globals);
     cache   = f->cache;
 
+    assert(globals_dict != NULL);
+
     const char* func_name_cstr = func_get_name_cstr(cur_fnc);
 
     ret = NONE_OBJECT;

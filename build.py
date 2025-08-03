@@ -47,12 +47,12 @@ def do_build_core():
         target = "./src/gen/%s.gen.c" % name
         compile_and_save(source, target)
 
-def do_build():
+def do_build(build_flag=""):
     print("current path: %s" % os.getcwd())
     print("python interpreter: %s" % sys.executable)
     do_build_core()
     print("compile python files done!")
-    os.system("make clean && make")
+    os.system("make clean && make " + build_flag)
 
 def do_build_user():
     names = ["main"]
@@ -78,7 +78,7 @@ def main():
         build_pack()
         return
     
-    do_build()
+    do_build(arg1)
 
 if __name__ == "__main__":
     main()

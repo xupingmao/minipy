@@ -180,6 +180,10 @@ int vm_init(int argc, char* argv[]) {
  * destroy goes with init
  */
 void vm_destroy() {
+#if MP_DEBUG
+    printf("vm_destroy start");
+#endif
+
 #ifdef MP_PRINT_STEPS
     printf("steps = %d\n", tm->steps);
 #endif

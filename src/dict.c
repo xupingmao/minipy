@@ -79,6 +79,7 @@ static void* dict_malloc(MpDict* dict, size_t size, const char* scene) {
 static void dict_free_block(MpDict* dict, void* block, size_t size) {
     if (dict->features & DICT_FEATURE_NO_GC) {
         assert(block != NULL);
+        memset(block, 0, size);
         free(block);
     } else {
         mp_free(block, size);
@@ -246,6 +247,8 @@ void dict_print_debug_info(MpDict* dict) {
  * @return node index
  */
 int dict_set0(MpDict* dict, MpObj key, MpObj val){
+    assert (dict != NULL);
+
     int hash = mp_get_ptr_hash(&key);
     DictNode* node = dict_get_node_with_hash(dict, key, hash);
     if (node != NULL) {
@@ -287,6 +290,8 @@ int dict_set0(MpDict* dict, MpObj key, MpObj val){
  * @since 2016-11-27
  */
 int dict_get0(MpDict* dict, MpObj key) {
+    assert (dict != NULL);
+
     DictNode* node = dict_get_node(dict, key);
     if (node != NULL) {
         return node - dict->nodes;
@@ -301,11 +306,14 @@ static int dict_find_start(MpDict* dict, int hash) {
 }
 
 DictNode* dict_get_node(MpDict* dict, MpObj key) {
+    assert (dict != NULL);
     return dict_get_node_with_hash(dict, key, mp_get_ptr_hash(&key));
 }
 
 DictNode* dict_get_node_by_index(MpDict* dict, int index) {
-    assert(index >= 0);
+    assert (dict != NULL);
+    assert (index >= 0);
+
     if (index < dict->len) {
         DictNode* node = dict->nodes + index;
         if (node->used > 0) {
@@ -319,6 +327,8 @@ DictNode* dict_get_node_by_index(MpDict* dict, int index) {
 }
 
 static DictNode* dict_get_node_with_hash(MpDict* dict, MpObj key, int hash){
+    assert (dict != NULL);
+
     DictNode* nodes = dict->nodes;
     // 计算开始位置
     int start = dict_find_start(dict, hash);

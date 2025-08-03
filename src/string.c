@@ -79,6 +79,7 @@ MpObj string_alloc(char* s, int size) {
             str->value = "";
             str->len = 0;
         } else {
+            assert(s!=NULL);
             str->len = strlen(s);
             str->value = s;
         }
@@ -90,6 +91,7 @@ MpObj string_alloc(char* s, int size) {
 }
 
 MpObj string_new(char* s) {
+    assert(s!=NULL);
     return string_alloc(s, strlen(s));
 }
 
@@ -242,13 +244,16 @@ MpObj string_append_char(MpObj string, char c) {
  * must be assigned
  */
 MpObj string_append_cstr(MpObj string, const char* sz) {
+    assert(sz!=NULL);
     // return obj_add(string, string_new(sz));
     MpStr* str = GET_STR_OBJ(string);
     int sz_len = strlen(sz);
     if (str->stype) {
+        /* memory */
         str->value = mp_realloc(str->value, str->len + 1, str->len + 1 + sz_len,
                                 "str.append_cstr");
     } else {
+        /* static */
         char* old_value = str->value;
         str->value = mp_malloc(str->len + sz_len + 1, "str.append_cstr");
         strcpy(str->value, old_value);

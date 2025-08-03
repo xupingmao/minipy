@@ -269,6 +269,8 @@ typedef struct MpVm {
     MpDict* builtins;     /* type: dict, builtins functions */
     MpObj root;         /* type: list */
     MpModule* builtins_mod; /* 内置模块 */
+    /* file class */
+    MpClass* file_class;
 
     int steps; /* record opcode steps executed */
     int init;  /* modules and builtins init */

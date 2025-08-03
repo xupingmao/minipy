@@ -638,7 +638,7 @@ MpObj mp_str(MpObj a) {
             FUNCTION_FORMAT(buf, a);
             return string_new(buf);
         case TYPE_CLASS:
-            return mp_format_class(GET_CLASS(a));
+            return MpClass_str(GET_CLASS(a));
         case TYPE_NONE:
             return string_static("None");
         case TYPE_MODULE: {

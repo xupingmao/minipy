@@ -5,8 +5,6 @@ static MpObj bf_file_read();
 static MpObj bf_file_write();
 static MpObj bf_file_str();
 
-static MpClass* file_class;
-
 /**
  * get rest file length
  * @param fp file descripter
@@ -30,7 +28,7 @@ static int is_file_obj(MpObj obj) {
     MpInstance* instance = GET_INSTANCE(obj);
     assert(instance != NULL);
 
-    if (instance->klass != file_class) {
+    if (instance->klass != tm->file_class) {
         return 0;
     }
     return 1;
@@ -48,15 +46,7 @@ MpObj bf_open() {
         mp_raise("open file failed");
     }
 
-    if (file_class == NULL) {
-        file_class = MpClass_New("fileobject", tm->builtins_mod);
-        file_class->__str__ = mp_new_native_func_obj(tm->builtins_mod, bf_file_str);
-        MpClass_setattr(file_class, string_const("write"), mp_new_native_func_obj(tm->builtins_mod, bf_file_write));
-        MpClass_setattr(file_class, string_const("read"), mp_new_native_func_obj(tm->builtins_mod, bf_file_read));
-        MpClass_setattr(file_class, string_const("close"), mp_new_native_func_obj(tm->builtins_mod, bf_file_close));
-    }
-
-    MpInstance* fileobject = class_instance(file_class);
+    MpInstance* fileobject = class_instance(tm->file_class);
 
     dict_set_by_cstr(fileobject->dict, "fp", mp_ptr_obj(fp));
     dict_set_by_cstr(fileobject->dict, "is_open", tm->_TRUE);
@@ -210,6 +200,13 @@ MpObj bf_save(){
 
 
 void mp_file_init() {
+    MpClass* file_class = MpClass_New("fileobject", tm->builtins_mod);
+    file_class->__str__ = mp_new_native_func_obj(tm->builtins_mod, bf_file_str);
+    MpClass_setattr(file_class, string_const("write"), mp_new_native_func_obj(tm->builtins_mod, bf_file_write));
+    MpClass_setattr(file_class, string_const("read"), mp_new_native_func_obj(tm->builtins_mod, bf_file_read));
+    MpClass_setattr(file_class, string_const("close"), mp_new_native_func_obj(tm->builtins_mod, bf_file_close));
+    tm->file_class = file_class;
+
     mp_reg_builtin_func("save", bf_save);
     mp_reg_builtin_func("load", bf_load);
     mp_reg_builtin_func("open", bf_open);

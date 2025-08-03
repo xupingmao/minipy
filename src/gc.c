@@ -256,6 +256,8 @@ void gc_mark_class(MpClass* pclass) {
         return;
     }
 
+    assert(pclass->attr_dict != NULL);
+
     pclass->marked = GC_REACHED_SIGN;
     gc_mark_str(pclass->name);
     gc_mark_dict(pclass->attr_dict);
@@ -470,6 +472,7 @@ void gc_mark_all() {
     gc_mark_frames();
     gc_mark_and_check(tm->ex, "ex");
     gc_mark_and_check(tm->ex_line, "ex_line");
+    gc_mark_class(tm->file_class);
 
 #ifdef MP_DEBUG
     gc_debug_mark();

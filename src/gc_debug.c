@@ -15,7 +15,7 @@ void gc_debug_init() {
 
 void gc_debug_malloc(void* block, const char* scene, size_t size) {
     // printf("gc_debug_add_pointer step2: %p %s\n", block, scene);
-    log_debug("malloc:%p,scene:%s,size:%lld", block, scene, size);
+    log_debug("malloc:%p,scene:%s,size:%d", block, scene, size);
 }
 
 void gc_debug_str_value(char* value) {
@@ -29,7 +29,7 @@ void gc_debug_mark() {
 }
 
 void gc_debug_free(void* block, size_t size) {
-    log_debug("free:%p,size:%lld", block, size);
+    log_debug("free:%p,size:%d", block, size);
 }
 
 void gc_debug_print() {

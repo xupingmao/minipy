@@ -29,8 +29,10 @@ MpObj MpInstance_getattr(MpInstance* instance, MpObj key, MpObj* default_) {
     // 2. 检查 class的属性
     // 3. 调用 __getattr__
     assert(instance != NULL);
+    assert(instance->dict != NULL);
     MpClass* klass = instance->klass;
-    assert (klass != NULL);
+    assert(klass != NULL);
+    assert(klass->attr_dict != NULL);
 
     // 1. 查询对象属性
     DictNode* attr_node = dict_get_node(instance->dict, key);
@@ -134,10 +136,15 @@ MpObj class_new(MpObj name, MpModule* module) {
     // klass->__str__ = NONE_OBJECT;
     // klass->__contains__ = NONE_OBJECT;
 
+    assert(klass->attr_dict != NULL);
+
     return gc_track(mp_to_obj(TYPE_CLASS, klass));
 }
 
 void MpClass_setattr(MpClass* klass, MpObj key, MpObj value) {
+    assert(klass != NULL);
+    assert(klass->attr_dict != NULL);
+
     if (IS_STR(key)) {
         // TODO 优化遍历性能
         MpStr* attr = GET_STR_OBJ(key);
@@ -172,7 +179,7 @@ MpClass* MpClass_New(char* name, MpModule* module) {
 }
 
 MpInstance* class_instance(MpClass* pclass) {
-    MpDict* cl = pclass->attr_dict;
+    assert(pclass != NULL);
     MpInstance* instance = mp_malloc(sizeof(MpInstance), "class_instance");
     instance->klass = pclass;
     instance->dict = dict_new_ptr();
@@ -193,15 +200,16 @@ void class_free(MpClass* pclass) {
     mp_free(pclass, sizeof(MpClass));
 }
 
-MpObj mp_format_class(MpClass* klass) {
-    char dest[100];
+MpObj MpClass_str(MpClass* klass) {
     assert(klass != NULL);
+
+    char dest[100];
     MpModule* module = klass->module;
     sprintf(dest, "<class '%s.%s' at %p>", module->file->value, klass->name->value, klass);
     return string_new(dest);
 }
 
-MpObj MpInstance_str(MpInstance* instance) {
+void MpInstance_format(char* dest, MpInstance* instance) {
     assert(instance != NULL);
     assert(instance->klass != NULL);
 
@@ -210,14 +218,23 @@ MpObj MpInstance_str(MpInstance* instance) {
     if (!IS_NONE(instance->klass->__str__)) {
         MpObj func = instance->klass->__str__;
         MpObj args[1] = {self};
-        return mp_call_obj_safe(func, 1, args);
+        MpObj result = mp_call_obj_safe(func, 1, args);
+        if (NOT_STR(result)) {
+            const char* type_name = mp_get_type_cstr(result.type);
+            mp_raise("TypeError: __str__ returned non-string (type %s)", type_name);
+        }
+        strcpy(dest, GET_CSTR(result));
+        return;
     }
-
-    char fmt[100];
     // todo module name
     char* klass_name = instance->klass->name->value;
-    sprintf(fmt, "<%s object at %p>", klass_name, instance);
-    return string_new(fmt);
+    sprintf(dest, "<%s object at %p>", klass_name, instance);
+}
+
+MpObj MpInstance_str(MpInstance* instance) {
+    char dest[100];
+    MpInstance_format(dest, instance);
+    return string_new(dest);
 }
 
 int MpInstance_contains(MpInstance* instance, MpObj key) {
@@ -226,7 +243,8 @@ int MpInstance_contains(MpInstance* instance, MpObj key) {
     // 3. 检查 __getitem__ 没有实现
     assert(instance != NULL);
     MpClass* klass = instance->klass;
-    assert (klass != NULL);
+    assert(klass != NULL);
+    assert(klass->attr_dict != NULL);
 
     // 查询自定义的__contains__方法
     if (NOT_NONE(klass->__contains__)) {
@@ -251,7 +269,7 @@ int MpInstance_contains(MpInstance* instance, MpObj key) {
 }
 
 void MpClass_RegNativeMethod(MpClass* clazz, char* name, MpNativeFunc native) {
-    MpDict* attr_dict = clazz->attr_dict;
+    assert(clazz != NULL);
     MpObj func = func_new(tm->builtins_mod, NONE_OBJECT, native);
     GET_FUNCTION(func)->name = string_new(name);
     MpClass_setattr(clazz, string_from_cstr(name), func);
