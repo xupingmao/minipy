@@ -175,8 +175,9 @@ const char* CodeCache_ToString(MpCodeCache* cache) {
         }
         case CACHE_VTYPE_OBJ: {
             int index = get_cache_int(cache);
+            MpObj obj = mp_get_constant(index);
             snprintf(buf, 1023, "%-20s v.obj:%s\n", 
-                inst_get_name_by_code(cache->op), mp_get_constant(index));
+                inst_get_name_by_code(cache->op), mp_to_cstr(obj));
             break;
         }
         default: {

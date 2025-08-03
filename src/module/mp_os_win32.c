@@ -21,3 +21,7 @@ static void os_listdir_impl(MpObj list, MpObj path) {
     } while (FindNextFile(h_find, &Find_file_data));
     FindClose(h_find);
 }
+
+int MpOS_mkdir(char* fname) {
+    return mkdir(fname);
+}

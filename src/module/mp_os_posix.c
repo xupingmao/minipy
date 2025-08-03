@@ -1,5 +1,7 @@
-#include "include/mp.h"
+#ifdef _POSIX_VERSION
+#include "../include/mp.h"
 #include <dirent.h>
+#include <sys/stat.h>
 
 static void os_listdir_impl(MpObj result, MpObj path_obj) {
     char* path = GET_CSTR(path_obj);
@@ -27,3 +29,10 @@ static void os_listdir_impl(MpObj result, MpObj path_obj) {
     }
     closedir(db);
 }
+
+int MpOS_mkdir(char* fname) {
+    mode_t mode = 0755;
+    return mkdir(fname, mode);
+}
+
+#endif

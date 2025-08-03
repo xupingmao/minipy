@@ -4,6 +4,7 @@
 #include <sys/stat.h>
 
 static void os_listdir_impl(MpObj list, MpObj path);
+int MpOS_mkdir(char* fname);
 
 #if _WIN32
     #include "mp_os_win32.c"
@@ -122,7 +123,7 @@ static MpObj os_system() {
 
 static MpObj os_mkdir() {
     char* dirname = mp_take_cstr_arg("os.mkdir");
-    int status = mkdir(dirname);
+    int status = MpOS_mkdir(dirname);
     if (status == 0) {
         return NONE_OBJECT;
     } else {
