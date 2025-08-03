@@ -25,8 +25,7 @@ def exec_bench(executable, fpath):
 	os.system(cmd)
 
 def exists_tinypy():
-	ret = os.system("build/tinypy")
-	return ret == 0
+	return os.path.exists("build/tinypy")
 
 def main():
 	parser = argparse.ArgumentParser("Minipy基准测试")
