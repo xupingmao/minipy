@@ -302,6 +302,7 @@ typedef struct MpData {
     long cur;
     long inc;
     long end;
+    /* object to record current state */
     MpObj cur_obj;
     MpObj* (*next)(struct MpData*);
 

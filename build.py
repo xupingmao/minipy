@@ -6,8 +6,9 @@ import mp_encode
 import mp_parse
 
 try:
-    import mp_debug
-    mp_debug.vmopt("gc.disable") # 关闭gc后可以自举
+    pass
+    # import mp_debug
+    # mp_debug.vmopt("gc.disable") # 关闭gc后可以自举
 except ImportError:
     pass
 
@@ -36,7 +37,6 @@ def compile_and_save(fpath: str, target: str):
         # mp_debug.print_dict_info(g)
         # mp_debug.print_dict_info(__builtins__)
         print(open) # OK
-
         raise e
 
 

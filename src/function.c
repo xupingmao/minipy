@@ -281,12 +281,12 @@ static MpObj mp_call_func(MpFunction* func) {
         return func->native();
     } else {
         assert(func->resolved == 1);
-        MpFrame* f = mp_push_frame(mp_to_obj(TYPE_FUNCTION, func));
+        MpFrame* f = MpFrame_create(mp_to_obj(TYPE_FUNCTION, func));
         assert(f != NULL);
 
     L_recall:
         if (setjmp(f->buf) == 0) {
-            return mp_eval(f);
+            return MpFrame_eval(f);
         } else {
             /* handle exception in this frame */
             f = tm->frame;
@@ -296,8 +296,8 @@ static MpObj mp_call_func(MpFunction* func) {
                 goto L_recall;
             } else {
                 /* there is no handler, throw to prev frame */
-                mp_push_exception(f);
-                mp_pop_frame();
+                MpFrame_push_exception(f);
+                MpFrame_exit();
                 longjmp(tm->frame->buf, 1);
             }
         }

@@ -8,14 +8,6 @@
 #include "include/mp.h"
 #include <setjmp.h>
 
-void mp_push_exception(MpFrame* f){
-    MpObj file = func_get_file_name_obj(f->fnc);
-    MpObj fnc_name = func_get_name_obj(f->fnc);
-    MpObj ex = mp_format("  File %o: in %o at line %d", file, fnc_name,
-            f->lineno);
-    list_append(GET_LIST(tm->ex_list), ex);
-}
-
 void mp_traceback() {
     int i;
     MpObj exlist = tm->ex_list;

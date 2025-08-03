@@ -259,6 +259,7 @@ void gc_mark_class(MpClass* pclass) {
     pclass->marked = GC_REACHED_SIGN;
     gc_mark_str(pclass->name);
     gc_mark_dict(pclass->attr_dict);
+    gc_mark_module(pclass->module);
 
     // mark meta functions
     gc_mark_obj(pclass->__init__);
@@ -314,8 +315,10 @@ void gc_mark_obj(MpObj o) {
  * @since 2014-??
  */
 static const char* gc_mark_ex(MpObj o, const char* source) {
-    if (o.type == TYPE_NUM || o.type == TYPE_NONE)
+    if (o.type == TYPE_NUM || o.type == TYPE_NONE) {
         return NULL;
+    }
+
     switch (o.type) {
         case TYPE_STR: {
             if (o.value.str->marked)
@@ -598,6 +601,7 @@ void data_mark(MpData* data) {
     for (int i = 0; i < data->data_size; i++) {
         gc_mark_ex(data->data_ptr[i], "data");
     }
+    gc_mark_ex(data->cur_obj, "data.mark");
 }
 
 static void data_free(MpData* data) {

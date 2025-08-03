@@ -215,15 +215,15 @@ MpObj mp_call_obj(MpObj);
 MpObj mp_call_with_nargs(MpObj func, int n, MpObj* args);
 MpObj mp_call_with_args(MpObj func, MpObj args);
 MpObj load_file_module(MpObj filename, MpObj code, MpObj name);
-MpObj mp_eval(MpFrame*);
-MpFrame* mp_push_frame(MpObj fnc);
-void mp_pop_frame();
+MpObj MpFrame_eval(MpFrame*);
+void MpFrame_push_exception(MpFrame* f);
+MpFrame* MpFrame_create(MpObj fnc);
+void MpFrame_exit();
 
 // exception functions
 void mp_assert(int value, char* msg);
 void mp_assert_type(MpObj o, int type, char* msg);
 void mp_assert_int(double value, char* msg);
-void mp_push_exception(MpFrame* f);
 void mp_traceback();
 void mp_raise(char* fmt, ...);
 /* 内部异常, 直接终止程序退出 */

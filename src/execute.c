@@ -11,16 +11,18 @@
 #include "include/debug.h"
 #include "execute_profile.c"
 
-void mp_reset_frame(MpFrame*);
+void MpFrame_reset(MpFrame*);
 
-void mp_pop_frame() {
+/**
+ * exit frame
+ */
+void MpFrame_exit() {
     if (tm->frame < tm->frames) {
-        printf("mp_pop_frame: invalid call\n");
+        printf("MpFrame_exit: invalid call\n");
         exit(1);
     }
     /* reset locals and stack */
-    mp_reset_frame(tm->frame);
-
+    MpFrame_reset(tm->frame);
     tm->frame --;
 }
 
@@ -54,12 +56,12 @@ if (tm->allocated > tm->gc_threshold) {   \
 }
 
 
-void mp_reset_frame(MpFrame* f) {
+void MpFrame_reset(MpFrame* f) {
     // clear local variables
     int i = 0;
-    for(i = 0; i < f->maxlocals; i++) {
-        f->locals[i] = NONE_OBJECT;
-    }
+
+    /* reset locals */
+    memset(f->locals, 0, sizeof(MpObj) * f->maxlocals);
 
     *(f->top) = NONE_OBJECT;
 
@@ -67,7 +69,10 @@ void mp_reset_frame(MpFrame* f) {
     f->cache_jmp = NULL;
 }
 
-MpFrame* mp_push_frame(MpObj fnc) {
+/**
+ * create and push frame
+ */
+MpFrame* MpFrame_create(MpObj fnc) {
     // make extra space for self in method call
     // top包含当前frame的stack-value
     // top+1 需要为self预留空间
@@ -79,13 +84,13 @@ MpFrame* mp_push_frame(MpObj fnc) {
 
     /* check oprand stack */
     if (top >= tm->stack + STACK_SIZE) {
-        mp_pop_frame();
+        MpFrame_exit();
         mp_raise("mp_eval: stack overflow (%d)", STACK_SIZE);
     }
     
     /* check frame stack*/
     if (tm->frame >= tm->frames + FRAMES_COUNT-1) {
-        mp_pop_frame();
+        MpFrame_exit();
         mp_raise("mp_eval: frame overflow (%d)", FRAMES_COUNT-1);
     }
 
@@ -101,7 +106,7 @@ MpFrame* mp_push_frame(MpObj fnc) {
     f->top    = f->stack;
     f->fnc    = fnc;
     
-    mp_reset_frame(f);
+    MpFrame_reset(f);
     return f;
 }
 
@@ -123,7 +128,7 @@ MpFrame* mp_push_frame(MpObj fnc) {
 ** @param f: Frame
 ** @return evaluated value.
 */
-MpObj mp_eval(MpFrame* f) {
+MpObj MpFrame_eval(MpFrame* f) {
     MpObj* locals, *top;
     MpObj cur_fnc, globals, x, k, v, ret;
     MpCodeCache* cache;
@@ -759,6 +764,15 @@ retry_op:
     if (top != f->stack) {
         mp_raise("mp_eval: operand stack overflow");
     }*/
-    mp_pop_frame();
+    MpFrame_exit();
     return ret;
+}
+
+
+void MpFrame_push_exception(MpFrame* f){
+    MpObj file = func_get_file_name_obj(f->fnc);
+    MpObj fnc_name = func_get_name_obj(f->fnc);
+    MpObj ex = mp_format("  File %o: in %o at line %d", file, fnc_name,
+            f->lineno);
+    list_append(GET_LIST(tm->ex_list), ex);
 }
