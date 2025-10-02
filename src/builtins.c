@@ -453,9 +453,14 @@ MpObj bf_system() {
     return mp_number(rs);
 }
 
-MpObj bf_str() {
+static MpObj bf_str() {
     MpObj a = mp_take_obj_arg("str");
     return mp_str(a);
+}
+
+static MpObj bf_repr() {
+    MpObj a = mp_take_obj_arg("repr");
+    return mp_repr(a);
 }
 
 MpObj bf_list() {
@@ -857,6 +862,7 @@ void mp_init_builtins() {
 
     /* builtin type */
     mp_reg_builtin_func("str", bf_str);
+    mp_reg_builtin_func("repr", bf_repr);
     mp_reg_builtin_func("int", bf_int);
     mp_reg_builtin_func("float", bf_float);
     mp_reg_builtin_func("bool", bf_bool);

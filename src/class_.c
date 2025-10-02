@@ -112,7 +112,7 @@ int MpInstance_len(MpInstance* instance) {
         MpObj self = mp_to_obj(TYPE_INSTANTCE, instance);
         MpObj args[1] = {self};
         MpObj result = mp_call_obj_safe(klass->__len__, 1, args);
-        return mp_toInt(result);
+        return mp_to_int(result);
     }
 
     mp_raise("mp_len: %o has no attribute len", MpInstance_str(instance));

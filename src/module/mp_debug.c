@@ -52,6 +52,7 @@ static MpObj bf_get_vm_info() {
     obj_set_by_cstr(mp_info, "mp_str_size", mp_number(sizeof(MpStr)));
     obj_set_by_cstr(mp_info, "mp_func_size", mp_number(sizeof(MpFunction)));
     obj_set_by_cstr(mp_info, "mp_dict_size", mp_number(sizeof(MpDict)));
+    obj_set_by_cstr(mp_info, "mp_class_size", mp_number(sizeof(MpClass)));
     obj_set_by_cstr(mp_info, "total_obj_len", mp_number(tm->all->len));
     obj_set_by_cstr(mp_info, "alloc_mem", mp_number(tm->allocated));
     obj_set_by_cstr(mp_info, "gc_threshold", mp_number(tm->gc_threshold));

@@ -75,7 +75,7 @@ struct MpRecycle {
 #define CACHE_VTYPE_INT 2
 #define CACHE_VTYPE_OBJ 3
 
-typedef struct _mp_code_cache {
+typedef struct MpCodeCache {
     unsigned char op;
     unsigned char vtype; /* value type: CACHE_VTYPE_XXX */
     unsigned char a;
@@ -152,6 +152,7 @@ typedef struct MpFrame {
     MpObj* last_top;
     char* last_code;
 
+    /* program counter */
     unsigned char* pc;
     MpCodeCache* cache;
 
@@ -237,10 +238,14 @@ typedef struct MpVm {
 
     int exit_code; /* function call exit code, to recognize exceptions */
 
+    /* exception object */
     MpObj ex;
+    /* exception line */
     MpObj ex_line;
+    /* exception list */
     MpObj ex_list;
-    int ex_index; /* index of frame where exception was thrown */
+    /* index of frame where exception was thrown */
+    int ex_index;
 
     int frames_init_done;
     MpFrame frames[FRAMES_COUNT];

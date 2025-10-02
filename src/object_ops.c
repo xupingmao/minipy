@@ -662,6 +662,24 @@ MpObj mp_str(MpObj a) {
     return string_alloc("", 0);
 }
 
+
+MpObj mp_repr(MpObj a) {
+    if (IS_STR(a)) {
+        MpObj result = string_new("");
+        string_append_char(result, '\'');
+        string_append_obj(result, a);
+        string_append_char(result, '\'');
+        return result;
+    } else {
+        return mp_str(a);
+    }
+}
+
+const char* mp_repr_as_cstr(MpObj a) {
+    MpObj result = mp_repr(a);
+    return GET_CSTR(result);
+}
+
 /** get const id, this will be used to search the const value */
 int get_const_id(MpObj const_value) {
     int i = dict_set0(tm->constants, const_value, NONE_OBJECT);
@@ -739,7 +757,7 @@ MpObj mp_to_obj(int type, void* value) {
     return o;
 }
 
-int mp_toInt(MpObj obj) {
+int mp_to_int(MpObj obj) {
     if (IS_NUM(obj)) {
         return (int) GET_NUM(obj);
     }

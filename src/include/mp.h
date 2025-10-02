@@ -174,6 +174,8 @@ MpObj obj_slice(MpObj self, MpObj first, MpObj second);
 MpObj iter_new(MpObj collections);
 
 MpObj mp_str(MpObj obj);
+MpObj mp_repr(MpObj obj);
+const char* mp_repr_as_cstr(MpObj obj);
 MpObj mp_append(MpObj a, MpObj item);
 MpObj* mp_next(MpObj iterator);
 
@@ -193,7 +195,7 @@ const char* mp_to_cstr(MpObj a);
 MpObj mp_to_obj(int type, void* value);
 MpObj mp_bool(int expression);
 int mp_obj_to_bool(MpObj);
-int mp_toInt(MpObj);
+int mp_to_int(MpObj);
 
 // vm functions
 void mp_reg_builtin_func(char* name, MpObj (*native_func)());

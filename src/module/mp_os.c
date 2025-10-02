@@ -98,6 +98,16 @@ MpObj os_path_dirname() {
     return string_static("");
 }
 
+MpObj os_path_getmtime() {
+    const char *fpath = mp_take_cstr_arg("getmtime");
+    struct stat stbuf;
+    if (!stat(fpath,&stbuf)) {
+        return mp_number(stbuf.st_mtime);
+    }
+    mp_raise("getmtime('%s'): file not exists or accessable.",fpath);
+    return NONE_OBJECT;
+}
+
 static MpObj os_path_join0(MpObj dirname, MpObj fname) {
     mp_assert_type(dirname, TYPE_STR, "os_path_join");
     mp_assert_type(dirname, TYPE_STR, "os_path_join");
@@ -150,6 +160,7 @@ void mp_os_init() {
     // 注册os.path属性
     MpModule_RegFunc(os_path_mod, "exists", os_exists);
     MpModule_RegFunc(os_path_mod, "dirname", os_path_dirname);
+    MpModule_RegFunc(os_path_mod, "getmtime", os_path_getmtime);
 
     // 注册os模块的属性
     MpModule_RegAttr(os_mod, "name", os_get_name());

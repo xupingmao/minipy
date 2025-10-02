@@ -183,7 +183,7 @@ def emit_def(v):
 def emit_load(v):
     if v == None:
         emit(OP_NONE)
-        return;
+        return
     t = v.type
     if t == 'string':
         emit(OP_STRING, v.val)
@@ -844,12 +844,12 @@ class EncodeCtx:
         code = join_code()
         return code
 
-def _compile(src, filename, des = None):
+def _compile(src, filename: str, des = None):
     global _ctx
     # lock here
     asm_init()
     _ctx = EncodeCtx(src)
-    _ctx.set_file_name(name)
+    _ctx.set_file_name(filename)
     _ctx.compile()
     return _ctx.gen_code()
 
